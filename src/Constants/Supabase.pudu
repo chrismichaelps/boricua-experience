@@ -1,0 +1,69 @@
+/** @Constants.Supabase.Contract — database functions and identity endpoints */
+module Constants.Supabase
+
+/// Database functions, called at `/rest/v1/rpc/<name>`.
+export const SEARCH_EVENTS: Str = "search_events"
+export const RECOMMENDED_EVENTS: Str = "recommended_events"
+export const EVENTS_NEAR: Str = "events_near"
+export const EVENT_DETAIL: Str = "event_detail"
+export const EVENT_ATTENDEES: Str = "event_attendees"
+export const PUBLIC_PROFILE: Str = "public_profile"
+export const LIST_CATEGORIES: Str = "list_categories"
+export const LIST_MUNICIPALITIES: Str = "list_municipalities"
+export const SITEMAP_EVENTS: Str = "sitemap_events"
+export const RECORD_EVENT_VIEW: Str = "record_event_view"
+export const RECORD_CONSENT: Str = "record_consent"
+export const MY_PROFILE: Str = "my_profile"
+export const MY_EVENTS: Str = "my_events"
+export const MY_REQUESTS: Str = "my_requests"
+export const MY_SAVED_EVENTS: Str = "my_saved_events"
+export const MY_NOTIFICATIONS: Str = "my_notifications"
+export const MARK_NOTIFICATIONS_READ: Str = "mark_notifications_read"
+export const EVENT_REQUESTS: Str = "event_requests"
+export const CREATE_EVENT: Str = "create_event"
+export const UPDATE_EVENT: Str = "update_event"
+export const CANCEL_EVENT: Str = "cancel_event"
+export const REQUEST_JOIN: Str = "request_join"
+export const WITHDRAW_REQUEST: Str = "withdraw_request"
+export const DECIDE_REQUEST: Str = "decide_request"
+export const TOGGLE_SAVED: Str = "toggle_saved"
+export const SET_REACTION: Str = "set_reaction"
+export const REPORT_EVENT: Str = "report_event"
+export const COMPLETE_ONBOARDING: Str = "complete_onboarding"
+export const UPDATE_MY_PROFILE: Str = "update_my_profile"
+export const UPDATE_MY_PREFERENCES: Str = "update_my_preferences"
+export const RECORD_POSITION: Str = "record_position"
+export const STOP_LIVE_LOCATION: Str = "stop_live_location"
+export const DELETE_LOCATION_HISTORY: Str = "delete_location_history"
+export const EVENT_PARTICIPANT_POSITIONS: Str = "event_participant_positions"
+export const EXPORT_MY_DATA: Str = "export_my_data"
+export const PAUSE_MY_ACCOUNT: Str = "pause_my_account"
+export const REACTIVATE_MY_ACCOUNT: Str = "reactivate_my_account"
+export const DELETE_MY_ACCOUNT: Str = "delete_my_account"
+export const ADMIN_OVERVIEW: Str = "admin_overview"
+export const ADMIN_REPORTS: Str = "admin_reports"
+export const ADMIN_RESOLVE_REPORT: Str = "admin_resolve_report"
+
+/// Path prefixes under the project address.
+export const RPC_PATH: Str = "rest/v1/rpc/"
+export const AUTH_PATH: Str = "auth/v1/"
+
+/// Identity endpoints, relative to `AUTH_PATH`.
+export const AUTH_SIGN_UP: Str = "signup"
+export const AUTH_TOKEN: Str = "token"
+export const AUTH_RECOVER: Str = "recover"
+export const AUTH_USER: Str = "user"
+export const AUTH_LOGOUT: Str = "logout"
+export const AUTH_AUTHORIZE: Str = "authorize"
+export const AUTH_ADMIN_USERS: Str = "admin/users/"
+
+/// Headers the platform reads.
+export const API_KEY_HEADER: Str = "apikey"
+export const PROFILE_HEADER: Str = "content-profile"
+
+/// Name of the named HTTP client every call uses.
+export const CLIENT_NAME: Str = "supabase"
+/// Milliseconds one call may take, attempts included.
+export const CALL_TIMEOUT_MILLIS: Int = 8000
+/// Milliseconds one attempt may take.
+export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000

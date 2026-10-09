@@ -1,0 +1,32 @@
+/** @Domain.Admin.Moderation — platform metrics and open reports */
+module Domain.Admin
+
+import Std.Json as Json
+
+/** @Domain.Admin.Overview — counts an administrator watches */
+export type Overview = {
+  accounts: Int,
+  @json("accounts_paused") accountsPaused: Int,
+  @json("accounts_new_7d") accountsNew7d: Int,
+  @json("events_upcoming") eventsUpcoming: Int,
+  @json("events_new_7d") eventsNew7d: Int,
+  @json("requests_pending") requestsPending: Int,
+  @json("requests_7d") requests7d: Int,
+  @json("views_7d") views7d: Int,
+  @json("live_now") liveNow: Int,
+  @json("reports_open") reportsOpen: Int,
+  @json("data_requests_open") dataRequestsOpen: Int
+} derives Json.Decode
+
+/** @Domain.Admin.ReportedEvent — the event a report names */
+export type ReportedEvent = { id: Str, slug: Str, title: Str, status: Str } derives Json.Decode
+
+/** @Domain.Admin.Report — one open report */
+export type Report = {
+  id: Int,
+  reason: Str,
+  detail: Str,
+  @json("created_at") createdAt: Str,
+  event: ReportedEvent,
+  @json("reporter_name") reporterName: Option[Str]
+} derives Json.Decode

@@ -1,0 +1,39 @@
+/** @Utils.Claims.Token — the readable part of an access token */
+module Utils.Claims
+
+import Std.Bytes as Bytes
+import Std.Json as Json
+import Std.Option as Option
+
+/** @Utils.Claims.Claims — who a token names and until when */
+export type Claims = { subject: Str, email: Str, expiresAt: Int, issuedAt: Int, provider: Str }
+
+/// The claims of a token's payload, read without checking its signature. The database verifies
+/// every token it is handed; these values only decide when to refresh and what to display.
+export fn read(token: Str) -> Option[Claims] {
+  let parts = token.split(".")
+  if parts.length() != 3 { return None }
+  let payload = match Bytes.decodeBase64Url(parts[1]) {
+    case Ok(decoded) => decoded
+    case Err(_) => { return None }
+  }
+  let text = match Bytes.toText(&payload) {
+    case Ok(decoded) => decoded
+    case Err(_) => { return None }
+  }
+  let document = match Json.decode(text) {
+    case Ok(decoded) => decoded
+    case Err(_) => { return None }
+  }
+  let subject = textAt(&document, "sub") ?
+  let expiresAt = Json.asInt(&Json.field(&document, "exp") ?) ?
+  Some(Claims {
+      subject: subject,
+      email: Option.unwrapOr(textAt(&document, "email"), ""),
+      expiresAt: expiresAt,
+      issuedAt: Option.unwrapOr(Option.andThen(Json.field(&document, "iat"), |value: Json.Json| Json.asInt(&value)), 0),
+      provider: Option.unwrapOr(Option.andThen(Json.path(&document, &["app_metadata", "provider"]), |value: Json.Json| Json.asText(&value)), "email")
+    })
+}
+
+fn textAt(document: &Json.Json, name: Str) -> Option[Str] { Json.asText(&Json.field(document, name) ?) }

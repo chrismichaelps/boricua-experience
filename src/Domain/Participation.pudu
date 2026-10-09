@@ -1,0 +1,46 @@
+/** @Domain.Participation.Requests — join requests seen by members and organizers */
+module Domain.Participation
+
+import Std.Json as Json
+import Domain.Event as Event
+
+/** @Domain.Participation.PersonRef — a member named on a request */
+export type PersonRef = { id: Str, @json("display_name") displayName: Str } derives Json.Decode
+
+/** @Domain.Participation.MyRequest — a member's own request with its event */
+export type MyRequest = {
+  @json("request_id") requestId: Str,
+  status: Str,
+  message: Str,
+  @json("decision_note") decisionNote: Str,
+  @json("created_at") createdAt: Str,
+  event: Event.Card
+} derives Json.Decode
+
+/** @Domain.Participation.IncomingRequest — a request in an organizer's queue */
+export type IncomingRequest = {
+  @json("request_id") requestId: Str,
+  status: Str,
+  message: Str,
+  @json("decision_note") decisionNote: Str,
+  @json("created_at") createdAt: Str,
+  requester: PersonRef
+} derives Json.Decode
+
+/** @Domain.Participation.JoinOutcome — the status a request reached */
+export type JoinOutcome = { status: Str } derives Json.Decode
+
+/** @Domain.Participation.SavedState — whether an event is saved after a toggle */
+export type SavedState = { saved: Bool } derives Json.Decode
+
+/** @Domain.Participation.ReactionState — a reaction after it changed, with the new like count */
+export type ReactionState = { reaction: Int, @json("like_count") likeCount: Int } derives Json.Decode
+
+/// Statuses a request may hold.
+export const PENDING: Str = "pending"
+export const APPROVED: Str = "approved"
+export const REJECTED: Str = "rejected"
+export const WITHDRAWN: Str = "withdrawn"
+
+/// Reasons a member may report an event for.
+export const REPORT_REASONS: Array[Str] = ["spam", "scam", "unsafe", "minors", "offensive", "other"]

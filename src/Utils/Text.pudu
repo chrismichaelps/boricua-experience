@@ -1,0 +1,28 @@
+/** @Utils.Text.Shaping — trimming, shortening, and initials */
+module Utils.Text
+
+import Std.Text as StdText
+
+/// The text with surrounding space removed and inner runs of space collapsed to one.
+export fn collapse(value: Str) -> Str {
+  StdText.words(value.replace("\r", " ").replace("\n", " ").replace("\t", " ")).join(" ")
+}
+
+/// The text cut to at most `max` characters, ending in an ellipsis when it was cut.
+export fn truncate(value: Str, max: Int) -> Str {
+  let tidy = collapse(value)
+  if tidy.length() <= max { tidy } else { StdText.trimEnd(tidy.take(max - 1)) + "…" }
+}
+
+/// Up to two upper-case initials of a name, for an avatar without a picture.
+export fn initials(name: Str) -> Str {
+  let parts = StdText.words(name)
+  var letters = ""
+  for part in parts.slice(0, if parts.length() < 2 { parts.length() } else { 2 }) {
+    letters = letters + part.take(1).toUpper()
+  }
+  if letters.isEmpty() { "?" } else { letters }
+}
+
+/// Whether the text holds nothing but space.
+export fn isBlank(value: Str) -> Bool { StdText.isBlank(value) }

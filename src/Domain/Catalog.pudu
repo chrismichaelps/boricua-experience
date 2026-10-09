@@ -1,0 +1,35 @@
+/** @Domain.Catalog.Reference — categories and municipalities */
+module Domain.Catalog
+
+import Std.Json as Json
+
+/** @Domain.Catalog.Category — a kind of activity */
+export type Category = {
+  slug: Str,
+  @json("name_es") nameEs: Str,
+  @json("name_en") nameEn: Str,
+  icon: Str,
+  @default("0") upcoming: Int
+} derives Json.Decode
+
+/** @Domain.Catalog.Municipality — one of the 78 municipalities */
+export type Municipality = { slug: Str, name: Str, region: Str, lat: Float64, lng: Float64 } derives Json.Decode
+
+/** @Domain.Catalog.Catalog — both reference lists, loaded together */
+export type Catalog = { categories: Array[Category], municipalities: Array[Municipality] }
+
+/// The category with a slug.
+export fn category(catalog: &Catalog, slug: Str) -> Option[Category] {
+  for found in catalog.categories {
+    if found.slug == slug { return Some(found) }
+  }
+  None
+}
+
+/// The municipality with a slug.
+export fn municipality(catalog: &Catalog, slug: Str) -> Option[Municipality] {
+  for found in catalog.municipalities {
+    if found.slug == slug { return Some(found) }
+  }
+  None
+}

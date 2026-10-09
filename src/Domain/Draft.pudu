@@ -1,0 +1,120 @@
+/** @Domain.Draft.EventForm — an event as an organizer writes it */
+module Domain.Draft
+
+import Domain.Event as Event
+import Utils.Time as Time
+
+/** @Domain.Draft.Draft — the publishing form's values, as entered */
+export type Draft = {
+  title: Str,
+  summary: Str,
+  description: Str,
+  instructions: Str,
+  category: Str,
+  municipality: Str,
+  venueName: Str,
+  addressLine: Str,
+  lat: Str,
+  lng: Str,
+  startsAt: Str,
+  endsAt: Str,
+  visibility: Str,
+  joinPolicy: Str,
+  capacity: Str,
+  price: Str
+}
+
+/** @Domain.Draft.Ready — a draft validated and converted for the database */
+export type Ready = {
+  title: Str,
+  summary: Str,
+  description: Str,
+  instructions: Str,
+  category: Str,
+  municipality: Str,
+  venueName: Str,
+  addressLine: Str,
+  lat: Float64,
+  lng: Float64,
+  startsAt: Str,
+  endsAt: Str,
+  visibility: Str,
+  joinPolicy: Str,
+  capacity: Option[Int],
+  priceCents: Int
+}
+
+/** @Domain.Draft.Published — the event a publish or edit produced */
+export type Published = { id: Str, slug: Str }
+
+/// An empty draft: public, approval required, free.
+export fn blank() -> Draft {
+  Draft {
+    title: "",
+    summary: "",
+    description: "",
+    instructions: "",
+    category: "",
+    municipality: "",
+    venueName: "",
+    addressLine: "",
+    lat: "",
+    lng: "",
+    startsAt: "",
+    endsAt: "",
+    visibility: "public",
+    joinPolicy: "approval",
+    capacity: "",
+    price: ""
+  }
+}
+
+/// The draft an existing event fills the edit form with.
+export fn fromDetail(detail: &Event.Detail) -> Draft {
+  let card = detail.card
+  Draft {
+    title: card.title,
+    summary: card.summary,
+    description: detail.description,
+    instructions: match detail.instructions {
+      case Some(text) => text
+      case None => ""
+    },
+    category: card.category.slug,
+    municipality: card.municipality.slug,
+    venueName: card.venueName,
+    addressLine: match detail.addressLine {
+      case Some(text) => text
+      case None => ""
+    },
+    lat: show(match detail.exactLat {
+      case Some(value) => value
+      case None => card.lat
+    }),
+    lng: show(match detail.exactLng {
+      case Some(value) => value
+      case None => card.lng
+    }),
+    startsAt: localOf(card.startsAt),
+    endsAt: localOf(card.endsAt),
+    visibility: card.visibility,
+    joinPolicy: card.joinPolicy,
+    capacity: match card.capacity {
+      case Some(total) => show(total)
+      case None => ""
+    },
+    price: if card.priceCents == 0 { "" } else { show(card.priceCents / 100) + "." + (if card.priceCents % 100 < 10 { "0" } else { "" }) + show(card.priceCents % 100) }
+  }
+}
+
+/// A database timestamp as a `datetime-local` value.
+fn localOf(timestamp: Str) -> Str {
+  match Time.parseTimestamp(timestamp) {
+    case Some(instant) => Time.localInput(&instant)
+    case None => ""
+  }
+}
+
+/// Visibility and join-policy values.
+export const VISIBILITIES: Array[Str] = ["public", "unlisted", "private"]
+export const JOIN_POLICIES: Array[Str] = ["approval", "open"]

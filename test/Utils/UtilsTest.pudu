@@ -1,0 +1,63 @@
+/** @Test.Utils.Suite — pure helpers: time, money, geo, cookies, claims, text */
+module Utils.UtilsTest
+
+import Std.Bytes as Bytes
+import Std.Io as Io
+import Std.Option as Option
+import Std.Test as Test
+import Utils.Claims as Claims
+import Utils.Cookie as Cookie
+import Utils.Geo as Geo
+import Utils.Money as Money
+import Utils.Query as Query
+import Utils.Text as Text
+import Utils.Time as Time
+
+/// A token whose payload is the given JSON, with placeholder header and signature.
+fn tokenWith(payload: Str) -> Str { "eyJhbGciOiJFUzI1NiJ9." + Bytes.encodeBase64Url(&Bytes.fromText(payload)) + ".signature" }
+
+/// Milliseconds of a timestamp, or -1 when it does not parse.
+fn millisOf(text: Str) -> Int { Option.unwrapOr(Option.map(Time.parseTimestamp(text), |at| at.millis), -1) }
+
+/// Runs the suite.
+fn main() -> Int {
+  let evening = Option.unwrapOr(Time.parseTimestamp("2026-10-10T23:30:00+00:00"), Time.now())
+  let atNight = Time.local(&evening)
+  let claims = Claims.read(tokenWith("\{\"sub\":\"abc\",\"email\":\"a@b.test\",\"exp\":1900000000,\"iat\":1800000000,\"app_metadata\":\{\"provider\":\"google\"\}\}"))
+  let checks = Test.suite("Utils", &[
+      Test.equals("a UTC timestamp parses", &millisOf("2026-10-10T14:00:00+00:00"), &1791640800000),
+      Test.equals("Z and an offset name the same instant", &millisOf("2026-10-10T10:00:00-04:00"), &millisOf("2026-10-10T14:00:00Z")),
+      Test.equals("fractional seconds are ignored", &millisOf("2026-10-10T14:00:00.561944+00:00"), &1791640800000),
+      Test.equals("a short timestamp is refused", &millisOf("2026-10-10"), &(-1)),
+      Test.equals("local time is four hours behind UTC", &(atNight.day, atNight.hour, atNight.minute), &(10, 19, 30)),
+      Test.equals("2026-10-10 is a Saturday", &atNight.weekday, &6),
+      Test.equals("a twelve-hour clock reads as Puerto Rico writes it", &Time.clock12(&atNight), &"7:30 PM"),
+      Test.equals("a datetime-local value round-trips", &Option.map(Time.parseLocalInput("2026-10-10T19:30"), |at| Time.localInput(&at)), &Some("2026-10-10T19:30")),
+      Test.equals("a datetime-local value is Puerto Rico time", &Option.map(Time.parseLocalInput("2026-10-10T19:30"), |at| at.millis), &Some(evening.millis)),
+      Test.equals("whole dollars", &Money.dollars(1500), &"$15"),
+      Test.equals("dollars and cents", &Money.dollars(1550), &"$15.50"),
+      Test.equals("thousands are grouped", &Money.dollars(120000), &"$1,200"),
+      Test.equals("a price field reads cents", &Money.parseCents("$15.5"), &Some(1550)),
+      Test.equals("an empty price is free", &Money.parseCents(""), &Some(0)),
+      Test.equals("three decimals are refused", &Money.parseCents("1.005"), &None),
+      Test.equals("San Juan is in Puerto Rico", &Geo.inPuertoRico(18.4655, -66.1057), &true),
+      Test.equals("Miami is not", &Geo.inPuertoRico(25.76, -80.19), &false),
+      Test.equals("short distances in metres", &Geo.distanceLabel(437), &"430 m"),
+      Test.equals("middle distances in tenths", &Geo.distanceLabel(3249), &"3.2 km"),
+      Test.equals("long distances in whole kilometres", &Geo.distanceLabel(25400), &"25 km"),
+      Test.equals("cookies are read by name", &Cookie.parse("a=1; bx_lang=en; a=2").get("bx_lang"), &Some("en")),
+      Test.equals("the first of a repeated cookie wins", &Cookie.parse("a=1; a=2").get("a"), &Some("1")),
+      Test.equals("a session cookie is locked down", &Cookie.render("s", "v", &Cookie.Attributes{maxAge: 60, httpOnly: true, secure: true, sameSite: "Lax"}), &"s=v; Path=/; Max-Age=60; SameSite=Lax; HttpOnly; Secure"),
+      Test.equals("claims are read from the payload", &Option.map(claims, |c| (c.subject, c.email, c.expiresAt, c.provider)), &Some(("abc", "a@b.test", 1900000000, "google"))),
+      Test.equals("a malformed token has no claims", &Option.isSome(&Claims.read("not-a-token")), &false),
+      Test.equals("empty query values are left out", &Query.render(&[("q", "salsa"), ("category", ""), ("page", "2")]), &"?q=salsa&page=2"),
+      Test.equals("long text is shortened with an ellipsis", &Text.truncate("Bomba en la calle", 10), &"Bomba en…"),
+      Test.equals("initials take two words", &Text.initials("maría del carmen rivera"), &"MD"),
+      Test.equals("space is collapsed", &Text.collapse("  a   b \n c "), &"a b c")
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) {
+    let _reported = Io.writeErrorLine(failure)
+  }
+  Test.report(&ran)
+}

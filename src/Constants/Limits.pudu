@@ -1,0 +1,50 @@
+/** @Constants.Limits.Bounds — sizes, counts, and windows */
+module Constants.Limits
+
+/// Event field lengths, matching the database checks.
+export const TITLE_MIN: Int = 4
+export const TITLE_MAX: Int = 120
+export const SUMMARY_MIN: Int = 10
+export const SUMMARY_MAX: Int = 200
+export const DESCRIPTION_MAX: Int = 5000
+export const INSTRUCTIONS_MAX: Int = 2000
+export const VENUE_MIN: Int = 2
+export const VENUE_MAX: Int = 120
+export const ADDRESS_MAX: Int = 200
+export const CAPACITY_MAX: Int = 100000
+export const PRICE_MAX_CENTS: Int = 10000000
+/// Longest event, in hours.
+export const EVENT_MAX_HOURS: Int = 336
+
+/// Account field lengths.
+export const DISPLAY_NAME_MAX: Int = 60
+export const BIO_MAX: Int = 280
+export const MESSAGE_MAX: Int = 500
+export const REPORT_DETAIL_MAX: Int = 1000
+export const EMAIL_MAX: Int = 254
+export const PASSWORD_MIN: Int = 8
+export const PASSWORD_MAX: Int = 72
+export const QUERY_MAX: Int = 120
+
+/// Results per page of a listing.
+export const PAGE_SIZE: Int = 24
+/// Recommendations on the home page.
+export const RECOMMENDED_COUNT: Int = 12
+/// Events in a home rail.
+export const RAIL_COUNT: Int = 10
+/// Pins on the map.
+export const MAP_PINS: Int = 60
+/// Search suggestions.
+export const SUGGEST_COUNT: Int = 6
+/// Default and largest radius for nearby searches, in metres.
+export const NEARBY_RADIUS_M: Int = 15000
+export const RADIUS_MAX_M: Int = 200000
+
+/// Seconds an access token may have left before it is refreshed.
+export const REFRESH_MARGIN_SECONDS: Int = 60
+/// Seconds since sign-in within which a Google account may delete itself without a password.
+export const RECENT_SIGN_IN_SECONDS: Int = 600
+/// Milliseconds reference data is kept per instance.
+export const CATALOG_TTL_MILLIS: Int = 600000
+/// Largest request body read, in bytes.
+export const BODY_BYTES_MAX: Int = 65536

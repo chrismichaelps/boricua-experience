@@ -18,6 +18,9 @@ CSS.md
 .DS_Store
 Thumbs.db
 
+# supabase
+supabase
+
 # Pudu packages and build output
 deps/
 .vercel/

@@ -1,0 +1,18 @@
+/** @Utils.Wire.Decoding — JSON read into a type chosen by the caller */
+module Utils.Wire
+
+import Std.Json as Json
+
+/// The value of the type the caller expects, read from JSON.
+export fn decode[T: Json.Decode](json: &Json.Json) -> Result[T, Json.DecodeError] { T.decode(json) }
+
+/// The value of the expected type, read from JSON text.
+export fn parse[T: Json.Decode](text: Str) -> Result[T, Str] {
+  match Json.decode(text) {
+    case Ok(json) => match T.decode(&json) {
+      case Ok(value) => Ok(value)
+      case Err(problem) => Err(Json.explainDecode(&problem))
+    }
+    case Err(problem) => Err(Json.explain(&problem))
+  }
+}

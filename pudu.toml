@@ -1,0 +1,16 @@
+[package]
+name = "@chrismichaelps/boricua-experience"
+version = "0.1.0"
+description = "Boricua Experience: discover, join, and create activities and events across Puerto Rico"
+license = "Apache-2.0"
+keywords = ["events", "puerto-rico", "pwa", "pudu"]
+language = ">=0.1.3 <0.2.0"
+source = "src"
+
+[dependencies]
+"@chrismichaelps/pudu-lang-environment" = "=0.1.0"
+"@chrismichaelps/pudu-lang-httpclient" = "=0.1.1"
+"@chrismichaelps/pudu-lang-log" = "=0.1.0"
+"@chrismichaelps/pudu-lang-mediator" = "=0.1.0"
+"@chrismichaelps/pudu-lang-resilience" = "=0.1.0"
+"@chrismichaelps/pudu-lang-validator" = "=0.1.1"

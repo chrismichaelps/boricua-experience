@@ -1,0 +1,24 @@
+/** @Constants.Cookies.Names — cookie names and lifetimes */
+module Constants.Cookies
+
+/// The sealed session.
+export const SESSION: Str = "bx_session"
+/// The sealed PKCE verifier and return path of a sign-in in progress.
+export const FLOW: Str = "bx_flow"
+/// The chosen language.
+export const LOCALE: Str = "bx_lang"
+/// The cookie choice: `necessary`, or a list such as `analytics,marketing`, with its version.
+export const CONSENT: Str = "bx_consent"
+/// An anonymous browser id used only to record consent choices.
+export const VISITOR: Str = "bx_visitor"
+/// A one-time message shown on the next page.
+export const FLASH: Str = "bx_flash"
+
+/// Session lifetime in seconds: 30 days.
+export const SESSION_MAX_AGE: Int = 2592000
+/// Sign-in flow lifetime in seconds: 10 minutes.
+export const FLOW_MAX_AGE: Int = 600
+/// Language and consent lifetime in seconds: 365 days.
+export const PREFERENCE_MAX_AGE: Int = 31536000
+/// Flash lifetime in seconds.
+export const FLASH_MAX_AGE: Int = 60

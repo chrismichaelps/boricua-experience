@@ -1,0 +1,72 @@
+/** @Test.Domain.Suite — decoding recorded answers and domain rules */
+module Domain.DomainTest
+
+import Std.Io as Io
+import Std.Json as Json
+import Std.Option as Option
+import Std.Result as Result
+import Std.Test as Test
+import Domain.Admin as Admin
+import Domain.Catalog as Catalog
+import Domain.Consent as Consent
+import Domain.Event as Event
+import Domain.Locale as Locale
+import Domain.Notification as Notification
+import Domain.Participation as Participation
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import Domain.Search as Search
+import Utils.Wire as Wire
+import Support.Fixtures as Fixtures
+
+/// Runs the suite.
+fn main() -> Int {
+  let page: Result[Event.Page, Json.DecodeError] = Wire.decode(&Fixtures.json("search-page.json"))
+  let member = Event.decodeDetail(&Fixtures.json("event-detail-member.json"))
+  let guest = Event.decodeDetail(&Fixtures.json("event-detail-guest.json"))
+  let categories: Result[Array[Catalog.Category], Json.DecodeError] = Wire.decode(&Fixtures.json("categories.json"))
+  let towns: Result[Array[Catalog.Municipality], Json.DecodeError] = Wire.decode(&Fixtures.json("municipalities.json"))
+  let mine: Result[Profile.MyProfile, Json.DecodeError] = Wire.decode(&Fixtures.json("my-profile.json"))
+  let host: Result[Profile.PublicProfile, Json.DecodeError] = Wire.decode(&Fixtures.json("public-profile.json"))
+  let requests: Result[Array[Participation.MyRequest], Json.DecodeError] = Wire.decode(&Fixtures.json("my-requests.json"))
+  let queue: Result[Array[Participation.IncomingRequest], Json.DecodeError] = Wire.decode(&Fixtures.json("event-requests.json"))
+  let inbox: Result[Array[Notification.Notification], Json.DecodeError] = Wire.decode(&Fixtures.json("notifications.json"))
+  let organized: Result[Array[Event.Card], Json.DecodeError] = Wire.decode(&Fixtures.json("my-events.json"))
+  let checks = Test.suite("Domain", &[
+      Test.succeeded("a search page decodes", &page),
+      Test.equals("a search page holds its cards and cursor", &Result.map(page, |p| (p.items.length(), Option.isSome(&p.next))), &Ok((3, true))),
+      Test.succeeded("a member's detail decodes", &member),
+      Test.equals("an approved member sees the location", &Result.map(member, |d| (d.locationRevealed, Option.isSome(&d.instructions), Option.isSome(&d.exactLat))), &Ok((true, true, true))),
+      Test.equals("an approved member sees who is going", &Result.map(member, |d| (d.attendees.canView, d.attendees.people.length())), &Ok((true, 2))),
+      Test.equals("a guest sees neither location nor names", &Result.map(guest, |d| (d.locationRevealed, d.instructions, d.attendees.canView, d.attendees.people.length())), &Ok((false, None, false, 0))),
+      Test.equals("the organizer card is present", &Result.map(member, |d| Option.map(d.organizer, |o| o.displayName)), &Ok(Some("María Rivera"))),
+      Test.equals("sixteen categories decode", &Result.map(categories, |all| all.length()), &Ok(16)),
+      Test.equals("seventy-eight municipalities decode", &Result.map(towns, |all| all.length()), &Ok(78)),
+      Test.equals("the profile decodes with its preferences", &Result.map(mine, |p| (p.displayName, p.locationVisibility, p.onboarded)), &Ok(("Carlos Ortiz", "approved_activities", true))),
+      Test.equals("a public profile lists upcoming events", &Result.map(host, |p| p.upcoming.length() > 0), &Ok(true)),
+      Test.succeeded("a member's requests decode", &requests),
+      Test.succeeded("an organizer's queue decodes", &queue),
+      Test.succeeded("notifications decode", &inbox),
+      Test.succeeded("organized events decode with pending counts", &organized),
+      Test.equals("a notification without a note reads empty", &Result.map(inbox, |all| Option.map(Option.fromArray(&all), |n| Notification.note(&n))), &Ok(Some(""))),
+      Test.equals("an unknown code reads as a refusal", &Problem.fromApi("event_full", 409), &Problem.Refused("event_full")),
+      Test.equals("a 401 reads as signed out", &Problem.fromApi("whatever", 401), &Problem.SignedOut),
+      Test.equals("a 5xx reads as unavailable", &Problem.status(&Problem.fromApi("boom", 502)), &503),
+      Test.equals("a known code has its message", &Problem.messageKey(&Problem.Refused("event_full")), &"problem.event_full"),
+      Test.equals("an unknown code has the generic message", &Problem.messageKey(&Problem.Refused("mystery")), &"problem.generic"),
+      Test.equals("field errors are found by field", &Problem.errorFor(&[Problem.FieldError{field: "title", key: "form.too_short"}], "title"), &Some("form.too_short")),
+      Test.equals("English is chosen from a header", &Locale.fromAcceptLanguage("en-US,en;q=0.9,es;q=0.8"), &Locale.En),
+      Test.equals("Spanish is the default", &Locale.fromAcceptLanguage("fr-FR"), &Locale.Es),
+      Test.equals("a consent choice round-trips", &Consent.decode(Consent.encode(&Consent.Choice{analytics: true, marketing: false, version: "1"}), "1"), &Some(Consent.Choice{analytics: true, marketing: false, version: "1"})),
+      Test.equals("a consent of an older version is asked again", &Consent.decode("v0:necessary", "1"), &None),
+      Test.equals("sorts round-trip by name", &Search.sortFrom(Search.sortName(&Search.Near)), &Search.Near),
+      Test.equals("windows round-trip by name", &Search.windowFrom(Search.windowName(&Search.Weekend)), &Search.Weekend),
+      Test.equals("no filter is not narrowed", &Search.isNarrowed(&Search.everything()), &false),
+      Test.equals("seats left never go below zero", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.seatsLeft(&Event.Card{..card, capacity: Some(1), approvedCount: 3}))), &Ok(Some(Some(0))))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) {
+    let _reported = Io.writeErrorLine(failure)
+  }
+  Test.report(&ran)
+}

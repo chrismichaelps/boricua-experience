@@ -1,0 +1,34 @@
+/** @Utils.Money.Dollars — prices written and read in US dollars */
+module Utils.Money
+
+import Std.Option as Option
+
+import Std.Text as StdText
+
+/// `$15`, `$15.50`, or `$1,200` for an amount in cents.
+export fn dollars(cents: Int) -> Str {
+  let whole = cents / 100
+  let rest = cents % 100
+  let grouped = group(show(whole))
+  if rest == 0 { "$" + grouped } else { "$" + grouped + "." + StdText.padLeft(show(rest), 2, "0") }
+}
+
+/// The amount in cents a price field holds: `15`, `15.5`, `15.50`, or `$15.50`. Answers nothing for
+/// anything else, including negative amounts and more than two decimals.
+export fn parseCents(text: Str) -> Option[Int] {
+  let written = text.trim().replace("$", "").replace(",", "")
+  if written.isEmpty() { return Some(0) }
+  let point = written.indexOf(".")
+  if point < 0 { return Option.map(written.toInt(), |whole: Int| whole * 100) }
+  let fraction = written.drop(point + 1)
+  if fraction.length() > 2 { return None }
+  let whole = if point == 0 { 0 } else { written.take(point).toInt() ? }
+  let cents = if fraction.isEmpty() { 0 } else { (fraction + "0").take(2).toInt() ? }
+  if whole < 0 || cents < 0 { None } else { Some(whole * 100 + cents) }
+}
+
+/// Digits with a comma between each group of three.
+fn group(digits: Str) -> Str {
+  if digits.length() <= 3 { return digits }
+  group(digits.take(digits.length() - 3)) + "," + digits.drop(digits.length() - 3)
+}

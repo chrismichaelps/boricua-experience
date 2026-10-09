@@ -1,0 +1,34 @@
+/** @Domain.Locale.Language — the two languages the app speaks */
+module Domain.Locale
+
+/** @Domain.Locale.Locale — Spanish, the default, or English */
+export type Locale = Es | En
+
+/// The locale a two-letter code names; Spanish for anything but `en`.
+export fn fromCode(written: Str) -> Locale { if written.trim().toLower().startsWith("en") { En } else { Es } }
+
+/// The two-letter code of a locale.
+export fn code(locale: &Locale) -> Str {
+  match locale {
+    case Es => "es"
+    case En => "en"
+  }
+}
+
+/// The language tag for `lang` attributes and `og:locale`.
+export fn tag(locale: &Locale) -> Str {
+  match locale {
+    case Es => "es-PR"
+    case En => "en-US"
+  }
+}
+
+/// The locale an `Accept-Language` header prefers, Spanish when it names neither.
+export fn fromAcceptLanguage(header: Str) -> Locale {
+  for part in header.toLower().split(",") {
+    let range = part.trim()
+    if range.startsWith("es") { return Es }
+    if range.startsWith("en") { return En }
+  }
+  Es
+}

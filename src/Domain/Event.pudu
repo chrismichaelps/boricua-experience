@@ -1,0 +1,159 @@
+/** @Domain.Event.Projections — events as listings and as a page */
+module Domain.Event
+
+import Std.Json as Json
+
+/** @Domain.Event.CategoryRef — the category a card names */
+export type CategoryRef = {
+  slug: Str,
+  @json("name_es") nameEs: Str,
+  @json("name_en") nameEn: Str,
+  icon: Str
+} derives Json.Decode
+
+/** @Domain.Event.TownRef — the municipality a card names */
+export type TownRef = { slug: Str, name: Str } derives Json.Decode
+
+/** @Domain.Event.Card — the listing projection: never an exact location */
+export type Card = {
+  id: Str,
+  slug: Str,
+  title: Str,
+  summary: Str,
+  category: CategoryRef,
+  municipality: TownRef,
+  @json("venue_name") venueName: Str,
+  @json("starts_at") startsAt: Str,
+  @json("ends_at") endsAt: Str,
+  @json("price_cents") priceCents: Int,
+  @json("join_policy") joinPolicy: Str,
+  visibility: Str,
+  status: Str,
+  capacity: Option[Int],
+  @json("approved_count") approvedCount: Int,
+  @json("saved_count") savedCount: Int,
+  @default("0") @json("like_count") likeCount: Int,
+  @json("cover_url") coverUrl: Option[Str],
+  lat: Float64,
+  lng: Float64,
+  @json("distance_m") distanceM: Option[Int],
+  @json("organizer_name") organizerName: Option[Str],
+  @json("pending_count") pendingCount: Option[Int]
+} derives Json.Decode
+
+/** @Domain.Event.Page — one page of cards and the cursor of the next */
+export type Page = { items: Array[Card], next: Option[Str] } derives Json.Decode
+
+/** @Domain.Event.Organizer — the organizer card on an event page */
+export type Organizer = {
+  id: Option[Str],
+  @default("true") visible: Bool,
+  @json("display_name") displayName: Str,
+  @default("\"\"") bio: Str,
+  @json("avatar_url") avatarUrl: Option[Str],
+  municipality: Option[Str],
+  @json("member_since") memberSince: Option[Str],
+  @default("0") @json("hosted_count") hostedCount: Int,
+  @default("0") @json("guests_hosted") guestsHosted: Int
+} derives Json.Decode
+
+/** @Domain.Event.Attendee — one approved attendee shown by name */
+export type Attendee = {
+  id: Str,
+  @json("display_name") displayName: Str,
+  municipality: Option[Str],
+  @json("joined_at") joinedAt: Str,
+  @json("is_viewer") isViewer: Bool
+} derives Json.Decode
+
+/** @Domain.Event.Attendees — who is going, as far as the viewer may see */
+export type Attendees = { total: Int, people: Array[Attendee], hidden: Int, @json("can_view") canView: Bool } derives Json.Decode
+
+/** @Domain.Event.Viewer — the viewer's own relation to an event */
+export type Viewer = {
+  @json("signed_in") signedIn: Bool,
+  @json("is_organizer") isOrganizer: Bool,
+  @json("request_status") requestStatus: Option[Str],
+  @json("request_message") requestMessage: Option[Str],
+  @json("decision_note") decisionNote: Option[Str],
+  @default("0") reaction: Int,
+  saved: Bool
+} derives Json.Decode
+
+/** @Domain.Event.Detail — everything an event page shows */
+export type Detail = {
+  card: Card,
+  description: Str,
+  source: Str,
+  sourceUrl: Option[Str],
+  organizer: Option[Organizer],
+  attendees: Attendees,
+  region: Str,
+  addressLine: Option[Str],
+  instructions: Option[Str],
+  exactLat: Option[Float64],
+  exactLng: Option[Float64],
+  locationRevealed: Bool,
+  isFull: Bool,
+  spotsLeft: Option[Int],
+  viewer: Viewer,
+  updatedAt: Str
+}
+
+/** @Domain.Event.DetailWire — the detail as the database API writes it, beside its card fields */
+type DetailWire = {
+  description: Str,
+  source: Str,
+  @json("source_url") sourceUrl: Option[Str],
+  organizer: Option[Organizer],
+  attendees: Attendees,
+  @json("municipality_region") region: Str,
+  @json("address_line") addressLine: Option[Str],
+  instructions: Option[Str],
+  @json("exact_lat") exactLat: Option[Float64],
+  @json("exact_lng") exactLng: Option[Float64],
+  @json("location_revealed") locationRevealed: Bool,
+  @json("is_full") isFull: Bool,
+  @json("spots_left") spotsLeft: Option[Int],
+  viewer: Viewer,
+  @json("updated_at") updatedAt: Str
+} derives Json.Decode
+
+/// The detail a database answer describes: card fields and detail fields share one object.
+export fn decodeDetail(json: &Json.Json) -> Result[Detail, Json.DecodeError] {
+  let card = Card.decode(json) ?
+  let wire = DetailWire.decode(json) ?
+  Ok(Detail {
+      card: card,
+      description: wire.description,
+      source: wire.source,
+      sourceUrl: wire.sourceUrl,
+      organizer: wire.organizer,
+      attendees: wire.attendees,
+      region: wire.region,
+      addressLine: wire.addressLine,
+      instructions: wire.instructions,
+      exactLat: wire.exactLat,
+      exactLng: wire.exactLng,
+      locationRevealed: wire.locationRevealed,
+      isFull: wire.isFull,
+      spotsLeft: wire.spotsLeft,
+      viewer: wire.viewer,
+      updatedAt: wire.updatedAt
+    })
+}
+
+/// Whether an event is free.
+export fn isFree(card: &Card) -> Bool { card.priceCents == 0 }
+
+/// Whether joining waits for the organizer.
+export fn needsApproval(card: &Card) -> Bool { card.joinPolicy == "approval" }
+
+/// Whether an event was cancelled.
+export fn isCancelled(card: &Card) -> Bool { card.status == "cancelled" }
+
+/// Seats left, when the event has a capacity.
+export fn seatsLeft(card: &Card) -> Option[Int] {
+  let total = card.capacity ?
+  Some(if total > card.approvedCount { total - card.approvedCount } else { 0 })
+}

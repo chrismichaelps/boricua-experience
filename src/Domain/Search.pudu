@@ -1,0 +1,89 @@
+/** @Domain.Search.Filters — what a visitor asked a listing for */
+module Domain.Search
+
+/** @Domain.Search.Sort — the order of a listing */
+export type Sort = Soon | Near | Relevant
+
+/** @Domain.Search.When — a date window chosen from presets */
+export type When = Anytime | Today | Tomorrow | Weekend | Week | Month
+
+/** @Domain.Search.Filters — every filter of a listing, empty when unused */
+export type Filters = {
+  query: Str,
+  category: Str,
+  municipality: Str,
+  window: When,
+  freeOnly: Bool,
+  maxPriceCents: Option[Int],
+  lat: Option[Float64],
+  lng: Option[Float64],
+  radiusM: Option[Int],
+  sort: Sort,
+  after: Str
+}
+
+/// Filters that select every upcoming event, soonest first.
+export fn everything() -> Filters {
+  Filters {
+    query: "",
+    category: "",
+    municipality: "",
+    window: Anytime,
+    freeOnly: false,
+    maxPriceCents: None,
+    lat: None,
+    lng: None,
+    radiusM: None,
+    sort: Soon,
+    after: ""
+  }
+}
+
+/// The sort's wire name.
+export fn sortName(sort: &Sort) -> Str {
+  match sort {
+    case Soon => "soon"
+    case Near => "near"
+    case Relevant => "relevant"
+  }
+}
+
+/// The sort a wire name selects; soonest first for anything else.
+export fn sortFrom(name: Str) -> Sort {
+  if name == "near" { return Near }
+  if name == "relevant" { return Relevant }
+  Soon
+}
+
+/// The window's wire name.
+export fn windowName(window: &When) -> Str {
+  match window {
+    case Anytime => ""
+    case Today => "today"
+    case Tomorrow => "tomorrow"
+    case Weekend => "weekend"
+    case Week => "week"
+    case Month => "month"
+  }
+}
+
+/// The window a wire name selects; any time for anything else.
+export fn windowFrom(name: Str) -> When {
+  match name {
+    case "today" => Today
+    case "tomorrow" => Tomorrow
+    case "weekend" => Weekend
+    case "week" => Week
+    case "month" => Month
+    case _ => Anytime
+  }
+}
+
+/// Every preset window, in the order the filters list them.
+export const WINDOWS: Array[When] = [Anytime, Today, Tomorrow, Weekend, Week, Month]
+
+/// Whether any filter narrows the listing.
+export fn isNarrowed(filters: &Filters) -> Bool {
+  !filters.query.isEmpty() || !filters.category.isEmpty() || !filters.municipality.isEmpty()
+    || filters.window != Anytime || filters.freeOnly || filters.lat != None
+}

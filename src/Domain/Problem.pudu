@@ -1,0 +1,77 @@
+/** @Domain.Problem.Failure — why a use case produced no value */
+module Domain.Problem
+
+import Constants.Codes as Codes
+
+/** @Domain.Problem.FieldError — one refused form field and the message key that says why */
+export type FieldError = { field: Str, key: Str }
+
+/** @Domain.Problem.Problem — every failure a service answers */
+export type Problem
+  = Refused(Str)
+  | SignedOut
+  | Forbidden
+  | Missing
+  | Invalid(Array[FieldError])
+  | Throttled
+  | Unavailable(Str)
+
+/// The HTTP status a problem is answered with.
+export fn status(problem: &Problem) -> Int {
+  match problem {
+    case Refused(_) => 409
+    case SignedOut => 401
+    case Forbidden => 403
+    case Missing => 404
+    case Invalid(_) => 422
+    case Throttled => 429
+    case Unavailable(_) => 503
+  }
+}
+
+/// The stable code of a problem, as the database API and the browser scripts name it.
+export fn code(problem: &Problem) -> Str {
+  match problem {
+    case Refused(reason) => reason
+    case SignedOut => Codes.NOT_AUTHENTICATED
+    case Forbidden => Codes.FORBIDDEN
+    case Missing => Codes.NOT_FOUND
+    case Invalid(_) => Codes.INVALID_INPUT
+    case Throttled => Codes.RATE_LIMITED
+    case Unavailable(_) => Codes.UNAVAILABLE
+  }
+}
+
+/// The translation key of the message shown for a problem.
+export fn messageKey(problem: &Problem) -> Str {
+  match Codes.MESSAGES.get(code(problem)) {
+    case Some(key) => key
+    case None => "problem.generic"
+  }
+}
+
+/// The problem a database API failure names: its code and HTTP status.
+export fn fromApi(reason: Str, httpStatus: Int) -> Problem {
+  if httpStatus == 401 || reason == Codes.NOT_AUTHENTICATED { return SignedOut }
+  if httpStatus == 404 || reason == Codes.NOT_FOUND { return Missing }
+  if reason == Codes.FORBIDDEN { return Forbidden }
+  if httpStatus == 429 { return Throttled }
+  if httpStatus >= 500 { return Unavailable(reason) }
+  Refused(reason)
+}
+
+/// The field errors a problem carries, or none.
+export fn fieldErrors(problem: &Problem) -> Array[FieldError] {
+  match problem {
+    case Invalid(errors) => errors
+    case _ => []
+  }
+}
+
+/// The message key for one field, when the problem refused it.
+export fn errorFor(errors: &Array[FieldError], field: Str) -> Option[Str] {
+  for error in *errors {
+    if error.field == field { return Some(error.key) }
+  }
+  None
+}

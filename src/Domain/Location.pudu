@@ -1,0 +1,19 @@
+/** @Domain.Location.Positions — live positions and who may see them */
+module Domain.Location
+
+import Std.Json as Json
+
+/** @Domain.Location.Position — one reading from the browser */
+export type Position = { lat: Float64, lng: Float64, accuracyM: Float64 }
+
+/** @Domain.Location.Recorded — what the database did with a reading */
+export type Recorded = { status: Str } derives Json.Decode
+
+/** @Domain.Location.Participant — a co-attendee's live position */
+export type Participant = {
+  @json("display_name") displayName: Str,
+  lat: Float64,
+  lng: Float64,
+  @json("accuracy_m") accuracyM: Float64,
+  @json("recorded_at") recordedAt: Str
+} derives Json.Encode, Json.Decode

@@ -1,0 +1,104 @@
+/** @Utils.Time.Local — instants read and written in Puerto Rico time */
+module Utils.Time
+
+import Std.Result as Result
+import Std.Time as Time
+import Std.Text as StdText
+import Constants.App as App
+
+/** @Utils.Time.Local — a wall-clock reading in Puerto Rico */
+export type Local = { year: Int, month: Int, day: Int, weekday: Int, hour: Int, minute: Int }
+
+/// Milliseconds in a minute and a day.
+const MINUTE_MILLIS: Int = 60000
+const DAY_MILLIS: Int = 86400000
+
+/// Weekday of the first day of the epoch, 1970-01-01, counting Sunday as 0.
+const EPOCH_WEEKDAY: Int = 4
+
+/// The instant a database timestamp names: `YYYY-MM-DDTHH:MM:SS`, an optional fraction,
+/// then `Z`, nothing, or `±HH:MM`.
+export fn parseTimestamp(text: Str) -> Option[Time.Instant] {
+  if text.length() < 19 { return None }
+  let base = match Time.parse("%Y-%m-%dT%H:%M:%S", text.take(19)) {
+    case Ok(found) => found
+    case Err(_) => { return None }
+  }
+  let offset = zoneMinutes(withoutFraction(text.drop(19))) ?
+  Some(Time.instantOf(base.millis - offset * MINUTE_MILLIS))
+}
+
+/// The zone suffix after any fractional seconds.
+fn withoutFraction(rest: Str) -> Str {
+  if rest.startsWith(".") { StdText.dropWhile(rest.drop(1), |c: Char| c >= '0' && c <= '9') } else { rest }
+}
+
+/// Minutes east of UTC a zone suffix names.
+fn zoneMinutes(zone: Str) -> Option[Int] {
+  if zone.isEmpty() || zone == "Z" { return Some(0) }
+  let sign = if zone.startsWith("-") { -1 } else { 1 }
+  let digits = zone.drop(1).replace(":", "")
+  let hours = digits.take(2).toInt() ?
+  let minutes = if digits.length() >= 4 { digits.drop(2).take(2).toInt() ? } else { 0 }
+  Some(sign * (hours * 60 + minutes))
+}
+
+/// The instant as a UTC timestamp the database reads.
+export fn toTimestamp(instant: &Time.Instant) -> Str {
+  Result.unwrapOr(Time.toRfc3339(instant), "")
+}
+
+/// The wall-clock reading of an instant in Puerto Rico.
+export fn local(instant: &Time.Instant) -> Local {
+  let shifted = Time.instantOf(instant.millis + App.PUERTO_RICO_OFFSET_MINUTES * MINUTE_MILLIS)
+  let date = Result.unwrapOr(Time.toDate(&shifted), Time.Date{year: 1970, month: 1, day: 1})
+  let clock = Result.unwrapOr(Time.toTimeOfDay(&shifted), Time.TimeOfDay{hour: 0, minute: 0, second: 0})
+  Local {
+    year: date.year,
+    month: date.month,
+    day: date.day,
+    weekday: (dayNumber(instant) + EPOCH_WEEKDAY) % 7,
+    hour: clock.hour,
+    minute: clock.minute
+  }
+}
+
+/// Days since the epoch of the Puerto Rico calendar day an instant falls on.
+export fn dayNumber(instant: &Time.Instant) -> Int {
+  (instant.millis + App.PUERTO_RICO_OFFSET_MINUTES * MINUTE_MILLIS) / DAY_MILLIS
+}
+
+/// The instant a `datetime-local` field names, read as Puerto Rico time.
+export fn parseLocalInput(text: Str) -> Option[Time.Instant] {
+  let written = text.trim()
+  let pattern = if written.length() > 16 { "%Y-%m-%dT%H:%M:%S" } else { "%Y-%m-%dT%H:%M" }
+  match Time.parse(pattern, written) {
+    case Ok(found) => Some(Time.instantOf(found.millis - App.PUERTO_RICO_OFFSET_MINUTES * MINUTE_MILLIS))
+    case Err(_) => None
+  }
+}
+
+/// The value a `datetime-local` field shows for an instant, in Puerto Rico time.
+export fn localInput(instant: &Time.Instant) -> Str {
+  let at = local(instant)
+  pad(at.year, 4) + "-" + pad(at.month, 2) + "-" + pad(at.day, 2) + "T" + pad(at.hour, 2) + ":" + pad(at.minute, 2)
+}
+
+/// `HH:MM` on a 24-hour clock.
+export fn clock24(at: &Local) -> Str { pad(at.hour, 2) + ":" + pad(at.minute, 2) }
+
+/// `h:MM AM` on a 12-hour clock, as Puerto Rico writes times.
+export fn clock12(at: &Local) -> Str {
+  let hour = if at.hour % 12 == 0 { 12 } else { at.hour % 12 }
+  let suffix = if at.hour < 12 { "AM" } else { "PM" }
+  show(hour) + ":" + pad(at.minute, 2) + " " + suffix
+}
+
+/// The current instant.
+export fn now() -> Time.Instant { Time.currentInstant() }
+
+/// Seconds since the epoch, now.
+export fn nowSeconds() -> Int { Time.currentInstant().millis / 1000 }
+
+/// A number written with leading zeros to a width.
+fn pad(value: Int, width: Int) -> Str { StdText.padLeft(show(value), width, "0") }

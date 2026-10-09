@@ -1,0 +1,21 @@
+/** @Domain.Consent.Cookies — a visitor's cookie choice */
+module Domain.Consent
+
+/** @Domain.Consent.Choice — which optional cookie uses a visitor allowed */
+export type Choice = { analytics: Bool, marketing: Bool, version: Str }
+
+/// The cookie value a choice is remembered by: `v1:analytics,marketing` or `v1:necessary`.
+export fn encode(choice: &Choice) -> Str {
+  var allowed: Array[Str] = []
+  if choice.analytics { allowed = allowed.push("analytics") }
+  if choice.marketing { allowed = allowed.push("marketing") }
+  "v" + choice.version + ":" + (if allowed.isEmpty() { "necessary" } else { allowed.join(",") })
+}
+
+/// The choice a cookie value remembers, when it answers the current version.
+export fn decode(value: Str, version: Str) -> Option[Choice] {
+  let prefix = "v" + version + ":"
+  if !value.startsWith(prefix) { return None }
+  let allowed = value.drop(prefix.length()).split(",")
+  Some(Choice{analytics: allowed.contains("analytics"), marketing: allowed.contains("marketing"), version: version})
+}

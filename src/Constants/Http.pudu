@@ -1,0 +1,41 @@
+/** @Constants.Http.Policies — cache, security, and media-type values */
+module Constants.Http
+
+/// HTML pages.
+export const HTML: Str = "text/html; charset=utf-8"
+/// JSON answers to scripts.
+export const JSON: Str = "application/json; charset=utf-8"
+/// The sitemap.
+export const XML: Str = "application/xml; charset=utf-8"
+/// `robots.txt`.
+export const TEXT: Str = "text/plain; charset=utf-8"
+/// The web app manifest.
+export const MANIFEST: Str = "application/manifest+json"
+/// A calendar file for one event.
+export const CALENDAR: Str = "text/calendar; charset=utf-8"
+
+/// Pages that depend on who is asking: never stored by a shared cache.
+export const CACHE_PRIVATE: Str = "private, no-store"
+/// Pages a guest sees: the CDN keeps them a minute and serves stale for ten while it refreshes.
+export const CACHE_PUBLIC_PAGE: Str = "public, max-age=0, s-maxage=60, stale-while-revalidate=600"
+/// Reference documents (sitemap, manifest, robots): an hour at the CDN.
+export const CACHE_REFERENCE: Str = "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
+
+/// The header scripts set on every request they send.
+export const REQUESTED_WITH: Str = "x-requested-with"
+/// Its value.
+export const REQUESTED_WITH_VALUE: Str = "boricua"
+
+/// Where scripts, styles, images, map tiles, and connections may come from.
+export const CONTENT_SECURITY_POLICY: Str = "default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://*.supabase.co https://accounts.google.com; object-src 'none'; upgrade-insecure-requests"
+
+/// Headers every response carries.
+export const SECURITY_HEADERS: Array[(Str, Str)] = [
+  ("content-security-policy", CONTENT_SECURITY_POLICY),
+  ("x-content-type-options", "nosniff"),
+  ("referrer-policy", "strict-origin-when-cross-origin"),
+  ("permissions-policy", "geolocation=(self), camera=(), microphone=(), payment=()"),
+  ("strict-transport-security", "max-age=63072000; includeSubDomains; preload"),
+  ("cross-origin-opener-policy", "same-origin"),
+  ("x-frame-options", "DENY")
+]

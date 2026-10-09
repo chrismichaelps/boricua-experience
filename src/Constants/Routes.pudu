@@ -1,0 +1,81 @@
+/** @Constants.Routes.Paths — every address the server answers */
+module Constants.Routes
+
+/// Home: search, categories, and recommendations.
+export const HOME: Str = "/"
+/// Search results and filters.
+export const SEARCH: Str = "/search"
+/// The map of upcoming events.
+export const MAP: Str = "/map"
+/// Prefix of an event page; the slug follows.
+export const EVENT_PREFIX: Str = "/e/"
+export const EVENT: Str = "/e/:slug"
+export const EVENT_EDIT: Str = "/e/:slug/edit"
+export const EVENT_MANAGE: Str = "/e/:slug/requests"
+export const EVENT_JOIN: Str = "/e/:slug/join"
+export const EVENT_WITHDRAW: Str = "/e/:slug/withdraw"
+export const EVENT_SAVE: Str = "/e/:slug/save"
+export const EVENT_REACT: Str = "/e/:slug/react"
+export const EVENT_REPORT: Str = "/e/:slug/report"
+export const EVENT_CANCEL: Str = "/e/:slug/cancel"
+export const EVENT_CALENDAR: Str = "/e/:slug/calendar.ics"
+/// A decision on one join request.
+export const REQUEST_DECIDE: Str = "/requests/:id/decide"
+/// Prefix of a category page; the slug follows.
+export const CATEGORY_PREFIX: Str = "/c/"
+export const CATEGORY: Str = "/c/:slug"
+/// Prefix of a municipality page; the slug follows.
+export const TOWN_PREFIX: Str = "/pueblo/"
+export const TOWN: Str = "/pueblo/:slug"
+/// Prefix of a public profile; the account id follows.
+export const PROFILE_PREFIX: Str = "/u/"
+export const PROFILE: Str = "/u/:id"
+/// Publishing a new event.
+export const CREATE: Str = "/create"
+/// The member's requests, saved events, and organized events.
+export const ACTIVITY: Str = "/activity"
+export const NOTIFICATIONS: Str = "/notifications"
+export const NOTIFICATIONS_READ: Str = "/notifications/read"
+/// The member's profile and settings.
+export const ACCOUNT: Str = "/account"
+export const ACCOUNT_PROFILE: Str = "/account/profile"
+export const ACCOUNT_PREFERENCES: Str = "/account/preferences"
+export const ACCOUNT_PASSWORD: Str = "/account/password"
+export const ACCOUNT_EXPORT: Str = "/account/export"
+export const ACCOUNT_LOCATION_HISTORY: Str = "/account/location-history"
+export const ACCOUNT_PAUSE: Str = "/account/pause"
+export const ACCOUNT_REACTIVATE: Str = "/account/reactivate"
+export const ACCOUNT_DELETE: Str = "/account/delete"
+export const SIGN_IN: Str = "/signin"
+export const SIGN_UP: Str = "/signup"
+export const SIGN_OUT: Str = "/signout"
+export const RECOVER: Str = "/recover"
+export const RESET_PASSWORD: Str = "/reset-password"
+export const AUTH_GOOGLE: Str = "/auth/google"
+export const AUTH_CALLBACK: Str = "/auth/callback"
+/// Age, terms, and privacy confirmation for accounts that have not given them.
+export const ONBOARDING: Str = "/welcome"
+export const ADMIN: Str = "/admin"
+export const ADMIN_REPORT: Str = "/admin/reports/:id"
+export const TERMS: Str = "/terms"
+export const PRIVACY: Str = "/privacy"
+export const COOKIES: Str = "/cookies"
+export const ABOUT: Str = "/about"
+export const OFFLINE: Str = "/offline"
+/// Language choice and cookie consent, both posted from every page.
+export const LANGUAGE: Str = "/language"
+export const CONSENT: Str = "/consent"
+export const SITEMAP: Str = "/sitemap.xml"
+export const ROBOTS: Str = "/robots.txt"
+export const MANIFEST: Str = "/manifest.webmanifest"
+export const HEALTH: Str = "/health"
+/// JSON endpoints read by the browser scripts.
+export const API_NEARBY: Str = "/api/nearby"
+export const API_SUGGEST: Str = "/api/suggest"
+export const API_LOCATION: Str = "/api/location"
+export const API_LOCATION_STOP: Str = "/api/location/stop"
+export const API_PARTICIPANTS: Str = "/api/e/:slug/positions"
+/// Static assets served by the CDN, or by the local server in development.
+export const ASSETS_PREFIX: Str = "/assets/"
+export const SERVICE_WORKER: Str = "/sw.js"
+export const FAVICON: Str = "/favicon.ico"

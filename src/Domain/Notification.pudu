@@ -1,0 +1,29 @@
+/** @Domain.Notification.Inbox — in-app notifications */
+module Domain.Notification
+
+import Std.Json as Json
+
+/** @Domain.Notification.EventRef — the event a notification is about */
+export type EventRef = { slug: Str, title: Str, @json("starts_at") startsAt: Str } derives Json.Decode
+
+/** @Domain.Notification.Notification — one message in the inbox */
+export type Notification = {
+  id: Int,
+  kind: Str,
+  read: Bool,
+  @json("created_at") createdAt: Str,
+  event: Option[EventRef],
+  @json("actor_name") actorName: Option[Str],
+  data: Json.Json
+} derives Json.Decode
+
+/// The note an organizer attached to a decision, when there is one.
+export fn note(notification: &Notification) -> Str {
+  match Json.field(&notification.data, "note") {
+    case Some(value) => match Json.asText(&value) {
+      case Some(text) => text
+      case None => ""
+    }
+    case None => ""
+  }
+}

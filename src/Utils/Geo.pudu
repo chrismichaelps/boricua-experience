@@ -1,0 +1,20 @@
+/** @Utils.Geo.Island — coordinates on and around Puerto Rico */
+module Utils.Geo
+
+import Constants.App as App
+
+/// Whether a point lies within the bounding box of Puerto Rico and its islands.
+export fn inPuertoRico(lat: Float64, lng: Float64) -> Bool {
+  lat >= App.BOUNDS_SOUTH && lat <= App.BOUNDS_NORTH && lng >= App.BOUNDS_WEST && lng <= App.BOUNDS_EAST
+}
+
+/// A coordinate written as decimal degrees.
+export fn parseDegrees(text: Str) -> Option[Float64] { text.trim().toFloat() }
+
+/// `450 m`, `3.2 km`, or `25 km` for a distance in metres.
+export fn distanceLabel(meters: Int) -> Str {
+  if meters < 1000 { return show((meters / 10) * 10) + " m" }
+  if meters >= 10000 { return show((meters + 500) / 1000) + " km" }
+  let tenths = (meters + 50) / 100
+  show(tenths / 10) + "." + show(tenths % 10) + " km"
+}

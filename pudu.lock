@@ -1,0 +1,50 @@
+# Written by pudu install. Do not edit by hand.
+version = 1
+
+[[package]]
+name = "@chrismichaelps/pudu-lang-environment"
+version = "0.1.0"
+source = "github+https://github.com/chrismichaelps/pudu-lang-environment#f1dd9eb253c94e49a3314ee34e169e0e53b65b4e"
+checksum = "sha256:c3ccabd4e9b854a20a5f66ae2b6b8eb066cb3ca1a71091ef444c94aee53244ee"
+root = "PuduLangEnvironment"
+dependencies = ["@chrismichaelps/pudu-lang-validator"]
+
+[[package]]
+name = "@chrismichaelps/pudu-lang-httpclient"
+version = "0.1.1"
+source = "github+https://github.com/chrismichaelps/pudu-lang-httpclient#433c7102477ef0583183c9aa94aa063c38390c8a"
+checksum = "sha256:98c8883d037b64c90271b1dc66a1b70a891dde54f3cfb436cedb7e47a45f26fc"
+root = "PuduLangHttpClient"
+dependencies = ["@chrismichaelps/pudu-lang-log", "@chrismichaelps/pudu-lang-resilience", "@chrismichaelps/pudu-lang-mediator"]
+
+[[package]]
+name = "@chrismichaelps/pudu-lang-log"
+version = "0.1.0"
+source = "github+https://github.com/chrismichaelps/pudu-lang-log#70fa2201b7e891755ff5ea3c35632219fdebd430"
+checksum = "sha256:1472e80a60fe4aff97534b2f5fbc9eabdd7c3b76847dd6d38c0ac044bda5e337"
+root = "PuduLangLog"
+dependencies = []
+
+[[package]]
+name = "@chrismichaelps/pudu-lang-mediator"
+version = "0.1.0"
+source = "github+https://github.com/chrismichaelps/pudu-lang-mediator#c5006171b797256d0668a46272e2df0b754ebae2"
+checksum = "sha256:9000102f026013ecdb308b08705e2a3e8f181e3da1cddd27e81b14a0ecf40798"
+root = "PuduLangMediator"
+dependencies = ["@chrismichaelps/pudu-lang-validator", "@chrismichaelps/pudu-lang-log", "@chrismichaelps/pudu-lang-resilience"]
+
+[[package]]
+name = "@chrismichaelps/pudu-lang-resilience"
+version = "0.1.0"
+source = "github+https://github.com/chrismichaelps/pudu-lang-resilience#15486d674af2be07e947fb165f386ffe80931cb8"
+checksum = "sha256:d9c0f54049da47230c85e924c6254546292a01c2576a6b1e133e5ebc8eb761e6"
+root = "PuduLangResilience"
+dependencies = []
+
+[[package]]
+name = "@chrismichaelps/pudu-lang-validator"
+version = "0.1.1"
+source = "github+https://github.com/chrismichaelps/pudu-lang-validator#931cef8fa717633ba96afa85f1844ceecd803a0b"
+checksum = "sha256:be34307e1a930793de5128607c6721fccb41bd40ac37e3cb8b7b9539518086b3"
+root = "PuduLangValidator"
+dependencies = []

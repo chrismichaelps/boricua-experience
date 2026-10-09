@@ -1,0 +1,13 @@
+/** @Utils.Query.String — query strings for links */
+module Utils.Query
+
+import Std.Url as Url
+
+/// `?a=1&b=2` from the pairs whose value is not empty, or nothing when none are.
+export fn render(pairs: &Array[(Str, Str)]) -> Str {
+  var kept: Array[Str] = []
+  for pair in *pairs {
+    if !pair[1].isEmpty() { kept = kept.push(Url.encodeComponent(pair[0]) + "=" + Url.encodeComponent(pair[1])) }
+  }
+  if kept.isEmpty() { "" } else { "?" + kept.join("&") }
+}

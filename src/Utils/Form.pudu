@@ -1,0 +1,24 @@
+/** @Utils.Form.Fields — values read from a posted form */
+module Utils.Form
+
+import Std.Option as Option
+import Utils.Text as Text
+
+/// A field's text with space collapsed, or empty when absent.
+export fn text(fields: &Map[Str, Str], name: Str) -> Str { Text.collapse(Option.unwrapOr(fields.get(name), "")) }
+
+/// A field's text as written, line breaks kept, trimmed at both ends.
+export fn paragraph(fields: &Map[Str, Str], name: Str) -> Str {
+  Option.unwrapOr(fields.get(name), "").replace("\r\n", "\n").trim()
+}
+
+/// Whether a checkbox was ticked.
+export fn flag(fields: &Map[Str, Str], name: Str) -> Bool {
+  match fields.get(name) {
+    case Some(value) => value == "on" || value == "true" || value == "1" || value == "yes"
+    case None => false
+  }
+}
+
+/// A whole number field; nothing when empty or not a number.
+export fn whole(fields: &Map[Str, Str], name: Str) -> Option[Int] { text(fields, name).toInt() }

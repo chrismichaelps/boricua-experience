@@ -1,0 +1,21 @@
+/** @Test.Support.Fixtures — recorded database API answers */
+module Support.Fixtures
+
+import Std.Io as Io
+import Std.Json as Json
+
+/// The text of a fixture file under `test/Fixtures/`.
+export fn text(name: Str) -> Str {
+  match Io.read("test/Fixtures/" + name) {
+    case Ok(found) => found
+    case Err(problem) => panic("missing fixture " + name + ": " + problem)
+  }
+}
+
+/// A fixture file read as JSON.
+export fn json(name: Str) -> Json.Json {
+  match Json.decode(text(name)) {
+    case Ok(found) => found
+    case Err(problem) => panic("unreadable fixture " + name + ": " + Json.explain(&problem))
+  }
+}

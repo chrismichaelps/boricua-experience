@@ -1,0 +1,36 @@
+/** @Utils.Cookie.Header — cookie headers read and written */
+module Utils.Cookie
+
+import Std.Url as Url
+
+/** @Utils.Cookie.Attributes — how long a cookie lives and who may read it */
+export type Attributes = { maxAge: Int, httpOnly: Bool, secure: Bool, sameSite: Str }
+
+/// The cookies a `Cookie` header carries, by name. A name written twice keeps its first value.
+export fn parse(header: Str) -> Map[Str, Str] {
+  var found: Map[Str, Str] = mapOf([])
+  for part in header.split(";") {
+    let pair = part.trim()
+    let equals = pair.indexOf("=")
+    if equals > 0 {
+      let name = pair.take(equals).trim()
+      if !found.containsKey(name) {
+        found = found.insert(name, Url.decodeComponent(pair.drop(equals + 1).trim()))
+      }
+    }
+  }
+  found
+}
+
+/// A `Set-Cookie` value for the whole site.
+export fn render(name: Str, value: Str, attributes: &Attributes) -> Str {
+  var parts = [name + "=" + Url.encodeComponent(value), "Path=/", "Max-Age=" + show(attributes.maxAge), "SameSite=" + attributes.sameSite]
+  if attributes.httpOnly { parts = parts.push("HttpOnly") }
+  if attributes.secure { parts = parts.push("Secure") }
+  parts.join("; ")
+}
+
+/// A `Set-Cookie` value that removes a cookie.
+export fn expire(name: Str, secure: Bool) -> Str {
+  render(name, "", &Attributes{maxAge: 0, httpOnly: true, secure: secure, sameSite: "Lax"})
+}

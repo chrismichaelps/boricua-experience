@@ -1,0 +1,31 @@
+/** @Domain.Session.Identity — who is visiting */
+module Domain.Session
+
+import Std.Json as Json
+
+/** @Domain.Session.Session — a signed-in member's tokens and identity */
+export type Session = {
+  accessToken: Str,
+  refreshToken: Str,
+  userId: Str,
+  email: Str,
+  provider: Str,
+  expiresAt: Int,
+  issuedAt: Int
+} derives Json.Encode, Json.Decode
+
+/** @Domain.Session.Flow — a sign-in in progress: the PKCE verifier and where to return */
+export type Flow = { verifier: Str, returnTo: Str, purpose: Str } derives Json.Encode, Json.Decode
+
+/** @Domain.Session.Tokens — what the identity provider answers on sign-in or refresh */
+export type Tokens = {
+  @json("access_token") accessToken: Str,
+  @json("refresh_token") refreshToken: Str
+} derives Json.Decode
+
+/// Purposes of a flow: signing in, or recovering a password.
+export const SIGN_IN: Str = "signin"
+export const RECOVERY: Str = "recovery"
+
+/// Whether a session was opened with an email and password.
+export fn usesPassword(session: &Session) -> Bool { session.provider == "email" }

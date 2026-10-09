@@ -1,0 +1,42 @@
+/** @Constants.App.Identity — names, versions, and fixed facts */
+module Constants.App
+
+/// The product name shown in titles, the manifest, and structured data.
+export const SITE_NAME: Str = "Boricua Experience"
+
+/// The name an installed app shows under its icon.
+export const SHORT_NAME: Str = "Boricua"
+
+/// The version of the terms of use members accept.
+export const TERMS_VERSION: Str = "2026-10"
+
+/// The version of the privacy policy members accept.
+export const PRIVACY_VERSION: Str = "2026-10"
+
+/// The version of the cookie notice a consent choice answers.
+export const COOKIE_POLICY_VERSION: Str = "1"
+
+/// The browser theme colour, the ocean blue of the palette.
+export const THEME_COLOR: Str = "#1878ec"
+
+/// Minutes Puerto Rico is offset from UTC; Atlantic Standard Time all year.
+export const PUERTO_RICO_OFFSET_MINUTES: Int = -240
+
+/// The minimum age of a member.
+export const MINIMUM_AGE: Int = 18
+
+/// Query suffix appended to stylesheet and script addresses so a deployment replaces cached copies.
+export const ASSET_VERSION: Str = "1"
+
+/// The contact address for privacy and legal requests.
+export const PRIVACY_EMAIL: Str = "privacidad@boricuaexperience.com"
+
+/// The bounding box of Puerto Rico and its islands: south, north, west, east.
+export const BOUNDS_SOUTH: Float64 = 17.5
+export const BOUNDS_NORTH: Float64 = 18.7
+export const BOUNDS_WEST: Float64 = -67.5
+export const BOUNDS_EAST: Float64 = -65.1
+
+/// The map's default centre, between San Juan and the island's middle.
+export const MAP_CENTER_LAT: Float64 = 18.2208
+export const MAP_CENTER_LNG: Float64 = -66.5901
