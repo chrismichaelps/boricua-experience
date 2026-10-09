@@ -1,0 +1,27 @@
+/** @Web.Access.Log — one structured event per request */
+module Web.Access
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Time as Time
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
+
+/// The event written for every request; the query string is never written.
+export const COMPLETED: Str = "HTTP \{Method\} \{Path\} responded \{Status\} in \{Elapsed\} ms"
+
+/// The response, with its access event written.
+export fn around(logger: &Logger.Logger, request: Route.Request, handle: Route.Handler) -> Http.Response {
+  let began = Time.elapsed()
+  let response = handle(request)
+  let took = Time.elapsed() - began
+  let values = [Value.text(Http.methodName(&request.message.method)), Value.text(request.path), Value.int(response.status.code), Value.int(took)]
+  if response.status.code >= 500 { logger.error(COMPLETED, values) } else { logger.information(COMPLETED, values) }
+  response
+}
+
+/// The same as middleware for the socket server.
+export fn middleware(logger: &Logger.Logger) -> Route.Middleware {
+  let held = *logger
+  fn(request: Route.Request, next: Route.Handler) -> Http.Response { around(&held, request, next) }
+}

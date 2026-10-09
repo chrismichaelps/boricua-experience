@@ -1,0 +1,41 @@
+/** @Web.Static.Files — the public folder served by the development server */
+module Web.Static
+
+import Std.Http as Http
+import Std.Http.Server.Reply as Reply
+import Std.Http.Server.Route as Route
+import Std.Io as Io
+import Std.Option as Option
+import Constants.Routes as Routes
+
+/// Media types by file extension.
+const TYPES: Map[Str, Str] = mapOf([
+  ("css", "text/css; charset=utf-8"),
+  ("js", "text/javascript; charset=utf-8"),
+  ("json", "application/json"),
+  ("svg", "image/svg+xml"),
+  ("png", "image/png"),
+  ("jpg", "image/jpeg"),
+  ("webp", "image/webp"),
+  ("ico", "image/x-icon"),
+  ("woff2", "font/woff2"),
+  ("txt", "text/plain; charset=utf-8"),
+  ("webmanifest", "application/manifest+json")
+])
+
+/// Serves files under `root` for asset paths, the service worker, and the favicon; passes the rest on.
+export fn middleware(root: Str) -> Route.Middleware {
+  fn(request: Route.Request, next: Route.Handler) -> Http.Response {
+    let path = request.path
+    let served = path.startsWith(Routes.ASSETS_PREFIX) || path == Routes.SERVICE_WORKER || path == Routes.FAVICON
+    if !served || path.contains("..") { return next(request) }
+    let extension = Option.unwrapOr(Option.fromArray(&path.split(".").reverse()), "")
+    match Io.readAllBytes(root + path) {
+      case Ok(bytes) => {
+        let response = Reply.bytes(200, Option.unwrapOr(TYPES.get(extension), "application/octet-stream"), &bytes)
+        Http.Response{..response, headers: response.headers.push(("cache-control", if path == Routes.SERVICE_WORKER { "no-cache" } else { "public, max-age=60" }))}
+      }
+      case Err(_) => next(request)
+    }
+  }
+}

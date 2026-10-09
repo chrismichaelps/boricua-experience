@@ -1,0 +1,49 @@
+/** @Main.Server.Entry — the application on a local socket for development */
+module Main
+
+import Std.Http.Server as Server
+import Std.Io as Io
+import Std.Result as Result
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
+import App.Assembly as Assembly
+import App.Logging as Logging
+import Config.Settings as Settings
+import Constants.Limits as Limits
+import Services.Runtime as Runtime
+import Web.Access as Access
+import Web.Router as Router
+import Web.Static as Static
+
+/// The folder holding the stylesheets, scripts, images, fonts, and service worker.
+const PUBLIC_ROOT: Str = "public"
+
+/// Serves the application until stopped.
+fn main() -> Int {
+  let settings = match Settings.load() {
+    case Ok(found) => found
+    case Err(problem) => { return stopped(problem) }
+  }
+  let logs = Logging.logs(&settings)
+  let app = match Result.andThen(Runtime.create(&settings), |runtime: Runtime.Runtime| Assembly.assemble(&runtime, &logs)) {
+    case Ok(built) => built
+    case Err(problem) => { return stopped(problem) }
+  }
+  match Server.start(settings.host, settings.port) {
+    case Ok(live) => {
+      logs.requests.information("Boricua Experience listening on \{Url\}", [Value.text("http://" + settings.host + ":" + show(Server.portOf(&live)))])
+      let served = Server.server(&Router.routes(&app)).withLimits(Limits.BODY_BYTES_MAX, Limits.BODY_BYTES_MAX).using(Static.middleware(PUBLIC_ROOT)).using(Access.middleware(&logs.requests))
+      let ran = Server.run(&served, &live, settings.connections)
+      let _stopped = Server.stop(&live)
+      Logger.close(&logs.requests)
+      if Result.isOk(&ran) { 0 } else { 1 }
+    }
+    case Err(_) => stopped("could not listen on " + settings.host + ":" + show(settings.port))
+  }
+}
+
+/// A start-up failure, said on standard error.
+fn stopped(reason: Str) -> Int {
+  let _said = Io.writeErrorLine("Boricua Experience could not start: " + reason)
+  1
+}

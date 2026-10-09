@@ -1,0 +1,153 @@
+/** @Web.Handlers.Account.Routes — the account page, profiles, notifications, and onboarding */
+module Web.Handlers.Account
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Cookies as Cookies
+import Constants.Routes as Routes
+import Domain.Credentials as Credentials
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import Domain.Session as Session
+import Utils.Form as Form
+import View.Pages.Account as AccountPage
+import View.Pages.Auth as AuthPage
+import View.Pages.Notifications as NotificationsPage
+import View.Pages.Profile as ProfilePage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The account routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.ACCOUNT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| accountPage(&held, &visitor, &session, None))),
+    Route.post(Routes.ACCOUNT_PROFILE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveProfile(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_PREFERENCES, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| savePreferences(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_PASSWORD, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changePassword(&held, &visitor, &session))),
+    Route.get(Routes.PROFILE, Serve.page(app, |visitor: Context.Visitor| profilePage(&held, &visitor))),
+    Route.get(Routes.NOTIFICATIONS, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| inbox(&held, &visitor, &session))),
+    Route.post(Routes.NOTIFICATIONS_READ, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| markRead(&held, &visitor, &session))),
+    Route.get(Routes.ONBOARDING, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| welcome(&held, &visitor, None))),
+    Route.post(Routes.ONBOARDING, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| onboard(&held, &visitor, &session)))
+  ]
+}
+
+/// The account page, with the problem of the last form when there is one.
+export fn accountPage(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session, problem: Option[Problem.Problem]) -> Http.Response {
+  let me = match visitor.member {
+    case Some(found) => found
+    case None => match Serve.ask(app, &app.kinds.me, Serve.signed(session, ())) {
+      case Ok(found) => found
+      case Err(found) => { return Respond.problem(app, visitor, &found) }
+    }
+  }
+  match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => {
+      let status = match problem {
+        case Some(found) => Problem.status(&found)
+        case None => 200
+      }
+      Respond.page(status, &AccountPage.render(&Context.frame(app, visitor), &me, &catalog, session.email, Session.usesPassword(session), &problem))
+    }
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// The account page after a refused form, with the member reloaded for the shell.
+fn refused(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session, problem: &Problem.Problem) -> Http.Response {
+  match problem {
+    case Problem.Invalid(_) => accountPage(app, &Context.resolve(app, &visitor.request, true), session, Some(*problem))
+    case Problem.Refused(_) => accountPage(app, &Context.resolve(app, &visitor.request, true), session, Some(*problem))
+    case _ => Respond.problem(app, visitor, problem)
+  }
+}
+
+/// Saves the profile; a language change takes effect at once.
+fn saveProfile(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let edit = Profile.ProfileEdit{displayName: Form.text(&fields, "displayName"), bio: Form.paragraph(&fields, "bio"), homeMunicipality: Form.text(&fields, "town"), locale: Locale.code(&Locale.fromCode(Form.text(&fields, "locale")))}
+  match Serve.ask(app, &app.kinds.updateProfile, Serve.signed(session, edit)) {
+    case Ok(_) => Respond.withPreference(app, Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.saved_settings"), Cookies.LOCALE, edit.locale)
+    case Err(problem) => refused(app, visitor, session, &problem)
+  }
+}
+
+/// Saves the preferences.
+fn savePreferences(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let chosen = Profile.Preferences {
+    notifyRequestUpdates: Form.flag(&fields, "notifyRequestUpdates"),
+    notifyNewRequests: Form.flag(&fields, "notifyNewRequests"),
+    notifyReminders: Form.flag(&fields, "notifyReminders"),
+    notifyEventChanges: Form.flag(&fields, "notifyEventChanges"),
+    marketingOptIn: Form.flag(&fields, "marketingOptIn"),
+    locationVisibility: Form.text(&fields, "locationVisibility"),
+    showInAttendeeLists: Form.flag(&fields, "showInAttendeeLists")
+  }
+  match Serve.ask(app, &app.kinds.updatePreferences, Serve.signed(session, chosen)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT + "#preferences"), "flash.saved_settings")
+    case Err(problem) => refused(app, visitor, session, &problem)
+  }
+}
+
+/// Changes the password of an email account.
+fn changePassword(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.NewPassword{password: Option.unwrapOr(fields.get("password"), ""), confirmation: Option.unwrapOr(fields.get("confirmation"), "")}
+  match Serve.ask(app, &app.kinds.changePassword, Serve.signed(session, form)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.password_changed")
+    case Err(problem) => refused(app, visitor, session, &problem)
+  }
+}
+
+/// An organizer's public profile.
+fn profilePage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.profile, Serve.param(visitor, "id")) {
+    case Ok(person) => Respond.page(200, &ProfilePage.render(&Context.frame(app, visitor), &person))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The inbox.
+fn inbox(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.notifications, Serve.signed(session, ())) {
+    case Ok(notes) => Respond.page(200, &NotificationsPage.render(&Context.frame(app, visitor), &notes))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Marks the inbox read.
+fn markRead(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.markRead, Serve.signed(session, ())) {
+    case Ok(_) => Respond.redirect(Routes.NOTIFICATIONS)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The onboarding page.
+fn welcome(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
+  let name = match visitor.member {
+    case Some(member) => member.displayName
+    case None => ""
+  }
+  if Option.holds(&visitor.member, |member: Profile.MyProfile| member.onboarded) && problem == None {
+    return Respond.redirect(Respond.returnPath(Route.queryParam(&visitor.request, "return")))
+  }
+  Respond.page(if problem == None { 200 } else { 422 }, &AuthPage.welcome(&Context.frame(app, visitor), name, Respond.returnPath(Option.orElse(Route.queryParam(&visitor.request, "return"), Route.fieldsOf(&visitor.request).get("return"))), &problem))
+}
+
+/// Records the confirmations and continues.
+fn onboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.Onboarding{displayName: Form.text(&fields, "displayName"), adult: Form.flag(&fields, "adult"), terms: Form.flag(&fields, "terms"), privacy: Form.flag(&fields, "privacy")}
+  match Serve.ask(app, &app.kinds.onboard, Serve.signed(session, Messages.Onboard{form: form, locale: Locale.code(&visitor.locale)})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.welcome")
+    case Err(problem) => welcome(app, &Context.resolve(app, &visitor.request, true), Some(problem))
+  }
+}

@@ -1,0 +1,35 @@
+/** @View.Calendar.Ics — one event as a calendar file */
+module View.Calendar
+
+import Constants.App as App
+import Domain.Event as Event
+
+/// A timestamp as an iCalendar UTC date-time, `YYYYMMDDTHHMMSSZ`.
+fn stamp(timestamp: Str) -> Str { timestamp.take(19).replace("-", "").replace(":", "") + "Z" }
+
+/// Text escaped for an iCalendar value.
+fn escaped(text: Str) -> Str { text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n") }
+
+/// The event as a single-event calendar, with its page as the address.
+export fn ics(siteUrl: Str, card: &Event.Card, path: Str) -> Str {
+  [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//" + App.SITE_NAME + "//ES",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:" + card.id + "@" + siteUrl.replace("https://", "").replace("http://", ""),
+    "DTSTAMP:" + stamp(card.startsAt),
+    "DTSTART:" + stamp(card.startsAt),
+    "DTEND:" + stamp(card.endsAt),
+    "SUMMARY:" + escaped(card.title),
+    "DESCRIPTION:" + escaped(card.summary + "\n" + siteUrl + path),
+    "LOCATION:" + escaped(card.venueName + ", " + card.municipality.name + ", Puerto Rico"),
+    "URL:" + siteUrl + path,
+    if Event.isCancelled(card) { "STATUS:CANCELLED" } else { "STATUS:CONFIRMED" },
+    "END:VEVENT",
+    "END:VCALENDAR",
+    ""
+  ].join("\r\n")
+}

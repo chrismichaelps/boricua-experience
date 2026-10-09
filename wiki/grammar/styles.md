@@ -6,7 +6,7 @@ tags: [grammar]
 
 # Grammar — Styles
 
-One stylesheet built from tokens; light theme first, dark through `prefers-color-scheme`.
+One stylesheet built from tokens. The app is white-themed only: no dark scheme is offered, and `color-scheme: light` keeps form controls light on every device.
 
 ## Tokens
 
@@ -31,6 +31,7 @@ headings, 24/32 card headings, 32/40 app headings. Spacing on a 4 px base. Radii
 - The ocean blue is never a page background.
 - Touch targets at least 44 px; focus is a visible 2 px ocean ring.
 - Motion respects `prefers-reduced-motion`.
+- The palette, type scale, radii, and flat surfaces follow the design tokens; layouts and compositions are the app's own.
 
 ## Referenced by
 

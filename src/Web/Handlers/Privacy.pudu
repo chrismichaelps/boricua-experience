@@ -1,0 +1,97 @@
+/** @Web.Handlers.Privacy.Routes — cookie choices, language, export, pause, deletion */
+module Web.Handlers.Privacy
+
+import Std.Http as Http
+import Std.Http.Server.Reply as Reply
+import Std.Http.Server.Route as Route
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.App as App
+import Constants.Cookies as Cookies
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import Domain.Consent as Consent
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Form as Form
+import Utils.Cookie as Cookie
+import Web.Context as Context
+import Web.Handlers.Account as Account
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The privacy routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.post(Routes.CONSENT, Serve.action(app, |visitor: Context.Visitor| consent(&held, &visitor))),
+    Route.post(Routes.LANGUAGE, Serve.action(app, |visitor: Context.Visitor| language(&held, &visitor))),
+    Route.post(Routes.ACCOUNT_EXPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| exportData(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_LOCATION_HISTORY, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| simple(&held, &visitor, Serve.ask(&held, &held.kinds.eraseLocation, Serve.signed(&session, ())), "flash.history_deleted"))),
+    Route.post(Routes.ACCOUNT_PAUSE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| simple(&held, &visitor, Serve.ask(&held, &held.kinds.pause, Serve.signed(&session, ())), "flash.paused"))),
+    Route.post(Routes.ACCOUNT_REACTIVATE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| reactivate(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_DELETE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| deleteAccount(&held, &visitor, &session)))
+  ]
+}
+
+/// Back to the account page with a message, or the problem.
+fn simple(app: &Assembly.App, visitor: &Context.Visitor, outcome: Result[(), Problem.Problem], flash: Str) -> Http.Response {
+  match outcome {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), flash)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Remembers and records a cookie choice; `reset` forgets it so the banner asks again.
+fn consent(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let back = Respond.returnPath(fields.get("return"))
+  let chosen = Form.text(&fields, "choice")
+  if chosen == "reset" { return Respond.withCookie(Respond.redirect(back), Cookie.expire(Cookies.CONSENT, app.runtime.secureCookies)) }
+  let choice = Consent.Choice {
+    analytics: chosen == "all" || (chosen == "custom" && Form.flag(&fields, "analytics")),
+    marketing: chosen == "all" || (chosen == "custom" && Form.flag(&fields, "marketing")),
+    version: App.COOKIE_POLICY_VERSION
+  }
+  let _recorded = Serve.ask(app, &app.kinds.cookies, Serve.visit(visitor, Messages.CookieChoice{subject: visitor.visitorId, choice: choice}))
+  var response = Respond.withPreference(app, Respond.redirect(back), Cookies.CONSENT, Consent.encode(&choice))
+  if visitor.newVisitor { response = Respond.withPreference(app, response, Cookies.VISITOR, visitor.visitorId) }
+  response
+}
+
+/// Switches the language and returns to the page.
+fn language(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  Respond.withPreference(app, Respond.redirect(Respond.returnPath(fields.get("return"))), Cookies.LOCALE, Locale.code(&Locale.fromCode(Form.text(&fields, "lang"))))
+}
+
+/// Everything held about the member, as a JSON download.
+fn exportData(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.exportData, Serve.signed(session, ())) {
+    case Ok(document) => Http.Response{..Reply.text(200, document), headers: [
+          ("content-type", HttpConstants.JSON),
+          ("content-disposition", "attachment; filename=\"boricua-experience-data.json\""),
+          ("cache-control", HttpConstants.CACHE_PRIVATE)
+        ]}
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Reactivates a paused account.
+fn reactivate(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  simple(app, visitor, Serve.ask(app, &app.kinds.reactivate, Serve.signed(session, ())), "flash.reactivated")
+}
+
+/// Deletes the account after confirming presence, and ends the session.
+fn deleteAccount(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let password = match Serve.fields(visitor).get("password") {
+    case Some(given) => given
+    case None => ""
+  }
+  match Serve.ask(app, &app.kinds.deleteAccount, Serve.signed(session, password)) {
+    case Ok(_) => Respond.withFlash(app, Respond.withoutSession(app, Respond.redirect(Routes.HOME)), "flash.deleted")
+    case Err(Problem.Refused("reauthenticate")) => Respond.withFlash(app, Respond.withoutSession(app, Respond.redirect(Routes.SIGN_IN + "?return=" + Routes.ACCOUNT)), "problem.reauthenticate")
+    case Err(problem) => Account.accountPage(app, &Context.resolve(app, &visitor.request, true), session, Some(problem))
+  }
+}

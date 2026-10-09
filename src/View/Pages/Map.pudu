@@ -17,10 +17,10 @@ import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
 
-/// The pins as JSON the map script reads: slug, title, when, price, place, and position.
-fn pinsJson(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Str {
+/// The pins the map script reads: slug, title, when, price, place, icon, cover, and position.
+export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json {
   let now = StdTime.instantOf(frame.nowMillis)
-  Json.encode(&Json.list(&cards.map(|card: Event.Card| Json.object(&[
+  Json.list(&cards.map(|card: Event.Card| Json.object(&[
             ("slug", Json.Text(card.slug)),
             ("title", Json.Text(card.title)),
             ("when", Json.Text(Dates.when(&frame.locale, card.startsAt, card.endsAt, &now))),
@@ -30,8 +30,11 @@ fn pinsJson(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Str {
             ("cover", Json.Text(EventCard.coverOf(&card))),
             ("lat", Json.Fractional(show(card.lat))),
             ("lng", Json.Fractional(show(card.lng)))
-          ])))).replace("</", "<\\/")
+          ])))
 }
+
+/// The pins as JSON text safe inside a script element.
+fn pinsJson(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Str { Json.encode(&pinsValue(frame, cards)).replace("</", "<\\/") }
 
 /// The map page: the map, the live-location switch, and a sheet listing the pins.
 export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], startNear: Bool) -> Html.Html {

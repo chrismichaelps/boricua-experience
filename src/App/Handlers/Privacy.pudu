@@ -15,6 +15,7 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.cookies, |asked: Messages.Visit[Messages.CookieChoice], _context: Context.Context| Messaging.lift(Privacy.recordCookies(&held, asked.input.subject, &asked.input.choice, &asked.session))),
     Registration.handler(&kinds.exportData, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Privacy.exportData(&held, &asked.session))),
     Registration.handler(&kinds.pause, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Privacy.pause(&held, &asked.session))),
+    Registration.handler(&kinds.reactivate, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Privacy.reactivate(&held, &asked.session))),
     Registration.handler(&kinds.deleteAccount, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Privacy.delete(&held, &asked.session, asked.input)))
   ]
 }

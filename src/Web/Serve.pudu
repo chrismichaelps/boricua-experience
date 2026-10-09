@@ -1,0 +1,101 @@
+/** @Web.Serve.Handlers — the shapes every route handler takes */
+module Web.Serve
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import PuduLangMediator.Mediator as Mediator
+import PuduLangMediator.Request as Request
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Web.Context as Context
+import Web.Guard as Guard
+import Web.Respond as Respond
+
+/// Sends a message through the mediator and answers its value or problem.
+export fn ask[Q, R](app: &Assembly.App, kind: &Request.Kind[Q, R, Problem.Problem], message: Q) -> Result[R, Problem.Problem] {
+  Context.problemOf(Mediator.send(&app.mediator, kind, message))
+}
+
+/// A page any visitor may see.
+export fn page(app: &Assembly.App, handle: fn(Context.Visitor) -> Http.Response) -> Route.Handler {
+  let held = *app
+  fn(request: Route.Request) -> Http.Response {
+    let visitor = Context.resolve(&held, &request, true)
+    Respond.finish(&held, &visitor, gate(&held, &visitor, handle))
+  }
+}
+
+/// A page only a member may see; guests are sent to sign in.
+export fn memberPage(app: &Assembly.App, handle: fn(Context.Visitor, Session.Session) -> Http.Response) -> Route.Handler {
+  page(app, fn(visitor: Context.Visitor) -> Http.Response {
+      match visitor.session {
+        case Some(session) => handle(visitor, session)
+        case None => Respond.redirect(Routes.SIGN_IN + "?return=" + visitor.request.path)
+      }
+    })
+}
+
+/// A form post or script call that changes state: checked for origin and form token first.
+export fn action(app: &Assembly.App, handle: fn(Context.Visitor) -> Http.Response) -> Route.Handler {
+  let held = *app
+  fn(request: Route.Request) -> Http.Response {
+    let visitor = Context.resolve(&held, &request, false)
+    let answered = match Guard.check(&held, &visitor) {
+      case Some(refusal) => refusal
+      case None => handle(visitor)
+    }
+    Respond.finish(&held, &visitor, answered)
+  }
+}
+
+/// A state change only a member may make.
+export fn memberAction(app: &Assembly.App, handle: fn(Context.Visitor, Session.Session) -> Http.Response) -> Route.Handler {
+  let held = *app
+  action(app, fn(visitor: Context.Visitor) -> Http.Response {
+      match visitor.session {
+        case Some(session) => handle(visitor, session)
+        case None => Respond.problem(&held, &visitor, &Problem.SignedOut)
+      }
+    })
+}
+
+/// A read for the app's scripts: JSON in and out, no member loading.
+export fn api(app: &Assembly.App, handle: fn(Context.Visitor) -> Http.Response) -> Route.Handler {
+  let held = *app
+  fn(request: Route.Request) -> Http.Response {
+    let visitor = Context.resolve(&held, &request, false)
+    Respond.finish(&held, &visitor, handle(visitor))
+  }
+}
+
+/// Sends an account that still owes its confirmations to onboarding before any other page.
+fn gate(app: &Assembly.App, visitor: &Context.Visitor, handle: fn(Context.Visitor) -> Http.Response) -> Http.Response {
+  match visitor.member {
+    case Some(member) => if !member.onboarded && !OPEN_PATHS.contains(visitor.request.path) {
+        Respond.redirect(Routes.ONBOARDING + "?return=" + visitor.request.path)
+      } else { handle(*visitor) }
+    case None => handle(*visitor)
+  }
+}
+
+/// Pages an account that has not finished onboarding may still read.
+const OPEN_PATHS: Set[Str] = setOf([Routes.ONBOARDING, Routes.TERMS, Routes.PRIVACY, Routes.COOKIES, Routes.ABOUT, Routes.OFFLINE])
+
+/// The value a member route reads from the request: a path parameter or a posted field.
+export fn param(visitor: &Context.Visitor, name: Str) -> Str { Option.unwrapOr(Route.param(&visitor.request, name), "") }
+
+/// The posted fields.
+export fn fields(visitor: &Context.Visitor) -> Map[Str, Str] { Route.fieldsOf(&visitor.request) }
+
+/// A query parameter, or empty.
+export fn query(visitor: &Context.Visitor, name: Str) -> Str { Option.unwrapOr(Route.queryParam(&visitor.request, name), "") }
+
+/// The signed message of a member.
+export fn signed[T](session: &Session.Session, input: T) -> Messages.Signed[T] { Messages.Signed{session: *session, input: input} }
+
+/// The message of any visitor.
+export fn visit[T](visitor: &Context.Visitor, input: T) -> Messages.Visit[T] { Messages.Visit{session: visitor.session, input: input} }

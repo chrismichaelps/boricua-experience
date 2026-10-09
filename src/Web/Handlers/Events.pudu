@@ -1,0 +1,155 @@
+/** @Web.Handlers.Events.Routes — event pages, calendar files, publishing, editing, cancelling */
+module Web.Handlers.Events
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import Domain.Draft as Draft
+import Domain.Event as Event
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Form as Form
+import View.Calendar as Calendar
+import View.Pages.Event as EventPage
+import View.Pages.EventForm as EventForm
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The draft a posted publishing form describes.
+export fn draftOf(fields: &Map[Str, Str]) -> Draft.Draft {
+  Draft.Draft {
+    title: Form.text(fields, "title"),
+    summary: Form.text(fields, "summary"),
+    description: Form.paragraph(fields, "description"),
+    instructions: Form.paragraph(fields, "instructions"),
+    category: Form.text(fields, "category"),
+    municipality: Form.text(fields, "municipality"),
+    venueName: Form.text(fields, "venueName"),
+    addressLine: Form.text(fields, "addressLine"),
+    lat: Form.text(fields, "lat"),
+    lng: Form.text(fields, "lng"),
+    startsAt: Form.text(fields, "startsAt"),
+    endsAt: Form.text(fields, "endsAt"),
+    visibility: Form.text(fields, "visibility"),
+    joinPolicy: Form.text(fields, "joinPolicy"),
+    capacity: Form.text(fields, "capacity"),
+    price: Form.text(fields, "price")
+  }
+}
+
+/// The event page and publishing routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.EVENT, Serve.page(app, |visitor: Context.Visitor| eventPage(&held, &visitor, None))),
+    Route.get(Routes.EVENT_CALENDAR, Serve.api(app, |visitor: Context.Visitor| calendar(&held, &visitor))),
+    Route.get(Routes.CREATE, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| publishForm(&held, &visitor, &EventForm.Creating, &Draft.blank(), None))),
+    Route.post(Routes.CREATE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| publish(&held, &visitor, &session))),
+    Route.get(Routes.EVENT_EDIT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| editForm(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_EDIT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| update(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_CANCEL, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| cancel(&held, &visitor, &session)))
+  ]
+}
+
+/// The event page, with the refusal of the last action when there is one.
+export fn eventPage(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
+  match Serve.ask(app, &app.kinds.event, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
+    case Ok(detail) => {
+      let status = match problem {
+        case Some(found) => Problem.status(&found)
+        case None => 200
+      }
+      Respond.page(status, &EventPage.render(&Context.frame(app, visitor), &detail, &problem))
+    }
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// The event as a calendar file.
+fn calendar(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.event, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
+    case Ok(detail) => Http.Response{..Respond.document(HttpConstants.CALENDAR, Calendar.ics(app.runtime.siteUrl, &detail.card, Routes.EVENT_PREFIX + detail.card.slug)), headers: [
+          ("content-type", HttpConstants.CALENDAR),
+          ("content-disposition", "attachment; filename=\"" + detail.card.slug + ".ics\""),
+          ("cache-control", HttpConstants.CACHE_PRIVATE)
+        ]}
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// The publishing form, filled and annotated.
+fn publishForm(app: &Assembly.App, visitor: &Context.Visitor, mode: &EventForm.Mode, draft: &Draft.Draft, problem: Option[Problem.Problem]) -> Http.Response {
+  match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => {
+      let status = match problem {
+        case Some(found) => Problem.status(&found)
+        case None => 200
+      }
+      Respond.page(status, &EventForm.render(&Context.frame(app, visitor), &catalog, mode, draft, &problem))
+    }
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// A form re-rendered with its problem; the visitor is resolved again with the member for the shell.
+fn refused(app: &Assembly.App, visitor: &Context.Visitor, mode: &EventForm.Mode, draft: &Draft.Draft, problem: &Problem.Problem) -> Http.Response {
+  match problem {
+    case Problem.Invalid(_) => publishForm(app, &Context.resolve(app, &visitor.request, true), mode, draft, Some(*problem))
+    case Problem.Refused(_) => publishForm(app, &Context.resolve(app, &visitor.request, true), mode, draft, Some(*problem))
+    case _ => Respond.problem(app, visitor, problem)
+  }
+}
+
+/// Publishes the posted draft and opens its page.
+fn publish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let draft = draftOf(&Serve.fields(visitor))
+  match Serve.ask(app, &app.kinds.publish, Serve.signed(session, draft)) {
+    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + published.slug), "flash.published")
+    case Err(problem) => refused(app, visitor, &EventForm.Creating, &draft, &problem)
+  }
+}
+
+/// The edit form of an event the member organizes.
+fn editForm(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  match Serve.ask(app, &app.kinds.editable, Serve.signed(session, slug)) {
+    case Ok((_, draft)) => publishForm(app, visitor, &EventForm.Editing(slug), &draft, None)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Saves the posted changes.
+fn update(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  let draft = draftOf(&Serve.fields(visitor))
+  let event = match Serve.ask(app, &app.kinds.editable, Serve.signed(session, slug)) {
+    case Ok((found, _)) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.update, Serve.signed(session, Messages.Edit{eventId: event.card.id, draft: draft})) {
+    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + saved.slug), "flash.updated")
+    case Err(problem) => refused(app, visitor, &EventForm.Editing(slug), &draft, &problem)
+  }
+}
+
+/// Cancels the event and returns to its page.
+fn cancel(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  let event = match Serve.ask(app, &app.kinds.event, Serve.visit(visitor, slug)) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.cancel, Serve.signed(session, event.card.id)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + slug), "flash.cancelled")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The id of the event at the request's slug, as the visitor may see it.
+export fn eventOf(app: &Assembly.App, visitor: &Context.Visitor) -> Result[Event.Detail, Problem.Problem] {
+  Serve.ask(app, &app.kinds.event, Serve.visit(visitor, Serve.param(visitor, "slug")))
+}

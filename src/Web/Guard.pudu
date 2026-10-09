@@ -1,0 +1,42 @@
+/** @Web.Guard.Forgery — state changes refused unless they come from this site's own pages */
+module Web.Guard
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import App.Assembly as Assembly
+import Domain.Problem as Problem
+import Services.Auth.Sessions as Sessions
+import Web.Context as Context
+import Web.Respond as Respond
+
+/// The refusal for a request that changes state from elsewhere, or nothing when it may proceed.
+/// The request must be a post from this site's origin (by `Origin`, else `Referer`), and a member's
+/// request must carry the session's form token as the `_token` field or the `x-csrf-token` header.
+export fn check(app: &Assembly.App, visitor: &Context.Visitor) -> Option[Http.Response] {
+  let request = &visitor.request
+  if request.message.method != Http.Post { return Some(Respond.problem(app, visitor, &Problem.Missing)) }
+  let origin = Option.orElse(Route.header(request, "origin"), Option.map(Route.header(request, "referer"), originOf))
+  match origin {
+    case Some(found) => if found != app.runtime.siteUrl { return Some(forbidden(app, visitor)) }
+    case None => { return Some(forbidden(app, visitor)) }
+  }
+  let session = visitor.session ?
+  let given = Option.unwrapOr(Option.orElse(Route.fieldsOf(request).get("_token"), Route.header(request, "x-csrf-token")), "")
+  if Sessions.formTokenValid(&app.runtime, &session, given) { None } else { Some(forbidden(app, visitor)) }
+}
+
+/// The scheme, host, and port of an address.
+fn originOf(address: Str) -> Str {
+  let scheme = address.indexOf("://")
+  if scheme < 0 { return "" }
+  let rest = address.drop(scheme + 3)
+  let slash = rest.indexOf("/")
+  address.take(scheme + 3) + (if slash < 0 { rest } else { rest.take(slash) })
+}
+
+/// The answer to a forged or foreign request.
+fn forbidden(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  Respond.problem(app, visitor, &Problem.Forbidden)
+}
+

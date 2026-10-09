@@ -1,0 +1,50 @@
+/** @Web.Handlers.Site.Routes — sitemap, robots, manifest, health, policies, and the offline page */
+module Web.Handlers.Site
+
+import Std.Http as Http
+import Std.Http.Server.Reply as Reply
+import Std.Http.Server.Route as Route
+import App.Assembly as Assembly
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import I18n.Translate as Translate
+import View.Pages.Errors as Errors
+import View.Pages.Legal as Legal
+import View.Seo as Seo
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The site routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.SITEMAP, Serve.api(app, |visitor: Context.Visitor| sitemap(&held, &visitor))),
+    Route.get(Routes.ROBOTS, Serve.api(app, |_visitor: Context.Visitor| Respond.document(HttpConstants.TEXT, Seo.robots(held.runtime.siteUrl)))),
+    Route.get(Routes.MANIFEST, Serve.api(app, |visitor: Context.Visitor| manifest(&visitor))),
+    Route.get(Routes.HEALTH, |_request: Route.Request| Http.Response{..Reply.text(200, "ok"), headers: [("cache-control", HttpConstants.CACHE_PRIVATE)]}),
+    Route.get(Routes.TERMS, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Terms)))),
+    Route.get(Routes.PRIVACY, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Privacy)))),
+    Route.get(Routes.COOKIES, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Cookies)))),
+    Route.get(Routes.ABOUT, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.About)))),
+    Route.get(Routes.OFFLINE, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Errors.offline(&Context.frame(&held, &visitor)))))
+  ]
+}
+
+/// The sitemap of every indexable address.
+fn sitemap(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.sitemap, ()) {
+    case Ok(entries) => Respond.document(HttpConstants.XML, Seo.sitemap(app.runtime.siteUrl, &entries))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The web app manifest in the visitor's language.
+fn manifest(visitor: &Context.Visitor) -> Http.Response {
+  let locale = visitor.locale
+  Respond.document(HttpConstants.MANIFEST, Seo.manifest(&locale, Translate.text(&locale, "home.description"), &[
+        (Translate.text(&locale, "nav.map"), Routes.MAP),
+        (Translate.text(&locale, "nav.create"), Routes.CREATE),
+        (Translate.text(&locale, "nav.activity"), Routes.ACTIVITY)
+      ]))
+}

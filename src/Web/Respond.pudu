@@ -1,0 +1,138 @@
+/** @Web.Respond.Answers — responses with their cookies, headers, and cache policy */
+module Web.Respond
+
+import Std.Html as Html
+import Std.Http as Http
+import Std.Http.Server.Reply as Reply
+import Std.Json as Json
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Codes as Codes
+import Constants.Cookies as Cookies
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Auth.Sealer as Sealer
+import Utils.Cookie as Cookie
+import View.Pages.Errors as Errors
+import Web.Context as Context
+
+/// A rendered page with a status.
+export fn page(status: Int, view: &Html.Html) -> Http.Response {
+  let rendered = Reply.page(status, *view)
+  Http.Response{..rendered, headers: Http.setHeader(&rendered.headers, "content-type", HttpConstants.HTML)}
+}
+
+/// A redirect after a form post, to a path on this site.
+export fn redirect(path: Str) -> Http.Response {
+  let target = if path.startsWith("/") && !path.startsWith("//") { path } else { Routes.HOME }
+  Http.Response{..Reply.empty(303), headers: [("location", target)]}
+}
+
+/// A JSON answer for the app's scripts.
+export fn json(status: Int, value: &Json.Json) -> Http.Response {
+  Http.Response{..Reply.json(status, Json.encode(value)), headers: [("content-type", HttpConstants.JSON)]}
+}
+
+/// A text document such as `robots.txt` or the sitemap, cached at the edge for an hour.
+export fn document(contentType: Str, body: Str) -> Http.Response {
+  Http.Response{..Reply.text(200, body), headers: [("content-type", contentType), ("cache-control", HttpConstants.CACHE_REFERENCE)]}
+}
+
+/// The response carrying one more `Set-Cookie`.
+export fn withCookie(response: Http.Response, cookie: Str) -> Http.Response {
+  Http.Response{..response, headers: response.headers.push(("set-cookie", cookie))}
+}
+
+/// Attributes of the session and flow cookies: unreadable by scripts, sent on top-level navigation.
+fn secret(app: &Assembly.App, maxAge: Int) -> Cookie.Attributes {
+  Cookie.Attributes{maxAge: maxAge, httpOnly: true, secure: app.runtime.secureCookies, sameSite: "Lax"}
+}
+
+/// Attributes of preference cookies.
+fn preference(app: &Assembly.App, maxAge: Int) -> Cookie.Attributes {
+  Cookie.Attributes{maxAge: maxAge, httpOnly: true, secure: app.runtime.secureCookies, sameSite: "Lax"}
+}
+
+/// The response opening a session.
+export fn withSession(app: &Assembly.App, response: Http.Response, session: &Session.Session) -> Http.Response {
+  match Sealer.sealSession(&app.runtime.sessionKey, session) {
+    case Some(sealed) => withCookie(response, Cookie.render(Cookies.SESSION, sealed, &secret(app, Cookies.SESSION_MAX_AGE)))
+    case None => response
+  }
+}
+
+/// The response ending the session.
+export fn withoutSession(app: &Assembly.App, response: Http.Response) -> Http.Response {
+  withCookie(response, Cookie.expire(Cookies.SESSION, app.runtime.secureCookies))
+}
+
+/// The response remembering a sign-in flow until its redirect returns.
+export fn withFlow(app: &Assembly.App, response: Http.Response, flow: &Session.Flow) -> Http.Response {
+  match Sealer.sealFlow(&app.runtime.sessionKey, flow) {
+    case Some(sealed) => withCookie(response, Cookie.render(Cookies.FLOW, sealed, &secret(app, Cookies.FLOW_MAX_AGE)))
+    case None => response
+  }
+}
+
+/// The response forgetting the sign-in flow.
+export fn withoutFlow(app: &Assembly.App, response: Http.Response) -> Http.Response {
+  withCookie(response, Cookie.expire(Cookies.FLOW, app.runtime.secureCookies))
+}
+
+/// The response carrying a one-time message key for the next page.
+export fn withFlash(app: &Assembly.App, response: Http.Response, key: Str) -> Http.Response {
+  withCookie(response, Cookie.render(Cookies.FLASH, key, &preference(app, Cookies.FLASH_MAX_AGE)))
+}
+
+/// The response remembering a preference cookie for a year.
+export fn withPreference(app: &Assembly.App, response: Http.Response, name: Str, value: Str) -> Http.Response {
+  withCookie(response, Cookie.render(name, value, &preference(app, Cookies.PREFERENCE_MAX_AGE)))
+}
+
+/// The response for a problem: sign-in for a signed-out visitor, onboarding for an account that owes
+/// it, JSON for scripts, and a page otherwise.
+export fn problem(app: &Assembly.App, visitor: &Context.Visitor, found: &Problem.Problem) -> Http.Response {
+  let code = Problem.code(found)
+  if Context.wantsJson(visitor) {
+    return json(Problem.status(found), &Json.object(&[("error", Json.Text(code)), ("message", Json.Text(Problem.messageKey(found)))]))
+  }
+  match found {
+    case Problem.SignedOut => redirect(Routes.SIGN_IN + "?return=" + visitor.request.path)
+    case Problem.Refused(reason) => {
+      if reason == "onboarding_required" { return redirect(Routes.ONBOARDING + "?return=" + visitor.request.path) }
+      if reason == "account_paused" { return withFlash(app, redirect(Routes.ACCOUNT), "problem.paused") }
+      if reason == Codes.SESSION_EXPIRED { return withoutSession(app, redirect(Routes.SIGN_IN + "?return=" + visitor.request.path)) }
+      page(Problem.status(found), &Errors.problem(&Context.frame(app, visitor), found))
+    }
+    case Problem.Missing => page(404, &Errors.missing(&Context.frame(app, visitor)))
+    case _ => page(Problem.status(found), &Errors.problem(&Context.frame(app, visitor), found))
+  }
+}
+
+/// The response with everything the visitor's state requires: a renewed or ended session, a consumed
+/// flash, the security headers, and the cache policy.
+export fn finish(app: &Assembly.App, visitor: &Context.Visitor, response: Http.Response) -> Http.Response {
+  var finished = response
+  let handled = Http.headerValues(&response.headers, "set-cookie").filter(|cookie: Str| cookie.startsWith(Cookies.SESSION + "=")).length() > 0
+  if visitor.sessionChanged && !handled {
+    if let Some(found) = visitor.session { finished = withSession(app, finished, &found) }
+  }
+  if visitor.sessionEnded && !handled { finished = withoutSession(app, finished) }
+  if !visitor.flash.isEmpty() && finished.status.code == 200 { finished = withCookie(finished, Cookie.expire(Cookies.FLASH, app.runtime.secureCookies)) }
+  let personal = visitor.session != None || Http.hasHeader(&finished.headers, "set-cookie") || !visitor.flash.isEmpty()
+  let cacheable = finished.status.code == 200 && visitor.request.message.method == Http.Get && !personal
+  var headers = finished.headers.concat(HttpConstants.SECURITY_HEADERS)
+  if !Http.hasHeader(&headers, "cache-control") {
+    headers = headers.push(("cache-control", if cacheable { HttpConstants.CACHE_PUBLIC_PAGE } else { HttpConstants.CACHE_PRIVATE }))
+  }
+  if !cacheable { headers = headers.push(("vary", "cookie")) }
+  Http.Response{..finished, headers: headers}
+}
+
+/// The `return` field or query parameter, kept on this site.
+export fn returnPath(given: Option[Str]) -> Str {
+  let path = Option.unwrapOr(given, Routes.HOME)
+  if path.startsWith("/") && !path.startsWith("//") && !path.contains("\\") { path } else { Routes.HOME }
+}

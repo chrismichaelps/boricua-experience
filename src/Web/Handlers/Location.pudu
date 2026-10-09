@@ -1,0 +1,61 @@
+/** @Web.Handlers.Location.Routes — live location for the map and event pages */
+module Web.Handlers.Location
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import App.Assembly as Assembly
+import Constants.Routes as Routes
+import Domain.Location as Location
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Wire as Wire
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/** @Web.Handlers.Location.Reading — the JSON a browser posts for one reading */
+type Reading = { lat: Float64, lng: Float64, accuracy: Float64 } derives Json.Decode
+
+/// The location routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.post(Routes.API_LOCATION, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| record(&held, &visitor, &session))),
+    Route.post(Routes.API_LOCATION_STOP, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| stop(&held, &visitor, &session))),
+    Route.get(Routes.API_PARTICIPANTS, Serve.api(app, |visitor: Context.Visitor| participants(&held, &visitor)))
+  ]
+}
+
+/// Records one reading; answers `recorded` or `throttled`.
+fn record(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let reading: Reading = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Refused("invalid_coordinates")) }
+  }
+  let position = Location.Position{lat: reading.lat, lng: reading.lng, accuracyM: reading.accuracy}
+  match Serve.ask(app, &app.kinds.recordPosition, Serve.signed(session, position)) {
+    case Ok(status) => Respond.json(200, &Json.object(&[("status", Json.Text(status))]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Stops sharing.
+fn stop(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.stopSharing, Serve.signed(session, ())) {
+    case Ok(_) => Respond.json(200, &Json.object(&[("sharing", Json.Boolean(false))]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Co-attendees' live positions for an event.
+fn participants(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let session = match visitor.session {
+    case Some(found) => found
+    case None => { return Respond.problem(app, visitor, &Problem.SignedOut) }
+  }
+  match Serve.ask(app, &app.kinds.participants, Serve.signed(&session, Serve.param(visitor, "slug"))) {
+    case Ok(people) => Respond.json(200, &Json.list(&people.map(|person: Location.Participant| person.encode())))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

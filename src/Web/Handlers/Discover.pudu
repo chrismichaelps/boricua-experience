@@ -1,0 +1,151 @@
+/** @Web.Handlers.Discover.Routes — home, search, landing pages, the map, and suggestions */
+module Web.Handlers.Discover
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Limits as Limits
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Event as Event
+import Domain.Problem as Problem
+import Domain.Search as Search
+import Utils.Geo as Geo
+import View.Pages.Home as HomePage
+import View.Pages.Map as MapPage
+import View.Pages.Search as SearchPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+import App.Messages as Messages
+
+/// The filters a query string describes.
+export fn filtersOf(visitor: &Context.Visitor) -> Search.Filters {
+  let read = |name: Str| Serve.query(visitor, name)
+  let lat = Geo.parseDegrees(read("lat"))
+  let lng = Geo.parseDegrees(read("lng"))
+  let located = match (lat, lng) {
+    case (Some(y), Some(x)) => Geo.inPuertoRico(y, x)
+    case _ => false
+  }
+  let query = read("q").trim()
+  let asked = Search.sortFrom(read("sort"))
+  Search.Filters {
+    query: query,
+    category: read("category"),
+    municipality: read("pueblo"),
+    window: Search.windowFrom(read("when")),
+    freeOnly: read("free") == "1",
+    maxPriceCents: None,
+    lat: if located { lat } else { None },
+    lng: if located { lng } else { None },
+    radiusM: if located { Some(Limits.NEARBY_RADIUS_M * 2) } else { None },
+    sort: if read("sort").isEmpty() && !query.isEmpty() { Search.Relevant } else { asked },
+    after: read("after")
+  }
+}
+
+/// The discovery routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.HOME, Serve.page(app, |visitor: Context.Visitor| home(&held, &visitor))),
+    Route.get(Routes.SEARCH, Serve.page(app, |visitor: Context.Visitor| listing(&held, &visitor, SearchPage.Open, filtersOf(&visitor)))),
+    Route.get(Routes.CATEGORY, Serve.page(app, |visitor: Context.Visitor| landingPage(&held, &visitor, true))),
+    Route.get(Routes.TOWN, Serve.page(app, |visitor: Context.Visitor| landingPage(&held, &visitor, false))),
+    Route.get(Routes.MAP, Serve.page(app, |visitor: Context.Visitor| map(&held, &visitor))),
+    Route.get(Routes.API_SUGGEST, Serve.api(app, |visitor: Context.Visitor| suggest(&held, &visitor))),
+    Route.get(Routes.API_NEARBY, Serve.api(app, |visitor: Context.Visitor| nearby(&held, &visitor)))
+  ]
+}
+
+/// The home page.
+fn home(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.home, Serve.visit(visitor, Messages.Place{lat: None, lng: None, radiusM: None})) {
+    case Ok(rails) => Respond.page(200, &HomePage.render(&Context.frame(app, visitor), &catalog, &rails))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A listing for the filters, inside a landing when one fixes a category or town.
+fn listing(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPage.Landing, filters: Search.Filters) -> Http.Response {
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, filters)) {
+    case Ok(page) => {
+      if Context.wantsJson(visitor) { return Respond.json(200, &pageJson(app, visitor, &filters, &landing, &page)) }
+      Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &filters, &landing, &page))
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A further page of results for the "load more" script: rendered cards and the next link.
+fn pageJson(app: &Assembly.App, visitor: &Context.Visitor, filters: &Search.Filters, landing: &SearchPage.Landing, page: &Event.Page) -> Json.Json {
+  let rendered = SearchPage.cards(&Context.frame(app, visitor), &page.items)
+  let next = match page.next {
+    case Some(cursor) => Json.Text(visitor.request.path + SearchPage.queryOf(filters, landing, cursor))
+    case None => Json.Null
+  }
+  Json.object(&[("html", Json.Text(rendered)), ("next", next)])
+}
+
+/// A category or municipality landing page.
+fn landingPage(app: &Assembly.App, visitor: &Context.Visitor, byCategory: Bool) -> Http.Response {
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let slug = Serve.param(visitor, "slug")
+  let filters = filtersOf(visitor)
+  if byCategory {
+    match Catalog.category(&catalog, slug) {
+      case Some(category) => listing(app, visitor, SearchPage.ForCategory(category), Search.Filters{..filters, category: slug})
+      case None => Respond.problem(app, visitor, &Problem.Missing)
+    }
+  } else {
+    match Catalog.municipality(&catalog, slug) {
+      case Some(town) => listing(app, visitor, SearchPage.ForTown(town), Search.Filters{..filters, municipality: slug})
+      case None => Respond.problem(app, visitor, &Problem.Missing)
+    }
+  }
+}
+
+/// The map, with pins for the filters' position or the next events.
+fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let filters = filtersOf(visitor)
+  match Serve.ask(app, &app.kinds.pins, Messages.Place{lat: filters.lat, lng: filters.lng, radiusM: filters.radiusM}) {
+    case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards, Serve.query(visitor, "near") == "1"))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Typeahead suggestions as JSON: title, place, and address of each match.
+fn suggest(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.suggest, Serve.query(visitor, "q")) {
+    case Ok(cards) => Http.Response{..Respond.json(200, &Json.list(&cards.map(|card: Event.Card| Json.object(&[
+                  ("title", Json.Text(card.title)),
+                  ("place", Json.Text(card.municipality.name)),
+                  ("href", Json.Text(Routes.EVENT_PREFIX + card.slug))
+                ])))), headers: [("content-type", "application/json; charset=utf-8"), ("cache-control", "public, max-age=0, s-maxage=60")]}
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Events around a position as JSON for the map: pins and their cards.
+fn nearby(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let filters = filtersOf(visitor)
+  if filters.lat == None { return Respond.problem(app, visitor, &Problem.Refused("invalid_coordinates")) }
+  match Serve.ask(app, &app.kinds.pins, Messages.Place{lat: filters.lat, lng: filters.lng, radiusM: Some(Option.unwrapOr(Serve.query(visitor, "radius").toInt(), Limits.NEARBY_RADIUS_M))}) {
+    case Ok(cards) => Respond.json(200, &MapPage.pinsValue(&Context.frame(app, visitor), &cards))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

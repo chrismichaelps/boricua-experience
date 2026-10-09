@@ -1,0 +1,51 @@
+/** @Function.Platform.Entry — the application as a serverless function */
+module Function
+
+import Std.Http.Server.Lambda as Lambda
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
+import App.Assembly as Assembly
+import App.Logging as Logging
+import Config.Settings as Settings
+import Services.Runtime as Runtime
+import Web.Access as Access
+import Web.Platform as Platform
+import Web.Router as Router
+import Std.Http.Server.Route as Route
+
+/// Builds the application once per cold start, then answers invocations until the platform stops it.
+fn main() -> Int {
+  let settings = match Settings.load() {
+    case Ok(found) => found
+    case Err(problem) => { return couldNotStart(problem) }
+  }
+  let logs = Logging.logs(&settings)
+  let app = match Result.andThen(Runtime.create(&settings), |runtime: Runtime.Runtime| Assembly.assemble(&runtime, &logs)) {
+    case Ok(built) => built
+    case Err(problem) => { return couldNotStart(problem) }
+  }
+  let router = Router.routes(&app)
+  let served = Lambda.serveEnvironment(fn(event: Json.Json) -> Result[Str, Str] {
+      Ok(Platform.answered(&Access.around(&logs.requests, Platform.requestOf(&event), |request: Route.Request| Route.dispatch(&router, request))))
+    })
+  match served {
+    case Ok(_) => 0
+    case Err(problem) => {
+      logs.requests.fatal("The function stopped serving: \{Reason\}", [Value.text(Lambda.explain(&problem))])
+      Logger.close(&logs.requests)
+      1
+    }
+  }
+}
+
+/// Tells the platform the function could not start, so the deployment reports a failure.
+fn couldNotStart(reason: Str) -> Int {
+  let _said = Io.writeErrorLine("Boricua Experience could not start: " + reason)
+  if let Some(runtime) = Lambda.fromEnvironment() {
+    let _told = Lambda.failedToStart(&runtime, reason)
+  }
+  1
+}

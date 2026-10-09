@@ -1,0 +1,42 @@
+/** @Web.Handlers.Admin.Routes — the administrator's dashboard and decisions */
+module Web.Handlers.Admin
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Routes as Routes
+import Domain.Session as Session
+import Utils.Form as Form
+import View.Pages.Admin as AdminPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The admin routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.ADMIN, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| dashboard(&held, &visitor, &session))),
+    Route.post(Routes.ADMIN_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| resolve(&held, &visitor, &session)))
+  ]
+}
+
+/// The dashboard; the database refuses anyone but an administrator.
+fn dashboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.dashboard, Serve.signed(session, ())) {
+    case Ok(found) => Respond.page(200, &AdminPage.render(&Context.frame(app, visitor), &found))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Dismisses a report or acts on it.
+fn resolve(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let id = Option.unwrapOr(Serve.param(visitor, "id").toInt(), 0)
+  let act = Form.text(&Serve.fields(visitor), "decision") == "act"
+  match Serve.ask(app, &app.kinds.resolve, Serve.signed(session, Messages.Resolution{reportId: id, act: act})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ADMIN), "flash.report_resolved")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

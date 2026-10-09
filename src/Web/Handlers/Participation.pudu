@@ -1,0 +1,139 @@
+/** @Web.Handlers.Participation.Routes — joining, deciding, saving, reacting, reporting, activity */
+module Web.Handlers.Participation
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Option as Option
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Form as Form
+import Validation.Participation as ParticipationRules
+import View.Pages.Activity as ActivityPage
+import View.Pages.Manage as ManagePage
+import Web.Context as Context
+import Web.Handlers.Events as Events
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The participation routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.post(Routes.EVENT_JOIN, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| join(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_WITHDRAW, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| withdraw(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_SAVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| save(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_REACT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| react(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| report(&held, &visitor, &session))),
+    Route.get(Routes.EVENT_MANAGE, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| queue(&held, &visitor, &session, None))),
+    Route.post(Routes.REQUEST_DECIDE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| decide(&held, &visitor, &session))),
+    Route.get(Routes.ACTIVITY, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| activity(&held, &visitor, &session)))
+  ]
+}
+
+/// The event page path of the request.
+fn eventPath(visitor: &Context.Visitor) -> Str { Routes.EVENT_PREFIX + Serve.param(visitor, "slug") }
+
+/// The answer to a refused action on an event: JSON for scripts, the event page with the reason otherwise.
+fn refusedOnEvent(app: &Assembly.App, visitor: &Context.Visitor, problem: &Problem.Problem) -> Http.Response {
+  if Context.wantsJson(visitor) { return Respond.problem(app, visitor, problem) }
+  match problem {
+    case Problem.Refused(_) => Events.eventPage(app, &Context.resolve(app, &visitor.request, true), Some(*problem))
+    case Problem.Invalid(_) => Events.eventPage(app, &Context.resolve(app, &visitor.request, true), Some(*problem))
+    case _ => Respond.problem(app, visitor, problem)
+  }
+}
+
+/// Asks to join; open events approve at once.
+fn join(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let event = match Events.eventOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.join, Serve.signed(session, Messages.Joining{eventId: event.card.id, message: Form.paragraph(&Serve.fields(visitor), "message")})) {
+    case Ok(status) => Respond.withFlash(app, Respond.redirect(eventPath(visitor)), if status == "approved" { "flash.joined" } else { "flash.requested" })
+    case Err(problem) => refusedOnEvent(app, visitor, &problem)
+  }
+}
+
+/// Withdraws the member's request.
+fn withdraw(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let event = match Events.eventOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.withdraw, Serve.signed(session, event.card.id)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(eventPath(visitor)), "flash.withdrawn")
+    case Err(problem) => refusedOnEvent(app, visitor, &problem)
+  }
+}
+
+/// Saves or unsaves; scripts get the new state as JSON.
+fn save(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let event = match Events.eventOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.save, Serve.signed(session, event.card.id)) {
+    case Ok(saved) => if Context.wantsJson(visitor) { Respond.json(200, &Json.object(&[("saved", Json.Boolean(saved))])) } else { Respond.withFlash(app, Respond.redirect(eventPath(visitor)), if saved { "flash.saved" } else { "flash.unsaved" }) }
+    case Err(problem) => refusedOnEvent(app, visitor, &problem)
+  }
+}
+
+/// Likes, dislikes, or clears; scripts get the reaction and like count as JSON.
+fn react(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let event = match Events.eventOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let value = Option.unwrapOr(Form.whole(&Serve.fields(visitor), "value"), 0)
+  match Serve.ask(app, &app.kinds.react, Serve.signed(session, Messages.Reacting{eventId: event.card.id, value: value})) {
+    case Ok(state) => if Context.wantsJson(visitor) { Respond.json(200, &Json.object(&[("reaction", Json.Number(state.reaction)), ("likeCount", Json.Number(state.likeCount))])) } else { Respond.redirect(eventPath(visitor)) }
+    case Err(problem) => refusedOnEvent(app, visitor, &problem)
+  }
+}
+
+/// Reports the event for moderation.
+fn report(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let event = match Events.eventOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let fields = Serve.fields(visitor)
+  let form = ParticipationRules.Report{reason: Form.text(&fields, "reason"), detail: Form.paragraph(&fields, "detail")}
+  match Serve.ask(app, &app.kinds.report, Serve.signed(session, Messages.Reporting{eventId: event.card.id, form: form})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(eventPath(visitor)), "flash.reported")
+    case Err(problem) => refusedOnEvent(app, visitor, &problem)
+  }
+}
+
+/// The organizer's queue.
+fn queue(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session, problem: Option[Problem.Problem]) -> Http.Response {
+  match Serve.ask(app, &app.kinds.queue, Serve.signed(session, Serve.param(visitor, "slug"))) {
+    case Ok(found) => Respond.page(200, &ManagePage.render(&Context.frame(app, visitor), &found, &problem))
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// Approves or rejects one request, then returns to the queue.
+fn decide(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let back = Respond.returnPath(fields.get("return"))
+  let decision = Messages.Decision{requestId: Serve.param(visitor, "id"), approve: Form.text(&fields, "decision") == "approve", note: Form.text(&fields, "note")}
+  match Serve.ask(app, &app.kinds.decide, Serve.signed(session, decision)) {
+    case Ok(status) => Respond.withFlash(app, Respond.redirect(back), if status == "approved" { "flash.approved" } else { "flash.rejected" })
+    case Err(Problem.Refused(reason)) => Respond.withFlash(app, Respond.redirect(back), "problem." + reason)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The member's activity.
+fn activity(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.activity, Serve.signed(session, ())) {
+    case Ok(found) => Respond.page(200, &ActivityPage.render(&Context.frame(app, visitor), &found))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

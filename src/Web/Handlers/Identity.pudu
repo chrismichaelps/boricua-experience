@@ -1,0 +1,153 @@
+/** @Web.Handlers.Identity.Routes — signing in, up, out, with Google, and recovering */
+module Web.Handlers.Identity
+
+import Std.Http as Http
+import Std.Http.Server.Reply as Reply
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Cookies as Cookies
+import Constants.Routes as Routes
+import Domain.Credentials as Credentials
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Auth.Accounts as Accounts
+import Services.Auth.Sealer as Sealer
+import Utils.Form as Form
+import View.Pages.Auth as AuthPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The external provider every "continue with" button uses.
+const GOOGLE: Str = "google"
+
+/// The identity routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.SIGN_IN, Serve.page(app, |visitor: Context.Visitor| signInPage(&held, &visitor))),
+    Route.post(Routes.SIGN_IN, Serve.action(app, |visitor: Context.Visitor| signIn(&held, &visitor))),
+    Route.get(Routes.SIGN_UP, Serve.page(app, |visitor: Context.Visitor| signUpPage(&held, &visitor))),
+    Route.post(Routes.SIGN_UP, Serve.action(app, |visitor: Context.Visitor| signUp(&held, &visitor))),
+    Route.get(Routes.AUTH_GOOGLE, Serve.api(app, |visitor: Context.Visitor| google(&held, &visitor))),
+    Route.get(Routes.AUTH_CALLBACK, Serve.api(app, |visitor: Context.Visitor| callback(&held, &visitor))),
+    Route.get(Routes.RECOVER, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &AuthPage.recover(&Context.frame(&held, &visitor), &typed(&visitor, "", ""), &None)))),
+    Route.post(Routes.RECOVER, Serve.action(app, |visitor: Context.Visitor| recover(&held, &visitor))),
+    Route.get(Routes.RESET_PASSWORD, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| Respond.page(200, &AuthPage.reset(&Context.frame(&held, &visitor), &None)))),
+    Route.post(Routes.RESET_PASSWORD, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| resetPassword(&held, &visitor, &session))),
+    Route.post(Routes.SIGN_OUT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| signOut(&held, &visitor, &session)))
+  ]
+}
+
+/// What the visitor typed, with the return path from the query or the form.
+fn typed(visitor: &Context.Visitor, displayName: Str, email: Str) -> AuthPage.Typed {
+  let given = Option.orElse(Route.fieldsOf(&visitor.request).get("return"), Route.queryParam(&visitor.request, "return"))
+  AuthPage.Typed{displayName: displayName, email: email, returnTo: Respond.returnPath(given)}
+}
+
+/// A page re-rendered after a refused form, with the member state resolved for the shell.
+fn again(app: &Assembly.App, visitor: &Context.Visitor) -> Context.Visitor { Context.resolve(app, &visitor.request, true) }
+
+/// The sign-in page; a member is sent where they were going.
+fn signInPage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let wanted = typed(visitor, "", "")
+  if visitor.session != None { return Respond.redirect(wanted.returnTo) }
+  Respond.page(200, &AuthPage.signIn(&Context.frame(app, visitor), &wanted, &None))
+}
+
+/// Signs in with an email and password.
+fn signIn(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.SignIn{email: Form.text(&fields, "email"), password: Option.unwrapOr(fields.get("password"), "")}
+  let wanted = typed(visitor, "", form.email)
+  match Serve.ask(app, &app.kinds.signIn, form) {
+    case Ok(session) => Respond.withFlash(app, Respond.withSession(app, Respond.redirect(wanted.returnTo), &session), "flash.welcome_back")
+    case Err(Problem.Unavailable(reason)) => Respond.problem(app, visitor, &Problem.Unavailable(reason))
+    case Err(problem) => Respond.page(Problem.status(&problem), &AuthPage.signIn(&Context.frame(app, &again(app, visitor)), &wanted, &Some(problem)))
+  }
+}
+
+/// The sign-up page.
+fn signUpPage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let wanted = typed(visitor, "", "")
+  if visitor.session != None { return Respond.redirect(wanted.returnTo) }
+  Respond.page(200, &AuthPage.signUp(&Context.frame(app, visitor), &wanted, &None))
+}
+
+/// Creates an account; signed in at once, or told to check their email.
+fn signUp(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.SignUp {
+    displayName: Form.text(&fields, "displayName"),
+    email: Form.text(&fields, "email"),
+    password: Option.unwrapOr(fields.get("password"), ""),
+    adult: Form.flag(&fields, "adult"),
+    terms: Form.flag(&fields, "terms"),
+    privacy: Form.flag(&fields, "privacy")
+  }
+  let wanted = typed(visitor, form.displayName, form.email)
+  match Serve.ask(app, &app.kinds.signUp, Messages.SignUp{form: form, locale: Locale.code(&visitor.locale), returnTo: wanted.returnTo}) {
+    case Ok(Accounts.SignedIn(session)) => Respond.withFlash(app, Respond.withSession(app, Respond.redirect(wanted.returnTo), &session), "flash.welcome")
+    case Ok(Accounts.CheckEmail(flow)) => Respond.withFlow(app, Respond.page(200, &AuthPage.checkEmail(&Context.frame(app, visitor), false)), &flow)
+    case Err(Problem.Unavailable(reason)) => Respond.problem(app, visitor, &Problem.Unavailable(reason))
+    case Err(problem) => Respond.page(Problem.status(&problem), &AuthPage.signUp(&Context.frame(app, &again(app, visitor)), &wanted, &Some(problem)))
+  }
+}
+
+/// Starts a Google sign-in: remembers the flow and sends the visitor to the provider.
+fn google(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.provider, Messages.Provider{provider: GOOGLE, returnTo: typed(visitor, "", "").returnTo}) {
+    case Ok((address, flow)) => Respond.withFlow(app, Http.Response{..Reply.empty(303), headers: [("location", address)]}, &flow)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A redirect returning with a code: opens the session, then continues where the flow was going.
+fn callback(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let flow = Option.andThen(visitor.cookies.get(Cookies.FLOW), |value: Str| Sealer.openFlow(&app.runtime.sessionKey, value))
+  let code = Serve.query(visitor, "code")
+  let started = match flow {
+    case Some(found) => found
+    case None => { return Respond.withFlash(app, Respond.redirect(Routes.SIGN_IN), if code.isEmpty() { "problem.flow_expired" } else { "flash.email_confirmed" }) }
+  }
+  if !Serve.query(visitor, "error").isEmpty() || code.isEmpty() {
+    return Respond.withoutFlow(app, Respond.withFlash(app, Respond.redirect(Routes.SIGN_IN), "problem.flow_expired"))
+  }
+  match Serve.ask(app, &app.kinds.callback, Messages.Callback{code: code, flow: started}) {
+    case Ok(session) => {
+      let next = if started.purpose == Session.RECOVERY { Routes.RESET_PASSWORD } else { started.returnTo }
+      Respond.withoutFlow(app, Respond.withFlash(app, Respond.withSession(app, Respond.redirect(next), &session), "flash.welcome"))
+    }
+    case Err(_) => Respond.withoutFlow(app, Respond.withFlash(app, Respond.redirect(Routes.SIGN_IN), "problem.flow_expired"))
+  }
+}
+
+/// Sends a recovery link.
+fn recover(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let email = Form.text(&Serve.fields(visitor), "email")
+  match Serve.ask(app, &app.kinds.recover, email) {
+    case Ok(flow) => Respond.withFlow(app, Respond.page(200, &AuthPage.checkEmail(&Context.frame(app, visitor), true)), &flow)
+    case Err(Problem.Invalid(errors)) => Respond.page(422, &AuthPage.recover(&Context.frame(app, &again(app, visitor)), &typed(visitor, "", email), &Some(Problem.Invalid(errors))))
+    case Err(Problem.Throttled) => Respond.page(429, &AuthPage.recover(&Context.frame(app, &again(app, visitor)), &typed(visitor, "", email), &Some(Problem.Throttled)))
+    case Err(_) => Respond.page(200, &AuthPage.checkEmail(&Context.frame(app, visitor), true))
+  }
+}
+
+/// Saves the new password chosen after recovery.
+fn resetPassword(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.NewPassword{password: Option.unwrapOr(fields.get("password"), ""), confirmation: Option.unwrapOr(fields.get("confirmation"), "")}
+  match Serve.ask(app, &app.kinds.changePassword, Serve.signed(session, form)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.password_changed")
+    case Err(problem) => Respond.page(Problem.status(&problem), &AuthPage.reset(&Context.frame(app, &again(app, visitor)), &Some(problem)))
+  }
+}
+
+/// Signs out here and at the provider.
+fn signOut(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let _ended = Serve.ask(app, &app.kinds.signOut, Serve.signed(session, ()))
+  Respond.withFlash(app, Respond.withoutSession(app, Respond.redirect(Routes.HOME)), "flash.signed_out")
+}

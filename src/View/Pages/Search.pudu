@@ -61,6 +61,11 @@ fn identity(frame: &Frame.Frame, landing: &Landing, filters: &Search.Filters) ->
   }
 }
 
+/// Cards rendered as markup, for the script that appends a further page.
+export fn cards(frame: &Frame.Frame, items: &Array[Event.Card]) -> Str {
+  Html.render(&H.nothing().holding(items.map(|card: Event.Card| EventCard.card(frame, &card))).html())
+}
+
 /// The results page.
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page) -> Html.Html {
   let (title, description, path) = identity(frame, landing, filters)

@@ -1,0 +1,128 @@
+/** @Web.Context.Visitor — who is asking, resolved once per request */
+module Web.Context
+
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import PuduLangMediator as Messaging
+import PuduLangMediator.Mediator as Mediator
+import App.Assembly as Assembly
+import App.Messages as Messages
+import App.Pipeline as Pipeline
+import Constants.App as App
+import Constants.Cookies as Cookies
+import Constants.Http as HttpConstants
+import Domain.Consent as Consent
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import Domain.Session as Session
+import Services.Auth.Pkce as Pkce
+import Services.Auth.Sealer as Sealer
+import Services.Auth.Sessions as Sessions
+import Utils.Cookie as Cookie
+import Utils.Time as Time
+import View.Frame as Frame
+
+/** @Web.Context.Visitor — locale, session, member, consent, and what the response must update */
+export type Visitor = {
+  request: Route.Request,
+  cookies: Map[Str, Str],
+  locale: Locale.Locale,
+  session: Option[Session.Session],
+  sessionChanged: Bool,
+  sessionEnded: Bool,
+  member: Option[Profile.MyProfile],
+  consent: Option[Consent.Choice],
+  visitorId: Str,
+  newVisitor: Bool,
+  flash: Str
+}
+
+/// Bytes of a new visitor id.
+const VISITOR_BYTES: Int = 18
+
+/// The visitor of a request. A session is opened from its cookie and refreshed when it is about to
+/// expire; `withMember` also loads the account, which pages need and actions do not.
+export fn resolve(app: &Assembly.App, request: &Route.Request, withMember: Bool) -> Visitor {
+  let cookies = Cookie.parse(Option.unwrapOr(Route.header(request, "cookie"), ""))
+  let locale = match cookies.get(Cookies.LOCALE) {
+    case Some(code) => Locale.fromCode(code)
+    case None => Locale.fromAcceptLanguage(Option.unwrapOr(Route.header(request, "accept-language"), ""))
+  }
+  let sealed = cookies.get(Cookies.SESSION)
+  let opened = Option.andThen(sealed, |value: Str| Sealer.openSession(&app.runtime.sessionKey, value))
+  let (session, changed, ended) = match opened {
+    case Some(found) => match Sessions.ensureFresh(&app.runtime, &found) {
+      case Ok(fresh) => (Some(fresh.session), fresh.renewed, false)
+      case Err(Problem.SignedOut) => (None, false, true)
+      case Err(_) => (Some(found), false, false)
+    }
+    case None => (None, false, sealed != None)
+  }
+  let member = if withMember { Option.andThen(session, |current: Session.Session| loadMember(app, &current)) } else { None }
+  let existingVisitor = cookies.get(Cookies.VISITOR)
+  let visitorId = match existingVisitor {
+    case Some(id) => id
+    case None => Option.unwrapOr(Pkce.token(VISITOR_BYTES), "")
+  }
+  Visitor {
+    request: *request,
+    cookies: cookies,
+    locale: locale,
+    session: session,
+    sessionChanged: changed,
+    sessionEnded: ended,
+    member: member,
+    consent: Option.andThen(cookies.get(Cookies.CONSENT), |value: Str| Consent.decode(value, App.COOKIE_POLICY_VERSION)),
+    visitorId: visitorId,
+    newVisitor: existingVisitor == None && !visitorId.isEmpty(),
+    flash: Option.unwrapOr(cookies.get(Cookies.FLASH), "")
+  }
+}
+
+/// The signed-in account, when the database answers for it.
+fn loadMember(app: &Assembly.App, session: &Session.Session) -> Option[Profile.MyProfile] {
+  match Mediator.send(&app.mediator, &app.kinds.me, Messages.Signed{session: *session, input: ()}) {
+    case Ok(found) => Some(found)
+    case Err(_) => None
+  }
+}
+
+/// The frame every page renders with.
+export fn frame(app: &Assembly.App, visitor: &Visitor) -> Frame.Frame {
+  Frame.Frame {
+    locale: visitor.locale,
+    siteUrl: app.runtime.siteUrl,
+    path: visitor.request.path,
+    query: queryText(&visitor.request),
+    member: visitor.member,
+    formToken: match visitor.session {
+      case Some(found) => Sessions.formToken(&app.runtime, &found)
+      case None => ""
+    },
+    consent: visitor.consent,
+    flash: visitor.flash,
+    nowMillis: Time.now().millis
+  }
+}
+
+/// The query string of the request, without the leading `?`.
+fn queryText(request: &Route.Request) -> Str {
+  let target = request.message.target
+  let mark = target.indexOf("?")
+  if mark < 0 { "" } else { target.drop(mark + 1) }
+}
+
+/// Whether the request came from the app's scripts and wants JSON back.
+export fn wantsJson(visitor: &Visitor) -> Bool {
+  Route.header(&visitor.request, HttpConstants.REQUESTED_WITH) == Some(HttpConstants.REQUESTED_WITH_VALUE)
+    || Option.unwrapOr(Route.header(&visitor.request, "accept"), "").startsWith("application/json")
+}
+
+/// The problem a mediator outcome failed with.
+export fn problemOf[T](outcome: Messaging.Outcome[T, Problem.Problem]) -> Result[T, Problem.Problem] {
+  match outcome {
+    case Ok(value) => Ok(value)
+    case Err(failure) => Err(Pipeline.problemOf(&failure))
+  }
+}
