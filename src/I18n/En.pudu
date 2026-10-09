@@ -1,0 +1,7 @@
+/** @I18n.En.Catalog — English text of every message key */
+module I18n.En
+
+/// English messages by key.
+export const MESSAGES: Map[Str, Str] = mapOf([
+  ("date.today", "Today")
+])

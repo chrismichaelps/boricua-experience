@@ -1,0 +1,18 @@
+/** @Validation.Location.Readings — browser positions checked */
+module Validation.Location
+
+import Domain.Location as Location
+import Domain.Problem as Problem
+import Utils.Geo as Geo
+import Validation.Check as Check
+
+/// Largest accepted accuracy radius, in metres.
+const ACCURACY_MAX_M: Float64 = 100000.0
+
+/// A reading inside Puerto Rico with a sensible accuracy.
+export fn position(reading: &Location.Position) -> Result[Location.Position, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("position", |p: Location.Position| p, |p: Location.Position| Geo.inPuertoRico(p.lat, p.lng), "problem.outside_puerto_rico"),
+        Check.rule("accuracy", |p: Location.Position| p.accuracyM, |v: Float64| v >= 0.0 && v <= ACCURACY_MAX_M, "problem.invalid_coordinates")
+      ]), *reading)
+}

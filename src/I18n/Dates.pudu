@@ -1,0 +1,106 @@
+/** @I18n.Dates.Calendar — dates and times written for a reader */
+module I18n.Dates
+
+import Std.Time as StdTime
+import Domain.Locale as Locale
+import I18n.Translate as Translate
+import Utils.Time as Time
+
+/// Weekday names from Sunday, short and long, in each language.
+const WEEKDAYS_ES: Array[Str] = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"]
+const WEEKDAYS_EN: Array[Str] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+const MONTHS_ES: Array[Str] = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
+const MONTHS_EN: Array[Str] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const MONTHS_LONG_ES: Array[Str] = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+const MONTHS_LONG_EN: Array[Str] = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+/// The weekday's name.
+export fn weekday(locale: &Locale.Locale, day: Int) -> Str {
+  match locale {
+    case Locale.Es => WEEKDAYS_ES[day % 7]
+    case Locale.En => WEEKDAYS_EN[day % 7]
+  }
+}
+
+/// The weekday's first three letters.
+fn weekdayShort(locale: &Locale.Locale, day: Int) -> Str { capitalized(weekday(locale, day).take(3)) }
+
+/// The month's short name, from 1 for January.
+fn monthShort(locale: &Locale.Locale, month: Int) -> Str {
+  match locale {
+    case Locale.Es => MONTHS_ES[(month - 1) % 12]
+    case Locale.En => MONTHS_EN[(month - 1) % 12]
+  }
+}
+
+/// The month's full name, from 1 for January.
+fn monthLong(locale: &Locale.Locale, month: Int) -> Str {
+  match locale {
+    case Locale.Es => MONTHS_LONG_ES[(month - 1) % 12]
+    case Locale.En => MONTHS_LONG_EN[(month - 1) % 12]
+  }
+}
+
+/// `Sáb 10 oct` or `Sat, Oct 10`.
+export fn short(locale: &Locale.Locale, at: &Time.Local) -> Str {
+  match locale {
+    case Locale.Es => weekdayShort(locale, at.weekday) + " " + show(at.day) + " " + monthShort(locale, at.month)
+    case Locale.En => weekdayShort(locale, at.weekday) + ", " + monthShort(locale, at.month) + " " + show(at.day)
+  }
+}
+
+/// `sábado, 10 de octubre de 2026` or `Saturday, October 10, 2026`.
+export fn long(locale: &Locale.Locale, at: &Time.Local) -> Str {
+  match locale {
+    case Locale.Es => weekday(locale, at.weekday) + ", " + show(at.day) + " de " + monthLong(locale, at.month) + " de " + show(at.year)
+    case Locale.En => weekday(locale, at.weekday) + ", " + monthLong(locale, at.month) + " " + show(at.day) + ", " + show(at.year)
+  }
+}
+
+/// `octubre de 2026` or `October 2026`, for "member since".
+export fn monthYear(locale: &Locale.Locale, at: &Time.Local) -> Str {
+  match locale {
+    case Locale.Es => monthLong(locale, at.month) + " de " + show(at.year)
+    case Locale.En => monthLong(locale, at.month) + " " + show(at.year)
+  }
+}
+
+/// The day an event starts relative to today: `Hoy`, `Mañana`, this week's weekday, or the date.
+export fn relativeDay(locale: &Locale.Locale, starts: &StdTime.Instant, today: &StdTime.Instant) -> Str {
+  let days = Time.dayNumber(starts) - Time.dayNumber(today)
+  let at = Time.local(starts)
+  if days == 0 { return Translate.text(locale, "date.today") }
+  if days == 1 { return Translate.text(locale, "date.tomorrow") }
+  if days > 1 && days < 7 { return capitalized(weekday(locale, at.weekday)) }
+  short(locale, &at)
+}
+
+/// The line a card shows: `Hoy · 7:30 PM`, or `Ahora` while it is happening.
+export fn when(locale: &Locale.Locale, startsAt: Str, endsAt: Str, today: &StdTime.Instant) -> Str {
+  match (Time.parseTimestamp(startsAt), Time.parseTimestamp(endsAt)) {
+    case (Some(starts), Some(ends)) => {
+      if starts.millis <= today.millis && ends.millis > today.millis {
+        return Translate.text(locale, "date.happening_now") + " · " + Translate.text(locale, "date.until") + " " + Time.clock12(&Time.local(&ends))
+      }
+      relativeDay(locale, &starts, today) + " · " + Time.clock12(&Time.local(&starts))
+    }
+    case _ => ""
+  }
+}
+
+/// The full schedule an event page shows: date, start, and end.
+export fn schedule(locale: &Locale.Locale, startsAt: Str, endsAt: Str) -> Str {
+  match (Time.parseTimestamp(startsAt), Time.parseTimestamp(endsAt)) {
+    case (Some(starts), Some(ends)) => {
+      let from = Time.local(&starts)
+      let to = Time.local(&ends)
+      let sameDay = Time.dayNumber(&starts) == Time.dayNumber(&ends)
+      let first = capitalized(long(locale, &from)) + " · " + Time.clock12(&from)
+      if sameDay { first + " – " + Time.clock12(&to) } else { first + " – " + capitalized(long(locale, &to)) + " · " + Time.clock12(&to) }
+    }
+    case _ => ""
+  }
+}
+
+/// The text with its first letter upper-case.
+fn capitalized(text: Str) -> Str { text.take(1).toUpper() + text.drop(1) }

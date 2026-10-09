@@ -1,0 +1,34 @@
+/** @Validation.Participation.Messages — join messages, decisions, and reports checked */
+module Validation.Participation
+
+import Constants.Limits as Limits
+import Domain.Participation as Participation
+import Domain.Problem as Problem
+import Validation.Check as Check
+
+/// Message keys of participation forms.
+const MESSAGE: Str = "form.message_length"
+const REASON: Str = "form.reason_required"
+const DETAIL: Str = "form.detail_length"
+const REACTION: Str = "form.reaction_invalid"
+
+/** @Validation.Participation.Report — a reason and an optional detail */
+export type Report = { reason: Str, detail: Str }
+
+/// A message to an organizer, or a note on a decision.
+export fn message(text: Str) -> Result[Str, Problem.Problem] {
+  Check.run(&Check.all(&[Check.rule("message", |v: Str| v, |v: Str| v.length() <= Limits.MESSAGE_MAX, MESSAGE)]), text)
+}
+
+/// A report with a known reason.
+export fn report(form: &Report) -> Result[Report, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("reason", |r: Report| r.reason, |v: Str| Participation.REPORT_REASONS.contains(v), REASON),
+        Check.rule("detail", |r: Report| r.detail, |v: Str| v.length() <= Limits.REPORT_DETAIL_MAX, DETAIL)
+      ]), *form)
+}
+
+/// A reaction of -1, 0, or 1.
+export fn reaction(value: Int) -> Result[Int, Problem.Problem] {
+  Check.run(&Check.all(&[Check.rule("reaction", |v: Int| v, |v: Int| v >= -1 && v <= 1, REACTION)]), value)
+}

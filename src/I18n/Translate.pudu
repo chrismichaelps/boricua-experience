@@ -1,0 +1,38 @@
+/** @I18n.Translate.Lookup — message keys turned into text in a language */
+module I18n.Translate
+
+import Domain.Locale as Locale
+import I18n.En as En
+import I18n.Es as Es
+
+/// The text of a key in a language; the Spanish text when English lacks it; the key itself when
+/// neither has it, so a missing entry is visible rather than blank.
+export fn text(locale: &Locale.Locale, key: Str) -> Str {
+  let found = match locale {
+    case Locale.Es => Es.MESSAGES.get(key)
+    case Locale.En => En.MESSAGES.get(key)
+  }
+  match found {
+    case Some(message) => message
+    case None => match Es.MESSAGES.get(key) {
+      case Some(message) => message
+      case None => key
+    }
+  }
+}
+
+/// The text of a key with each `:name` replaced by its value, longest names first so `:count`
+/// never consumes part of `:counted`.
+export fn fill(locale: &Locale.Locale, key: Str, values: &Array[(Str, Str)]) -> Str {
+  var message = text(locale, key)
+  let ordered = values.sortBy(|left: (Str, Str), right: (Str, Str)| left[0].length() > right[0].length())
+  for pair in ordered {
+    message = message.replace(":" + pair[0], pair[1])
+  }
+  message
+}
+
+/// The singular or plural form of a counted message: `key.one` for one, `key.other` otherwise.
+export fn count(locale: &Locale.Locale, key: Str, amount: Int) -> Str {
+  fill(locale, key + (if amount == 1 { ".one" } else { ".other" }), &[("count", show(amount))])
+}

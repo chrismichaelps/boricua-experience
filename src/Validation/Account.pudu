@@ -1,0 +1,89 @@
+/** @Validation.Account.Identity — identity and profile forms checked */
+module Validation.Account
+
+import Constants.Limits as Limits
+import Domain.Credentials as Credentials
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import Validation.Check as Check
+
+/// Message keys of the identity forms.
+const NAME: Str = "form.name_length"
+const EMAIL: Str = "form.email_invalid"
+const PASSWORD: Str = "form.password_length"
+const CONFIRMATION: Str = "form.password_mismatch"
+const ADULT: Str = "form.adult_required"
+const TERMS: Str = "form.terms_required"
+const PRIVACY: Str = "form.privacy_required"
+const BIO: Str = "form.bio_length"
+const VISIBILITY: Str = "form.visibility_invalid"
+
+/// Whether text reads as one email address: a local part, `@`, and a dotted domain.
+export fn isEmail(text: Str) -> Bool {
+  let written = text.trim()
+  let at = written.indexOf("@")
+  if at < 1 || written.length() > Limits.EMAIL_MAX || written.contains(" ") { return false }
+  let domain = written.drop(at + 1)
+  !domain.contains("@") && domain.indexOf(".") > 0 && !domain.endsWith(".")
+}
+
+/// Whether a password has an acceptable length.
+fn passwordOk(text: Str) -> Bool { text.length() >= Limits.PASSWORD_MIN && text.length() <= Limits.PASSWORD_MAX }
+
+/// A sign-up with its name, email, password, and three confirmations.
+export fn signUp(form: &Credentials.SignUp) -> Result[Credentials.SignUp, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("displayName", |f: Credentials.SignUp| f.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
+        Check.rule("email", |f: Credentials.SignUp| f.email, isEmail, EMAIL),
+        Check.rule("password", |f: Credentials.SignUp| f.password, passwordOk, PASSWORD),
+        Check.rule("adult", |f: Credentials.SignUp| f.adult, |v: Bool| v, ADULT),
+        Check.rule("terms", |f: Credentials.SignUp| f.terms, |v: Bool| v, TERMS),
+        Check.rule("privacy", |f: Credentials.SignUp| f.privacy, |v: Bool| v, PRIVACY)
+      ]), *form)
+}
+
+/// A sign-in with an address and a password.
+export fn signIn(form: &Credentials.SignIn) -> Result[Credentials.SignIn, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("email", |f: Credentials.SignIn| f.email, isEmail, EMAIL),
+        Check.rule("password", |f: Credentials.SignIn| f.password, |v: Str| !v.isEmpty(), PASSWORD)
+      ]), *form)
+}
+
+/// An address to send a recovery link to.
+export fn email(address: Str) -> Result[Str, Problem.Problem] {
+  Check.run(&Check.all(&[Check.rule("email", |v: Str| v, isEmail, EMAIL)]), address)
+}
+
+/// A new password typed twice.
+export fn newPassword(form: &Credentials.NewPassword) -> Result[Credentials.NewPassword, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("password", |f: Credentials.NewPassword| f.password, passwordOk, PASSWORD),
+        Check.ruleWith("confirmation", |f: Credentials.NewPassword| f.confirmation, |f: Credentials.NewPassword, v: Str| v == f.password, CONFIRMATION)
+      ]), *form)
+}
+
+/// The confirmations an account created through Google still owes.
+export fn onboarding(form: &Credentials.Onboarding) -> Result[Credentials.Onboarding, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("displayName", |f: Credentials.Onboarding| f.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
+        Check.rule("adult", |f: Credentials.Onboarding| f.adult, |v: Bool| v, ADULT),
+        Check.rule("terms", |f: Credentials.Onboarding| f.terms, |v: Bool| v, TERMS),
+        Check.rule("privacy", |f: Credentials.Onboarding| f.privacy, |v: Bool| v, PRIVACY)
+      ]), *form)
+}
+
+/// A profile edit: a name, a short bio, and the language.
+export fn profile(edit: &Profile.ProfileEdit) -> Result[Profile.ProfileEdit, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("displayName", |e: Profile.ProfileEdit| e.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
+        Check.rule("bio", |e: Profile.ProfileEdit| e.bio, |v: Str| v.length() <= Limits.BIO_MAX, BIO)
+      ]), *edit)
+}
+
+/// Preferences with a known location visibility.
+export fn preferences(chosen: &Profile.Preferences) -> Result[Profile.Preferences, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("locationVisibility", |p: Profile.Preferences| p.locationVisibility, |v: Str| v == Profile.ONLY_ME || v == Profile.APPROVED_ACTIVITIES, VISIBILITY)
+      ]), *chosen)
+}

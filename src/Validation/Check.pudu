@@ -1,0 +1,45 @@
+/** @Validation.Check.Runner — a validator's verdict as a problem */
+module Validation.Check
+
+import PuduLangValidator.Result as Verdict
+import PuduLangValidator.Rule as Rule
+import PuduLangValidator.Validator as Validator
+import Domain.Problem as Problem
+
+/// The value, or `Invalid` naming each refused field with the message key its rule carries.
+export fn run[T](validator: &Validator.Validator[T], value: T) -> Result[T, Problem.Problem] {
+  let verdict = Validator.validate(validator, value)
+  if verdict.isValid { return Ok(value) }
+  var errors: Array[Problem.FieldError] = []
+  for failure in verdict.errors {
+    if Problem.errorFor(&errors, failure.propertyName) == None {
+      errors = errors.push(Problem.FieldError{field: failure.propertyName, key: failure.errorCode})
+    }
+  }
+  Err(Problem.Invalid(errors))
+}
+
+/// A rule over one field that holds when `test` does, refused with message key `key`.
+export fn rule[T, V](field: Str, select: fn(T) -> V, test: fn(V) -> Bool, key: Str) -> Rule.Rule[T] {
+  Rule.build(Rule.withCode(Rule.must(Rule.ruleFor(field, select), test), key))
+}
+
+/// A rule over one field that reads the whole value, refused with message key `key`.
+export fn ruleWith[T, V](field: Str, select: fn(T) -> V, test: fn(T, V) -> Bool, key: Str) -> Rule.Rule[T] {
+  Rule.build(Rule.withCode(Rule.mustWith(Rule.ruleFor(field, select), test), key))
+}
+
+/// A validator holding every rule given, in order.
+export fn all[T](rules: &Array[Rule.Rule[T]]) -> Validator.Validator[T] {
+  var built = Validator.create()
+  for added in *rules {
+    built = Validator.add(built, added)
+  }
+  built
+}
+
+/// Whether text has between `low` and `high` characters once trimmed.
+export fn lengthWithin(text: Str, low: Int, high: Int) -> Bool {
+  let size = text.trim().length()
+  size >= low && size <= high
+}

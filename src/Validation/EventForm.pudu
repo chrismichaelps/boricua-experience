@@ -1,0 +1,122 @@
+/** @Validation.EventForm.Publishing — an organizer's draft checked and converted */
+module Validation.EventForm
+
+import Std.Option as Option
+import Constants.Limits as Limits
+import Domain.Draft as Draft
+import Domain.Problem as Problem
+import Utils.Geo as Geo
+import Utils.Money as Money
+import Utils.Time as Time
+import Validation.Check as Check
+import PuduLangValidator.Validator as Validator
+
+/// Message keys of the publishing form.
+const TITLE: Str = "form.title_length"
+const SUMMARY: Str = "form.summary_length"
+const DESCRIPTION: Str = "form.description_length"
+const INSTRUCTIONS: Str = "form.instructions_length"
+const CATEGORY: Str = "form.category_required"
+const MUNICIPALITY: Str = "form.municipality_required"
+const VENUE: Str = "form.venue_length"
+const ADDRESS: Str = "form.address_length"
+const LOCATION: Str = "form.location_required"
+const STARTS: Str = "form.starts_invalid"
+const ENDS: Str = "form.ends_after_start"
+const DURATION: Str = "form.duration_too_long"
+const VISIBILITY: Str = "form.visibility_invalid"
+const POLICY: Str = "form.private_requires_approval"
+const CAPACITY: Str = "form.capacity_invalid"
+const PRICE: Str = "form.price_invalid"
+
+/// Milliseconds in an hour.
+const HOUR_MILLIS: Int = 3600000
+
+/// Every rule of the publishing form.
+fn validator() -> Validator.Validator[Draft.Draft] {
+  Check.all(&[
+      Check.rule("title", |d: Draft.Draft| d.title, |v: Str| Check.lengthWithin(v, Limits.TITLE_MIN, Limits.TITLE_MAX), TITLE),
+      Check.rule("summary", |d: Draft.Draft| d.summary, |v: Str| Check.lengthWithin(v, Limits.SUMMARY_MIN, Limits.SUMMARY_MAX), SUMMARY),
+      Check.rule("description", |d: Draft.Draft| d.description, |v: Str| v.length() <= Limits.DESCRIPTION_MAX, DESCRIPTION),
+      Check.rule("instructions", |d: Draft.Draft| d.instructions, |v: Str| v.length() <= Limits.INSTRUCTIONS_MAX, INSTRUCTIONS),
+      Check.rule("category", |d: Draft.Draft| d.category, |v: Str| !v.isEmpty(), CATEGORY),
+      Check.rule("municipality", |d: Draft.Draft| d.municipality, |v: Str| !v.isEmpty(), MUNICIPALITY),
+      Check.rule("venueName", |d: Draft.Draft| d.venueName, |v: Str| Check.lengthWithin(v, Limits.VENUE_MIN, Limits.VENUE_MAX), VENUE),
+      Check.rule("addressLine", |d: Draft.Draft| d.addressLine, |v: Str| v.length() <= Limits.ADDRESS_MAX, ADDRESS),
+      Check.rule("location", |d: Draft.Draft| d, |d: Draft.Draft| Option.isSome(&point(&d)), LOCATION),
+      Check.rule("startsAt", |d: Draft.Draft| d.startsAt, |v: Str| Option.isSome(&Time.parseLocalInput(v)), STARTS),
+      Check.rule("endsAt", |d: Draft.Draft| d, |d: Draft.Draft| endsAfterStart(&d), ENDS),
+      Check.rule("endsAt", |d: Draft.Draft| d, |d: Draft.Draft| withinLongest(&d), DURATION),
+      Check.rule("visibility", |d: Draft.Draft| d.visibility, |v: Str| Draft.VISIBILITIES.contains(v), VISIBILITY),
+      Check.rule("joinPolicy", |d: Draft.Draft| d, |d: Draft.Draft| Draft.JOIN_POLICIES.contains(d.joinPolicy) && (d.visibility != "private" || d.joinPolicy == "approval"), POLICY),
+      Check.rule("capacity", |d: Draft.Draft| d.capacity, |v: Str| capacityOk(v), CAPACITY),
+      Check.rule("price", |d: Draft.Draft| d.price, |v: Str| priceOk(v), PRICE)
+    ])
+}
+
+/// The draft converted for the database, or `Invalid` naming every refused field.
+export fn check(draft: &Draft.Draft) -> Result[Draft.Ready, Problem.Problem] {
+  let valid = Check.run(&validator(), *draft) ?
+  let (lat, lng) = Option.unwrapOr(point(&valid), (0.0, 0.0))
+  let starts = Option.unwrapOr(Time.parseLocalInput(valid.startsAt), Time.now())
+  let ends = Option.unwrapOr(Time.parseLocalInput(valid.endsAt), Time.now())
+  Ok(Draft.Ready {
+      title: valid.title.trim(),
+      summary: valid.summary.trim(),
+      description: valid.description,
+      instructions: valid.instructions,
+      category: valid.category,
+      municipality: valid.municipality,
+      venueName: valid.venueName.trim(),
+      addressLine: valid.addressLine.trim(),
+      lat: lat,
+      lng: lng,
+      startsAt: Time.toTimestamp(&starts),
+      endsAt: Time.toTimestamp(&ends),
+      visibility: valid.visibility,
+      joinPolicy: valid.joinPolicy,
+      capacity: valid.capacity.trim().toInt(),
+      priceCents: Option.unwrapOr(Money.parseCents(valid.price), 0)
+    })
+}
+
+/// The pin's coordinates when both parse and lie in Puerto Rico.
+fn point(draft: &Draft.Draft) -> Option[(Float64, Float64)] {
+  let lat = Geo.parseDegrees(draft.lat) ?
+  let lng = Geo.parseDegrees(draft.lng) ?
+  if Geo.inPuertoRico(lat, lng) { Some((lat, lng)) } else { None }
+}
+
+/// Whether the end parses and comes after the start.
+fn endsAfterStart(draft: &Draft.Draft) -> Bool {
+  match (Time.parseLocalInput(draft.startsAt), Time.parseLocalInput(draft.endsAt)) {
+    case (Some(starts), Some(ends)) => ends.millis > starts.millis
+    case (None, Some(_)) => true
+    case _ => false
+  }
+}
+
+/// Whether the event lasts no longer than the longest allowed.
+fn withinLongest(draft: &Draft.Draft) -> Bool {
+  match (Time.parseLocalInput(draft.startsAt), Time.parseLocalInput(draft.endsAt)) {
+    case (Some(starts), Some(ends)) => ends.millis - starts.millis <= Limits.EVENT_MAX_HOURS * HOUR_MILLIS
+    case _ => true
+  }
+}
+
+/// Whether capacity is empty (unlimited) or a whole number in range.
+fn capacityOk(written: Str) -> Bool {
+  if written.trim().isEmpty() { return true }
+  match written.trim().toInt() {
+    case Some(total) => total >= 1 && total <= Limits.CAPACITY_MAX
+    case None => false
+  }
+}
+
+/// Whether the price is empty (free) or a valid amount in range.
+fn priceOk(written: Str) -> Bool {
+  match Money.parseCents(written) {
+    case Some(cents) => cents <= Limits.PRICE_MAX_CENTS
+    case None => false
+  }
+}

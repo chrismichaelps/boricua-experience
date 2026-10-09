@@ -1,0 +1,7 @@
+/** @I18n.Es.Catalog — Spanish text of every message key */
+module I18n.Es
+
+/// Spanish messages by key.
+export const MESSAGES: Map[Str, Str] = mapOf([
+  ("date.today", "Hoy")
+])

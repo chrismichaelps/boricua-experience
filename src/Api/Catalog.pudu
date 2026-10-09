@@ -1,0 +1,17 @@
+/** @Api.Catalog.Client — categories and municipalities */
+module Api.Catalog
+
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Catalog as Catalog
+import Domain.Problem as Problem
+
+/// Every category with its count of upcoming events.
+export fn categories(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Category], Problem.Problem] {
+  Gateway.query(gateway, Supabase.LIST_CATEGORIES, &[], None, Gateway.Read)
+}
+
+/// Every municipality with its centroid.
+export fn municipalities(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Municipality], Problem.Problem] {
+  Gateway.query(gateway, Supabase.LIST_MUNICIPALITIES, &[], None, Gateway.Read)
+}

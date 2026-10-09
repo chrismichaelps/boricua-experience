@@ -1,0 +1,64 @@
+/** @Api.Participation.Client — joining, deciding, saving, reacting, and reporting */
+module Api.Participation
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Event as Event
+import Domain.Participation as Participation
+import Domain.Problem as Problem
+
+/// Asks to join an event; answers the status reached.
+export fn requestJoin(gateway: &Gateway.Gateway, eventId: Str, message: Str, token: Str) -> Result[Participation.JoinOutcome, Problem.Problem] {
+  Gateway.query(gateway, Supabase.REQUEST_JOIN, &[("p_event_id", Gateway.text(eventId)), ("p_message", Gateway.text(message))], Some(token), Gateway.Write)
+}
+
+/// Withdraws the member's pending or approved request.
+export fn withdraw(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.WITHDRAW_REQUEST, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// The organizer approves or rejects a request with an optional note.
+export fn decide(gateway: &Gateway.Gateway, requestId: Str, approve: Bool, note: Str, token: Str) -> Result[Participation.JoinOutcome, Problem.Problem] {
+  Gateway.query(gateway, Supabase.DECIDE_REQUEST, &[
+      ("p_request_id", Gateway.text(requestId)),
+      ("p_approve", Gateway.truth(approve)),
+      ("p_note", Gateway.text(note))
+    ], Some(token), Gateway.Write)
+}
+
+/// The organizer's queue for one event.
+export fn incoming(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[Array[Participation.IncomingRequest], Problem.Problem] {
+  Gateway.query(gateway, Supabase.EVENT_REQUESTS, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Read)
+}
+
+/// The member's own requests.
+export fn mine(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Participation.MyRequest], Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_REQUESTS, &[], Some(token), Gateway.Read)
+}
+
+/// Saves or unsaves an event.
+export fn toggleSaved(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[Participation.SavedState, Problem.Problem] {
+  Gateway.query(gateway, Supabase.TOGGLE_SAVED, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write)
+}
+
+/// The member's saved events.
+export fn saved(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Event.Card], Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_SAVED_EVENTS, &[], Some(token), Gateway.Read)
+}
+
+/// Sets the member's reaction: 1 likes, -1 dislikes, 0 clears.
+export fn react(gateway: &Gateway.Gateway, eventId: Str, value: Int, token: Str) -> Result[Participation.ReactionState, Problem.Problem] {
+  Gateway.query(gateway, Supabase.SET_REACTION, &[("p_event_id", Gateway.text(eventId)), ("p_value", Json.Number(value))], Some(token), Gateway.Write)
+}
+
+/// Reports an event for moderation.
+export fn report(gateway: &Gateway.Gateway, eventId: Str, reason: Str, detail: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.REPORT_EVENT, &[
+        ("p_event_id", Gateway.text(eventId)),
+        ("p_reason", Gateway.text(reason)),
+        ("p_detail", Gateway.text(detail))
+      ], Some(token), Gateway.Write) ?
+  Ok(())
+}

@@ -1,0 +1,70 @@
+/** @Config.Settings.Environment — what the server reads at start-up */
+module Config.Settings
+
+import Std.App.Secret as Secret
+import Std.Bytes as Bytes
+import Std.Result as Result
+import PuduLangEnvironment as Environment
+import PuduLangEnvironment.Binding as Binding
+import PuduLangEnvironment.Loader as Loader
+import PuduLangEnvironment.Options as Options
+import PuduLangEnvironment.Settings as Bound
+import PuduLangEnvironment.Variables as Variables
+import PuduLangValidator.Rule as Rule
+import PuduLangValidator.Rules.Number as NumberRule
+import PuduLangValidator.Rules.Text as TextRule
+import PuduLangValidator.Validator as Validator
+
+/** @Config.Settings.Settings — addresses, keys, and server options */
+export type Settings = {
+  @env("BORICUA_SITE_URL") siteUrl: Str,
+  @env("BORICUA_SUPABASE_URL") supabaseUrl: Str,
+  @env("BORICUA_SUPABASE_ANON_KEY") @secret anonKey: Secret.Secret,
+  @env("BORICUA_SUPABASE_SERVICE_KEY") @secret serviceKey: Secret.Secret,
+  @env("BORICUA_SESSION_KEY") @secret sessionKey: Secret.Secret,
+  @env("BORICUA_LOG_LEVEL") @default("information") logLevel: Str,
+  @env("BORICUA_LOG_FORMAT") @default("text") logFormat: Str,
+  @env("BORICUA_HOST") @default("127.0.0.1") host: Str,
+  @env("BORICUA_PORT") @default("8080") port: Int,
+  @env("BORICUA_CONNECTIONS") @default("64") connections: Int
+} derives Binding.Bind, Binding.Redacted
+
+/// Log levels the server accepts.
+const LOG_LEVELS: Array[Str] = ["verbose", "debug", "information", "warning", "error", "fatal"]
+
+/// Log formats the server accepts.
+const LOG_FORMATS: Array[Str] = ["text", "console", "json"]
+
+/// Every rule the settings must satisfy, reported together.
+fn rules() -> Validator.Validator[Settings] {
+  let site = Rule.build(Rule.withCode(Rule.must(Rule.ruleFor("BORICUA_SITE_URL", |s: Settings| s.siteUrl), |url: Str| url.startsWith("https://") || url.startsWith("http://localhost") || url.startsWith("http://127.0.0.1")), "an https:// origin, or http://localhost in development"))
+  let siteEnd = Rule.build(Rule.withCode(Rule.must(Rule.ruleFor("BORICUA_SITE_URL", |s: Settings| s.siteUrl), |url: Str| !url.endsWith("/")), "an origin without a trailing slash"))
+  let database = Rule.build(Rule.withCode(Rule.must(Rule.ruleFor("BORICUA_SUPABASE_URL", |s: Settings| s.supabaseUrl), |url: Str| url.startsWith("https://") && !url.endsWith("/")), "an https:// project address without a trailing slash"))
+  let key = Rule.build(Rule.withCode(Rule.must(Rule.ruleFor("BORICUA_SESSION_KEY", |s: Settings| s.sessionKey), |held: Secret.Secret| Result.isOk(&keyBytes(&held))), "64 hexadecimal characters (32 bytes)"))
+  let level = Rule.build(Rule.withCode(Rule.must(Rule.ruleFor("BORICUA_LOG_LEVEL", |s: Settings| s.logLevel), |given: Str| LOG_LEVELS.contains(given)), "one of verbose, debug, information, warning, error, fatal"))
+  let format = Rule.build(Rule.withCode(Rule.must(Rule.ruleFor("BORICUA_LOG_FORMAT", |s: Settings| s.logFormat), |given: Str| LOG_FORMATS.contains(given)), "one of text, console, json"))
+  let port = Rule.build(NumberRule.inclusiveBetween(Rule.ruleFor("BORICUA_PORT", |s: Settings| s.port), 1, 65535))
+  let connections = Rule.build(NumberRule.inclusiveBetween(Rule.ruleFor("BORICUA_CONNECTIONS", |s: Settings| s.connections), 1, 4096))
+  let host = Rule.build(TextRule.notEmpty(Rule.ruleFor("BORICUA_HOST", |s: Settings| s.host)))
+  var built = Validator.create()
+  for rule in [site, siteEnd, database, key, level, format, port, connections, host] {
+    built = Validator.add(built, rule)
+  }
+  built
+}
+
+/// The settings from `.env` (when present) over the process environment, bound and validated.
+export fn load() -> Result[Settings, Str] {
+  let bound = Result.andThen(Loader.load(&Options.defaults()), |variables: Variables.Variables| Bound.bind(&variables, &rules()))
+  Result.mapErr(bound, |problem: Environment.Problem| Environment.describe(&problem))
+}
+
+/// The 32 bytes of the session key.
+export fn keyBytes(key: &Secret.Secret) -> Result[Bytes, Str] {
+  let text = Secret.reveal(key).trim()
+  if text.length() != 64 { return Err("the session key must be 64 hexadecimal characters") }
+  Result.mapErr(Bytes.decodeHex(text), |_problem: Bytes.BytesError| "the session key must be hexadecimal")
+}
+
+/// Whether the site is served over HTTPS, which decides the `Secure` cookie attribute.
+export fn isSecure(settings: &Settings) -> Bool { settings.siteUrl.startsWith("https://") }

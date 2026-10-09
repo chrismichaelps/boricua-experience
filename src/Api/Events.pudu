@@ -1,0 +1,143 @@
+/** @Api.Events.Client — event listings, pages, and publishing */
+module Api.Events
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Draft as Draft
+import Domain.Event as Event
+import Domain.Problem as Problem
+
+/** @Api.Events.SearchArgs — the arguments `search_events` reads */
+export type SearchArgs = {
+  query: Str,
+  category: Str,
+  municipality: Str,
+  from: Str,
+  to: Str,
+  maxPriceCents: Option[Int],
+  lat: Option[Float64],
+  lng: Option[Float64],
+  radiusM: Option[Int],
+  sort: Str,
+  limit: Int,
+  after: Str
+}
+
+/** @Api.Events.SitemapEntry — one public event for the sitemap */
+export type SitemapEntry = { slug: Str, @json("updated_at") updatedAt: Str } derives Json.Decode
+
+/** @Api.Events.Recommended — recommendations come without a cursor */
+type Recommended = { items: Array[Event.Card] } derives Json.Decode
+
+/** @Api.Events.PublishedWire — the id and slug a publish answers */
+type PublishedWire = { id: Str, slug: Str } derives Json.Decode
+
+/// One page of upcoming public events matching the arguments.
+export fn search(gateway: &Gateway.Gateway, args: &SearchArgs, token: Option[Str]) -> Result[Event.Page, Problem.Problem] {
+  Gateway.query(gateway, Supabase.SEARCH_EVENTS, &[
+      ("p_query", Gateway.textOrNull(args.query)),
+      ("p_category", Gateway.textOrNull(args.category)),
+      ("p_municipality", Gateway.textOrNull(args.municipality)),
+      ("p_from", Gateway.textOrNull(args.from)),
+      ("p_to", Gateway.textOrNull(args.to)),
+      ("p_max_price_cents", Gateway.whole(args.maxPriceCents)),
+      ("p_lat", Gateway.fraction(args.lat)),
+      ("p_lng", Gateway.fraction(args.lng)),
+      ("p_radius_m", Gateway.whole(args.radiusM)),
+      ("p_sort", Gateway.text(args.sort)),
+      ("p_limit", Json.Number(args.limit)),
+      ("p_after", Gateway.textOrNull(args.after))
+    ], token, Gateway.Read)
+}
+
+/// Recommendations for the viewer, nearer ones first when a position is known.
+export fn recommended(gateway: &Gateway.Gateway, lat: Option[Float64], lng: Option[Float64], limit: Int, token: Option[Str]) -> Result[Array[Event.Card], Problem.Problem] {
+  let found: Recommended = Gateway.query(gateway, Supabase.RECOMMENDED_EVENTS, &[
+        ("p_lat", Gateway.fraction(lat)),
+        ("p_lng", Gateway.fraction(lng)),
+        ("p_limit", Json.Number(limit))
+      ], token, Gateway.Read) ?
+  Ok(found.items)
+}
+
+/// Upcoming public events within a radius, nearest first.
+export fn near(gateway: &Gateway.Gateway, lat: Float64, lng: Float64, radiusM: Int, limit: Int) -> Result[Event.Page, Problem.Problem] {
+  Gateway.query(gateway, Supabase.EVENTS_NEAR, &[
+      ("p_lat", Gateway.fraction(Some(lat))),
+      ("p_lng", Gateway.fraction(Some(lng))),
+      ("p_radius_m", Json.Number(radiusM)),
+      ("p_limit", Json.Number(limit))
+    ], None, Gateway.Read)
+}
+
+/// An event as the viewer may see it.
+export fn detail(gateway: &Gateway.Gateway, slug: Str, token: Option[Str]) -> Result[Event.Detail, Problem.Problem] {
+  let document = Gateway.call(gateway, Supabase.EVENT_DETAIL, &[("p_slug", Gateway.text(slug))], token, Gateway.Read) ?
+  match Event.decodeDetail(&document) {
+    case Ok(found) => Ok(found)
+    case Err(problem) => Err(Problem.Unavailable(Supabase.EVENT_DETAIL + ": " + Json.explainDecode(&problem)))
+  }
+}
+
+/// Everyone going to an event, as far as the viewer may see.
+export fn attendees(gateway: &Gateway.Gateway, eventId: Str, limit: Int, token: Option[Str]) -> Result[Event.Attendees, Problem.Problem] {
+  Gateway.query(gateway, Supabase.EVENT_ATTENDEES, &[("p_event_id", Gateway.text(eventId)), ("p_limit", Json.Number(limit))], token, Gateway.Read)
+}
+
+/// Events the member organizes, newest first.
+export fn mine(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Event.Card], Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_EVENTS, &[], Some(token), Gateway.Read)
+}
+
+/// The arguments shared by publishing and editing.
+fn draftArguments(ready: &Draft.Ready) -> Array[(Str, Json.Json)] {
+  [
+    ("p_title", Gateway.text(ready.title)),
+    ("p_summary", Gateway.text(ready.summary)),
+    ("p_description", Gateway.text(ready.description)),
+    ("p_instructions", Gateway.text(ready.instructions)),
+    ("p_category", Gateway.text(ready.category)),
+    ("p_municipality", Gateway.text(ready.municipality)),
+    ("p_venue_name", Gateway.text(ready.venueName)),
+    ("p_address_line", Gateway.text(ready.addressLine)),
+    ("p_lat", Gateway.fraction(Some(ready.lat))),
+    ("p_lng", Gateway.fraction(Some(ready.lng))),
+    ("p_starts_at", Gateway.text(ready.startsAt)),
+    ("p_ends_at", Gateway.text(ready.endsAt)),
+    ("p_visibility", Gateway.text(ready.visibility)),
+    ("p_join_policy", Gateway.text(ready.joinPolicy)),
+    ("p_capacity", Gateway.whole(ready.capacity)),
+    ("p_price_cents", Json.Number(ready.priceCents))
+  ]
+}
+
+/// Publishes an event organized by the member.
+export fn create(gateway: &Gateway.Gateway, ready: &Draft.Ready, token: Str) -> Result[Draft.Published, Problem.Problem] {
+  let wire: PublishedWire = Gateway.query(gateway, Supabase.CREATE_EVENT, &draftArguments(ready), Some(token), Gateway.Write) ?
+  Ok(Draft.Published{id: wire.id, slug: wire.slug})
+}
+
+/// Changes an event the member organizes.
+export fn update(gateway: &Gateway.Gateway, eventId: Str, ready: &Draft.Ready, token: Str) -> Result[Draft.Published, Problem.Problem] {
+  let arguments = [("p_event_id", Gateway.text(eventId))].concat(draftArguments(ready))
+  let wire: PublishedWire = Gateway.query(gateway, Supabase.UPDATE_EVENT, &arguments, Some(token), Gateway.Write) ?
+  Ok(Draft.Published{id: wire.id, slug: wire.slug})
+}
+
+/// Cancels an event the member organizes.
+export fn cancel(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.CANCEL_EVENT, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Counts one view of an event.
+export fn recordView(gateway: &Gateway.Gateway, eventId: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.RECORD_EVENT_VIEW, &[("p_event_id", Gateway.text(eventId))], None, Gateway.Write) ?
+  Ok(())
+}
+
+/// Public events for the sitemap.
+export fn sitemap(gateway: &Gateway.Gateway, limit: Int) -> Result[Array[SitemapEntry], Problem.Problem] {
+  Gateway.query(gateway, Supabase.SITEMAP_EVENTS, &[("p_limit", Json.Number(limit))], None, Gateway.Read)
+}

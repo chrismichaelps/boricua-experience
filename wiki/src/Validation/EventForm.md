@@ -1,0 +1,55 @@
+---
+type: module
+path: "@root/src/Validation/EventForm.pudu"
+fidelity: Active
+grammar: "[[grammar/pudu]]"
+layer: Validation
+depth_status: DEEP
+tags: [module, validation, deep]
+---
+
+# Validation.EventForm
+
+> /** @Validation.EventForm.Publishing — an organizer's draft checked and converted */
+
+## Purpose
+
+Checks every publishing field and converts the draft into database values: coordinates, UTC timestamps, capacity, and cents.
+
+## Interface
+
+### Signatures
+
+```pudu
+export fn check(draft: &Draft.Draft) -> Result[Draft.Ready, Problem.Problem]
+```
+
+### Linkage
+
+- **Requires:** [[src/Validation/Check]], [[src/Domain/Draft]], [[src/Utils/Geo]], [[src/Utils/Money]], [[src/Utils/Time]], [[src/Constants/Limits]].
+- **Consumed by:** [[src/Services/Events]].
+
+## Algorithm
+
+Lengths from [[src/Constants/Limits]]; the pin must parse and lie in Puerto Rico; start and end parse as Puerto Rico time, end after start, at most 14 days; private implies approval; capacity empty or 1–100000; price empty or a valid amount.
+
+## Negative Logic (Prohibited Paths)
+
+- ❌ No check that the start is in the future: the database refuses events starting over an hour ago, and an organizer may fix a running event.
+
+## Edge Cases
+
+- Empty capacity is unlimited; empty price is free.
+
+## Depth
+
+DEEP.
+
+## Grill Log
+
+- **Q:** Validate again in the database?
+  **A:** Yes: the database is the authority; this layer answers in the visitor's language before a round trip.
+
+## Referenced by
+
+[[src/_MOC]]

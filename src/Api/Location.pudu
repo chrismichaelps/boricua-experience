@@ -1,0 +1,34 @@
+/** @Api.Location.Client — live positions and their history */
+module Api.Location
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Location as Location
+import Domain.Problem as Problem
+
+/// Stores the member's current position; answers `recorded` or `throttled`.
+export fn record(gateway: &Gateway.Gateway, reading: &Location.Position, token: Str) -> Result[Location.Recorded, Problem.Problem] {
+  Gateway.query(gateway, Supabase.RECORD_POSITION, &[
+      ("p_lat", Gateway.fraction(Some(reading.lat))),
+      ("p_lng", Gateway.fraction(Some(reading.lng))),
+      ("p_accuracy_m", Gateway.fraction(Some(reading.accuracyM)))
+    ], Some(token), Gateway.Write)
+}
+
+/// Stops sharing: the live position is removed.
+export fn stop(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.STOP_LIVE_LOCATION, &[], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Deletes the live position and every recorded one.
+export fn deleteHistory(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.DELETE_LOCATION_HISTORY, &[], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Live positions of co-attendees who share them, for an event the member is approved for.
+export fn participants(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[Array[Location.Participant], Problem.Problem] {
+  Gateway.query(gateway, Supabase.EVENT_PARTICIPANT_POSITIONS, &[("p_event_id", Json.Text(eventId))], Some(token), Gateway.Read)
+}

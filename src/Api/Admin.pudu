@@ -1,0 +1,24 @@
+/** @Api.Admin.Client — metrics and moderation */
+module Api.Admin
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Admin as Admin
+import Domain.Problem as Problem
+
+/// Platform counts for an administrator.
+export fn overview(gateway: &Gateway.Gateway, token: Str) -> Result[Admin.Overview, Problem.Problem] {
+  Gateway.query(gateway, Supabase.ADMIN_OVERVIEW, &[], Some(token), Gateway.Read)
+}
+
+/// Open reports, oldest first.
+export fn reports(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Admin.Report], Problem.Problem] {
+  Gateway.query(gateway, Supabase.ADMIN_REPORTS, &[], Some(token), Gateway.Read)
+}
+
+/// Closes a report: `dismissed`, or `actioned`, which cancels the event.
+export fn resolve(gateway: &Gateway.Gateway, reportId: Int, action: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.ADMIN_RESOLVE_REPORT, &[("p_report_id", Json.Number(reportId)), ("p_action", Gateway.text(action))], Some(token), Gateway.Write) ?
+  Ok(())
+}

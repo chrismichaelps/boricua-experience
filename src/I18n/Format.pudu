@@ -1,0 +1,41 @@
+/** @I18n.Format.Values — prices, counts, and distances written for a reader */
+module I18n.Format
+
+import Domain.Event as Event
+import Domain.Locale as Locale
+import I18n.Translate as Translate
+import Utils.Geo as Geo
+import Utils.Money as Money
+
+/// `Gratis` / `Free`, or the price.
+export fn price(locale: &Locale.Locale, cents: Int) -> Str {
+  if cents == 0 { Translate.text(locale, "event.free") } else { Money.dollars(cents) }
+}
+
+/// `12 van` / `12 going`.
+export fn going(locale: &Locale.Locale, count: Int) -> Str { Translate.count(locale, "event.going", count) }
+
+/// `Quedan 3` / `3 spots left`, `Lleno` / `Full`, or nothing without a capacity.
+export fn seats(locale: &Locale.Locale, card: &Event.Card) -> Str {
+  match Event.seatsLeft(card) {
+    case Some(0) => Translate.text(locale, "event.full")
+    case Some(left) => Translate.count(locale, "event.spots_left", left)
+    case None => ""
+  }
+}
+
+/// `A 3.2 km` / `3.2 km away`, or nothing without a distance.
+export fn distance(locale: &Locale.Locale, meters: Option[Int]) -> Str {
+  match meters {
+    case Some(found) => Translate.fill(locale, "event.distance", &[("distance", Geo.distanceLabel(found))])
+    case None => ""
+  }
+}
+
+/// The category's name in the reader's language.
+export fn categoryName(locale: &Locale.Locale, category: &Event.CategoryRef) -> Str {
+  match locale {
+    case Locale.Es => category.nameEs
+    case Locale.En => category.nameEn
+  }
+}

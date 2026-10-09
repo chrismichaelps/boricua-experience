@@ -1,0 +1,103 @@
+/** @Api.Account.Client — profiles, preferences, notifications, consent, and data rights */
+module Api.Account
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.App as App
+import Constants.Supabase as Supabase
+import Domain.Notification as Notification
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+
+/// The signed-in account.
+export fn me(gateway: &Gateway.Gateway, token: Str) -> Result[Profile.MyProfile, Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_PROFILE, &[], Some(token), Gateway.Read)
+}
+
+/// An organizer's public profile.
+export fn publicProfile(gateway: &Gateway.Gateway, id: Str) -> Result[Profile.PublicProfile, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PUBLIC_PROFILE, &[("p_id", Gateway.text(id))], None, Gateway.Read)
+}
+
+/// Records age, terms, and privacy acceptance for an account that has not given them.
+export fn completeOnboarding(gateway: &Gateway.Gateway, displayName: Str, locale: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.COMPLETE_ONBOARDING, &[
+        ("p_display_name", Gateway.text(displayName)),
+        ("p_adult", Gateway.truth(true)),
+        ("p_terms_version", Gateway.text(App.TERMS_VERSION)),
+        ("p_privacy_version", Gateway.text(App.PRIVACY_VERSION)),
+        ("p_locale", Gateway.text(locale))
+      ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Changes the member's name, bio, home municipality, and language.
+export fn updateProfile(gateway: &Gateway.Gateway, edit: &Profile.ProfileEdit, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_PROFILE, &[
+        ("p_display_name", Gateway.text(edit.displayName)),
+        ("p_bio", Gateway.text(edit.bio)),
+        ("p_home_municipality", Gateway.textOrNull(edit.homeMunicipality)),
+        ("p_locale", Gateway.text(edit.locale))
+      ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Changes the member's notification, marketing, location, and attendee-list choices.
+export fn updatePreferences(gateway: &Gateway.Gateway, chosen: &Profile.Preferences, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_PREFERENCES, &[
+        ("p_notify_request_updates", Gateway.truth(chosen.notifyRequestUpdates)),
+        ("p_notify_new_requests", Gateway.truth(chosen.notifyNewRequests)),
+        ("p_notify_reminders", Gateway.truth(chosen.notifyReminders)),
+        ("p_notify_event_changes", Gateway.truth(chosen.notifyEventChanges)),
+        ("p_marketing_opt_in", Gateway.truth(chosen.marketingOptIn)),
+        ("p_location_visibility", Gateway.text(chosen.locationVisibility)),
+        ("p_show_in_attendee_lists", Gateway.truth(chosen.showInAttendeeLists))
+      ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// The member's notifications, newest first.
+export fn notifications(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Notification.Notification], Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_NOTIFICATIONS, &[], Some(token), Gateway.Read)
+}
+
+/// Marks every notification read.
+export fn markRead(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.MARK_NOTIFICATIONS_READ, &[], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Everything held about the member, as one JSON document.
+export fn exportData(gateway: &Gateway.Gateway, token: Str) -> Result[Json.Json, Problem.Problem] {
+  Gateway.call(gateway, Supabase.EXPORT_MY_DATA, &[], Some(token), Gateway.Write)
+}
+
+/// Pauses the member's account.
+export fn pause(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.PAUSE_MY_ACCOUNT, &[], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Reactivates a paused account.
+export fn reactivate(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.REACTIVATE_MY_ACCOUNT, &[], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Cancels the member's upcoming events and erases location data ahead of deleting the identity.
+export fn prepareDeletion(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.DELETE_MY_ACCOUNT, &[], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Records a cookie or marketing choice for a visitor or member.
+export fn recordConsent(gateway: &Gateway.Gateway, subject: Str, kind: Str, granted: Bool, version: Str, source: Str, token: Option[Str]) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.RECORD_CONSENT, &[
+        ("p_subject", Gateway.text(subject)),
+        ("p_kind", Gateway.text(kind)),
+        ("p_granted", Gateway.truth(granted)),
+        ("p_version", Gateway.text(version)),
+        ("p_source", Gateway.text(source))
+      ], token, Gateway.Write) ?
+  Ok(())
+}
