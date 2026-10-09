@@ -1,0 +1,24 @@
+# FMCF Architectural Governance
+fmcf.md
+
+# Product & Technical Specifications
+SPEC.md
+
+# Design & UI/UX Specifications
+DESIGN.md
+DESIGN-TOKENS.md
+CSS.md
+
+# Environment & Local Secrets
+.env
+.env.local
+.env.*.local
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Pudu packages and build output
+deps/
+.vercel/
+dist/
