@@ -1,0 +1,127 @@
+/** @Services.Discovery.Feed — the home feed, search, suggestions, and the map */
+module Services.Discovery
+
+import Std.Concurrent as Concurrent
+import Std.Option as Option
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Time as StdTime
+import Api.Events as EventsApi
+import Constants.Limits as Limits
+import Domain.Event as Event
+import Domain.Problem as Problem
+import Domain.Search as Search
+import Services.Runtime as Runtime
+import Utils.Time as Time
+
+/** @Services.Discovery.Home — the rails the home page shows */
+export type Home = { recommended: Array[Event.Card], soon: Array[Event.Card], weekend: Array[Event.Card], free: Array[Event.Card] }
+
+/// Milliseconds in a day.
+const DAY_MILLIS: Int = 86400000
+/// Saturday and Sunday as weekdays, Sunday = 0.
+const SATURDAY: Int = 6
+
+/// The window's first and last instants as database timestamps; empty for any time.
+export fn bounds(window: &Search.When, now: &StdTime.Instant) -> (Str, Str) {
+  let today = Time.dayNumber(now)
+  let weekday = Time.local(now).weekday
+  let span = match window {
+    case Search.Anytime => None
+    case Search.Today => Some((today, today + 1))
+    case Search.Tomorrow => Some((today + 1, today + 2))
+    case Search.Weekend => {
+      let untilSaturday = if weekday == 0 { -1 } else { SATURDAY - weekday }
+      Some((today + untilSaturday, today + untilSaturday + 2))
+    }
+    case Search.Week => Some((today, today + 7))
+    case Search.Month => Some((today, today + 31))
+  }
+  match span {
+    case Some((first, last)) => {
+      let from = Time.startOfDay(first)
+      let start = if from.millis < now.millis { StdTime.instantOf(now.millis - DAY_MILLIS / 2) } else { from }
+      (Time.toTimestamp(&start), Time.toTimestamp(&Time.startOfDay(last)))
+    }
+    case None => ("", "")
+  }
+}
+
+/// The database arguments for a visitor's filters.
+export fn argumentsFor(filters: &Search.Filters, limit: Int, now: &StdTime.Instant) -> EventsApi.SearchArgs {
+  let (from, to) = bounds(&filters.window, now)
+  let sort = if filters.sort == Search.Near && filters.lat == None { Search.Soon } else { filters.sort }
+  let ranked = if sort == Search.Relevant && filters.query.trim().isEmpty() { Search.Soon } else { sort }
+  EventsApi.SearchArgs {
+    query: filters.query.trim().take(Limits.QUERY_MAX),
+    category: filters.category,
+    municipality: filters.municipality,
+    from: from,
+    to: to,
+    maxPriceCents: if filters.freeOnly { Some(0) } else { filters.maxPriceCents },
+    lat: filters.lat,
+    lng: filters.lng,
+    radiusM: match filters.radiusM {
+      case Some(radius) => Some(if radius > Limits.RADIUS_MAX_M { Limits.RADIUS_MAX_M } else { radius })
+      case None => None
+    },
+    sort: Search.sortName(&ranked),
+    limit: limit,
+    after: filters.after
+  }
+}
+
+/// One page of results for the filters.
+export fn search(runtime: &Runtime.Runtime, filters: &Search.Filters, token: Option[Str]) -> Result[Event.Page, Problem.Problem] {
+  EventsApi.search(&runtime.gateway, &argumentsFor(filters, Limits.PAGE_SIZE, &Time.now()), token)
+}
+
+/// The home rails, read together: recommendations, the next events, this weekend, and free ones.
+export fn home(runtime: &Runtime.Runtime, lat: Option[Float64], lng: Option[Float64], token: Option[Str]) -> Result[Home, Problem.Problem] {
+  let now = Time.now()
+  let held = *runtime
+  let recommended = Sync.cell(Ok([]))
+  let soon = Sync.cell(Ok([]))
+  let weekend = Sync.cell(Ok([]))
+  let free = Sync.cell(Ok([]))
+  let rail = |filters: Search.Filters| EventsApi.search(&held.gateway, &argumentsFor(&filters, Limits.RAIL_COUNT, &now), token)
+  let everything = Search.everything()
+  let ran = Concurrent.parallel(&[
+        || { let _set = Sync.set(&recommended, EventsApi.recommended(&held.gateway, lat, lng, Limits.RECOMMENDED_COUNT, token)) },
+        || { let _set = Sync.set(&soon, Result.map(rail(everything), |page: Event.Page| page.items)) },
+        || { let _set = Sync.set(&weekend, Result.map(rail(Search.Filters{..everything, window: Search.Weekend}), |page: Event.Page| page.items)) },
+        || { let _set = Sync.set(&free, Result.map(rail(Search.Filters{..everything, freeOnly: true, window: Search.Week}), |page: Event.Page| page.items)) }
+      ])
+  if Result.isErr(&ran) { return Err(Problem.Unavailable("the home rails could not run")) }
+  Ok(Home {
+      recommended: read(&recommended) ?,
+      soon: read(&soon) ?,
+      weekend: read(&weekend) ?,
+      free: read(&free) ?
+    })
+}
+
+/// The value a worker stored.
+fn read(cell: &Sync.Cell[Result[Array[Event.Card], Problem.Problem]]) -> Result[Array[Event.Card], Problem.Problem] {
+  match Sync.get(cell) {
+    case Ok(stored) => stored
+    case Err(_) => Err(Problem.Unavailable("a home rail was lost"))
+  }
+}
+
+/// Titles and slugs matching what a visitor has typed so far.
+export fn suggest(runtime: &Runtime.Runtime, query: Str) -> Result[Array[Event.Card], Problem.Problem] {
+  if query.trim().length() < 2 { return Ok([]) }
+  let filters = Search.Filters{..Search.everything(), query: query, sort: Search.Relevant}
+  let page = EventsApi.search(&runtime.gateway, &argumentsFor(&filters, Limits.SUGGEST_COUNT, &Time.now()), None) ?
+  Ok(page.items)
+}
+
+/// Pins for the map: nearest first around a position, or the next events island-wide.
+export fn pins(runtime: &Runtime.Runtime, lat: Option[Float64], lng: Option[Float64], radiusM: Option[Int]) -> Result[Array[Event.Card], Problem.Problem] {
+  let page = match (lat, lng) {
+    case (Some(y), Some(x)) => EventsApi.near(&runtime.gateway, y, x, Option.unwrapOr(radiusM, Limits.NEARBY_RADIUS_M), Limits.MAP_PINS) ?
+    case _ => EventsApi.search(&runtime.gateway, &argumentsFor(&Search.everything(), Limits.MAP_PINS, &Time.now()), None) ?
+  }
+  Ok(page.items)
+}

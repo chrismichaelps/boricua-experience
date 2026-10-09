@@ -1,0 +1,54 @@
+/** @Services.Events.Publishing — event pages, publishing, editing, and cancelling */
+module Services.Events
+
+import Std.Option as Option
+import Api.Events as EventsApi
+import Domain.Draft as Draft
+import Domain.Event as Event
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Validation.EventForm as EventForm
+
+/// An event as the viewer may see it; a view is counted for everyone but the organizer.
+export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.Session]) -> Result[Event.Detail, Problem.Problem] {
+  let token = tokenOf(&session)
+  let found = EventsApi.detail(&runtime.gateway, slug, token) ?
+  if !found.viewer.isOrganizer {
+    let _counted = EventsApi.recordView(&runtime.gateway, found.card.id)
+  }
+  Ok(found)
+}
+
+/// Everyone going, as far as the viewer may see.
+export fn attendees(runtime: &Runtime.Runtime, eventId: Str, session: Option[Session.Session]) -> Result[Event.Attendees, Problem.Problem] {
+  EventsApi.attendees(&runtime.gateway, eventId, 200, tokenOf(&session))
+}
+
+/// Publishes a draft; answers the new event's slug, or `Invalid` naming every refused field.
+export fn publish(runtime: &Runtime.Runtime, draft: &Draft.Draft, session: &Session.Session) -> Result[Draft.Published, Problem.Problem] {
+  let ready = EventForm.check(draft) ?
+  EventsApi.create(&runtime.gateway, &ready, session.accessToken)
+}
+
+/// The edit form of an event the member organizes, with the event it edits.
+export fn editable(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session) -> Result[(Event.Detail, Draft.Draft), Problem.Problem] {
+  let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
+  if !found.viewer.isOrganizer { return Err(Problem.Forbidden) }
+  if Event.isCancelled(&found.card) { return Err(Problem.Refused("event_cancelled")) }
+  Ok((found, Draft.fromDetail(&found)))
+}
+
+/// Saves changes to an event the member organizes.
+export fn update(runtime: &Runtime.Runtime, eventId: Str, draft: &Draft.Draft, session: &Session.Session) -> Result[Draft.Published, Problem.Problem] {
+  let ready = EventForm.check(draft) ?
+  EventsApi.update(&runtime.gateway, eventId, &ready, session.accessToken)
+}
+
+/// Cancels an event the member organizes; pending requests are declined and attendees notified.
+export fn cancel(runtime: &Runtime.Runtime, eventId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  EventsApi.cancel(&runtime.gateway, eventId, session.accessToken)
+}
+
+/// The access token of a session, when there is one.
+export fn tokenOf(session: &Option[Session.Session]) -> Option[Str] { Option.map(*session, |found: Session.Session| found.accessToken) }

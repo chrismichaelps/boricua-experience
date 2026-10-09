@@ -1,0 +1,26 @@
+/** @Services.Catalog.Reference — categories and municipalities, cached per instance */
+module Services.Catalog
+
+import Std.Option as Option
+import Std.Result as Result
+import Std.Sync as Sync
+import Api.Catalog as CatalogApi
+import Constants.Limits as Limits
+import Domain.Catalog as Catalog
+import Domain.Problem as Problem
+import Services.Runtime as Runtime
+import Utils.Time as Time
+
+/// Both reference lists, read from the database at most once per cache lifetime.
+export fn current(runtime: &Runtime.Runtime) -> Result[Catalog.Catalog, Problem.Problem] {
+  let now = Time.now().millis
+  let cached = Option.flatten(Result.toOption(Sync.get(&runtime.catalog)))
+  if let Some(held) = cached {
+    if now - held[0] < Limits.CATALOG_TTL_MILLIS { return Ok(held[1]) }
+  }
+  let categories = CatalogApi.categories(&runtime.gateway) ?
+  let municipalities = CatalogApi.municipalities(&runtime.gateway) ?
+  let loaded = Catalog.Catalog{categories: categories, municipalities: municipalities}
+  let _stored = Sync.set(&runtime.catalog, Some((now, loaded)))
+  Ok(loaded)
+}

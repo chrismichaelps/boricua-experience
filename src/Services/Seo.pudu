@@ -1,0 +1,42 @@
+/** @Services.Seo.Index — what the sitemap lists */
+module Services.Seo
+
+import Api.Events as EventsApi
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import Services.Catalog as Catalog
+import Services.Runtime as Runtime
+
+/** @Services.Seo.Entry — one address in the sitemap, with its last change when known */
+export type Entry = { path: Str, updatedAt: Str, priority: Str }
+
+/// Largest number of events listed.
+const SITEMAP_EVENTS: Int = 20000
+
+/// The fixed pages that are worth indexing.
+const PAGES: Array[(Str, Str)] = [
+  (Routes.HOME, "1.0"),
+  (Routes.SEARCH, "0.8"),
+  (Routes.MAP, "0.6"),
+  (Routes.ABOUT, "0.4"),
+  (Routes.TERMS, "0.2"),
+  (Routes.PRIVACY, "0.2"),
+  (Routes.COOKIES, "0.2")
+]
+
+/// Every indexable address: fixed pages, categories, municipalities, and public events.
+export fn entries(runtime: &Runtime.Runtime) -> Result[Array[Entry], Problem.Problem] {
+  let catalog = Catalog.current(runtime) ?
+  let events = EventsApi.sitemap(&runtime.gateway, SITEMAP_EVENTS) ?
+  var found = PAGES.map(|page: (Str, Str)| Entry{path: page[0], updatedAt: "", priority: page[1]})
+  for category in catalog.categories {
+    found = found.push(Entry{path: Routes.CATEGORY_PREFIX + category.slug, updatedAt: "", priority: "0.7"})
+  }
+  for town in catalog.municipalities {
+    found = found.push(Entry{path: Routes.TOWN_PREFIX + town.slug, updatedAt: "", priority: "0.6"})
+  }
+  for event in events {
+    found = found.push(Entry{path: Routes.EVENT_PREFIX + event.slug, updatedAt: event.updatedAt, priority: "0.9"})
+  }
+  Ok(found)
+}

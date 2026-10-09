@@ -68,6 +68,11 @@ export fn dayNumber(instant: &Time.Instant) -> Int {
   (instant.millis + App.PUERTO_RICO_OFFSET_MINUTES * MINUTE_MILLIS) / DAY_MILLIS
 }
 
+/// The instant a Puerto Rico calendar day begins, from its day number.
+export fn startOfDay(day: Int) -> Time.Instant {
+  Time.instantOf(day * DAY_MILLIS - App.PUERTO_RICO_OFFSET_MINUTES * MINUTE_MILLIS)
+}
+
 /// The instant a `datetime-local` field names, read as Puerto Rico time.
 export fn parseLocalInput(text: Str) -> Option[Time.Instant] {
   let written = text.trim()

@@ -1,0 +1,49 @@
+/** @Services.Account.Profile — the member's profile, preferences, onboarding, and inbox */
+module Services.Account
+
+import Api.Account as AccountApi
+import Domain.Credentials as Credentials
+import Domain.Notification as Notification
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Validation.Account as Rules
+
+/// The signed-in account.
+export fn me(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Profile.MyProfile, Problem.Problem] {
+  AccountApi.me(&runtime.gateway, session.accessToken)
+}
+
+/// An organizer's public profile.
+export fn publicProfile(runtime: &Runtime.Runtime, id: Str) -> Result[Profile.PublicProfile, Problem.Problem] {
+  AccountApi.publicProfile(&runtime.gateway, id)
+}
+
+/// Records the confirmations an account still owes.
+export fn onboard(runtime: &Runtime.Runtime, form: &Credentials.Onboarding, locale: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.onboarding(form) ?
+  AccountApi.completeOnboarding(&runtime.gateway, valid.displayName.trim(), locale, session.accessToken)
+}
+
+/// Saves a profile edit.
+export fn updateProfile(runtime: &Runtime.Runtime, edit: &Profile.ProfileEdit, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.profile(edit) ?
+  AccountApi.updateProfile(&runtime.gateway, &valid, session.accessToken)
+}
+
+/// Saves the member's choices.
+export fn updatePreferences(runtime: &Runtime.Runtime, chosen: &Profile.Preferences, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.preferences(chosen) ?
+  AccountApi.updatePreferences(&runtime.gateway, &valid, session.accessToken)
+}
+
+/// The inbox, newest first.
+export fn notifications(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Array[Notification.Notification], Problem.Problem] {
+  AccountApi.notifications(&runtime.gateway, session.accessToken)
+}
+
+/// Marks the inbox read.
+export fn markRead(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  AccountApi.markRead(&runtime.gateway, session.accessToken)
+}

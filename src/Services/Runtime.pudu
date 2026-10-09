@@ -1,0 +1,35 @@
+/** @Services.Runtime.Dependencies — what every use case is given */
+module Services.Runtime
+
+import Std.Bytes as Bytes
+import Std.Sync as Sync
+import Api.Supabase.Gateway as Gateway
+import Config.Settings as Settings
+import Domain.Catalog as Catalog
+
+/** @Services.Runtime.Runtime — the gateway, the session key, the site address, and caches */
+export type Runtime = {
+  gateway: Gateway.Gateway,
+  sessionKey: Bytes,
+  siteUrl: Str,
+  secureCookies: Bool,
+  catalog: Sync.Cell[Option[(Int, Catalog.Catalog)]]
+}
+
+/// The runtime for the configured project.
+export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
+  let gateway = Gateway.create(settings) ?
+  let key = Settings.keyBytes(&settings.sessionKey) ?
+  Ok(Runtime {
+      gateway: gateway,
+      sessionKey: key,
+      siteUrl: settings.siteUrl,
+      secureCookies: Settings.isSecure(settings),
+      catalog: Sync.cell(None)
+    })
+}
+
+/// A runtime over a given gateway, for tests.
+export fn over(gateway: Gateway.Gateway, sessionKey: Bytes, siteUrl: Str) -> Runtime {
+  Runtime{gateway: gateway, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, catalog: Sync.cell(None)}
+}

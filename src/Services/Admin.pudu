@@ -1,0 +1,23 @@
+/** @Services.Admin.Moderation — the administrator's dashboard and decisions */
+module Services.Admin
+
+import Api.Admin as AdminApi
+import Domain.Admin as Admin
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+
+/** @Services.Admin.Dashboard — counts and open reports together */
+export type Dashboard = { overview: Admin.Overview, reports: Array[Admin.Report] }
+
+/// The dashboard; the database refuses anyone who is not an administrator.
+export fn dashboard(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Dashboard, Problem.Problem] {
+  let overview = AdminApi.overview(&runtime.gateway, session.accessToken) ?
+  let reports = AdminApi.reports(&runtime.gateway, session.accessToken) ?
+  Ok(Dashboard{overview: overview, reports: reports})
+}
+
+/// Dismisses a report, or acts on it, which cancels the event.
+export fn resolve(runtime: &Runtime.Runtime, reportId: Int, act: Bool, session: &Session.Session) -> Result[(), Problem.Problem] {
+  AdminApi.resolve(&runtime.gateway, reportId, if act { "actioned" } else { "dismissed" }, session.accessToken)
+}

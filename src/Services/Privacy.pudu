@@ -1,0 +1,44 @@
+/** @Services.Privacy.Rights — consent, export, pause, and deletion */
+module Services.Privacy
+
+import Std.Json as Json
+import Std.Option as Option
+import Api.Account as AccountApi
+import Api.Supabase.Identity as Identity
+import Constants.App as App
+import Domain.Consent as Consent
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Auth.Accounts as Accounts
+import Services.Runtime as Runtime
+
+/// Logs a cookie choice for a visitor or member: one ledger row per optional use.
+export fn recordCookies(runtime: &Runtime.Runtime, subject: Str, choice: &Consent.Choice, session: &Option[Session.Session]) -> Result[(), Problem.Problem] {
+  let token = Option.map(*session, |found: Session.Session| found.accessToken)
+  AccountApi.recordConsent(&runtime.gateway, subject, "cookies_analytics", choice.analytics, App.COOKIE_POLICY_VERSION, "banner", token) ?
+  AccountApi.recordConsent(&runtime.gateway, subject, "cookies_marketing", choice.marketing, App.COOKIE_POLICY_VERSION, "banner", token)
+}
+
+/// Everything held about the member, as JSON text for download.
+export fn exportData(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Str, Problem.Problem] {
+  let document = AccountApi.exportData(&runtime.gateway, session.accessToken) ?
+  Ok(Json.encodePretty(&document))
+}
+
+/// Pauses the account: hidden, no joining or publishing, no location.
+export fn pause(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  AccountApi.pause(&runtime.gateway, session.accessToken)
+}
+
+/// Reactivates a paused account.
+export fn reactivate(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  AccountApi.reactivate(&runtime.gateway, session.accessToken)
+}
+
+/// Deletes the account after the member proves presence: upcoming events cancelled, location erased,
+/// the identity deleted, and with it the profile and personal rows.
+export fn delete(runtime: &Runtime.Runtime, session: &Session.Session, password: Str) -> Result[(), Problem.Problem] {
+  Accounts.confirm(runtime, session, password) ?
+  AccountApi.prepareDeletion(&runtime.gateway, session.accessToken) ?
+  Identity.deleteUser(&runtime.gateway, session.userId)
+}

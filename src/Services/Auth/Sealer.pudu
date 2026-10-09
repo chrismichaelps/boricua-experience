@@ -1,0 +1,64 @@
+/** @Services.Auth.Sealer.Cookies — values sealed into cookies and opened again */
+module Services.Auth.Sealer
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Std.Json as Json
+import Std.Random as Random
+import Domain.Session as Session
+import Utils.Wire as Wire
+
+/// Associated data binding a sealed value to its purpose, so a flow cookie never opens as a session.
+const SESSION_PURPOSE: Str = "boricua.session.v1"
+const FLOW_PURPOSE: Str = "boricua.flow.v1"
+
+/// Bytes of the nonce at the front of every sealed value.
+const NONCE_BYTES: Int = 12
+
+/// JSON text sealed under `key` for `purpose`, as base64url: nonce then ciphertext.
+fn seal(key: &Bytes, purpose: Str, text: Str) -> Option[Str] {
+  let nonce = match Random.secureBytes(NONCE_BYTES) {
+    case Ok(found) => found
+    case Err(_) => { return None }
+  }
+  let sealed = Crypto.seal(key, &nonce, &Bytes.fromText(text), &Bytes.fromText(purpose)) ?
+  Some(Bytes.encodeBase64Url(&Bytes.concat(&nonce, &sealed)))
+}
+
+/// The text a sealed value holds, when it opens under `key` for `purpose`.
+fn open(key: &Bytes, purpose: Str, value: Str) -> Option[Str] {
+  let whole = match Bytes.decodeBase64Url(value) {
+    case Ok(found) => found
+    case Err(_) => { return None }
+  }
+  if whole.length() <= NONCE_BYTES { return None }
+  let opened = Crypto.open(key, &Bytes.take(&whole, NONCE_BYTES), &Bytes.drop(&whole, NONCE_BYTES), &Bytes.fromText(purpose)) ?
+  match Bytes.toText(&opened) {
+    case Ok(text) => Some(text)
+    case Err(_) => None
+  }
+}
+
+/// A session sealed for its cookie.
+export fn sealSession(key: &Bytes, session: &Session.Session) -> Option[Str] { seal(key, SESSION_PURPOSE, Json.encode(&session.encode())) }
+
+/// The session a cookie holds, when it is genuine.
+export fn openSession(key: &Bytes, value: Str) -> Option[Session.Session] {
+  let text = open(key, SESSION_PURPOSE, value) ?
+  match Wire.parse(text) {
+    case Ok(session) => Some(session)
+    case Err(_) => None
+  }
+}
+
+/// A sign-in flow sealed for its cookie.
+export fn sealFlow(key: &Bytes, flow: &Session.Flow) -> Option[Str] { seal(key, FLOW_PURPOSE, Json.encode(&flow.encode())) }
+
+/// The flow a cookie holds, when it is genuine.
+export fn openFlow(key: &Bytes, value: Str) -> Option[Session.Flow] {
+  let text = open(key, FLOW_PURPOSE, value) ?
+  match Wire.parse(text) {
+    case Ok(flow) => Some(flow)
+    case Err(_) => None
+  }
+}

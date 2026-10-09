@@ -1,0 +1,78 @@
+/** @Services.Auth.Sessions.Lifecycle — sessions started, refreshed, and their forms signed */
+module Services.Auth.Sessions
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Api.Supabase.Identity as Identity
+import Constants.Limits as Limits
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Auth.Pkce as Pkce
+import Services.Runtime as Runtime
+import Utils.Claims as Claims
+import Utils.Time as Time
+
+/** @Services.Auth.Sessions.Fresh — a usable session and whether it was renewed */
+export type Fresh = { session: Session.Session, renewed: Bool }
+
+/// Random bytes behind a session's form key.
+const FORM_KEY_BYTES: Int = 24
+
+/// A session from new tokens, keeping `formKey` and `signedInAt` when given or making new ones.
+fn fromTokens(tokens: &Session.Tokens, formKey: Option[Str], signedInAt: Option[Int]) -> Result[Session.Session, Problem.Problem] {
+  let claims = match Claims.read(tokens.accessToken) {
+    case Some(found) => found
+    case None => { return Err(Problem.Unavailable("identity: unreadable access token")) }
+  }
+  let key = match formKey {
+    case Some(kept) => kept
+    case None => match Pkce.token(FORM_KEY_BYTES) {
+      case Some(made) => made
+      case None => { return Err(Problem.Unavailable("no randomness for a form key")) }
+    }
+  }
+  Ok(Session.Session {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      userId: claims.subject,
+      email: claims.email,
+      provider: claims.provider,
+      expiresAt: claims.expiresAt,
+      issuedAt: claims.issuedAt,
+      signedInAt: match signedInAt {
+        case Some(kept) => kept
+        case None => Time.nowSeconds()
+      },
+      formKey: key
+    })
+}
+
+/// A new session for tokens just issued by a sign-in.
+export fn start(tokens: &Session.Tokens) -> Result[Session.Session, Problem.Problem] { fromTokens(tokens, None, None) }
+
+/// The session, refreshed first when its access token is about to expire. A refresh the provider
+/// refuses ends the session as `SignedOut`.
+export fn ensureFresh(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Fresh, Problem.Problem] {
+  if session.expiresAt - Time.nowSeconds() > Limits.REFRESH_MARGIN_SECONDS {
+    return Ok(Fresh{session: *session, renewed: false})
+  }
+  match Identity.refresh(&runtime.gateway, session.refreshToken) {
+    case Ok(tokens) => {
+      let renewed = fromTokens(&tokens, Some(session.formKey), Some(session.signedInAt)) ?
+      Ok(Fresh{session: renewed, renewed: true})
+    }
+    case Err(Problem.Unavailable(reason)) => Err(Problem.Unavailable(reason))
+    case Err(Problem.Throttled) => Err(Problem.Throttled)
+    case Err(_) => Err(Problem.SignedOut)
+  }
+}
+
+/// The token every form of this session carries: an HMAC of its form key under the server key.
+export fn formToken(runtime: &Runtime.Runtime, session: &Session.Session) -> Str {
+  Bytes.encodeBase64Url(&Crypto.hmacSha256(&runtime.sessionKey, &Bytes.fromText(session.formKey + "|" + session.userId)))
+}
+
+/// Whether a posted form token belongs to this session, compared in constant time.
+export fn formTokenValid(runtime: &Runtime.Runtime, session: &Session.Session, given: Str) -> Bool {
+  Crypto.bytesMatch(&Bytes.fromText(formToken(runtime, session)), &Bytes.fromText(given))
+}

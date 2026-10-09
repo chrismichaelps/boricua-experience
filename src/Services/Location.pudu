@@ -1,0 +1,33 @@
+/** @Services.Location.Sharing — live location recorded, stopped, erased, and shared */
+module Services.Location
+
+import Api.Events as EventsApi
+import Api.Location as LocationApi
+import Domain.Location as Location
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Validation.Location as Rules
+
+/// Records the member's position; answers `recorded` or `throttled`.
+export fn record(runtime: &Runtime.Runtime, reading: &Location.Position, session: &Session.Session) -> Result[Str, Problem.Problem] {
+  let valid = Rules.position(reading) ?
+  let recorded = LocationApi.record(&runtime.gateway, &valid, session.accessToken) ?
+  Ok(recorded.status)
+}
+
+/// Stops sharing.
+export fn stop(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  LocationApi.stop(&runtime.gateway, session.accessToken)
+}
+
+/// Erases the live position and the history.
+export fn erase(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  LocationApi.deleteHistory(&runtime.gateway, session.accessToken)
+}
+
+/// Co-attendees sharing their position for an event the member is approved for.
+export fn participants(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session) -> Result[Array[Location.Participant], Problem.Problem] {
+  let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
+  LocationApi.participants(&runtime.gateway, found.card.id, session.accessToken)
+}

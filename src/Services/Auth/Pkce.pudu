@@ -1,0 +1,33 @@
+/** @Services.Auth.Pkce.Proof — verifiers and challenges for redirect sign-ins */
+module Services.Auth.Pkce
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Std.Random as Random
+
+/// Random bytes behind a verifier; 32 bytes give 43 base64url characters.
+const VERIFIER_BYTES: Int = 32
+
+/// A new verifier, or nothing when the system has no randomness to give.
+export fn newVerifier() -> Option[Str] {
+  match Random.secureBytes(VERIFIER_BYTES) {
+    case Ok(bytes) => Some(Bytes.encodeBase64Url(&bytes))
+    case Err(_) => None
+  }
+}
+
+/// The S256 challenge of a verifier: base64url of its SHA-256 digest.
+export fn challenge(verifier: Str) -> Str {
+  match Bytes.decodeHex(Crypto.sha256Hex(verifier)) {
+    case Ok(digest) => Bytes.encodeBase64Url(&digest)
+    case Err(_) => ""
+  }
+}
+
+/// A random identifier of `bytes` bytes as base64url text, for visitors and form keys.
+export fn token(bytes: Int) -> Option[Str] {
+  match Random.secureBytes(bytes) {
+    case Ok(found) => Some(Bytes.encodeBase64Url(&found))
+    case Err(_) => None
+  }
+}

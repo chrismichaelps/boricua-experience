@@ -1,0 +1,85 @@
+/** @Services.Participation.Joining — requests, decisions, saves, reactions, and reports */
+module Services.Participation
+
+import Std.Concurrent as Concurrent
+import Std.Result as Result
+import Std.Sync as Sync
+import Api.Events as EventsApi
+import Api.Participation as ParticipationApi
+import Domain.Event as Event
+import Domain.Participation as Participation
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Validation.Participation as Rules
+
+/** @Services.Participation.Activity — what the activity page shows */
+export type Activity = { requests: Array[Participation.MyRequest], saved: Array[Event.Card], organizing: Array[Event.Card] }
+
+/** @Services.Participation.Queue — an event and the requests waiting on its organizer */
+export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest] }
+
+/// Asks to join with an optional message; answers `approved` or `pending`.
+export fn join(runtime: &Runtime.Runtime, eventId: Str, message: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
+  let valid = Rules.message(message) ?
+  let outcome = ParticipationApi.requestJoin(&runtime.gateway, eventId, valid.trim(), session.accessToken) ?
+  Ok(outcome.status)
+}
+
+/// Withdraws the member's request.
+export fn withdraw(runtime: &Runtime.Runtime, eventId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  ParticipationApi.withdraw(&runtime.gateway, eventId, session.accessToken)
+}
+
+/// Approves or rejects a request with an optional note.
+export fn decide(runtime: &Runtime.Runtime, requestId: Str, approve: Bool, note: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
+  let valid = Rules.message(note) ?
+  let outcome = ParticipationApi.decide(&runtime.gateway, requestId, approve, valid.trim(), session.accessToken) ?
+  Ok(outcome.status)
+}
+
+/// An organizer's event with its requests, pending first.
+export fn queue(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session) -> Result[Queue, Problem.Problem] {
+  let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
+  if !found.viewer.isOrganizer { return Err(Problem.Forbidden) }
+  let requests = ParticipationApi.incoming(&runtime.gateway, found.card.id, session.accessToken) ?
+  Ok(Queue{event: found, requests: requests})
+}
+
+/// Saves or unsaves an event; answers whether it is now saved.
+export fn toggleSaved(runtime: &Runtime.Runtime, eventId: Str, session: &Session.Session) -> Result[Bool, Problem.Problem] {
+  let state = ParticipationApi.toggleSaved(&runtime.gateway, eventId, session.accessToken) ?
+  Ok(state.saved)
+}
+
+/// Sets the member's reaction; answers the reaction and the new like count.
+export fn react(runtime: &Runtime.Runtime, eventId: Str, value: Int, session: &Session.Session) -> Result[Participation.ReactionState, Problem.Problem] {
+  let valid = Rules.reaction(value) ?
+  ParticipationApi.react(&runtime.gateway, eventId, valid, session.accessToken)
+}
+
+/// Reports an event for moderation.
+export fn report(runtime: &Runtime.Runtime, eventId: Str, form: &Rules.Report, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.report(form) ?
+  ParticipationApi.report(&runtime.gateway, eventId, valid.reason, valid.detail.trim(), session.accessToken)
+}
+
+/// The member's requests, saved events, and organized events, read together.
+export fn activity(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Activity, Problem.Problem] {
+  let held = *runtime
+  let token = session.accessToken
+  let requests = Sync.cell(Ok([]))
+  let saved = Sync.cell(Ok([]))
+  let organizing = Sync.cell(Ok([]))
+  let ran = Concurrent.parallel(&[
+        || { let _set = Sync.set(&requests, ParticipationApi.mine(&held.gateway, token)) },
+        || { let _set = Sync.set(&saved, ParticipationApi.saved(&held.gateway, token)) },
+        || { let _set = Sync.set(&organizing, EventsApi.mine(&held.gateway, token)) }
+      ])
+  if Result.isErr(&ran) { return Err(Problem.Unavailable("the activity lists could not run")) }
+  Ok(Activity {
+      requests: Result.unwrapOr(Sync.get(&requests), Err(Problem.Unavailable("lost"))) ?,
+      saved: Result.unwrapOr(Sync.get(&saved), Err(Problem.Unavailable("lost"))) ?,
+      organizing: Result.unwrapOr(Sync.get(&organizing), Err(Problem.Unavailable("lost"))) ?
+    })
+}

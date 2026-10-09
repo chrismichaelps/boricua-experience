@@ -1,0 +1,103 @@
+/** @Services.Auth.Accounts.Identity — signing up, in, and out, and proving it is you */
+module Services.Auth.Accounts
+
+import Api.Account as Account
+import Api.Supabase.Identity as Identity
+import Constants.Limits as Limits
+import Constants.Routes as Routes
+import Domain.Credentials as Credentials
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Auth.Pkce as Pkce
+import Services.Auth.Sessions as Sessions
+import Services.Runtime as Runtime
+import Utils.Time as Time
+import Validation.Account as Rules
+
+/** @Services.Auth.Accounts.Joined — a new account signed in, or waiting for its email link */
+export type Joined = SignedIn(Session.Session) | CheckEmail(Session.Flow)
+
+/// The address the identity provider returns every redirect flow to.
+fn callback(runtime: &Runtime.Runtime) -> Str { runtime.siteUrl + Routes.AUTH_CALLBACK }
+
+/// A new flow with a fresh verifier.
+fn newFlow(returnTo: Str, purpose: Str) -> Result[Session.Flow, Problem.Problem] {
+  match Pkce.newVerifier() {
+    case Some(verifier) => Ok(Session.Flow{verifier: verifier, returnTo: safeReturn(returnTo), purpose: purpose})
+    case None => Err(Problem.Unavailable("no randomness for a sign-in flow"))
+  }
+}
+
+/// A return path only when it stays on this site; home otherwise.
+export fn safeReturn(path: Str) -> Str {
+  if path.startsWith("/") && !path.startsWith("//") && !path.contains("\\") { path } else { Routes.HOME }
+}
+
+/// Signs in with an email and password; a paused account is reactivated by signing in.
+export fn signIn(runtime: &Runtime.Runtime, form: &Credentials.SignIn) -> Result[Session.Session, Problem.Problem] {
+  let valid = Rules.signIn(form) ?
+  let tokens = Identity.passwordGrant(&runtime.gateway, valid.email, valid.password) ?
+  let session = Sessions.start(&tokens) ?
+  let _reactivated = Account.reactivate(&runtime.gateway, session.accessToken)
+  Ok(session)
+}
+
+/// Creates an email account. When the project confirms email first, the answer is the flow whose
+/// verifier the confirmation link needs.
+export fn signUp(runtime: &Runtime.Runtime, form: &Credentials.SignUp, locale: Str, returnTo: Str) -> Result[Joined, Problem.Problem] {
+  let valid = Rules.signUp(form) ?
+  let flow = newFlow(returnTo, Session.SIGN_IN) ?
+  match Identity.signUp(&runtime.gateway, &valid, locale, callback(runtime), Pkce.challenge(flow.verifier)) ? {
+    case Identity.Ready(tokens) => Ok(SignedIn(Sessions.start(&tokens) ?))
+    case Identity.AwaitingEmail => Ok(CheckEmail(flow))
+  }
+}
+
+/// The provider's sign-in address and the flow to keep until it returns.
+export fn startProvider(runtime: &Runtime.Runtime, provider: Str, returnTo: Str) -> Result[(Str, Session.Flow), Problem.Problem] {
+  let flow = newFlow(returnTo, Session.SIGN_IN) ?
+  Ok((Identity.authorizeUrl(&runtime.gateway, provider, callback(runtime), Pkce.challenge(flow.verifier)), flow))
+}
+
+/// The session a returning redirect's code opens, proven with the flow's verifier.
+export fn finish(runtime: &Runtime.Runtime, code: Str, flow: &Session.Flow) -> Result[Session.Session, Problem.Problem] {
+  if code.isEmpty() { return Err(Problem.Refused("flow_expired")) }
+  let tokens = Identity.exchangeCode(&runtime.gateway, code, flow.verifier) ?
+  let session = Sessions.start(&tokens) ?
+  let _reactivated = Account.reactivate(&runtime.gateway, session.accessToken)
+  Ok(session)
+}
+
+/// Sends a recovery link; answers the flow its return needs. An unknown address answers the same.
+export fn recover(runtime: &Runtime.Runtime, email: Str) -> Result[Session.Flow, Problem.Problem] {
+  let valid = Rules.email(email) ?
+  let flow = newFlow(Routes.RESET_PASSWORD, Session.RECOVERY) ?
+  Identity.recover(&runtime.gateway, valid, callback(runtime), Pkce.challenge(flow.verifier)) ?
+  Ok(flow)
+}
+
+/// Sets a new password for the signed-in member.
+export fn changePassword(runtime: &Runtime.Runtime, session: &Session.Session, form: &Credentials.NewPassword) -> Result[(), Problem.Problem] {
+  let valid = Rules.newPassword(form) ?
+  Identity.changePassword(&runtime.gateway, session.accessToken, valid.password)
+}
+
+/// Ends the session at the provider. The cookie is cleared whatever the provider answers.
+export fn signOut(runtime: &Runtime.Runtime, session: &Session.Session) -> () {
+  let _ended = Identity.signOut(&runtime.gateway, session.accessToken)
+  ()
+}
+
+/// Proves the member is present before an irreversible action: the password for email accounts,
+/// a sign-in within the last ten minutes for accounts of an external provider.
+export fn confirm(runtime: &Runtime.Runtime, session: &Session.Session, password: Str) -> Result[(), Problem.Problem] {
+  if Session.usesPassword(session) {
+    match Identity.passwordGrant(&runtime.gateway, session.email, password) {
+      case Ok(_) => Ok(())
+      case Err(Problem.Refused(_)) => Err(Problem.Invalid([Problem.FieldError{field: "password", key: "problem.invalid_credentials"}]))
+      case Err(other) => Err(other)
+    }
+  } else {
+    if Time.nowSeconds() - session.signedInAt <= Limits.RECENT_SIGN_IN_SECONDS { Ok(()) } else { Err(Problem.Refused("reauthenticate")) }
+  }
+}

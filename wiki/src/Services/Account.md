@@ -1,0 +1,55 @@
+---
+type: module
+path: "@root/src/Services/Account.pudu"
+fidelity: Active
+grammar: "[[grammar/pudu]]"
+layer: Services
+depth_status: MEDIUM
+tags: [module, services, medium]
+---
+
+# Services.Account
+
+> /** @Services.Account.Profile — the member's profile, preferences, onboarding, and inbox */
+
+## Purpose
+
+Profile reads and edits, preferences, onboarding, and notifications.
+
+## Interface
+
+### Signatures
+
+```pudu
+export fn me, publicProfile, onboard, updateProfile, updatePreferences, notifications, markRead
+```
+
+### Linkage
+
+- **Requires:** [[src/Api/Account]], [[src/Validation/Account]].
+- **Consumed by:** [[src/App/Handlers/Account]].
+
+## Algorithm
+
+Validate then call.
+
+## Negative Logic (Prohibited Paths)
+
+- ❌ No direct consent writes: onboarding records consent in the database.
+
+## Edge Cases
+
+- A paused profile cannot be shown publicly.
+
+## Depth
+
+MEDIUM: callers name a use case; validation, calls, and composition stay inside.
+
+## Grill Log
+
+- **Q:** Separate service per screen?
+  **A:** No: one service per subject keeps the handlers thin.
+
+## Referenced by
+
+[[src/_MOC]]
