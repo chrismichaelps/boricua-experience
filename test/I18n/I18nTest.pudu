@@ -1,0 +1,49 @@
+/** @Test.I18n.Suite — both languages hold every key the app uses, with the same placeholders */
+module I18n.I18nTest
+
+import Std.Io as Io
+import Std.Test as Test
+import Domain.Locale as Locale
+import I18n.En as En
+import I18n.EnLegal as EnLegal
+import I18n.Es as Es
+import I18n.EsLegal as EsLegal
+import I18n.Translate as Translate
+import Support.Fixtures as Fixtures
+
+/// The `:name` placeholders of a message, in order.
+fn placeholders(message: Str) -> Array[Str] {
+  var found: Array[Str] = []
+  for word in message.replace("“", " ").replace("”", " ").replace(",", " ").replace(".", " ").replace("(", " ").replace(")", " ").split(" ") {
+    if word.startsWith(":") && word.length() > 1 { found = found.push(word) }
+  }
+  found
+}
+
+/// Runs the suite.
+fn main() -> Int {
+  let used = Fixtures.text("message-keys.txt").split("\n").filter(|key: Str| !key.isEmpty())
+  let spanishKeys = Es.MESSAGES.keys().concat(EsLegal.MESSAGES.keys())
+  let englishKeys = En.MESSAGES.keys().concat(EnLegal.MESSAGES.keys())
+  let missingEs = used.filter(|key: Str| !Translate.has(&Locale.Es, key))
+  let missingEn = used.filter(|key: Str| !Translate.has(&Locale.En, key))
+  let onlyEs = spanishKeys.filter(|key: Str| !Translate.has(&Locale.En, key))
+  let onlyEn = englishKeys.filter(|key: Str| !Translate.has(&Locale.Es, key))
+  let mismatched = spanishKeys.filter(|key: Str| placeholders(Translate.text(&Locale.Es, key)).sortBy(|a: Str, b: Str| a < b) != placeholders(Translate.text(&Locale.En, key)).sortBy(|a: Str, b: Str| a < b))
+  let checks = Test.suite("I18n", &[
+      Test.equals("every key the app uses is in Spanish", &missingEs, &[]),
+      Test.equals("every key the app uses is in English", &missingEn, &[]),
+      Test.equals("English has every Spanish key", &onlyEs, &[]),
+      Test.equals("Spanish has every English key", &onlyEn, &[]),
+      Test.equals("both languages use the same placeholders", &mismatched, &[]),
+      Test.equals("placeholders are filled", &Translate.fill(&Locale.Es, "search.town_title", &[("town", "Ponce")]), &"Qué hacer en Ponce"),
+      Test.equals("one takes the singular", &Translate.count(&Locale.Es, "event.going", 1), &"1 va"),
+      Test.equals("many take the plural", &Translate.count(&Locale.En, "event.spots_left", 3), &"3 spots left"),
+      Test.equals("a missing key renders as itself", &Translate.text(&Locale.En, "nothing.here"), &"nothing.here")
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) {
+    let _reported = Io.writeErrorLine(failure)
+  }
+  Test.report(&ran)
+}

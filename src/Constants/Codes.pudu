@@ -34,7 +34,10 @@ export const MESSAGES: Map[Str, Str] = mapOf([
   ("weak_password", "problem.weak_password"),
   ("email_not_confirmed", "problem.email_not_confirmed"),
   ("rate_limited", "problem.rate_limited"),
-  ("unavailable", "problem.unavailable")
+  ("unavailable", "problem.unavailable"),
+  ("flow_expired", "problem.flow_expired"),
+  ("session_expired", "problem.session_expired"),
+  ("reauthenticate", "problem.reauthenticate")
 ])
 
 /// Codes the server itself raises.
