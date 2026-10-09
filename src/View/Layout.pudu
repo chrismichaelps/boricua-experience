@@ -62,7 +62,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("preload").href("/assets/fonts/nunito-sans.woff2").at("as", "font").kind("font/woff2").at("crossorigin", "anonymous"),
     H.link().rel("stylesheet").href("/assets/css/app.css" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
-  ]
+  ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }
 
 /// A navigation link, marked current in its section.

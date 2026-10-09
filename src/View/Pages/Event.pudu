@@ -102,12 +102,12 @@ fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
       ])
   }
   H.div().class("reactions").holding([
-      H.form().action(base + "/react").method("post").data("feature", "react").holding([
+      H.form().action(base + "/react").method("post").data("feature", "react").data("own", "1").holding([
           Form.token(frame),
           H.input().kind("hidden").name("value").value(if reaction == 1 { "0" } else { "1" }),
           H.button().submit().class(if reaction == 1 { "reaction is-on" } else { "reaction" }).at("aria-pressed", if reaction == 1 { "true" } else { "false" }).holding([Icons.sized("heart", 18), H.span().says(Frame.t(frame, "event.like")), H.span().class("count").says(show(card.likeCount))])
         ]),
-      H.form().action(base + "/react").method("post").data("feature", "react").holding([
+      H.form().action(base + "/react").method("post").data("feature", "react").data("own", "-1").holding([
           Form.token(frame),
           H.input().kind("hidden").name("value").value(if reaction == -1 { "0" } else { "-1" }),
           H.button().submit().class(if reaction == -1 { "reaction is-on" } else { "reaction" }).at("aria-pressed", if reaction == -1 { "true" } else { "false" }).holding([Icons.sized("thumb-down", 18), H.span().says(Frame.t(frame, "event.not_interested"))])
