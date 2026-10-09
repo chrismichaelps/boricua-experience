@@ -1,0 +1,26 @@
+/** @App.Handlers.Discover.Registrations — home, search, suggestions, pins, catalogue, and sitemap */
+module App.Handlers.Discover
+
+import PuduLangMediator as Messaging
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Registration as Registration
+import App.Messages as Messages
+import Domain.Search as Search
+import Services.Catalog as Catalog
+import Services.Discovery as Discovery
+import Services.Events as Events
+import Services.Runtime as Runtime
+import Services.Seo as Seo
+
+/// The handlers of discovery.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.home, |asked: Messages.Visit[Messages.Place], _context: Context.Context| Messaging.lift(Discovery.home(&held, asked.input.lat, asked.input.lng, Events.tokenOf(&asked.session)))),
+    Registration.handler(&kinds.search, |asked: Messages.Visit[Search.Filters], _context: Context.Context| Messaging.lift(Discovery.search(&held, &asked.input, Events.tokenOf(&asked.session)))),
+    Registration.handler(&kinds.suggest, |asked: Str, _context: Context.Context| Messaging.lift(Discovery.suggest(&held, asked))),
+    Registration.handler(&kinds.pins, |asked: Messages.Place, _context: Context.Context| Messaging.lift(Discovery.pins(&held, asked.lat, asked.lng, asked.radiusM))),
+    Registration.handler(&kinds.catalog, |_asked: (), _context: Context.Context| Messaging.lift(Catalog.current(&held))),
+    Registration.handler(&kinds.sitemap, |_asked: (), _context: Context.Context| Messaging.lift(Seo.entries(&held)))
+  ]
+}

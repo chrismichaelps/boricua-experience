@@ -1,0 +1,35 @@
+/** @View.Components.Avatar.Faces — initials in a coloured circle, alone or stacked */
+module View.Components.Avatar
+
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Utils.Text as Text
+
+/// Background hues avatars are drawn in, chosen by name so a person keeps their colour.
+const HUES: Array[Str] = ["#1878ec", "#0f9d8a", "#e0603a", "#8a4fd8", "#d63c6b", "#2f7d32", "#b8860b", "#2b5ea7"]
+
+/// The hue of a name.
+fn hueOf(name: Str) -> Str {
+  var sum = 0
+  for letter in name.chars() {
+    sum = (sum * 31 + letter.code()) % 9973
+  }
+  HUES[sum % HUES.length()]
+}
+
+/// One avatar of a size class (`sm`, `md`, `lg`).
+export fn avatar(name: Str, size: Str) -> H.Node {
+  H.span().class("avatar avatar-" + size).at("style", "background:" + hueOf(name)).at("aria-hidden", "true").says(Text.initials(name))
+}
+
+/// Up to four overlapping avatars and a count of the rest.
+export fn stack(names: &Array[Str], total: Int) -> H.Node {
+  var shown: Array[H.Node] = []
+  var index = 0
+  for name in *names {
+    if index < 4 { shown = shown.push(avatar(name, "sm")) }
+    index = index + 1
+  }
+  let rest = total - shown.length()
+  H.span().class("avatar-stack").holding(shown).when(rest > 0, H.span().class("avatar avatar-sm avatar-more").at("aria-hidden", "true").says("+" + show(rest)))
+}

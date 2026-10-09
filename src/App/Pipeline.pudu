@@ -1,0 +1,81 @@
+/** @App.Pipeline.Behaviors — what every message passes through */
+module App.Pipeline
+
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
+import PuduLangMediator as Messaging
+import PuduLangMediator.Behaviors.Logging as Recording
+import PuduLangMediator.Behaviors.Validation as Validation
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Message as Message
+import PuduLangMediator.Open as Open
+import PuduLangMediator.Registration as Registration
+import PuduLangValidator.Rule as Rule
+import PuduLangValidator.Rules.Text as TextRule
+import PuduLangValidator.Validator as Validator
+import App.Messages as Messages
+import Constants.Limits as Limits
+import Domain.Problem as Problem
+import Domain.Search as Search
+
+/// The event written for a fault of the application rather than an answer to the visitor.
+export const FAULT: Str = "\{MessageName\} failed unexpectedly: \{Failure\}"
+
+/// The event written when the database or identity provider could not answer.
+export const UPSTREAM: Str = "\{MessageName\} could not reach a dependency: \{Reason\}"
+
+/** @App.Pipeline.Alarm — reports faults as errors and unreachable dependencies as warnings */
+type Alarm = { logger: Logger.Logger }
+
+impl Open.ExceptionAction for Alarm {
+  /// Writes an error for a crash or a missing route, and a warning for an unavailable dependency.
+  fn onFailure[Q, E](self: &Self, request: &Q, failure: &Messaging.Failure[E], info: &Message.Info, context: Context.Context) -> () {
+    if isFault(failure) {
+      self.logger.error(FAULT, [Value.text(info.name), Value.text(Messaging.describe(failure))])
+    } else if Messaging.describe(failure).contains("Unavailable") {
+      self.logger.warning(UPSTREAM, [Value.text(info.name), Value.text(Messaging.describe(failure))])
+    }
+  }
+}
+
+/// Whether a failure is a fault of the application rather than an answer.
+export fn isFault[E](failure: &Messaging.Failure[E]) -> Bool {
+  match failure {
+    case Messaging.Crashed(_) => true
+    case Messaging.Unhandled(_) => true
+    case Messaging.Mismatched(_) => true
+    case Messaging.Aggregate(parts) => parts.filter(|part: Messaging.Failure[E]| isFault(&part)).length() > 0
+    case _ => false
+  }
+}
+
+/// Searches longer than a query may be are refused before any work.
+fn searchBounds() -> Validator.Validator[Messages.Visit[Search.Filters]] {
+  Validator.add(Validator.create(), Rule.build(TextRule.maximumLength(Rule.ruleFor("q", |asked: Messages.Visit[Search.Filters]| asked.input.query), Limits.QUERY_MAX * 4)))
+}
+
+/// Suggestions longer than a query may be are refused before any work.
+fn suggestBounds() -> Validator.Validator[Str] {
+  Validator.add(Validator.create(), Rule.build(TextRule.maximumLength(Rule.ruleFor("q", |asked: Str| asked), Limits.QUERY_MAX * 4)))
+}
+
+/// The registrations every mediator starts with: the recorder outermost, the alarm, and the bounds.
+export fn registrations(kinds: &Messages.Kinds, messages: &Logger.Logger) -> Array[Registration.Registration] {
+  [
+    Registration.openBehavior(Recording.of(*messages)),
+    Registration.openExceptionAction(Alarm{logger: *messages}),
+    Validation.register(&kinds.search, searchBounds()),
+    Validation.register(&kinds.suggest, suggestBounds())
+  ]
+}
+
+/// The problem a mediator failure stands for, so every page answers failures the same way.
+export fn problemOf(failure: &Messaging.Failure[Problem.Problem]) -> Problem.Problem {
+  match failure {
+    case Messaging.Raised(problem) => problem
+    case Messaging.Invalid(violations) => Problem.Invalid(violations.map(|v: Messaging.Violation| Problem.FieldError{field: v.property, key: "form.too_long"}))
+    case Messaging.Refused(reason) => Problem.Refused(reason)
+    case Messaging.Cancelled(_) => Problem.Unavailable("cancelled")
+    case other => Problem.Unavailable(Messaging.describe(&other))
+  }
+}

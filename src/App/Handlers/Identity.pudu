@@ -1,0 +1,24 @@
+/** @App.Handlers.Identity.Registrations — signing up, in, out, and recovering */
+module App.Handlers.Identity
+
+import PuduLangMediator as Messaging
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Registration as Registration
+import App.Messages as Messages
+import Domain.Credentials as Credentials
+import Services.Auth.Accounts as Accounts
+import Services.Runtime as Runtime
+
+/// The handlers of identity.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.signIn, |asked: Credentials.SignIn, _context: Context.Context| Messaging.lift(Accounts.signIn(&held, &asked))),
+    Registration.handler(&kinds.signUp, |asked: Messages.SignUp, _context: Context.Context| Messaging.lift(Accounts.signUp(&held, &asked.form, asked.locale, asked.returnTo))),
+    Registration.handler(&kinds.provider, |asked: Messages.Provider, _context: Context.Context| Messaging.lift(Accounts.startProvider(&held, asked.provider, asked.returnTo))),
+    Registration.handler(&kinds.callback, |asked: Messages.Callback, _context: Context.Context| Messaging.lift(Accounts.finish(&held, asked.code, &asked.flow))),
+    Registration.handler(&kinds.recover, |asked: Str, _context: Context.Context| Messaging.lift(Accounts.recover(&held, asked))),
+    Registration.handler(&kinds.changePassword, |asked: Messages.Signed[Credentials.NewPassword], _context: Context.Context| Messaging.lift(Accounts.changePassword(&held, &asked.session, &asked.input))),
+    Registration.handler(&kinds.signOut, |asked: Messages.Signed[()], _context: Context.Context| Messaging.succeed(Accounts.signOut(&held, &asked.session)))
+  ]
+}

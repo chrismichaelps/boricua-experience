@@ -1,0 +1,24 @@
+/** @App.Handlers.Account.Registrations — profile, preferences, onboarding, inbox */
+module App.Handlers.Account
+
+import PuduLangMediator as Messaging
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Registration as Registration
+import App.Messages as Messages
+import Domain.Profile as Profile
+import Services.Account as Account
+import Services.Runtime as Runtime
+
+/// The handlers of the member's account.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.me, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.me(&held, &asked.session))),
+    Registration.handler(&kinds.profile, |asked: Str, _context: Context.Context| Messaging.lift(Account.publicProfile(&held, asked))),
+    Registration.handler(&kinds.onboard, |asked: Messages.Signed[Messages.Onboard], _context: Context.Context| Messaging.lift(Account.onboard(&held, &asked.input.form, asked.input.locale, &asked.session))),
+    Registration.handler(&kinds.updateProfile, |asked: Messages.Signed[Profile.ProfileEdit], _context: Context.Context| Messaging.lift(Account.updateProfile(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.updatePreferences, |asked: Messages.Signed[Profile.Preferences], _context: Context.Context| Messaging.lift(Account.updatePreferences(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.notifications, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.notifications(&held, &asked.session))),
+    Registration.handler(&kinds.markRead, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.markRead(&held, &asked.session)))
+  ]
+}

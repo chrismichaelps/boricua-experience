@@ -1,0 +1,80 @@
+/** @View.Components.People.Faces — the organizer card and who is going */
+module View.Components.People
+
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Event as Event
+import I18n.Dates as Dates
+import I18n.Translate as Translate
+import Utils.Time as Time
+import View.Components.Avatar as Avatar
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The organizer: face, name, town, tenure, hosting record, and bio, linked to their profile.
+export fn organizer(frame: &Frame.Frame, host: &Option[Event.Organizer], curated: Bool) -> H.Node {
+  match host {
+    case None => H.section().class("panel organizer").holding([
+        H.h2().class("section-title").says(Frame.t(frame, "event.hosted_by")),
+        H.p().class("muted").says(Frame.t(frame, if curated { "event.curated_source" } else { "event.deleted_organizer" }))
+      ])
+    case Some(found) => {
+      let since = match Option.andThen(found.memberSince, |text: Str| Time.parseTimestamp(text)) {
+        case Some(instant) => Frame.tf(frame, "profile.member_since", &[("date", Dates.monthYear(&frame.locale, &Time.local(&instant)))])
+        case None => ""
+      }
+      let name = H.strong().class("organizer-name").says(found.displayName)
+      let heading = match found.id {
+        case Some(id) => if found.visible { H.a().href(Routes.PROFILE_PREFIX + id).holding([name]) } else { name }
+        case None => name
+      }
+      H.section().class("panel organizer").at("aria-labelledby", "organizer-title").holding([
+          H.h2().class("section-title").id("organizer-title").says(Frame.t(frame, "event.hosted_by")),
+          H.div().class("organizer-head").holding([
+              Avatar.avatar(found.displayName, "lg"),
+              H.div().holding([
+                  heading,
+                  H.p().class("muted").says([Option.unwrapOr(found.municipality, ""), since].filter(|part: Str| !part.isEmpty()).join(" · "))
+                ])
+            ]),
+          H.ul().class("stats").holding([
+              H.li().holding([H.strong().says(show(found.hostedCount)), H.span().says(Translate.count(&frame.locale, "profile.events_hosted", found.hostedCount))]),
+              H.li().holding([H.strong().says(show(found.guestsHosted)), H.span().says(Translate.count(&frame.locale, "profile.guests_hosted", found.guestsHosted))])
+            ]),
+          if found.bio.isEmpty() { H.nothing() } else { H.p().class("organizer-bio").says(found.bio) }
+        ])
+    }
+  }
+}
+
+/// Who is going: faces and names when the viewer may see them, the count otherwise.
+export fn attendees(frame: &Frame.Frame, going: &Event.Attendees, signInHref: Str) -> H.Node {
+  let title = H.h2().class("section-title").id("going-title").says(Translate.count(&frame.locale, "event.going_title", going.total))
+  if going.total == 0 {
+    return H.section().class("panel").at("aria-labelledby", "going-title").holding([title, H.p().class("muted").says(Frame.t(frame, "event.be_first"))])
+  }
+  if !going.canView {
+    return H.section().class("panel").at("aria-labelledby", "going-title").holding([
+        title,
+        H.div().class("going-locked").holding([
+            Avatar.stack(&["?", "?", "?"], going.total),
+            H.p().holding([Icons.sized("lock", 16), H.span().says(Frame.t(frame, if Frame.signedIn(frame) { "event.going_private" } else { "event.going_sign_in" }))]),
+            if Frame.signedIn(frame) { H.nothing() } else { H.a().class("text-link").href(signInHref).says(Frame.t(frame, "nav.sign_in")) }
+          ])
+      ])
+  }
+  H.section().class("panel").at("aria-labelledby", "going-title").holding([
+      title,
+      Avatar.stack(&going.people.map(|person: Event.Attendee| person.displayName), going.total),
+      H.ul().class("people").holding(going.people.map(|person: Event.Attendee| H.li().class("person").holding([
+              Avatar.avatar(person.displayName, "md"),
+              H.div().holding([
+                  H.strong().says(if person.isViewer { Frame.tf(frame, "event.you", &[("name", person.displayName)]) } else { person.displayName }),
+                  H.span().class("muted").says(Option.unwrapOr(person.municipality, ""))
+                ])
+            ]))),
+      if going.hidden > 0 { H.p().class("muted").says(Translate.count(&frame.locale, "event.more_people", going.hidden)) } else { H.nothing() }
+    ])
+}

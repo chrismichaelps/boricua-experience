@@ -1,0 +1,21 @@
+/** @App.Handlers.Location.Registrations — live location */
+module App.Handlers.Location
+
+import PuduLangMediator as Messaging
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Registration as Registration
+import App.Messages as Messages
+import Domain.Location as Position
+import Services.Location as Location
+import Services.Runtime as Runtime
+
+/// The handlers of live location.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.recordPosition, |asked: Messages.Signed[Position.Position], _context: Context.Context| Messaging.lift(Location.record(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.stopSharing, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Location.stop(&held, &asked.session))),
+    Registration.handler(&kinds.eraseLocation, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Location.erase(&held, &asked.session))),
+    Registration.handler(&kinds.participants, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Location.participants(&held, asked.input, &asked.session)))
+  ]
+}

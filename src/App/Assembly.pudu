@@ -1,0 +1,37 @@
+/** @App.Assembly.Composition — the mediator built once over the runtime */
+module App.Assembly
+
+import PuduLangMediator.Mediator as Mediator
+import App.Handlers.Account as AccountHandlers
+import App.Handlers.Admin as AdminHandlers
+import App.Handlers.Discover as DiscoverHandlers
+import App.Handlers.Events as EventHandlers
+import App.Handlers.Identity as IdentityHandlers
+import App.Handlers.Location as LocationHandlers
+import App.Handlers.Participation as ParticipationHandlers
+import App.Handlers.Privacy as PrivacyHandlers
+import App.Logging as Logging
+import App.Messages as Messages
+import App.Pipeline as Pipeline
+import Services.Runtime as Runtime
+
+/** @App.Assembly.App — the runtime, the mediator, its kinds, and the loggers */
+export type App = { runtime: Runtime.Runtime, mediator: Mediator.Mediator, kinds: Messages.Kinds, logs: Logging.Logs }
+
+/// The application over a runtime, or every registration problem at once.
+export fn assemble(runtime: &Runtime.Runtime, logs: &Logging.Logs) -> Result[App, Str] {
+  let kinds = Messages.kinds()
+  let registrations = Pipeline.registrations(&kinds, &logs.messages)
+    .concat(DiscoverHandlers.registrations(&kinds, runtime))
+    .concat(EventHandlers.registrations(&kinds, runtime))
+    .concat(ParticipationHandlers.registrations(&kinds, runtime))
+    .concat(LocationHandlers.registrations(&kinds, runtime))
+    .concat(AccountHandlers.registrations(&kinds, runtime))
+    .concat(PrivacyHandlers.registrations(&kinds, runtime))
+    .concat(IdentityHandlers.registrations(&kinds, runtime))
+    .concat(AdminHandlers.registrations(&kinds, runtime))
+  match Mediator.build(registrations) {
+    case Ok(mediator) => Ok(App{runtime: *runtime, mediator: mediator, kinds: kinds, logs: *logs})
+    case Err(invalid) => Err(Mediator.explain(&invalid))
+  }
+}

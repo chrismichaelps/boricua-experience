@@ -1,0 +1,116 @@
+/** @View.Pages.Account.Settings — profile, preferences, location, security, and data rights */
+module View.Pages.Account
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import View.Components.Avatar as Avatar
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The account page; `problem` is the refusal of the last form posted from it.
+export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.Catalog, email: Str, usesPassword: Bool, problem: &Option[Problem.Problem]) -> Html.Html {
+  let errors = match problem {
+    case Some(found) => Problem.fieldErrors(&found)
+    case None => []
+  }
+  let towns = [("", Frame.t(frame, "account.no_town"))].concat(catalog.municipalities.map(|town: Catalog.Municipality| (town.slug, town.name)))
+  let meta = Seo.meta(Frame.t(frame, "account.title"), Frame.t(frame, "account.title"), Routes.ACCOUNT, false)
+  Layout.page(frame, &meta, Layout.Me, H.div().class("narrow account").holding([
+        H.header().class("profile-head").holding([
+            Avatar.avatar(me.displayName, "xl"),
+            H.div().holding([
+                H.h1().class("page-title").says(me.displayName),
+                H.p().class("muted").says(email),
+                H.a().class("text-link").href(Routes.PROFILE_PREFIX + me.id).says(Frame.t(frame, "account.view_public"))
+              ])
+          ]),
+        if me.status == Profile.PAUSED { H.div().class("banner").holding([H.p().says(Frame.t(frame, "account.paused_notice")), H.form().action(Routes.ACCOUNT_REACTIVATE).method("post").holding([Form.token(frame), H.button().submit().class("button button-small").says(Frame.t(frame, "account.reactivate"))])]) } else { H.nothing() },
+        if me.isAdmin { H.a().class("button button-ghost").href(Routes.ADMIN).holding([Icons.sized("settings", 18), H.span().says(Frame.t(frame, "admin.title"))]) } else { H.nothing() },
+        Form.problemBanner(frame, problem),
+        H.section().class("panel").id("profile").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "account.profile")),
+            H.form().class("stack-form").action(Routes.ACCOUNT_PROFILE).method("post").holding([
+                Form.token(frame),
+                Form.input(frame, &Form.Field{..Form.field("displayName", Frame.t(frame, "account.field_name"), me.displayName), required: true}, &errors, |c: H.Node| c.at("maxlength", "60").at("autocomplete", "name")),
+                Form.area(frame, &Form.Field{..Form.field("bio", Frame.t(frame, "account.field_bio"), me.bio), hint: Frame.t(frame, "account.hint_bio")}, 3, &errors),
+                Form.select(frame, &Form.field("town", Frame.t(frame, "account.field_town"), Option.unwrapOr(me.homeMunicipality, "")), &towns, &errors),
+                Form.select(frame, &Form.field("locale", Frame.t(frame, "account.field_language"), me.preferredLocale), &[("es", "Español"), ("en", "English")], &errors),
+                H.button().submit().class("button").says(Frame.t(frame, "account.save"))
+              ])
+          ]),
+        H.section().class("panel").id("preferences").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "account.preferences")),
+            H.form().class("stack-form").action(Routes.ACCOUNT_PREFERENCES).method("post").holding([
+                Form.token(frame),
+                H.h3().says(Frame.t(frame, "account.notifications")),
+                Form.toggle("notifyRequestUpdates", Frame.t(frame, "account.notify_updates"), Frame.t(frame, "account.notify_updates_body"), me.notifyRequestUpdates),
+                Form.toggle("notifyNewRequests", Frame.t(frame, "account.notify_requests"), Frame.t(frame, "account.notify_requests_body"), me.notifyNewRequests),
+                Form.toggle("notifyReminders", Frame.t(frame, "account.notify_reminders"), Frame.t(frame, "account.notify_reminders_body"), me.notifyReminders),
+                Form.toggle("notifyEventChanges", Frame.t(frame, "account.notify_changes"), Frame.t(frame, "account.notify_changes_body"), me.notifyEventChanges),
+                Form.toggle("marketingOptIn", Frame.t(frame, "account.marketing"), Frame.t(frame, "account.marketing_body"), me.marketingOptIn),
+                H.h3().says(Frame.t(frame, "account.privacy")),
+                Form.toggle("showInAttendeeLists", Frame.t(frame, "account.attendee_lists"), Frame.t(frame, "account.attendee_lists_body"), me.showInAttendeeLists),
+                H.fieldset().class("choices").holding([
+                    H.legend().says(Frame.t(frame, "account.location_visibility")),
+                    visibility(frame, Profile.ONLY_ME, "account.visibility_only_me", "account.visibility_only_me_body", me.locationVisibility),
+                    visibility(frame, Profile.APPROVED_ACTIVITIES, "account.visibility_activities", "account.visibility_activities_body", me.locationVisibility)
+                  ]),
+                H.button().submit().class("button").says(Frame.t(frame, "account.save"))
+              ])
+          ]),
+        H.section().class("panel").id("location").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "account.location")),
+            H.p().class(if me.sharingLive { "status status-live" } else { "muted" }).says(Frame.t(frame, if me.sharingLive { "account.sharing_now" } else { "account.not_sharing" })),
+            H.p().class("muted small").says(Frame.t(frame, "account.location_body")),
+            H.form().action(Routes.ACCOUNT_LOCATION_HISTORY).method("post").holding([Form.token(frame), H.button().submit().class("button button-ghost").holding([Icons.sized("trash", 18), H.span().says(Frame.t(frame, "account.delete_history"))])])
+          ]),
+        if usesPassword {
+          H.section().class("panel").id("security").holding([
+              H.h2().class("section-title").says(Frame.t(frame, "account.password")),
+              H.form().class("stack-form").action(Routes.ACCOUNT_PASSWORD).method("post").holding([
+                  Form.token(frame),
+                  Form.input(frame, &Form.Field{..Form.field("password", Frame.t(frame, "auth.new_password"), ""), kind: "password", required: true}, &errors, |c: H.Node| c.at("autocomplete", "new-password")),
+                  Form.input(frame, &Form.Field{..Form.field("confirmation", Frame.t(frame, "auth.confirm_password"), ""), kind: "password", required: true}, &errors, |c: H.Node| c.at("autocomplete", "new-password")),
+                  H.button().submit().class("button button-ghost").says(Frame.t(frame, "account.change_password"))
+                ])
+            ])
+        } else { H.nothing() },
+        H.section().class("panel").id("data").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "account.your_data")),
+            H.p().class("muted small").says(Frame.t(frame, "account.your_data_body")),
+            H.form().action(Routes.ACCOUNT_EXPORT).method("post").holding([Form.token(frame), H.button().submit().class("button button-ghost").holding([Icons.sized("download", 18), H.span().says(Frame.t(frame, "account.export"))])]),
+            if me.status == Profile.ACTIVE {
+              H.details().class("confirm").holding([
+                  H.summary().class("text-link").holding([Icons.sized("pause", 16), H.span().says(Frame.t(frame, "account.pause"))]),
+                  H.form().action(Routes.ACCOUNT_PAUSE).method("post").holding([Form.token(frame), H.p().says(Frame.t(frame, "account.pause_body")), H.button().submit().class("button button-ghost").says(Frame.t(frame, "account.pause_yes"))])
+                ])
+            } else { H.nothing() },
+            H.details().class("confirm danger-zone").holding([
+                H.summary().class("text-link danger").holding([Icons.sized("trash", 16), H.span().says(Frame.t(frame, "account.delete"))]),
+                H.form().class("stack-form").action(Routes.ACCOUNT_DELETE).method("post").holding([
+                    Form.token(frame),
+                    H.p().says(Frame.t(frame, "account.delete_body")),
+                    if usesPassword { Form.input(frame, &Form.Field{..Form.field("password", Frame.t(frame, "account.delete_password"), ""), kind: "password", required: true}, &errors, |c: H.Node| c.at("autocomplete", "current-password")) } else { H.p().class("muted small").says(Frame.t(frame, "account.delete_recent")) },
+                    H.button().submit().class("button button-danger").says(Frame.t(frame, "account.delete_yes"))
+                  ])
+              ])
+          ]),
+        H.form().action(Routes.SIGN_OUT).method("post").holding([Form.token(frame), H.button().submit().class("button button-ghost button-block").holding([Icons.sized("logout", 18), H.span().says(Frame.t(frame, "nav.sign_out"))])])
+      ]))
+}
+
+/// One location visibility choice.
+fn visibility(frame: &Frame.Frame, value: Str, title: Str, body: Str, chosen: Str) -> H.Node {
+  var radio = H.input().kind("radio").name("locationVisibility").id("vis-" + value).value(value)
+  if value == chosen { radio = radio.checked() }
+  H.labelFor().class("choice").at("for", "vis-" + value).holding([radio, H.span().holding([H.strong().says(Frame.t(frame, title)), H.small().says(Frame.t(frame, body))])])
+}

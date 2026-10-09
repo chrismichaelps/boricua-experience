@@ -1,0 +1,100 @@
+/** @View.Pages.Search.Results — filtered listings, with category and town landing pages */
+module View.Pages.Search
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Event as Event
+import Domain.Search as Search
+import Utils.Query as Query
+import View.Components.EventCard as EventCard
+import View.Components.Icons as Icons
+import View.Components.Notice as Notice
+import View.Components.Search as SearchControls
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/** @View.Pages.Search.Landing — what fixes the listing: nothing, a category, or a town */
+export type Landing = Open | ForCategory(Catalog.Category) | ForTown(Catalog.Municipality)
+
+/// The query string that reproduces the filters, with a cursor when given.
+export fn queryOf(filters: &Search.Filters, landing: &Landing, after: Str) -> Str {
+  let coordinate = |value: Option[Float64]| match value {
+    case Some(found) => show(found)
+    case None => ""
+  }
+  Query.render(&[
+      ("q", filters.query),
+      ("when", Search.windowName(&filters.window)),
+      ("category", match landing {
+          case ForCategory(_) => ""
+          case _ => filters.category
+        }),
+      ("pueblo", match landing {
+          case ForTown(_) => ""
+          case _ => filters.municipality
+        }),
+      ("free", if filters.freeOnly { "1" } else { "" }),
+      ("sort", if filters.sort == Search.Soon { "" } else { Search.sortName(&filters.sort) }),
+      ("lat", coordinate(filters.lat)),
+      ("lng", coordinate(filters.lng)),
+      ("after", after)
+    ])
+}
+
+/// The title, description, and path of a listing.
+fn identity(frame: &Frame.Frame, landing: &Landing, filters: &Search.Filters) -> (Str, Str, Str) {
+  match landing {
+    case ForCategory(category) => {
+      let name = SearchControls.categoryName(frame, &category)
+      (Frame.tf(frame, "search.category_title", &[("category", name)]), Frame.tf(frame, "search.category_description", &[("category", name)]), Routes.CATEGORY_PREFIX + category.slug)
+    }
+    case ForTown(town) => (Frame.tf(frame, "search.town_title", &[("town", town.name)]), Frame.tf(frame, "search.town_description", &[("town", town.name)]), Routes.TOWN_PREFIX + town.slug)
+    case Open => {
+      let title = if filters.query.isEmpty() { Frame.t(frame, "search.title") } else { Frame.tf(frame, "search.results_for", &[("query", filters.query)]) }
+      (title, Frame.t(frame, "search.description"), Routes.SEARCH)
+    }
+  }
+}
+
+/// The results page.
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page) -> Html.Html {
+  let (title, description, path) = identity(frame, landing, filters)
+  let indexable = match landing {
+    case Open => !Search.isNarrowed(filters)
+    case _ => filters.after.isEmpty()
+  }
+  let crumbs = match landing {
+    case Open => []
+    case _ => [Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (title, path)])]
+  }
+  let meta = Seo.Meta{..Seo.meta(title, description, path, indexable), structured: crumbs}
+  let activeCategory = match landing {
+    case ForCategory(category) => category.slug
+    case _ => filters.category
+  }
+  let more = match page.next {
+    case Some(cursor) => H.a().class("button button-ghost load-more").href(path + queryOf(filters, landing, cursor)).data("feature", "load-more").says(Frame.t(frame, "search.load_more"))
+    case None => H.nothing()
+  }
+  Layout.page(frame, &meta, Layout.Explore, H.div().class("search-page").holding([
+        H.div().class("search-top").holding([
+            SearchControls.pill(frame, catalog, filters),
+            SearchControls.chips(frame, catalog, activeCategory)
+          ]),
+        H.div().class("results-head").holding([
+            H.h1().class("page-title").says(title),
+            H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, landing, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
+          ]),
+        SearchControls.filterBar(frame, catalog, filters),
+        if page.items.isEmpty() {
+          Notice.empty("search", Frame.t(frame, "search.empty_title"), Frame.t(frame, "search.empty_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action")))
+        } else {
+          H.div().class("results").data("feature", "results").holding([EventCard.grid(frame, &page.items), more])
+        }
+      ]))
+}

@@ -1,0 +1,23 @@
+/** @App.Handlers.Events.Registrations — event pages and publishing */
+module App.Handlers.Events
+
+import PuduLangMediator as Messaging
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Registration as Registration
+import App.Messages as Messages
+import Domain.Draft as Draft
+import Services.Events as Events
+import Services.Runtime as Runtime
+
+/// The handlers of event pages and publishing.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.event, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Events.detail(&held, asked.input, asked.session))),
+    Registration.handler(&kinds.attendees, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Events.attendees(&held, asked.input, asked.session))),
+    Registration.handler(&kinds.publish, |asked: Messages.Signed[Draft.Draft], _context: Context.Context| Messaging.lift(Events.publish(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.editable, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Events.editable(&held, asked.input, &asked.session))),
+    Registration.handler(&kinds.update, |asked: Messages.Signed[Messages.Edit], _context: Context.Context| Messaging.lift(Events.update(&held, asked.input.eventId, &asked.input.draft, &asked.session))),
+    Registration.handler(&kinds.cancel, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Events.cancel(&held, asked.input, &asked.session)))
+  ]
+}

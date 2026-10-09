@@ -1,0 +1,113 @@
+/** @View.Components.Search.Controls — the search pill, category chips, and the filter bar */
+module View.Components.Search
+
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Constants.Limits as Limits
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Locale as Locale
+import Domain.Search as Search
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The label of a date window.
+export fn windowLabel(frame: &Frame.Frame, window: &Search.When) -> Str {
+  Frame.t(frame, "when." + (if *window == Search.Anytime { "anytime" } else { Search.windowName(window) }))
+}
+
+/// A category's name in the frame's language.
+export fn categoryName(frame: &Frame.Frame, category: &Catalog.Category) -> Str {
+  match frame.locale {
+    case Locale.Es => category.nameEs
+    case Locale.En => category.nameEn
+  }
+}
+
+/// A select of municipalities with an "anywhere" first option.
+fn townSelect(frame: &Frame.Frame, catalog: &Catalog.Catalog, chosen: Str, id: Str) -> H.Node {
+  var select = H.select().name("pueblo").id(id)
+  select = select.holding([H.option().value("").says(Frame.t(frame, "search.anywhere"))])
+  for town in catalog.municipalities {
+    var item = H.option().value(town.slug).says(town.name)
+    if town.slug == chosen { item = item.flag("selected") }
+    select = select.holding([item])
+  }
+  select
+}
+
+/// A select of date windows.
+fn windowSelect(frame: &Frame.Frame, chosen: &Search.When, id: Str) -> H.Node {
+  var select = H.select().name("when").id(id)
+  for window in Search.WINDOWS {
+    var item = H.option().value(Search.windowName(&window)).says(windowLabel(frame, &window))
+    if window == *chosen { item = item.flag("selected") }
+    select = select.holding([item])
+  }
+  select
+}
+
+/// The white search pill: what, where, when, and the round blue submit.
+export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters) -> H.Node {
+  H.form().class("search-pill").action(Routes.SEARCH).method("get").role("search").label(Frame.t(frame, "search.label")).holding([
+      H.div().class("pill-field pill-what").holding([
+          H.labelFor().at("for", "pill-q").says(Frame.t(frame, "search.what")),
+          H.input().kind("search").name("q").id("pill-q").value(filters.query).placeholder(Frame.t(frame, "search.what_placeholder")).at("maxlength", show(Limits.QUERY_MAX)).at("autocomplete", "off").data("feature", "suggest").at("aria-autocomplete", "list").at("aria-controls", "suggestions")
+        ]),
+      H.div().class("pill-field pill-where").holding([
+          H.labelFor().at("for", "pill-town").says(Frame.t(frame, "search.where")),
+          townSelect(frame, catalog, filters.municipality, "pill-town")
+        ]),
+      H.div().class("pill-field pill-when").holding([
+          H.labelFor().at("for", "pill-when").says(Frame.t(frame, "search.when")),
+          windowSelect(frame, &filters.window, "pill-when")
+        ]),
+      H.button().submit().class("pill-submit").label(Frame.t(frame, "search.submit")).holding([Icons.icon("search")]),
+      H.ul().class("suggestions").id("suggestions").role("listbox").at("hidden", "hidden")
+    ])
+}
+
+/// Horizontally scrolling category chips; the active one is marked.
+export fn chips(frame: &Frame.Frame, catalog: &Catalog.Catalog, active: Str) -> H.Node {
+  H.nav().class("chips").label(Frame.t(frame, "search.categories")).holding(catalog.categories.map(|category: Catalog.Category| {
+        var chip = H.a().class(if category.slug == active { "chip chip-active" } else { "chip" }).href(Routes.CATEGORY_PREFIX + category.slug).holding([Icons.sized(category.icon, 18), H.span().says(categoryName(frame, &category))])
+        if category.slug == active { chip = chip.at("aria-current", "page") }
+        chip
+      }))
+}
+
+/// The filter bar of the search page: every filter as a control of one GET form.
+export fn filterBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters) -> H.Node {
+  var categorySelect = H.select().name("category").id("filter-category")
+  categorySelect = categorySelect.holding([H.option().value("").says(Frame.t(frame, "search.all_categories"))])
+  for category in catalog.categories {
+    var item = H.option().value(category.slug).says(categoryName(frame, &category))
+    if category.slug == filters.category { item = item.flag("selected") }
+    categorySelect = categorySelect.holding([item])
+  }
+  var sortSelect = H.select().name("sort").id("filter-sort")
+  for sort in [Search.Soon, Search.Near, Search.Relevant] {
+    var item = H.option().value(Search.sortName(&sort)).says(Frame.t(frame, "sort." + Search.sortName(&sort)))
+    if sort == filters.sort { item = item.flag("selected") }
+    sortSelect = sortSelect.holding([item])
+  }
+  var free = H.input().kind("checkbox").name("free").id("filter-free").value("1")
+  if filters.freeOnly { free = free.checked() }
+  H.form().class("filter-bar").action(Routes.SEARCH).method("get").data("feature", "filters").holding([
+      H.input().kind("hidden").name("q").value(filters.query),
+      H.div().class("filter").holding([H.labelFor().at("for", "filter-when").class("sr-only").says(Frame.t(frame, "search.when")), windowSelect(frame, &filters.window, "filter-when")]),
+      H.div().class("filter").holding([H.labelFor().at("for", "filter-category").class("sr-only").says(Frame.t(frame, "search.category")), categorySelect]),
+      H.div().class("filter").holding([H.labelFor().at("for", "filter-town").class("sr-only").says(Frame.t(frame, "search.where")), townSelect(frame, catalog, filters.municipality, "filter-town")]),
+      H.labelFor().class("filter filter-toggle").at("for", "filter-free").holding([free, H.span().says(Frame.t(frame, "search.free_only"))]),
+      H.div().class("filter").holding([H.labelFor().at("for", "filter-sort").class("sr-only").says(Frame.t(frame, "search.sort")), sortSelect]),
+      H.input().kind("hidden").name("lat").value(match filters.lat {
+          case Some(value) => show(value)
+          case None => ""
+        }).data("geo", "lat"),
+      H.input().kind("hidden").name("lng").value(match filters.lng {
+          case Some(value) => show(value)
+          case None => ""
+        }).data("geo", "lng"),
+      H.button().submit().class("button button-small").says(Frame.t(frame, "search.apply"))
+    ])
+}

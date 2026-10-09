@@ -1,0 +1,88 @@
+/** @View.Components.Icons.Set — line icons drawn on a 24-pixel grid */
+module View.Components.Icons
+
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+
+/// Path data of every icon by name, stroked at 2 px with round joins.
+const PATHS: Map[Str, Array[Str]] = mapOf([
+  ("search", ["M10.5 3a7.5 7.5 0 1 1 0 15a7.5 7.5 0 0 1 0-15z", "M16 16l5 5"]),
+  ("map", ["M3 6l6-3l6 3l6-3v15l-6 3l-6-3l-6 3z", "M9 3v15", "M15 6v15"]),
+  ("plus", ["M12 5v14", "M5 12h14"]),
+  ("ticket", ["M3 8a2 2 0 0 0 0 4v0a2 2 0 0 1 0 4v2h18v-2a2 2 0 0 1 0-4a2 2 0 0 0 0-4V6H3z", "M14 6v2", "M14 11v2", "M14 16v2"]),
+  ("user", ["M12 12a4 4 0 1 0 0-8a4 4 0 0 0 0 8z", "M4 21c0-4 4-6 8-6s8 2 8 6"]),
+  ("heart", ["M12 20s-7-4.4-9-8.5C1.6 8.6 3.5 5 7 5c2 0 3.5 1.2 5 3c1.5-1.8 3-3 5-3c3.5 0 5.4 3.6 4 6.5c-2 4.1-9 8.5-9 8.5z"]),
+  ("bookmark", ["M6 3h12v18l-6-4l-6 4z"]),
+  ("thumb-up", ["M7 11v9H4v-9z", "M7 11l4-8c1.5 0 2.5 1 2.5 2.5V9h5a2 2 0 0 1 2 2.3l-1.2 6.7a2 2 0 0 1-2 1.7H7"]),
+  ("thumb-down", ["M7 13V4H4v9z", "M7 13l4 8c1.5 0 2.5-1 2.5-2.5V15h5a2 2 0 0 0 2-2.3l-1.2-6.7a2 2 0 0 0-2-1.7H7"]),
+  ("share", ["M12 3v12", "M7 8l5-5l5 5", "M5 14v6h14v-6"]),
+  ("pin", ["M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z", "M12 12.5a3 3 0 1 0 0-6a3 3 0 0 0 0 6z"]),
+  ("clock", ["M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18z", "M12 7v5l3 2"]),
+  ("users", ["M9 11a4 4 0 1 0 0-8a4 4 0 0 0 0 8z", "M2 21c0-3.5 3-5.5 7-5.5s7 2 7 5.5", "M16 3.5a4 4 0 0 1 0 7.5", "M19 15.5c1.8.8 3 2.5 3 5.5"]),
+  ("chevron-left", ["M15 5l-7 7l7 7"]),
+  ("chevron-right", ["M9 5l7 7l-7 7"]),
+  ("globe", ["M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18z", "M3 12h18", "M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"]),
+  ("bell", ["M6 16V11a6 6 0 0 1 12 0v5l2 2H4z", "M10 20a2 2 0 0 0 4 0"]),
+  ("settings", ["M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6z", "M19 12a7 7 0 0 0-.1-1.2l2-1.6l-2-3.4l-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1l-2 3.4l2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6l2 3.4l2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1l2-3.4l-2-1.6c.1-.4.1-.8.1-1.2z"]),
+  ("logout", ["M15 4h4v16h-4", "M10 8l-4 4l4 4", "M6 12h11"]),
+  ("check", ["M5 12.5l4.5 4.5L19 7"]),
+  ("x", ["M6 6l12 12", "M18 6L6 18"]),
+  ("lock", ["M6 11h12v10H6z", "M8 11V8a4 4 0 0 1 8 0v3"]),
+  ("crosshair", ["M12 19a7 7 0 1 0 0-14a7 7 0 0 0 0 14z", "M12 2v4", "M12 18v4", "M2 12h4", "M18 12h4"]),
+  ("sliders", ["M4 6h10", "M18 6h2", "M16 4v4", "M4 12h4", "M12 12h8", "M10 10v4", "M4 18h12", "M20 18h0", "M18 16v4"]),
+  ("list", ["M8 6h12", "M8 12h12", "M8 18h12", "M4 6h0", "M4 12h0", "M4 18h0"]),
+  ("calendar", ["M4 6h16v15H4z", "M4 10h16", "M8 3v5", "M16 3v5"]),
+  ("navigation", ["M12 2l7 19l-7-4l-7 4z"]),
+  ("download", ["M12 4v11", "M7 10l5 5l5-5", "M5 20h14"]),
+  ("trash", ["M4 7h16", "M9 7V4h6v3", "M6 7l1 14h10l1-14"]),
+  ("pause", ["M8 5v14", "M16 5v14"]),
+  ("flag-report", ["M5 21V4", "M5 4h12l-2 4l2 4H5"]),
+  ("edit", ["M4 20h4l11-11l-4-4L4 16z", "M13 7l4 4"]),
+  ("eye", ["M2 12s3.5-7 10-7s10 7 10 7s-3.5 7-10 7s-10-7-10-7z", "M12 15a3 3 0 1 0 0-6a3 3 0 0 0 0 6z"]),
+  ("sparkle", ["M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z", "M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"]),
+  ("people", ["M8 11a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7z", "M16 11a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7z", "M2 20c0-3 2.5-5 6-5s6 2 6 5", "M14 15.5c.6-.3 1.3-.5 2-.5c3.5 0 6 2 6 5"]),
+  ("mask", ["M4 5c5 2 11 2 16 0v6c0 5-3.5 9-8 9s-8-4-8-9z", "M8 10.5h2", "M14 10.5h2", "M9 15c1.8 1.2 4.2 1.2 6 0"]),
+  ("music", ["M9 18V5l11-2v13", "M6 21a3 3 0 1 0 0-6a3 3 0 0 0 0 6z", "M17 19a3 3 0 1 0 0-6a3 3 0 0 0 0 6z"]),
+  ("ball", ["M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18z", "M3.5 9.5c5 1 12 1 17 0", "M3.5 14.5c5-1 12-1 17 0", "M12 3c-3 4-3 14 0 18"]),
+  ("food", ["M7 3v8", "M4 3v5a3 3 0 0 0 6 0V3", "M7 11v10", "M17 3c-2 2-3 5-3 8h3v10"]),
+  ("tools", ["M14 6a4 4 0 0 0 5 5l-9 9a2 2 0 0 1-3-3l9-9a4 4 0 0 1-2-2z"]),
+  ("home", ["M3 11l9-7l9 7", "M5 10v10h14V10", "M10 20v-6h4v6"]),
+  ("flag", ["M5 21V4", "M5 4c3-2 6 2 9 0s4-1 5 0v9c-1-1-2-2-5 0s-6-2-9 0"]),
+  ("cake", ["M4 21V12h16v9", "M4 16c2 1.5 4 1.5 6 0s4-1.5 6 0s3 1 4 0", "M12 12V8", "M12 5.5a1.2 1.2 0 1 0 0 .1"]),
+  ("mountain", ["M2 20l7-12l4 6l3-4l6 10z"]),
+  ("wave", ["M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2s2.5-2 5-2s2.5 2 5 2", "M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2s2.5-2 5-2s2.5 2 5 2", "M9 9a3 3 0 1 1 6 0"]),
+  ("leaf", ["M20 4C9 4 4 9 4 16v4h4c7 0 12-5 12-16z", "M4 20l9-9"]),
+  ("chip", ["M7 7h10v10H7z", "M10 10h4v4h-4z", "M10 3v4", "M14 3v4", "M10 17v4", "M14 17v4", "M3 10h4", "M3 14h4", "M17 10h4", "M17 14h4"]),
+  ("moon", ["M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"]),
+  ("star", ["M12 3l2.7 5.6l6.1.9l-4.4 4.3l1 6.1L12 17l-5.4 2.9l1-6.1L3.2 9.5l6.1-.9z"])
+])
+
+/// An icon as inline SVG, hidden from assistive software; the control it sits in carries the label.
+export fn icon(name: Str) -> H.Node { sized(name, 24) }
+
+/// An icon at a pixel size.
+export fn sized(name: Str, size: Int) -> H.Node {
+  let paths = match PATHS.get(name) {
+    case Some(found) => found
+    case None => []
+  }
+  var svg = H.tag("svg")
+    .at("viewBox", "0 0 24 24")
+    .at("width", show(size))
+    .at("height", show(size))
+    .at("fill", "none")
+    .at("stroke", "currentColor")
+    .at("stroke-width", "2")
+    .at("stroke-linecap", "round")
+    .at("stroke-linejoin", "round")
+    .at("aria-hidden", "true")
+    .at("focusable", "false")
+    .class("icon")
+  for data in paths {
+    svg = svg.holding([H.tag("path").at("d", data)])
+  }
+  svg
+}
+
+/// Whether the set has an icon of this name.
+export fn has(name: Str) -> Bool { PATHS.containsKey(name) }

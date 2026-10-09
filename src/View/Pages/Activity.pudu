@@ -1,0 +1,57 @@
+/** @View.Pages.Activity.Mine — requests, saved events, and organized events */
+module View.Pages.Activity
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Constants.Routes as Routes
+import Domain.Event as Event
+import Domain.Participation as Participation
+import Services.Participation as ParticipationService
+import View.Components.EventCard as EventCard
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// A request's event card with its status underneath.
+fn requestItem(frame: &Frame.Frame, request: &Participation.MyRequest) -> H.Node {
+  H.div().class("activity-item").holding([
+      EventCard.card(frame, &request.event),
+      H.p().class("status status-" + request.status).says(Frame.t(frame, "status." + request.status))
+    ])
+}
+
+/// The activity page with its three sections and in-page tabs.
+export fn render(frame: &Frame.Frame, activity: &ParticipationService.Activity) -> Html.Html {
+  let meta = Seo.meta(Frame.t(frame, "activity.title"), Frame.t(frame, "activity.title"), Routes.ACTIVITY, false)
+  let tab = |id: Str, key: Str, count: Int| H.a().class("tab-link").href("#" + id).says(Frame.t(frame, key) + " · " + show(count))
+  Layout.page(frame, &meta, Layout.Activity, H.div().class("activity").holding([
+        H.h1().class("page-title").says(Frame.t(frame, "activity.title")),
+        H.nav().class("segmented").label(Frame.t(frame, "activity.title")).holding([
+            tab("going", "activity.requests", activity.requests.length()),
+            tab("saved", "activity.saved", activity.saved.length()),
+            tab("organizing", "activity.organizing", activity.organizing.length())
+          ]),
+        H.section().id("going").class("activity-section").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "activity.requests")),
+            if activity.requests.isEmpty() { Notice.empty("ticket", Frame.t(frame, "activity.no_requests"), Frame.t(frame, "activity.no_requests_body"), H.a().class("button").href(Routes.HOME).says(Frame.t(frame, "nav.explore"))) } else { H.div().class("card-grid").holding(activity.requests.map(|r: Participation.MyRequest| requestItem(frame, &r))) }
+          ]),
+        H.section().id("saved").class("activity-section").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "activity.saved")),
+            if activity.saved.isEmpty() { Notice.empty("bookmark", Frame.t(frame, "activity.no_saved"), Frame.t(frame, "activity.no_saved_body"), H.nothing()) } else { EventCard.grid(frame, &activity.saved) }
+          ]),
+        H.section().id("organizing").class("activity-section").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "activity.organizing")),
+            if activity.organizing.isEmpty() { Notice.empty("plus", Frame.t(frame, "activity.no_organizing"), Frame.t(frame, "activity.no_organizing_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action"))) } else {
+              H.div().class("card-grid").holding(activity.organizing.map(|card: Event.Card| H.div().class("activity-item").holding([
+                      EventCard.card(frame, &card),
+                      H.a().class("text-link").href(Routes.EVENT_PREFIX + card.slug + "/requests").says(Frame.tf(frame, "activity.pending_count", &[("count", show(match card.pendingCount {
+                                  case Some(count) => count
+                                  case None => 0
+                                }))]))
+                    ])))
+            }
+          ])
+      ]))
+}

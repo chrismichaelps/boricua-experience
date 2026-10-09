@@ -1,0 +1,5 @@
+/** @Domain.Index.Sitemap — addresses offered to search engines */
+module Domain.Index
+
+/** @Domain.Index.Entry — one address in the sitemap, with its last change when known */
+export type Entry = { path: Str, updatedAt: Str, priority: Str }

@@ -1,0 +1,58 @@
+/** @App.Logging.Events — the structured loggers of the application */
+module App.Logging
+
+import PuduLangLog as Log
+import PuduLangLog.Configuration as Configuration
+import PuduLangLog.Formatting.Compact as Compact
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Sinks.Console as Console
+import PuduLangLog.Value as Value
+import Config.Settings as Settings
+import Constants.App as App
+
+/** @App.Logging.Logs — one event per request, and the mediator's events */
+export type Logs = { requests: Logger.Logger, messages: Logger.Logger }
+
+/// The level each configured name means.
+const LEVELS: Map[Str, Log.Level] = mapOf([
+  ("verbose", Log.Verbose),
+  ("debug", Log.Debug),
+  ("information", Log.Information),
+  ("warning", Log.Warning),
+  ("error", Log.Error),
+  ("fatal", Log.Fatal)
+])
+
+/// Levels at which every message's start and end are written too.
+const DETAILED: Set[Str] = setOf(["verbose", "debug"])
+
+/// The loggers the settings describe. The mediator writes only warnings and worse unless a detailed
+/// level is set, so one request is one line at the usual level.
+export fn logs(settings: &Settings.Settings) -> Logs {
+  let messagesLevel = if DETAILED.contains(settings.logLevel) { settings.logLevel } else { "warning" }
+  Logs {
+    requests: logger(settings.logLevel, settings.logFormat),
+    messages: logger(messagesLevel, settings.logFormat).forSource("Boricua.Messages")
+  }
+}
+
+/// Loggers that write nothing, for tests.
+export fn quiet() -> Logs { Logs{requests: Logger.none(), messages: Logger.none()} }
+
+/// A logger writing events at or above a level to standard error, as text, coloured text, or JSON.
+fn logger(level: Str, format: Str) -> Logger.Logger {
+  let console = Console.defaults()
+  let formatted = match format {
+    case "json" => Console.Options{..console, colored: false, formatter: Some(Compact.rendered())}
+    case "console" => Console.Options{..console, colored: true}
+    case _ => Console.Options{..console, colored: false}
+  }
+  Configuration.create()
+    .minimumLevel(match LEVELS.get(level) {
+      case Some(found) => found
+      case None => Log.Information
+    })
+    .enrichWithProperty("Application", Value.text(App.SITE_NAME))
+    .writeTo(Console.sink(Console.Options{..formatted, standardErrorFromLevel: Some(Log.Verbose)}))
+    .createLogger()
+}

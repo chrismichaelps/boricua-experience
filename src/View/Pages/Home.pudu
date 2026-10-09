@@ -1,0 +1,70 @@
+/** @View.Pages.Home.Front — search first, then rails of what is happening */
+module View.Pages.Home
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Search as Search
+import Services.Discovery as Discovery
+import View.Components.EventCard as EventCard
+import View.Components.Icons as Icons
+import View.Components.Search as SearchControls
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The home page.
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discovery.Home) -> Html.Html {
+  let meta = Seo.Meta{..Seo.meta(Frame.t(frame, "home.title"), Frame.t(frame, "home.description"), Routes.HOME, true), structured: [Seo.website(frame.siteUrl)]}
+  Layout.page(frame, &meta, Layout.Explore, H.div().class("home").holding([
+        H.section().class("hero").holding([
+            H.div().class("hero-frame").holding([
+                H.div().class("hero-copy").holding([
+                    H.h1().says(Frame.t(frame, "home.headline")),
+                    H.p().says(Frame.t(frame, "home.subhead"))
+                  ]),
+                SearchControls.pill(frame, catalog, &Search.everything())
+              ])
+          ]),
+        SearchControls.chips(frame, catalog, ""),
+        EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, ""),
+        EventCard.rail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
+        nearTile(frame),
+        EventCard.rail(frame, "rail-soon", Frame.t(frame, "home.soon"), &home.soon, Routes.SEARCH),
+        EventCard.rail(frame, "rail-free", Frame.t(frame, "home.free"), &home.free, Routes.SEARCH + "?free=1&when=week"),
+        createTile(frame),
+        directory(frame, catalog)
+      ]))
+}
+
+/// The blue promotional tile inviting the visitor to see what is near.
+fn nearTile(frame: &Frame.Frame) -> H.Node {
+  H.section().class("promo").holding([
+      H.div().class("promo-copy").holding([
+          H.h2().says(Frame.t(frame, "home.near_title")),
+          H.p().says(Frame.t(frame, "home.near_body"))
+        ]),
+      H.a().class("button button-light").href(Routes.MAP + "?near=1").holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "home.near_action"))])
+    ])
+}
+
+/// The tile inviting the visitor to publish their own activity.
+fn createTile(frame: &Frame.Frame) -> H.Node {
+  H.section().class("create-tile").holding([
+      H.div().holding([
+          H.h2().class("app-heading").says(Frame.t(frame, "home.create_title")),
+          H.p().says(Frame.t(frame, "home.create_body"))
+        ]),
+      H.a().class("button").href(Routes.CREATE).holding([Icons.sized("plus", 18), H.span().says(Frame.t(frame, "home.create_action"))])
+    ])
+}
+
+/// Every municipality, in columns, as the exploration band at the foot of the page.
+fn directory(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
+  H.section().class("directory").at("aria-labelledby", "directory-title").holding([
+      H.h2().class("section-title").id("directory-title").says(Frame.t(frame, "home.towns")),
+      H.ul().class("directory-list").holding(catalog.municipalities.map(|town: Catalog.Municipality| H.li().holding([H.a().href(Routes.TOWN_PREFIX + town.slug).says(town.name)])))
+    ])
+}

@@ -1,0 +1,18 @@
+/** @App.Handlers.Admin.Registrations — the administrator's dashboard */
+module App.Handlers.Admin
+
+import PuduLangMediator as Messaging
+import PuduLangMediator.Context as Context
+import PuduLangMediator.Registration as Registration
+import App.Messages as Messages
+import Services.Admin as Admin
+import Services.Runtime as Runtime
+
+/// The handlers of moderation.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.dashboard, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Admin.dashboard(&held, &asked.session))),
+    Registration.handler(&kinds.resolve, |asked: Messages.Signed[Messages.Resolution], _context: Context.Context| Messaging.lift(Admin.resolve(&held, asked.input.reportId, asked.input.act, &asked.session)))
+  ]
+}

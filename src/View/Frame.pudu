@@ -1,0 +1,32 @@
+/** @View.Frame.Context — what every page knows about the visitor */
+module View.Frame
+
+import Domain.Consent as Consent
+import Domain.Locale as Locale
+import Domain.Profile as Profile
+import I18n.Translate as Translate
+
+/** @View.Frame.Frame — locale, address, member, form token, consent, and a one-time message */
+export type Frame = {
+  locale: Locale.Locale,
+  siteUrl: Str,
+  path: Str,
+  query: Str,
+  member: Option[Profile.MyProfile],
+  formToken: Str,
+  consent: Option[Consent.Choice],
+  flash: Str,
+  nowMillis: Int
+}
+
+/// The text of a key in the frame's language.
+export fn t(frame: &Frame, key: Str) -> Str { Translate.text(&frame.locale, key) }
+
+/// The text of a key with placeholders filled.
+export fn tf(frame: &Frame, key: Str, values: &Array[(Str, Str)]) -> Str { Translate.fill(&frame.locale, key, values) }
+
+/// Whether a member is signed in.
+export fn signedIn(frame: &Frame) -> Bool { frame.member != None }
+
+/// The path with its query, as the visitor asked for it.
+export fn here(frame: &Frame) -> Str { if frame.query.isEmpty() { frame.path } else { frame.path + "?" + frame.query } }

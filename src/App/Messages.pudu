@@ -1,0 +1,169 @@
+/** @App.Messages.Vocabulary — every request the application answers */
+module App.Messages
+
+import PuduLangMediator.Request as Request
+import Domain.Catalog as Catalog
+import Domain.Consent as Consent
+import Domain.Credentials as Credentials
+import Domain.Draft as Draft
+import Domain.Event as Event
+import Domain.Index as Index
+import Domain.Location as Location
+import Domain.Notification as Notification
+import Domain.Problem as Problem
+import Domain.Profile as Profile
+import Domain.Search as Search
+import Domain.Session as Session
+import Services.Admin as AdminService
+import Services.Auth.Accounts as Accounts
+import Services.Discovery as Discovery
+import Services.Participation as Participation
+import Validation.Participation as ParticipationRules
+
+/** @App.Messages.Visit — a request a guest or a member may send */
+export type Visit[T] = { session: Option[Session.Session], input: T }
+
+/** @App.Messages.Signed — a request only a member may send */
+export type Signed[T] = { session: Session.Session, input: T }
+
+/** @App.Messages.Place — an optional position and radius */
+export type Place = { lat: Option[Float64], lng: Option[Float64], radiusM: Option[Int] }
+
+/** @App.Messages.Decision — an organizer's answer to one request */
+export type Decision = { requestId: Str, approve: Bool, note: Str }
+
+/** @App.Messages.Edit — changes to one event */
+export type Edit = { eventId: Str, draft: Draft.Draft }
+
+/** @App.Messages.Joining — a join request with its message */
+export type Joining = { eventId: Str, message: Str }
+
+/** @App.Messages.Reacting — a reaction to an event */
+export type Reacting = { eventId: Str, value: Int }
+
+/** @App.Messages.Reporting — a report about an event */
+export type Reporting = { eventId: Str, form: ParticipationRules.Report }
+
+/** @App.Messages.SignUp — a sign-up with the visitor's language and where to return */
+export type SignUp = { form: Credentials.SignUp, locale: Str, returnTo: Str }
+
+/** @App.Messages.Provider — a provider sign-in and where to return */
+export type Provider = { provider: Str, returnTo: Str }
+
+/** @App.Messages.Callback — a redirect's code and the flow that started it */
+export type Callback = { code: Str, flow: Session.Flow }
+
+/** @App.Messages.Onboard — the confirmations an account owes and its language */
+export type Onboard = { form: Credentials.Onboarding, locale: Str }
+
+/** @App.Messages.CookieChoice — a cookie choice and who made it */
+export type CookieChoice = { subject: Str, choice: Consent.Choice }
+
+/** @App.Messages.Resolution — an administrator's decision on a report */
+export type Resolution = { reportId: Int, act: Bool }
+
+/** @App.Messages.Kinds — every kind of request, made once and shared by the mediator and the routes */
+export type Kinds = {
+  home: Request.Kind[Visit[Place], Discovery.Home, Problem.Problem],
+  search: Request.Kind[Visit[Search.Filters], Event.Page, Problem.Problem],
+  suggest: Request.Kind[Str, Array[Event.Card], Problem.Problem],
+  pins: Request.Kind[Place, Array[Event.Card], Problem.Problem],
+  catalog: Request.Kind[(), Catalog.Catalog, Problem.Problem],
+  event: Request.Kind[Visit[Str], Event.Detail, Problem.Problem],
+  attendees: Request.Kind[Visit[Str], Event.Attendees, Problem.Problem],
+  publish: Request.Kind[Signed[Draft.Draft], Draft.Published, Problem.Problem],
+  editable: Request.Kind[Signed[Str], (Event.Detail, Draft.Draft), Problem.Problem],
+  update: Request.Kind[Signed[Edit], Draft.Published, Problem.Problem],
+  cancel: Request.Kind[Signed[Str], (), Problem.Problem],
+  join: Request.Kind[Signed[Joining], Str, Problem.Problem],
+  withdraw: Request.Kind[Signed[Str], (), Problem.Problem],
+  decide: Request.Kind[Signed[Decision], Str, Problem.Problem],
+  queue: Request.Kind[Signed[Str], Participation.Queue, Problem.Problem],
+  save: Request.Kind[Signed[Str], Bool, Problem.Problem],
+  react: Request.Kind[Signed[Reacting], Participation.ReactionState, Problem.Problem],
+  report: Request.Kind[Signed[Reporting], (), Problem.Problem],
+  activity: Request.Kind[Signed[()], Participation.Activity, Problem.Problem],
+  recordPosition: Request.Kind[Signed[Location.Position], Str, Problem.Problem],
+  stopSharing: Request.Kind[Signed[()], (), Problem.Problem],
+  eraseLocation: Request.Kind[Signed[()], (), Problem.Problem],
+  participants: Request.Kind[Signed[Str], Array[Location.Participant], Problem.Problem],
+  me: Request.Kind[Signed[()], Profile.MyProfile, Problem.Problem],
+  profile: Request.Kind[Str, Profile.PublicProfile, Problem.Problem],
+  onboard: Request.Kind[Signed[Onboard], (), Problem.Problem],
+  updateProfile: Request.Kind[Signed[Profile.ProfileEdit], (), Problem.Problem],
+  updatePreferences: Request.Kind[Signed[Profile.Preferences], (), Problem.Problem],
+  notifications: Request.Kind[Signed[()], Array[Notification.Notification], Problem.Problem],
+  markRead: Request.Kind[Signed[()], (), Problem.Problem],
+  cookies: Request.Kind[Visit[CookieChoice], (), Problem.Problem],
+  exportData: Request.Kind[Signed[()], Str, Problem.Problem],
+  pause: Request.Kind[Signed[()], (), Problem.Problem],
+  deleteAccount: Request.Kind[Signed[Str], (), Problem.Problem],
+  signIn: Request.Kind[Credentials.SignIn, Session.Session, Problem.Problem],
+  signUp: Request.Kind[SignUp, Accounts.Joined, Problem.Problem],
+  provider: Request.Kind[Provider, (Str, Session.Flow), Problem.Problem],
+  callback: Request.Kind[Callback, Session.Session, Problem.Problem],
+  recover: Request.Kind[Str, Session.Flow, Problem.Problem],
+  changePassword: Request.Kind[Signed[Credentials.NewPassword], (), Problem.Problem],
+  signOut: Request.Kind[Signed[()], (), Problem.Problem],
+  sitemap: Request.Kind[(), Array[Index.Entry], Problem.Problem],
+  dashboard: Request.Kind[Signed[()], AdminService.Dashboard, Problem.Problem],
+  resolve: Request.Kind[Signed[Resolution], (), Problem.Problem]
+}
+
+/// Tags grouping kinds for behaviors: pages read, commands change state.
+export const READ: Str = "read"
+export const COMMAND: Str = "command"
+export const IDENTITY: Str = "identity"
+
+/// A kind with its name and tag.
+fn kind[Q, R](name: Str, tag: Str) -> Request.Kind[Q, R, Problem.Problem] { Request.tagged(&Request.kind(name), [tag]) }
+
+/// Every kind, made once.
+export fn kinds() -> Kinds {
+  Kinds {
+    home: kind("discover.home", READ),
+    search: kind("discover.search", READ),
+    suggest: kind("discover.suggest", READ),
+    pins: kind("discover.pins", READ),
+    catalog: kind("discover.catalog", READ),
+    event: kind("events.detail", READ),
+    attendees: kind("events.attendees", READ),
+    publish: kind("events.publish", COMMAND),
+    editable: kind("events.editable", READ),
+    update: kind("events.update", COMMAND),
+    cancel: kind("events.cancel", COMMAND),
+    join: kind("participation.join", COMMAND),
+    withdraw: kind("participation.withdraw", COMMAND),
+    decide: kind("participation.decide", COMMAND),
+    queue: kind("participation.queue", READ),
+    save: kind("participation.save", COMMAND),
+    react: kind("participation.react", COMMAND),
+    report: kind("participation.report", COMMAND),
+    activity: kind("participation.activity", READ),
+    recordPosition: kind("location.record", COMMAND),
+    stopSharing: kind("location.stop", COMMAND),
+    eraseLocation: kind("location.erase", COMMAND),
+    participants: kind("location.participants", READ),
+    me: kind("account.me", READ),
+    profile: kind("account.profile", READ),
+    onboard: kind("account.onboard", COMMAND),
+    updateProfile: kind("account.update_profile", COMMAND),
+    updatePreferences: kind("account.update_preferences", COMMAND),
+    notifications: kind("account.notifications", READ),
+    markRead: kind("account.mark_read", COMMAND),
+    cookies: kind("privacy.cookies", COMMAND),
+    exportData: kind("privacy.export", COMMAND),
+    pause: kind("privacy.pause", COMMAND),
+    deleteAccount: kind("privacy.delete", COMMAND),
+    signIn: kind("identity.sign_in", IDENTITY),
+    signUp: kind("identity.sign_up", IDENTITY),
+    provider: kind("identity.provider", IDENTITY),
+    callback: kind("identity.callback", IDENTITY),
+    recover: kind("identity.recover", IDENTITY),
+    changePassword: kind("identity.change_password", IDENTITY),
+    signOut: kind("identity.sign_out", IDENTITY),
+    sitemap: kind("seo.sitemap", READ),
+    dashboard: kind("admin.dashboard", READ),
+    resolve: kind("admin.resolve", COMMAND)
+  }
+}

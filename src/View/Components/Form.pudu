@@ -1,0 +1,100 @@
+/** @View.Components.Form.Fields — labelled inputs with their errors */
+module View.Components.Form
+
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Domain.Problem as Problem
+import View.Frame as Frame
+
+/** @View.Components.Form.Field — what one input needs to render */
+export type Field = { name: Str, label: Str, value: Str, kind: Str, hint: Str, required: Bool }
+
+/// A plain text field description.
+export fn field(name: Str, label: Str, value: Str) -> Field {
+  Field{name: name, label: label, value: value, kind: "text", hint: "", required: false}
+}
+
+/// The hidden token every member form carries.
+export fn token(frame: &Frame.Frame) -> H.Node { H.input().kind("hidden").name("_token").value(frame.formToken) }
+
+/// The error message under a field, when the problem refused it.
+fn errorOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], name: Str) -> H.Node {
+  match Problem.errorFor(errors, name) {
+    case Some(key) => H.p().class("field-error").id(name + "-error").role("alert").says(Frame.t(frame, key))
+    case None => H.nothing()
+  }
+}
+
+/// A labelled input with its hint and error.
+export fn input(frame: &Frame.Frame, spec: &Field, errors: &Array[Problem.FieldError], extra: fn(H.Node) -> H.Node) -> H.Node {
+  let invalid = Problem.errorFor(errors, spec.name) != None
+  var control = H.input().kind(spec.kind).name(spec.name).id("f-" + spec.name).value(spec.value)
+  if spec.required { control = control.required() }
+  if invalid { control = control.at("aria-invalid", "true").at("aria-describedby", spec.name + "-error") }
+  H.div().class(if invalid { "field field-invalid" } else { "field" }).holding([
+      H.labelFor().at("for", "f-" + spec.name).says(spec.label),
+      extra(control),
+      if spec.hint.isEmpty() { H.nothing() } else { H.p().class("field-hint").says(spec.hint) },
+      errorOf(frame, errors, spec.name)
+    ])
+}
+
+/// A labelled multi-line field.
+export fn area(frame: &Frame.Frame, spec: &Field, rows: Int, errors: &Array[Problem.FieldError]) -> H.Node {
+  let invalid = Problem.errorFor(errors, spec.name) != None
+  var control = H.textarea().name(spec.name).id("f-" + spec.name).rows(rows).says(spec.value)
+  if spec.required { control = control.required() }
+  if invalid { control = control.at("aria-invalid", "true").at("aria-describedby", spec.name + "-error") }
+  H.div().class(if invalid { "field field-invalid" } else { "field" }).holding([
+      H.labelFor().at("for", "f-" + spec.name).says(spec.label),
+      control,
+      if spec.hint.isEmpty() { H.nothing() } else { H.p().class("field-hint").says(spec.hint) },
+      errorOf(frame, errors, spec.name)
+    ])
+}
+
+/// A labelled select of (value, label) options with one chosen.
+export fn select(frame: &Frame.Frame, spec: &Field, options: &Array[(Str, Str)], errors: &Array[Problem.FieldError]) -> H.Node {
+  var control = H.select().name(spec.name).id("f-" + spec.name)
+  if spec.required { control = control.required() }
+  for option in *options {
+    var item = H.option().value(option[0]).says(option[1])
+    if option[0] == spec.value { item = item.flag("selected") }
+    control = control.holding([item])
+  }
+  H.div().class("field").holding([
+      H.labelFor().at("for", "f-" + spec.name).says(spec.label),
+      control,
+      errorOf(frame, errors, spec.name)
+    ])
+}
+
+/// A checkbox with its label beside it.
+export fn checkbox(frame: &Frame.Frame, name: Str, label: H.Node, checked: Bool, errors: &Array[Problem.FieldError]) -> H.Node {
+  var box = H.input().kind("checkbox").name(name).id("f-" + name).value("on")
+  if checked { box = box.checked() }
+  H.div().class("check").holding([
+      H.labelFor().at("for", "f-" + name).holding([box, H.span().holding([label])]),
+      errorOf(frame, errors, name)
+    ])
+}
+
+/// A switch-styled checkbox with a title and a description.
+export fn toggle(name: Str, title: Str, description: Str, checked: Bool) -> H.Node {
+  var box = H.input().kind("checkbox").name(name).id("f-" + name).value("on").role("switch")
+  if checked { box = box.checked() }
+  H.labelFor().class("toggle").at("for", "f-" + name).holding([
+      H.span().class("toggle-text").holding([H.strong().says(title), H.small().says(description)]),
+      box,
+      H.span().class("toggle-track").at("aria-hidden", "true")
+    ])
+}
+
+/// The summary of a refused form, listing nothing but pointing at the fields.
+export fn problemBanner(frame: &Frame.Frame, problem: &Option[Problem.Problem]) -> H.Node {
+  match problem {
+    case Some(Problem.Invalid(_)) => H.div().class("banner banner-error").role("alert").says(Frame.t(frame, "form.fix_fields"))
+    case Some(found) => H.div().class("banner banner-error").role("alert").says(Frame.t(frame, Problem.messageKey(&found)))
+    case None => H.nothing()
+  }
+}

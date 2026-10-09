@@ -1,0 +1,269 @@
+/** @View.Pages.Event.Detail — one event: what, when, where, who hosts, who goes, and how to join */
+module View.Pages.Event
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Event as Event
+import Domain.Participation as Participation
+import Domain.Problem as Problem
+import I18n.Dates as Dates
+import I18n.Format as Format
+import I18n.Translate as Translate
+import Utils.Text as Text
+import Utils.Time as Time
+import View.Components.EventCard as EventCard
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Components.People as People
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The event page; `problem` is the refusal of the last action on it, shown in the join panel.
+export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> Html.Html {
+  let card = detail.card
+  let path = Routes.EVENT_PREFIX + card.slug
+  let indexable = card.visibility == "public"
+  let meta = Seo.Meta {
+    ..Seo.meta(card.title, Text.truncate(card.summary, 160), path, indexable),
+    image: EventCard.coverOf(&card),
+    structured: if indexable { [Seo.event(frame.siteUrl, detail), Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (Format.categoryName(&frame.locale, &card.category), Routes.CATEGORY_PREFIX + card.category.slug), (card.title, path)])] } else { [] }
+  }
+  Layout.page(frame, &meta, Layout.Explore, H.article().class("event").data("feature", "event").data("slug", card.slug).holding([
+        cover(frame, detail),
+        H.div().class("event-layout").holding([
+            H.div().class("event-main").holding([
+                heading(frame, detail),
+                reactions(frame, detail),
+                about(frame, detail),
+                facts(frame, detail),
+                place(frame, detail),
+                People.organizer(frame, &detail.organizer, card.organizerName == None),
+                People.attendees(frame, &detail.attendees, Routes.SIGN_IN + "?return=" + path),
+                participants(frame, detail),
+                report(frame, detail)
+              ]),
+            H.aside().class("event-side").holding([joinPanel(frame, detail, problem)])
+          ])
+      ]))
+}
+
+/// The cover with its overlaid back, share, and save controls.
+fn cover(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  H.div().class("event-cover").holding([
+      H.img().src(EventCard.coverOf(&card)).alt("").at("width", "1280").at("height", "640").at("fetchpriority", "high"),
+      H.div().class("cover-actions").holding([
+          H.a().class("round-button").href(Routes.HOME).data("feature", "back").label(Frame.t(frame, "nav.back")).holding([Icons.icon("chevron-left")]),
+          H.div().class("cover-actions-end").holding([
+              H.button().kind("button").class("round-button").data("feature", "share").data("title", card.title).label(Frame.t(frame, "event.share")).holding([Icons.icon("share")]),
+              if detail.viewer.signedIn { saveForm(frame, detail) } else { H.nothing() }
+            ])
+        ])
+    ])
+}
+
+/// The save toggle as a one-button form.
+fn saveForm(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  H.form().action(Routes.EVENT_PREFIX + detail.card.slug + "/save").method("post").data("feature", "toggle").holding([
+      Form.token(frame),
+      H.button().submit().class(if detail.viewer.saved { "round-button is-on" } else { "round-button" }).at("aria-pressed", if detail.viewer.saved { "true" } else { "false" }).label(Frame.t(frame, if detail.viewer.saved { "event.unsave" } else { "event.save" })).holding([Icons.icon("bookmark")])
+    ])
+}
+
+/// Category, title, schedule, and place.
+fn heading(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  H.header().class("event-head").holding([
+      H.a().class("chip chip-small").href(Routes.CATEGORY_PREFIX + card.category.slug).holding([Icons.sized(card.category.icon, 16), H.span().says(Format.categoryName(&frame.locale, &card.category))]),
+      H.h1().class("event-title").says(card.title),
+      H.p().class("event-summary").says(card.summary),
+      H.ul().class("event-lines").holding([
+          H.li().holding([Icons.sized("calendar", 18), H.span().says(Dates.schedule(&frame.locale, card.startsAt, card.endsAt))]),
+          H.li().holding([Icons.sized("pin", 18), H.span().holding([H.a().class("text-link").href(Routes.TOWN_PREFIX + card.municipality.slug).says(card.municipality.name), H.span().says(" · " + card.venueName)])]),
+          H.li().holding([Icons.sized("ticket", 18), H.span().says(Format.price(&frame.locale, card.priceCents) + " · " + Frame.t(frame, if Event.needsApproval(&card) { "event.policy_approval" } else { "event.policy_open" }))])
+        ])
+    ])
+}
+
+/// Like, not interested, add to calendar.
+fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  let base = Routes.EVENT_PREFIX + card.slug
+  let reaction = detail.viewer.reaction
+  let calendar = H.a().class("reaction").href(base + "/calendar.ics").holding([Icons.sized("calendar", 18), H.span().says(Frame.t(frame, "event.add_calendar"))])
+  if !detail.viewer.signedIn || detail.viewer.isOrganizer {
+    return H.div().class("reactions").holding([
+        H.span().class("reaction reaction-static").holding([Icons.sized("heart", 18), H.span().says(show(card.likeCount))]),
+        calendar
+      ])
+  }
+  H.div().class("reactions").holding([
+      H.form().action(base + "/react").method("post").data("feature", "react").holding([
+          Form.token(frame),
+          H.input().kind("hidden").name("value").value(if reaction == 1 { "0" } else { "1" }),
+          H.button().submit().class(if reaction == 1 { "reaction is-on" } else { "reaction" }).at("aria-pressed", if reaction == 1 { "true" } else { "false" }).holding([Icons.sized("heart", 18), H.span().says(Frame.t(frame, "event.like")), H.span().class("count").says(show(card.likeCount))])
+        ]),
+      H.form().action(base + "/react").method("post").data("feature", "react").holding([
+          Form.token(frame),
+          H.input().kind("hidden").name("value").value(if reaction == -1 { "0" } else { "-1" }),
+          H.button().submit().class(if reaction == -1 { "reaction is-on" } else { "reaction" }).at("aria-pressed", if reaction == -1 { "true" } else { "false" }).holding([Icons.sized("thumb-down", 18), H.span().says(Frame.t(frame, "event.not_interested"))])
+        ]),
+      calendar
+    ])
+}
+
+/// The description, paragraph by paragraph.
+fn about(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  if detail.description.trim().isEmpty() { return H.nothing() }
+  H.section().class("panel prose").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "event.about")),
+      H.div().holding(detail.description.split("\n\n").filter(|part: Str| !part.trim().isEmpty()).map(|part: Str| H.p().says(part.trim())))
+    ])
+}
+
+/// The facts a visitor checks before going.
+fn facts(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  let capacity = match card.capacity {
+    case Some(total) => Translate.fill(&frame.locale, "event.capacity_of", &[("count", show(card.approvedCount)), ("total", show(total))])
+    case None => Translate.count(&frame.locale, "event.going", card.approvedCount)
+  }
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "event.details")),
+      H.dl().class("facts").holding([
+          H.dt().says(Frame.t(frame, "event.when")), H.dd().says(Dates.schedule(&frame.locale, card.startsAt, card.endsAt)),
+          H.dt().says(Frame.t(frame, "event.price")), H.dd().says(Format.price(&frame.locale, card.priceCents)),
+          H.dt().says(Frame.t(frame, "event.attendance")), H.dd().says(capacity),
+          H.dt().says(Frame.t(frame, "event.joining")), H.dd().says(Frame.t(frame, if Event.needsApproval(&card) { "event.policy_approval_long" } else { "event.policy_open_long" })),
+          H.dt().says(Frame.t(frame, "event.visibility")), H.dd().says(Frame.t(frame, "visibility." + card.visibility))
+        ])
+    ])
+}
+
+/// Where: the exact place with directions once revealed, the area otherwise.
+fn place(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  let lat = Option.unwrapOr(detail.exactLat, card.lat)
+  let lng = Option.unwrapOr(detail.exactLng, card.lng)
+  let map = H.div().class("mini-map").data("feature", "mini-map").data("lat", show(lat)).data("lng", show(lng)).data("exact", if detail.locationRevealed { "1" } else { "0" }).role("img").label(Frame.tf(frame, "event.map_label", &[("place", card.venueName + ", " + card.municipality.name)]))
+  if detail.locationRevealed {
+    return H.section().class("panel").holding([
+        H.h2().class("section-title").says(Frame.t(frame, "event.where")),
+        map,
+        H.p().class("place-name").holding([H.strong().says(card.venueName)]),
+        H.p().class("muted").says(Option.unwrapOr(detail.addressLine, card.municipality.name)),
+        H.a().class("button button-ghost button-small").href("https://www.google.com/maps/dir/?api=1&destination=" + show(lat) + "," + show(lng)).at("rel", "noopener").target("_blank").holding([Icons.sized("navigation", 16), H.span().says(Frame.t(frame, "event.directions"))]),
+        match detail.instructions {
+          case Some(text) => if text.trim().isEmpty() { H.nothing() } else { H.div().class("instructions").holding([H.h3().says(Frame.t(frame, "event.instructions")), H.p().says(text)]) }
+          case None => H.nothing()
+        }
+      ])
+  }
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "event.where")),
+      map,
+      H.p().class("place-name").holding([H.strong().says(card.municipality.name)]),
+      H.p().class("locked").holding([Icons.sized("lock", 16), H.span().says(Frame.t(frame, "event.location_locked"))])
+    ])
+}
+
+/// The co-attendees' live map, for approved attendees and the organizer while the event is near.
+fn participants(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let approved = detail.viewer.requestStatus == Some(Participation.APPROVED) || detail.viewer.isOrganizer
+  if !approved || Event.isCancelled(&detail.card) { return H.nothing() }
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "event.live_title")),
+      H.p().class("muted").says(Frame.t(frame, "event.live_body")),
+      H.div().class("mini-map").data("feature", "participants").data("src", "/api/e/" + detail.card.slug + "/positions").data("lat", show(Option.unwrapOr(detail.exactLat, detail.card.lat))).data("lng", show(Option.unwrapOr(detail.exactLng, detail.card.lng))).role("img").label(Frame.t(frame, "event.live_title"))
+    ])
+}
+
+/// A collapsed report form for members other than the organizer.
+fn report(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  if !detail.viewer.signedIn || detail.viewer.isOrganizer { return H.nothing() }
+  H.details().class("report").holding([
+      H.summary().holding([Icons.sized("flag-report", 16), H.span().says(Frame.t(frame, "event.report"))]),
+      H.form().action(Routes.EVENT_PREFIX + detail.card.slug + "/report").method("post").holding([
+          Form.token(frame),
+          Form.select(frame, &Form.Field{..Form.field("reason", Frame.t(frame, "event.report_reason"), "spam"), required: true}, &Participation.REPORT_REASONS.map(|reason: Str| (reason, Frame.t(frame, "report." + reason))), &[]),
+          Form.area(frame, &Form.field("detail", Frame.t(frame, "event.report_detail"), ""), 3, &[]),
+          H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "event.report_send"))
+        ])
+    ])
+}
+
+/// What the viewer can do now: sign in, join, wait, attend, manage, or nothing.
+fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> H.Node {
+  let card = detail.card
+  let base = Routes.EVENT_PREFIX + card.slug
+  let ended = match Time.parseTimestamp(card.endsAt) {
+    case Some(ends) => ends.millis < frame.nowMillis
+    case None => false
+  }
+  let price = H.div().class("join-price").holding([H.strong().says(Format.price(&frame.locale, card.priceCents)), H.span().says(Format.seats(&frame.locale, &card))])
+  let refusal = match problem {
+    case Some(found) => H.p().class("field-error").role("alert").says(Frame.t(frame, Problem.messageKey(&found)))
+    case None => H.nothing()
+  }
+  let body = if Event.isCancelled(&card) {
+    H.p().class("banner banner-error").says(Frame.t(frame, "event.cancelled_notice"))
+  } else if detail.viewer.isOrganizer {
+    H.div().class("join-actions").holding([
+        H.a().class("button").href(base + "/requests").holding([Icons.sized("users", 18), H.span().says(Translate.count(&frame.locale, "event.manage_requests", Option.unwrapOr(card.pendingCount, 0)))]),
+        H.a().class("button button-ghost").href(base + "/edit").holding([Icons.sized("edit", 18), H.span().says(Frame.t(frame, "event.edit"))]),
+        H.details().class("confirm").holding([
+            H.summary().class("text-link danger").says(Frame.t(frame, "event.cancel")),
+            H.form().action(base + "/cancel").method("post").holding([Form.token(frame), H.p().says(Frame.t(frame, "event.cancel_confirm")), H.button().submit().class("button button-danger").says(Frame.t(frame, "event.cancel_yes"))])
+          ])
+      ])
+  } else if ended {
+    H.p().class("muted").says(Frame.t(frame, "event.ended"))
+  } else if !detail.viewer.signedIn {
+    H.div().class("join-actions").holding([
+        H.a().class("button button-block").href(Routes.SIGN_IN + "?return=" + base).says(Frame.t(frame, "event.sign_in_to_join")),
+        H.p().class("muted small").says(Frame.t(frame, "event.sign_in_why"))
+      ])
+  } else {
+    match detail.viewer.requestStatus {
+      case Some("approved") => H.div().class("join-state join-approved").holding([
+          H.p().class("state-line").holding([Icons.sized("check", 20), H.strong().says(Frame.t(frame, "event.you_are_going"))]),
+          withdrawForm(frame, base)
+        ])
+      case Some("pending") => H.div().class("join-state join-pending").holding([
+          H.p().class("state-line").holding([Icons.sized("clock", 20), H.strong().says(Frame.t(frame, "event.request_pending"))]),
+          H.p().class("muted small").says(Frame.t(frame, "event.request_pending_body")),
+          withdrawForm(frame, base)
+        ])
+      case Some("rejected") => H.div().class("join-state join-rejected").holding([
+          H.p().class("state-line").holding([Icons.sized("x", 20), H.strong().says(Frame.t(frame, "event.request_rejected"))]),
+          match detail.viewer.decisionNote {
+            case Some(note) => if note.isEmpty() || note == "cancelled" { H.nothing() } else { H.blockquote().says(note) }
+            case None => H.nothing()
+          }
+        ])
+      case _ => if detail.isFull {
+          H.p().class("banner").says(Frame.t(frame, "event.full_notice"))
+        } else {
+          H.form().action(base + "/join").method("post").class("join-form").holding([
+              Form.token(frame),
+              if Event.needsApproval(&card) { Form.area(frame, &Form.Field{..Form.field("message", Frame.t(frame, "event.message_label"), ""), hint: Frame.t(frame, "event.message_hint")}, 3, &[]) } else { H.nothing() },
+              H.button().submit().class("button button-block").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_to_join" } else { "event.join_now" })),
+              H.p().class("muted small").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_note" } else { "event.join_note" }))
+            ])
+        }
+    }
+  }
+  H.div().class("join-panel").data("feature", "join-panel").holding([price, refusal, body])
+}
+
+/// A collapsed form withdrawing the viewer's request.
+fn withdrawForm(frame: &Frame.Frame, base: Str) -> H.Node {
+  H.details().class("confirm").holding([
+      H.summary().class("text-link").says(Frame.t(frame, "event.withdraw")),
+      H.form().action(base + "/withdraw").method("post").holding([Form.token(frame), H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "event.withdraw_yes"))])
+    ])
+}

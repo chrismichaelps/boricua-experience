@@ -1,0 +1,150 @@
+/** @View.Layout.Shell — the document every page is rendered inside */
+module View.Layout
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Constants.App as App
+import Constants.Routes as Routes
+import Domain.Locale as Locale
+import Domain.Profile as Profile
+import View.Components.Avatar as Avatar
+import View.Components.Icons as Icons
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Seo as Seo
+
+/** @View.Layout.Section — the part of the app a page belongs to, marked in navigation */
+export type Section = Explore | MapView | Create | Activity | Me | Elsewhere
+
+/// A page in the app shell.
+export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: H.Node) -> Html.Html {
+  H.html().lang(Locale.tag(&frame.locale)).holding([
+      H.head().holding(headTags(frame).concat(Seo.head(frame, meta))),
+      H.body().class(bodyClass(&section)).holding([
+          H.a().class("skip").href("#content").says(Frame.t(frame, "nav.skip")),
+          appBar(frame, &section),
+          H.main().id("content").class("shell").at("tabindex", "-1").holding([content]),
+          footer(frame),
+          tabBar(frame, &section),
+          Notice.cookieBanner(frame),
+          Notice.flash(frame),
+          H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])
+        ])
+    ]).html()
+}
+
+/// The body class for a section, so full-screen tools can drop the footer.
+fn bodyClass(section: &Section) -> Str {
+  match section {
+    case MapView => "app app-full"
+    case _ => "app"
+  }
+}
+
+/// Charset, viewport, colours, icons, manifest, fonts, styles, and scripts.
+fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
+  let version = "?v=" + App.ASSET_VERSION
+  [
+    H.meta().at("charset", "utf-8"),
+    H.meta().name("viewport").at("content", "width=device-width, initial-scale=1, viewport-fit=cover"),
+    H.meta().name("theme-color").at("content", App.THEME_COLOR),
+    H.meta().name("color-scheme").at("content", "light dark"),
+    H.meta().name("apple-mobile-web-app-capable").at("content", "yes"),
+    H.meta().name("mobile-web-app-capable").at("content", "yes"),
+    H.meta().name("apple-mobile-web-app-status-bar-style").at("content", "default"),
+    H.meta().name("apple-mobile-web-app-title").at("content", App.SHORT_NAME),
+    H.link().rel("icon").href(Routes.FAVICON).at("sizes", "48x48"),
+    H.link().rel("icon").href("/assets/brand/icon.svg").kind("image/svg+xml"),
+    H.link().rel("icon").href("/assets/brand/icon-192.png").kind("image/png").at("sizes", "192x192"),
+    H.link().rel("apple-touch-icon").href("/assets/brand/apple-touch-icon.png").at("sizes", "180x180"),
+    H.link().rel("manifest").href(Routes.MANIFEST),
+    H.link().rel("preload").href("/assets/fonts/nunito-sans.woff2").at("as", "font").kind("font/woff2").at("crossorigin", "anonymous"),
+    H.link().rel("stylesheet").href("/assets/css/app.css" + version),
+    H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
+  ]
+}
+
+/// A navigation link, marked current in its section.
+fn navLink(href: Str, icon: Str, label: Str, current: Bool, className: Str) -> H.Node {
+  var link = H.a().class(if current { className + " is-current" } else { className }).href(href).holding([Icons.icon(icon), H.span().says(label)])
+  if current { link = link.at("aria-current", "page") }
+  link
+}
+
+/// The top bar: brand, navigation on wide screens, language, inbox, and the account.
+fn appBar(frame: &Frame.Frame, section: &Section) -> H.Node {
+  H.header().class("appbar").holding([
+      H.a().class("brand").href(Routes.HOME).label(App.SITE_NAME).holding([
+          H.img().src("/assets/brand/logo.svg").alt("").at("width", "32").at("height", "32"),
+          H.span().class("brand-name").holding([H.strong().says("Boricua"), H.span().says(" Experience")])
+        ]),
+      H.nav().class("topnav").label(Frame.t(frame, "nav.main")).holding([
+          navLink(Routes.HOME, "search", Frame.t(frame, "nav.explore"), *section == Explore, "topnav-link"),
+          navLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), *section == MapView, "topnav-link"),
+          navLink(Routes.CREATE, "plus", Frame.t(frame, "nav.create"), *section == Create, "topnav-link"),
+          navLink(Routes.ACTIVITY, "ticket", Frame.t(frame, "nav.activity"), *section == Activity, "topnav-link")
+        ]),
+      H.div().class("appbar-actions").holding([
+          languageSwitch(frame),
+          account(frame)
+        ])
+    ])
+}
+
+/// A one-button form switching between Spanish and English.
+fn languageSwitch(frame: &Frame.Frame) -> H.Node {
+  let other = if frame.locale == Locale.Es { "en" } else { "es" }
+  H.form().action(Routes.LANGUAGE).method("post").class("lang-switch").holding([
+      H.input().kind("hidden").name("lang").value(other),
+      H.input().kind("hidden").name("return").value(Frame.here(frame)),
+      H.button().submit().class("icon-button").label(Frame.t(frame, "nav.language")).at("lang", other).holding([Icons.sized("globe", 20), H.span().says(other.toUpper())])
+    ])
+}
+
+/// The inbox and the member's avatar, or the sign-in button.
+fn account(frame: &Frame.Frame) -> H.Node {
+  match frame.member {
+    case Some(member) => H.div().class("appbar-member").holding([
+        H.a().class("icon-button").href(Routes.NOTIFICATIONS).label(Frame.t(frame, "nav.notifications")).holding([
+            Icons.sized("bell", 22),
+            if member.unreadNotifications > 0 { H.span().class("badge").says(if member.unreadNotifications > 9 { "9+" } else { show(member.unreadNotifications) }) } else { H.nothing() }
+          ]),
+        H.a().class("avatar-link").href(Routes.ACCOUNT).label(Frame.t(frame, "nav.profile")).holding([Avatar.avatar(member.displayName, "sm")])
+      ])
+    case None => H.a().class("button button-small").href(Routes.SIGN_IN + "?return=" + Frame.here(frame).replace("&", "%26")).says(Frame.t(frame, "nav.sign_in"))
+  }
+}
+
+/// The bottom tab bar on phones.
+fn tabBar(frame: &Frame.Frame, section: &Section) -> H.Node {
+  H.nav().class("tabbar").label(Frame.t(frame, "nav.main")).holding([
+      navLink(Routes.HOME, "search", Frame.t(frame, "nav.explore"), *section == Explore, "tab"),
+      navLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), *section == MapView, "tab"),
+      navLink(Routes.CREATE, "plus", Frame.t(frame, "nav.create"), *section == Create, "tab tab-create"),
+      navLink(Routes.ACTIVITY, "ticket", Frame.t(frame, "nav.activity"), *section == Activity, "tab"),
+      navLink(if Frame.signedIn(frame) { Routes.ACCOUNT } else { Routes.SIGN_IN }, "user", Frame.t(frame, "nav.profile"), *section == Me, "tab")
+    ])
+}
+
+/// The footer: what the app is, legal pages, and cookie settings.
+fn footer(frame: &Frame.Frame) -> H.Node {
+  H.footer().class("footer").holding([
+      H.div().class("footer-inner").holding([
+          H.div().class("footer-brand").holding([
+              H.img().src("/assets/brand/logo.svg").alt("").at("width", "28").at("height", "28"),
+              H.p().says(Frame.t(frame, "footer.tagline"))
+            ]),
+          H.nav().class("footer-links").label(Frame.t(frame, "footer.legal")).holding([
+              H.a().href(Routes.ABOUT).says(Frame.t(frame, "footer.about")),
+              H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms")),
+              H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy")),
+              H.a().href(Routes.COOKIES).says(Frame.t(frame, "footer.cookies"))
+            ]),
+          H.p().class("footer-note").says(Frame.t(frame, "footer.adults"))
+        ])
+    ])
+}
+
+/// Whether a member may act: onboarded and active.
+export fn canAct(member: &Profile.MyProfile) -> Bool { member.onboarded && member.status == Profile.ACTIVE }

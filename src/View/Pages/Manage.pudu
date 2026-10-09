@@ -1,0 +1,66 @@
+/** @View.Pages.Manage.Requests — the organizer's queue for one event */
+module View.Pages.Manage
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Constants.Routes as Routes
+import Domain.Participation as Participation
+import Domain.Problem as Problem
+import I18n.Translate as Translate
+import Services.Participation as ParticipationService
+import Utils.Time as Time
+import View.Components.Avatar as Avatar
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+import I18n.Dates as Dates
+
+/// One request with approve and reject controls while it is pending.
+fn row(frame: &Frame.Frame, request: &Participation.IncomingRequest, returnTo: Str) -> H.Node {
+  let when = match Time.parseTimestamp(request.createdAt) {
+    case Some(at) => Dates.short(&frame.locale, &Time.local(&at))
+    case None => ""
+  }
+  let decide = Routes.REQUEST_DECIDE.replace(":id", request.requestId)
+  H.li().class("request request-" + request.status).holding([
+      H.div().class("request-who").holding([
+          Avatar.avatar(request.requester.displayName, "md"),
+          H.div().holding([
+              H.strong().says(request.requester.displayName),
+              H.span().class("muted small").says(when + " · " + Frame.t(frame, "status." + request.status))
+            ])
+        ]),
+      if request.message.isEmpty() { H.nothing() } else { H.blockquote().says(request.message) },
+      if request.status == Participation.PENDING {
+        H.form().class("request-actions").action(decide).method("post").holding([
+            Form.token(frame),
+            H.input().kind("hidden").name("return").value(returnTo),
+            H.labelFor().class("sr-only").at("for", "note-" + request.requestId).says(Frame.t(frame, "manage.note")),
+            H.input().kind("text").name("note").id("note-" + request.requestId).placeholder(Frame.t(frame, "manage.note_placeholder")).at("maxlength", "500"),
+            H.button().submit().name("decision").value("reject").class("button button-ghost button-small").holding([Icons.sized("x", 16), H.span().says(Frame.t(frame, "manage.reject"))]),
+            H.button().submit().name("decision").value("approve").class("button button-small").holding([Icons.sized("check", 16), H.span().says(Frame.t(frame, "manage.approve"))])
+          ])
+      } else { H.nothing() }
+    ])
+}
+
+/// The queue page.
+export fn render(frame: &Frame.Frame, queue: &ParticipationService.Queue, problem: &Option[Problem.Problem]) -> Html.Html {
+  let card = queue.event.card
+  let path = Routes.EVENT_PREFIX + card.slug + "/requests"
+  let pending = queue.requests.filter(|r: Participation.IncomingRequest| r.status == Participation.PENDING)
+  let decided = queue.requests.filter(|r: Participation.IncomingRequest| r.status != Participation.PENDING)
+  let meta = Seo.meta(Frame.t(frame, "manage.title"), card.title, path, false)
+  Layout.page(frame, &meta, Layout.Activity, H.div().class("narrow").holding([
+        H.a().class("text-link back-link").href(Routes.EVENT_PREFIX + card.slug).holding([Icons.sized("chevron-left", 16), H.span().says(card.title)]),
+        H.h1().class("page-title").says(Frame.t(frame, "manage.title")),
+        H.p().class("lead").says(Translate.fill(&frame.locale, "manage.summary", &[("going", show(card.approvedCount)), ("pending", show(pending.length()))])),
+        Form.problemBanner(frame, problem),
+        if pending.isEmpty() { Notice.empty("check", Frame.t(frame, "manage.empty_title"), Frame.t(frame, "manage.empty_body"), H.nothing()) } else { H.ul().class("requests").holding(pending.map(|r: Participation.IncomingRequest| row(frame, &r, path))) },
+        if decided.isEmpty() { H.nothing() } else { H.section().holding([H.h2().class("section-title").says(Frame.t(frame, "manage.decided")), H.ul().class("requests").holding(decided.map(|r: Participation.IncomingRequest| row(frame, &r, path)))]) }
+      ]))
+}

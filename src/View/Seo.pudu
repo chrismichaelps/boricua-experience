@@ -1,0 +1,207 @@
+/** @View.Seo.Discovery — head tags, structured data, sitemap, robots, and the manifest */
+module View.Seo
+
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Json as Json
+import Std.Option as Option
+import Constants.App as App
+import Constants.Routes as Routes
+import Domain.Event as Event
+import Domain.Index as Index
+import Domain.Locale as Locale
+import View.Frame as Frame
+
+/** @View.Seo.Meta — what a page says about itself to search engines and link previews */
+export type Meta = { title: Str, description: Str, path: Str, indexable: Bool, image: Str, structured: Array[Json.Json] }
+
+/// Social image used when a page has none of its own.
+export const SOCIAL_IMAGE: Str = "/assets/brand/social.png"
+
+/// A page's metadata with the default image and no structured data.
+export fn meta(title: Str, description: Str, path: Str, indexable: Bool) -> Meta {
+  Meta{title: title, description: description, path: path, indexable: indexable, image: SOCIAL_IMAGE, structured: []}
+}
+
+/// The head tags of a page: title, description, robots, canonical, alternates, Open Graph, and data.
+export fn head(frame: &Frame.Frame, page: &Meta) -> Array[H.Node] {
+  let canonical = frame.siteUrl + page.path
+  let fullTitle = if page.path == Routes.HOME { App.SITE_NAME + " · " + page.title } else { page.title + " · " + App.SITE_NAME }
+  let image = if page.image.startsWith("https://") { page.image } else { frame.siteUrl + page.image }
+  var nodes = [
+    H.tag("title").says(fullTitle),
+    H.meta().name("description").at("content", page.description),
+    H.meta().name("robots").at("content", if page.indexable { "index,follow,max-image-preview:large" } else { "noindex,follow" }),
+    H.link().rel("canonical").href(canonical),
+    H.link().rel("alternate").at("hreflang", "es-PR").href(canonical),
+    H.link().rel("alternate").at("hreflang", "x-default").href(canonical),
+    property("og:type", "website"),
+    property("og:site_name", App.SITE_NAME),
+    property("og:locale", if frame.locale == Locale.En { "en_US" } else { "es_PR" }),
+    property("og:title", fullTitle),
+    property("og:description", page.description),
+    property("og:url", canonical),
+    property("og:image", image),
+    property("og:image:width", "1200"),
+    property("og:image:height", "630"),
+    H.meta().name("twitter:card").at("content", "summary_large_image"),
+    H.meta().name("twitter:title").at("content", fullTitle),
+    H.meta().name("twitter:description").at("content", page.description),
+    H.meta().name("twitter:image").at("content", image)
+  ]
+  for document in page.structured {
+    nodes = nodes.push(H.script().kind("application/ld+json").raw(Json.encode(&document).replace("</", "<\\/")))
+  }
+  nodes
+}
+
+/// An Open Graph property.
+fn property(name: Str, value: Str) -> H.Node { H.meta().at("property", name).at("content", value) }
+
+/// The site and its search action, for the home page.
+export fn website(siteUrl: Str) -> Json.Json {
+  Json.object(&[
+      ("@context", Json.Text("https://schema.org")),
+      ("@graph", Json.list(&[
+            Json.object(&[
+                ("@type", Json.Text("WebSite")),
+                ("@id", Json.Text(siteUrl + "/#website")),
+                ("name", Json.Text(App.SITE_NAME)),
+                ("url", Json.Text(siteUrl)),
+                ("inLanguage", Json.list(&[Json.Text("es-PR"), Json.Text("en-US")])),
+                ("potentialAction", Json.object(&[
+                      ("@type", Json.Text("SearchAction")),
+                      ("target", Json.Text(siteUrl + Routes.SEARCH + "?q=\{search_term_string\}")),
+                      ("query-input", Json.Text("required name=search_term_string"))
+                    ]))
+              ]),
+            Json.object(&[
+                ("@type", Json.Text("Organization")),
+                ("@id", Json.Text(siteUrl + "/#organization")),
+                ("name", Json.Text(App.SITE_NAME)),
+                ("url", Json.Text(siteUrl)),
+                ("logo", Json.Text(siteUrl + "/assets/brand/icon-512.png")),
+                ("areaServed", Json.Text("Puerto Rico"))
+              ])
+          ]))
+    ])
+}
+
+/// An event as structured data: name, dates, place, offer, organizer, and attendance mode.
+export fn event(siteUrl: Str, detail: &Event.Detail) -> Json.Json {
+  let card = detail.card
+  let status = if Event.isCancelled(&card) { "https://schema.org/EventCancelled" } else { "https://schema.org/EventScheduled" }
+  let place = Json.object(&[
+      ("@type", Json.Text("Place")),
+      ("name", Json.Text(card.venueName)),
+      ("address", Json.object(&[
+            ("@type", Json.Text("PostalAddress")),
+            ("addressLocality", Json.Text(card.municipality.name)),
+            ("addressRegion", Json.Text("PR")),
+            ("addressCountry", Json.Text("US"))
+          ])),
+      ("geo", Json.object(&[
+            ("@type", Json.Text("GeoCoordinates")),
+            ("latitude", Json.Fractional(show(card.lat))),
+            ("longitude", Json.Fractional(show(card.lng)))
+          ]))
+    ])
+  let offer = Json.object(&[
+      ("@type", Json.Text("Offer")),
+      ("price", Json.Text(show(card.priceCents / 100) + "." + (if card.priceCents % 100 < 10 { "0" } else { "" }) + show(card.priceCents % 100))),
+      ("priceCurrency", Json.Text("USD")),
+      ("availability", Json.Text(if detail.isFull { "https://schema.org/SoldOut" } else { "https://schema.org/InStock" })),
+      ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
+    ])
+  var fields = [
+    ("@context", Json.Text("https://schema.org")),
+    ("@type", Json.Text("Event")),
+    ("name", Json.Text(card.title)),
+    ("description", Json.Text(card.summary)),
+    ("startDate", Json.Text(card.startsAt)),
+    ("endDate", Json.Text(card.endsAt)),
+    ("eventStatus", Json.Text(status)),
+    ("eventAttendanceMode", Json.Text("https://schema.org/OfflineEventAttendanceMode")),
+    ("location", place),
+    ("image", Json.list(&[Json.Text(siteUrl + Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg"))])),
+    ("offers", offer),
+    ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
+  ]
+  if let Some(host) = detail.organizer {
+    fields = fields.push(("organizer", Json.object(&[("@type", Json.Text("Person")), ("name", Json.Text(host.displayName))])))
+  }
+  if let Some(total) = card.capacity {
+    fields = fields.push(("maximumAttendeeCapacity", Json.Number(total)))
+  }
+  Json.object(&fields)
+}
+
+/// A breadcrumb trail of (name, path) pairs.
+export fn breadcrumbs(siteUrl: Str, trail: &Array[(Str, Str)]) -> Json.Json {
+  var items: Array[Json.Json] = []
+  var position = 1
+  for step in *trail {
+    items = items.push(Json.object(&[
+          ("@type", Json.Text("ListItem")),
+          ("position", Json.Number(position)),
+          ("name", Json.Text(step[0])),
+          ("item", Json.Text(siteUrl + step[1]))
+        ]))
+    position = position + 1
+  }
+  Json.object(&[("@context", Json.Text("https://schema.org")), ("@type", Json.Text("BreadcrumbList")), ("itemListElement", Json.list(&items))])
+}
+
+/// `robots.txt`: everything public is crawlable; member and action addresses are not.
+export fn robots(siteUrl: Str) -> Str {
+  [
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /account",
+    "Disallow: /activity",
+    "Disallow: /notifications",
+    "Disallow: /admin",
+    "Disallow: /api/",
+    "Disallow: /auth/",
+    "Disallow: /create",
+    "Disallow: /welcome",
+    "Sitemap: " + siteUrl + Routes.SITEMAP,
+    ""
+  ].join("\n")
+}
+
+/// The sitemap of every indexable address.
+export fn sitemap(siteUrl: Str, entries: &Array[Index.Entry]) -> Str {
+  var lines = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"]
+  for entry in *entries {
+    let modified = if entry.updatedAt.length() >= 10 { "<lastmod>" + entry.updatedAt.take(10) + "</lastmod>" } else { "" }
+    lines = lines.push("<url><loc>" + (siteUrl + entry.path).escapeHtml() + "</loc>" + modified + "<priority>" + entry.priority + "</priority></url>")
+  }
+  lines.push("</urlset>").join("\n")
+}
+
+/// The web app manifest: names, colours, icons, and shortcuts that make the site installable.
+export fn manifest(locale: &Locale.Locale, description: Str, shortcuts: &Array[(Str, Str)]) -> Str {
+  let icon = |src: Str, size: Str, purpose: Str| Json.object(&[("src", Json.Text(src)), ("sizes", Json.Text(size)), ("type", Json.Text("image/png")), ("purpose", Json.Text(purpose))])
+  Json.encode(&Json.object(&[
+        ("name", Json.Text(App.SITE_NAME)),
+        ("short_name", Json.Text(App.SHORT_NAME)),
+        ("description", Json.Text(description)),
+        ("lang", Json.Text(Locale.tag(locale))),
+        ("id", Json.Text("/")),
+        ("start_url", Json.Text("/?source=pwa")),
+        ("scope", Json.Text("/")),
+        ("display", Json.Text("standalone")),
+        ("display_override", Json.list(&[Json.Text("window-controls-overlay"), Json.Text("standalone")])),
+        ("orientation", Json.Text("portrait")),
+        ("background_color", Json.Text("#ffffff")),
+        ("theme_color", Json.Text(App.THEME_COLOR)),
+        ("categories", Json.list(&[Json.Text("events"), Json.Text("social"), Json.Text("travel")])),
+        ("icons", Json.list(&[
+              icon("/assets/brand/icon-192.png", "192x192", "any"),
+              icon("/assets/brand/icon-512.png", "512x512", "any"),
+              icon("/assets/brand/maskable-512.png", "512x512", "maskable")
+            ])),
+        ("shortcuts", Json.list(&shortcuts.map(|pair: (Str, Str)| Json.object(&[("name", Json.Text(pair[0])), ("url", Json.Text(pair[1]))]))))
+      ]))
+}

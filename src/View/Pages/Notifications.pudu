@@ -1,0 +1,67 @@
+/** @View.Pages.Notifications.Inbox — what happened to the member's requests and events */
+module View.Pages.Notifications
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Notification as Notification
+import I18n.Dates as Dates
+import Utils.Time as Time
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The icon of a notification kind.
+const KIND_ICONS: Map[Str, Str] = mapOf([
+  ("request_received", "users"),
+  ("request_approved", "check"),
+  ("request_rejected", "x"),
+  ("event_reminder", "clock"),
+  ("event_changed", "edit"),
+  ("event_cancelled", "x")
+])
+
+/// One notification as a linked row.
+fn item(frame: &Frame.Frame, note: &Notification.Notification) -> H.Node {
+  let title = match note.event {
+    case Some(event) => event.title
+    case None => ""
+  }
+  let href = match note.event {
+    case Some(event) => if note.kind == "request_received" { Routes.EVENT_PREFIX + event.slug + "/requests" } else { Routes.EVENT_PREFIX + event.slug }
+    case None => Routes.ACTIVITY
+  }
+  let when = match Time.parseTimestamp(note.createdAt) {
+    case Some(at) => Dates.short(&frame.locale, &Time.local(&at)) + " · " + Time.clock12(&Time.local(&at))
+    case None => ""
+  }
+  let extra = Notification.note(note)
+  H.li().class(if note.read { "note" } else { "note note-unread" }).holding([
+      H.a().href(href).holding([
+          H.span().class("note-icon note-" + note.kind).holding([Icons.sized(Option.unwrapOr(KIND_ICONS.get(note.kind), "bell"), 18)]),
+          H.span().class("note-body").holding([
+              H.strong().says(Frame.tf(frame, "notification." + note.kind, &[("event", title), ("name", Option.unwrapOr(note.actorName, ""))])),
+              if extra.isEmpty() || extra == "cancelled" { H.nothing() } else { H.span().class("muted").says("“" + extra + "”") },
+              H.span().class("muted small").says(when)
+            ])
+        ])
+    ])
+}
+
+/// The inbox page.
+export fn render(frame: &Frame.Frame, notes: &Array[Notification.Notification]) -> Html.Html {
+  let meta = Seo.meta(Frame.t(frame, "notifications.title"), Frame.t(frame, "notifications.title"), Routes.NOTIFICATIONS, false)
+  let unread = notes.filter(|n: Notification.Notification| !n.read).length()
+  Layout.page(frame, &meta, Layout.Activity, H.div().class("narrow").holding([
+        H.div().class("results-head").holding([
+            H.h1().class("page-title").says(Frame.t(frame, "notifications.title")),
+            if unread > 0 { H.form().action(Routes.NOTIFICATIONS_READ).method("post").holding([Form.token(frame), H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "notifications.mark_read"))]) } else { H.nothing() }
+          ]),
+        if notes.isEmpty() { Notice.empty("bell", Frame.t(frame, "notifications.empty_title"), Frame.t(frame, "notifications.empty_body"), H.nothing()) } else { H.ul().class("notes").holding(notes.map(|n: Notification.Notification| item(frame, &n))) }
+      ]))
+}

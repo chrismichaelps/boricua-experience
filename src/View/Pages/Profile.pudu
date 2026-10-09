@@ -1,0 +1,54 @@
+/** @View.Pages.Profile.Public — an organizer as anyone may see them */
+module View.Pages.Profile
+
+import Std.Html as Html
+import Std.Html.Build as H
+import Std.Html.Build {Building}
+import Std.Json as Json
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Profile as Profile
+import I18n.Dates as Dates
+import I18n.Translate as Translate
+import Utils.Text as Text
+import Utils.Time as Time
+import View.Components.Avatar as Avatar
+import View.Components.EventCard as EventCard
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The profile page.
+export fn render(frame: &Frame.Frame, person: &Profile.PublicProfile) -> Html.Html {
+  let path = Routes.PROFILE_PREFIX + person.id
+  let since = match Time.parseTimestamp(person.memberSince) {
+    case Some(at) => Frame.tf(frame, "profile.member_since", &[("date", Dates.monthYear(&frame.locale, &Time.local(&at)))])
+    case None => ""
+  }
+  let structured = Json.object(&[
+      ("@context", Json.Text("https://schema.org")),
+      ("@type", Json.Text("ProfilePage")),
+      ("mainEntity", Json.object(&[("@type", Json.Text("Person")), ("name", Json.Text(person.displayName)), ("description", Json.Text(person.bio))]))
+    ])
+  let meta = Seo.Meta{..Seo.meta(person.displayName, if person.bio.isEmpty() { Frame.tf(frame, "profile.description", &[("name", person.displayName)]) } else { Text.truncate(person.bio, 160) }, path, person.upcomingCount > 0), structured: [structured]}
+  let stat = |count: Int, key: Str| H.li().holding([H.strong().says(show(count)), H.span().says(Translate.count(&frame.locale, key, count))])
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("profile").holding([
+        H.header().class("profile-head").holding([
+            Avatar.avatar(person.displayName, "xl"),
+            H.div().holding([
+                H.h1().class("page-title").says(person.displayName),
+                H.p().class("muted").says([Option.unwrapOr(person.municipality, ""), since].filter(|part: Str| !part.isEmpty()).join(" · ")),
+                if person.bio.isEmpty() { H.nothing() } else { H.p().class("profile-bio").says(person.bio) }
+              ])
+          ]),
+        H.ul().class("stats stats-wide").holding([
+            stat(person.hostedCount, "profile.events_hosted"),
+            stat(person.upcomingCount, "profile.upcoming"),
+            stat(person.guestsHosted, "profile.guests_hosted"),
+            stat(person.likesReceived, "profile.likes")
+          ]),
+        H.h2().class("section-title").says(Frame.t(frame, "profile.upcoming_title")),
+        if person.upcoming.isEmpty() { Notice.empty("calendar", Frame.t(frame, "profile.no_upcoming"), "", H.nothing()) } else { EventCard.grid(frame, &person.upcoming) }
+      ]))
+}
