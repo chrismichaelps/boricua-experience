@@ -1,5 +1,5 @@
 import { ENDPOINTS, SUGGEST } from '../constants/config.js';
-import { getJson } from '../net/http.js?v=19';
+import { getJson } from '../net/http.js?v=22';
 import { create, debounce } from '../utils/dom.js';
 
 export function suggest(input) {

@@ -1,6 +1,6 @@
-import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js?v=19';
-import { message } from '../constants/messages.js?v=19';
-import { postJson } from '../net/http.js?v=19';
+import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js?v=22';
+import { message } from '../constants/messages.js?v=22';
+import { postJson } from '../net/http.js?v=22';
 import { distanceM, readingOf } from '../utils/geo.js';
 import { toast } from './toast.js';
 

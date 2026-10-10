@@ -38,3 +38,10 @@ MEDIUM: asset provenance and presentation boundary.
 ## Referenced by
 
 [[src/_MOC]] · [[src/Public/Styles]] · [[src/View/Components/Footer]]
+
+## Puerto Rican parrot Grill Log
+
+- **Q:** Which photograph replaces the Río Grande slide and tile?
+  **A:** `cotorra-photo.webp`, from USDA Forest Service photo 20230408-FS-PJK-6020 by Preston Keres, a public-domain work of the United States government. It shows a wild Puerto Rican parrot taking off with its blue flight feathers open. The Commons SHA-1 was matched before conversion. The El Yunque photograph remains on the auth page. Resolved.
+- **Q:** How does text stay readable over a bright sky?
+  **A:** The hero copy carries a soft radial scrim and a text shadow. Every slide benefits, and no photograph is altered. Resolved.

@@ -26,3 +26,10 @@ White-on-photo, blue-on-white, 32px header, 16px favicon, 192/512px install icon
 
 ## Referenced by
 [[src/_MOC]] · [[src/View/Layout]] · [[src/View/Components/Search]] · [[src/View/Components/Footer]] · [[src/Public/ServiceWorker]] · [[handoffs/homepage-refresh]]
+
+## Search companion redraw Grill Log
+
+- **Q:** What changed in `cotorra-search.svg`?
+  **A:** A three-quarter profile replaces the front-facing blob: a rounded crown and chest with soft plumage gradients, feather scallops, a red forehead band, a white eye ring with a brown iris, a pale hooked bill, a tucked wing with blue primaries, and zygodactyl feet gripping the search surface. Resolved.
+- **Q:** How does it move?
+  **A:** CSS inside the SVG, so it runs as a plain `<img>`. The bird rises out of the search surface, clipped at the surface line, and the feet settle after it. Afterwards it blinks every few seconds, glances left and right, and breathes slightly. `prefers-reduced-motion` disables every animation. Resolved.

@@ -26,6 +26,15 @@ Real camera photographs used in the destination carousel, destination tiles and 
 - Original SHA-256: b60df193d07f3768bc00ec0d09aa5b8ab4120beba8519f90d73a8fb982a7445d
 - WebP SHA-256: 4e13a50542fa59a8456a825bcf9907b9000ecbd5e8e078d09d3b04d14596059a
 
+## Puerto Rican parrot (Amazona vittata)
+- Asset: cotorra-photo.webp
+- Author: Preston Keres, USDA Forest Service
+- Source: [Puerto Rican Parrot - 20230408-FS-PJK-6020](https://commons.wikimedia.org/wiki/File:Puerto_Rican_Parrot_-_20230408-FS-PJK-6020.jpg), originally published on the [USDA Flickr account](https://www.flickr.com/photos/41284017@N08/52888353198/)
+- License: Public domain (work of the United States federal government)
+- Original SHA-1 (matches Commons): 7a6d0b6e07f6aeb65b45b94cd00f2380881c294f
+- Original SHA-256: 5c2c63e89fd599c4cdeeb231f2db0955fa8227f6e537e81a1e4db93c58a307b2
+- WebP SHA-256: 750c866e0452f296e881f1dcb844bbb422f88b6737c294ac5c31ba21d793f65a
+
 ## Flamenco Beach, Culebra
 - Asset: culebra-photo.webp
 - Author: [Breezy Baldwin](https://www.flickr.com/people/breezy421/)

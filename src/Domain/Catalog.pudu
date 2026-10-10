@@ -15,6 +15,9 @@ export type Category = {
 /** @Domain.Catalog.Municipality — one of the 78 municipalities */
 export type Municipality = { slug: Str, name: Str, region: Str, lat: Float64, lng: Float64 } derives Json.Decode
 
+/// The island's regions in the order a visitor reads them: the metro area first, the offshore islands last.
+export const REGIONS: Array[Str] = ["metro", "norte", "este", "centro", "sur", "oeste", "islas"]
+
 /** @Domain.Catalog.Catalog — both reference lists, loaded together */
 export type Catalog = { categories: Array[Category], municipalities: Array[Municipality] }
 

@@ -172,3 +172,9 @@ Architect → Implementer (separate session): own `scripts/fetch-runtime.sh`, `s
 - Vercel project `boricua-experience` created; production variables `BORICUA_SUPABASE_URL`, `BORICUA_SUPABASE_ANON_KEY`, `BORICUA_SUPABASE_SERVICE_KEY`, and a production-only `BORICUA_SESSION_KEY` are encrypted project variables; the site URL and log format travel with the function.
 - Production deployment answers `/health`, `/`, `/map`, search, the sitemap, an event page, assets, favicon, and manifest with 200; guest pages are cached at the edge (`x-vercel-cache: HIT`); security headers present.
 - `boricuaexperience.com` serves production over HTTPS; `www.boricuaexperience.com` redirects with 308 to the apex.
+
+## Location, parrot and town browser (parallel session)
+
+Architect → Implementer (this session, while the other session is idle): owns `public/assets/js/features/explorer.js` location framing, `eventMaps.js` pin-here, `cotorra-search.svg`, `cotorra-photo.webp`, the home town browser (`View.Pages.Home.directory`, `Domain.Catalog.REGIONS`, `home.css` directory rules), the hero copy scrim, photo credits, and the asset/cache version bump to 22. Any session resuming homepage work starts from these files as they are now.
+
+Exact next action: deploy version 22 to production and verify location follow mode on a physical phone.

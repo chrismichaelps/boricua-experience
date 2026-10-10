@@ -29,3 +29,7 @@
 
 - 2026-10-09 · [[handoffs/homepage-refresh]] · approved hosted Google OAuth web client/provider configuration and public audience; production/local exact callbacks saved. Local login-form Google flow returns authenticated onboarding; application consent and production deployment remain unverified. No OAuth secret stored in source or app environment.
 - 2026-10-09 · [[src/Validation/Avatar]] · member photos: storage bucket and policies, upload and removal, photos in app bar, account, organizer card, attendees, and request queue · risk LOW · issue #1
+- 2026-10-09 · [[src/Public/Explorer]] · current location follows each reading until the visitor moves the map; coarse fixes frame their accuracy circle with an approximate-location notice; price-marker hover no longer overrides MapLibre positioning; high-accuracy pin-here on the create form.
+- 2026-10-09 · [[src/View/Pages/Home]] · region-tab town browser replaces the raw directory list; works without scripts.
+- 2026-10-09 · [[src/Public/Brand]] · redrawn animated search parrot (rise, blink, glance, breathe; reduced-motion safe).
+- 2026-10-09 · [[src/Public/Photographs]] · real public-domain Puerto Rican parrot photograph on the Río Grande slide and tile; hero copy scrim. Asset/cache version 22.

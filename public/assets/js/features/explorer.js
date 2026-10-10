@@ -1,13 +1,13 @@
-import { clusterPins } from './mapClusters.js?v=19';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=19';
+import { clusterPins } from './mapClusters.js?v=22';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=22';
 import { message } from '../constants/messages.js';
-import { getJson } from '../net/http.js?v=19';
+import { getJson } from '../net/http.js?v=22';
 import { $, $$, create } from '../utils/dom.js';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=19';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=22';
 import { toast } from './toast.js';
-import { createMap } from './mapLoader.js?v=19';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=19';
-import * as live from './live.js?v=19';
+import { createMap } from './mapLoader.js?v=22';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=22';
+import * as live from './live.js?v=22';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -160,28 +160,69 @@ export async function explorer(page) {
     queryTimer = setTimeout(() => refreshViewport(ticket), MAP.viewportDelayMs);
   };
 
+  let follow = false;
+  let precise = false;
+  let warnedCoarse = false;
+  let lastMe = null;
+  const COARSE_M = 500;
+  const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: matchMedia('(min-width: 960px)').matches ? 24 : sheet.getBoundingClientRect().height + 24 });
+  const motionMs = (ms) => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms);
+
+  const frameReading = (reading, first) => {
+    const accuracy = Math.max(reading.accuracy || 0, 10);
+    if (accuracy > COARSE_M) {
+      const circle = accuracyCircle(reading, accuracy).geometry.coordinates[0];
+      const bounds = circle.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(circle[0], circle[0]));
+      map.fitBounds(bounds, { padding: sheetPadding(), maxZoom: MAP.selfZoom, duration: motionMs(first ? 450 : 300) });
+      return;
+    }
+    const zoom = !precise ? MAP.selfZoom : Math.max(map.getZoom(), 12);
+    precise = true;
+    map.easeTo({ center: [reading.lng, reading.lat], zoom, padding: sheetPadding(), duration: motionMs(first ? 450 : 300) });
+  };
+
   const showMe = (reading) => {
     if (!ready) { pendingReading = reading; return; }
     me ??= meMarker(maplibregl, message('you')).setLngLat([reading.lng, reading.lat]).addTo(map);
     me.setLngLat([reading.lng, reading.lat]);
+    lastMe = reading;
+    const accuracy = Math.max(reading.accuracy || 0, 10);
+    const coarse = accuracy > COARSE_M;
+    me.getElement().classList.toggle('is-coarse', coarse);
     const source = map.getSource('accuracy');
-    const circle = accuracyCircle(reading, Math.max(reading.accuracy, 10));
+    const circle = accuracyCircle(reading, accuracy);
     if (source) source.setData(circle);
     else if (map.isStyleLoaded()) {
       map.addSource('accuracy', { type: 'geojson', data: circle });
       map.addLayer({ id: 'accuracy', type: 'fill', source: 'accuracy', paint: { 'fill-color': '#1a73e8', 'fill-opacity': 0.12 } });
+      map.addLayer({ id: 'accuracy-edge', type: 'line', source: 'accuracy', paint: { 'line-color': '#1a73e8', 'line-opacity': 0.35, 'line-width': 1 } });
     }
-    me.getElement().setAttribute('aria-label', message('you'));
+    me.getElement().setAttribute('aria-label', coarse ? `${message('you')} (±${Math.round(accuracy)} m)` : message('you'));
+    if (coarse && !warnedCoarse) {
+      warnedCoarse = true;
+      toast(message('locationApproximate').replace(':distance', accuracy >= 1000 ? `${(accuracy / 1000).toFixed(1)} km` : `${Math.round(accuracy)} m`));
+    }
+    const first = centerRequested;
     if (centerRequested) {
       centerRequested = false;
+      follow = true;
       const [[west, south], [east, north]] = MAP.searchBounds;
       if (reading.lng < west || reading.lng > east || reading.lat < south || reading.lat > north) {
         toast(message('locationOutside'));
         map.setMaxBounds(null);
       }
-      map.easeTo({ center: [reading.lng, reading.lat], zoom: MAP.focusZoom, padding: { top: 72, bottom: matchMedia('(min-width: 960px)').matches ? 24 : sheet.getBoundingClientRect().height + 24 }, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450 });
     }
+    if (follow) frameReading(reading, first);
   };
+
+  // A pan or zoom by the visitor ends following, as in native map apps; the locate button resumes it.
+  for (const type of ['dragstart', 'zoomstart', 'rotatestart']) {
+    map.on(type, (event) => {
+      if (!event.originalEvent || !follow) return;
+      follow = false;
+      $('[data-feature="locate"]', page)?.classList.add('is-detached');
+    });
+  }
 
   const bindList = () => {
     for (const item of $$('.sheet-item', list)) {
@@ -208,7 +249,15 @@ export async function explorer(page) {
   let stopLocateReading = null;
   let stopShareReading = null;
   locate?.addEventListener('click', () => {
+    if (following && !follow) {
+      follow = true;
+      precise = false;
+      locate.classList.remove('is-detached');
+      if (lastMe) frameReading(lastMe, true);
+      return;
+    }
     following = !following;
+    locate.classList.remove('is-detached');
     locate.setAttribute('aria-pressed', String(following));
     if (!following) {
       stopLocateReading?.();
@@ -217,6 +266,8 @@ export async function explorer(page) {
       return;
     }
     centerRequested = true;
+    precise = false;
+    warnedCoarse = false;
     stopLocateReading?.();
     stopLocateReading = live.onReading(showMe);
     live.startWatching();
@@ -260,6 +311,7 @@ export async function explorer(page) {
     share?.setAttribute('aria-busy', String(live.isSharing() && state === 'waiting'));
     if (state === 'error' || state === 'stopped') {
       following = false;
+      follow = false;
       centerRequested = false;
       locate?.setAttribute('aria-pressed', 'false');
       stopLocateReading?.();

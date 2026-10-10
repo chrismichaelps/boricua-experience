@@ -23,6 +23,7 @@ Category and municipality reference values and lookups by slug.
 ```pudu
 export type Category = { slug, nameEs, nameEn, icon, upcoming }
 export type Municipality = { slug, name, region, lat, lng }
+export const REGIONS: Array[Str]  // metro, norte, este, centro, sur, oeste, islas
 export type Catalog = { categories: Array[Category], municipalities: Array[Municipality] }
 export fn category(catalog: &Catalog, slug: Str) -> Option[Category]
 export fn municipality(catalog: &Catalog, slug: Str) -> Option[Municipality]
@@ -57,3 +58,6 @@ SHALLOW: typed values with their decoding, so no caller reads raw JSON.
 ## Referenced by
 
 [[src/_MOC]]
+
+- **Q:** Why does the region order live here?
+  **A:** It is the domain order of the `app.municipalities.region` check constraint, read as a visitor reads the island: the metro area first, the offshore islands last. The home town browser and any later region filter share it. Resolved.

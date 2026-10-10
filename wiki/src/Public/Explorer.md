@@ -73,3 +73,12 @@ Map results preserve the server limited flag and show a bilingual zoom-in notice
 
 ## Transition boundary
 Only the sheet itself ending a height/max-height transition updates map padding. Ignore bubbled card/child transitions to prevent repeated read loops. Grill: final soak found propagation loop; target/property filter resolves it.
+
+## Location follow mode Grill Log
+
+- **Q:** Why did the current-position dot look misplaced?
+  **A:** Three causes. The first, often coarse network fix was centred once and never followed, so the dot drifted from the camera as GPS sharpened. A coarse fix was shown at a tight fixed zoom, so a ±2 km guess looked exact. And `transform` rules on price markers overrode the transform MapLibre uses to position each marker. Resolved.
+- **Q:** What is the contract now?
+  **A:** The locate control starts follow mode. Every reading re-frames the camera until the visitor pans, zooms, or rotates; only events carrying `originalEvent` count, so programmatic easing never cancels following. A detached state keeps the control pressed with an outline; pressing it again re-frames the last reading at once. A reading less precise than 500 m fits the camera to its accuracy circle, mutes the halo, and shows a one-time approximate-location toast. A precise first fix opens at zoom 15, and later fixes keep the visitor's zoom. Hover and selected price markers scale through the independent `scale` property. Resolved.
+- **Q:** What proves it?
+  **A:** A simulated 2.5 km reading framed the circle and showed the toast; a 25 m reading switched to precise and centred the marker in the unobscured canvas. A real drag detached following and a later reading left the camera alone; pressing locate re-centred. Resolved.

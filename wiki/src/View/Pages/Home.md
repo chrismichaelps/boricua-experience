@@ -67,3 +67,10 @@ MEDIUM.
 [[src/_MOC]]
 
 Real destination assets now use `*-photo.webp`; location and licenses are recorded in [[src/Public/Photographs]]. Generated scene assets are removed.
+
+## Town browser Grill Log
+
+- **Q:** Why replace the collapsible directory?
+  **A:** A default disclosure triangle opening onto 78 thin links in columns read as an unfinished list. Seven region tabs over a grid of town rows (name and chevron, 52 px rows, four columns on desktop, three on tablet, two on phone) make every municipality reachable in at most two taps. Resolved.
+- **Q:** How does it work before any script runs?
+  **A:** Region tabs are native radio inputs inside a fieldset with a hidden legend; `:has(:checked)` reveals the matching panel. Arrow keys move between regions natively. The fieldset overrides its default `min-inline-size` so the tab strip scrolls instead of widening the page. Region order is `Domain.Catalog.REGIONS`; labels are the run-time `region.*` message family listed in `scripts/message-keys.sh`. Resolved.

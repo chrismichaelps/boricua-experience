@@ -1,7 +1,9 @@
-import { LIVE, MAP } from '../constants/config.js?v=19';
-import { getJson } from '../net/http.js?v=19';
-import { createMap } from './mapLoader.js?v=19';
-import { accuracyCircle, personMarker } from './markers.js?v=19';
+import { LIVE, MAP } from '../constants/config.js?v=22';
+import { getJson } from '../net/http.js?v=22';
+import { message } from '../constants/messages.js?v=22';
+import { createMap } from './mapLoader.js?v=22';
+import { accuracyCircle, personMarker } from './markers.js?v=22';
+import { toast } from './toast.js';
 
 function whenVisible(element, action) {
   const observer = new IntersectionObserver((entries) => {
@@ -72,6 +74,6 @@ export async function pinPicker(element) {
     navigator.geolocation?.getCurrentPosition((position) => {
       place(position.coords.longitude, position.coords.latitude);
       map.easeTo({ center: [position.coords.longitude, position.coords.latitude], zoom: MAP.pinZoom });
-    });
+    }, () => toast(message('locationUnavailable')), LIVE.watch);
   });
 }

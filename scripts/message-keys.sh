@@ -17,6 +17,7 @@ out="$root/test/Fixtures/message-keys.txt"
   for section in eligibility accounts events joining conduct safety minors content liability termination changes contact; do echo "legal.terms.$section.title"; echo "legal.terms.$section.body"; done
   for section in collect use location sharing retention rights deletion cookies security minors contact; do echo "legal.privacy.$section.title"; echo "legal.privacy.$section.body"; done
   for section in what necessary analytics marketing choices; do echo "legal.cookies.$section.title"; echo "legal.cookies.$section.body"; done
+  for region in metro norte este centro sur oeste islas; do echo "region.$region"; done
   for section in mission how safety privacy; do echo "about.$section.title"; echo "about.$section.body"; done
   for doc in legal.terms legal.privacy legal.cookies about; do echo "$doc.title"; echo "$doc.description"; echo "$doc.intro"; done
 } | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|event\.going|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"

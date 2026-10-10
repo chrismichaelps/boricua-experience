@@ -7,12 +7,13 @@ export const ENDPOINTS = {
   locationStop: '/api/location/stop',
 };
 export const MAP = {
-  style: '/assets/map/style.json?v=2',
+  style: '/assets/map/style.json?v=22',
   script: '/assets/vendor/maplibre-gl.js',
   stylesheet: '/assets/vendor/maplibre-gl.css',
   center: [-66.4, 18.22],
   zoom: 8.3,
   focusZoom: 11,
+  selfZoom: 15,
   bounds: [[-70, 12], [-62, 24]],
   pinZoom: 15,
   viewportDelayMs: 300,

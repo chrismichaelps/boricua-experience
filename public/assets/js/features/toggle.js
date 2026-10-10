@@ -1,5 +1,5 @@
-import { haptic } from './haptics.js?v=19';
-import { postForm } from '../net/http.js?v=19';
+import { haptic } from './haptics.js?v=22';
+import { postForm } from '../net/http.js?v=22';
 import { message } from '../constants/messages.js';
 import { toast } from './toast.js';
 

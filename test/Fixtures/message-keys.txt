@@ -295,6 +295,7 @@ form.too_long
 form.venue_length
 form.visibility_invalid
 home.all_towns
+home.all_towns_body
 home.carousel
 home.carousel_role
 home.create_action
@@ -311,6 +312,7 @@ home.near_title
 home.pause_slides
 home.play_slides
 home.popular
+home.region_picker
 home.see_all
 home.slide
 home.soon
@@ -518,6 +520,13 @@ publish.visibility_unlisted
 publish.when
 publish.where
 publish.who
+region.centro
+region.este
+region.islas
+region.metro
+region.norte
+region.oeste
+region.sur
 report.minors
 report.offensive
 report.other
