@@ -14,7 +14,7 @@ tags: [module, services, medium]
 
 ## Purpose
 
-Both reference lists, read at most once per ten minutes per instance.
+Categories, municipalities and featured scenes, read at most once per ten minutes per instance.
 
 ## Interface
 
@@ -31,7 +31,7 @@ export fn current(runtime) -> Result[Catalog.Catalog, Problem.Problem]
 
 ## Algorithm
 
-A cell holds (loaded at, catalogue); stale or empty reloads both lists.
+A cell holds (loaded at, catalogue); stale or empty reloads all three lists.
 
 ## Negative Logic (Prohibited Paths)
 
@@ -53,3 +53,7 @@ MEDIUM: callers name a use case; validation, calls, and composition stay inside.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Cache categories, municipalities and featured scenes together. No embedded business-data fallback on a failed database read. Resolved.

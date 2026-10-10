@@ -8,7 +8,7 @@ tags: [module, presentation, carousel]
 
 ## Purpose
 
-A static first-slide hero, cotorra search form, caption link, four labelled dot buttons and a pause control. Decorative images are hidden from assistive technology.
+A static first-slide hero, cotorra search form, caption link, database-driven labelled dot buttons and a pause control. Decorative images are hidden from assistive technology.
 
 ## Interface
 
@@ -28,7 +28,7 @@ No JavaScript (first image and search work), failed image decode, rapid dot clic
 
 ## Depth
 
-MEDIUM: presentation boundaries; Constants are shallow immutable data.
+MEDIUM: presentation boundaries; the catalog supplies all featured content.
 
 ## Grill Log
 
@@ -44,3 +44,7 @@ MEDIUM: presentation boundaries; Constants are shallow immutable data.
 [[src/_MOC]] · [[src/View/Pages/Home]] · [[subsystems/Presentation]]
 
 Real destination assets now use `*-photo.webp`; location and licenses are recorded in [[src/Public/Photographs]]. Generated scene assets are removed.
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Render scenes from Catalog. Empty scenes retain search/headline without a caption or carousel controls; one scene has no pause button. Resolved.

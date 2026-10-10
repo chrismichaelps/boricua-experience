@@ -59,3 +59,7 @@ Use original cotorra puertorriqueña SVG assets and optional Motion privacy disc
 
 ## Brand upgrade validation
 Use the declared runtime/cache asset version rather than stale fixture versions. Grill: output and old-cache cleanup assertions still verify the same public boundary; resolved.
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Fixture-only scenes prove catalog-driven rendering, empty carousel safety, bilingual escaping and consent/reset session tokens. Resolved.

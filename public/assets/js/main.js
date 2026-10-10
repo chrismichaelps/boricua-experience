@@ -1,18 +1,18 @@
-import { privacyControls } from './features/privacyControls.js?v=32';
-import { interactionFeedback } from './features/haptics.js?v=32';
-import { sheetGestures } from './features/sheetGestures.js?v=32';
-import { searchPickers } from './features/searchPickers.js?v=32';
-import { heroCarousel } from './features/carousel.js?v=32';
-import { accountMenu } from './features/accountMenu.js?v=32';
-import { bell } from './features/bell.js?v=32';
-import { localizeMoments } from './features/localTime.js?v=32';
-import { $$ } from './utils/dom.js?v=32';
-import { back, joinPanel, registerServiceWorker, retry } from './features/app.js?v=32';
-import { filters, loadMore } from './features/listing.js?v=32';
-import { share } from './features/share.js?v=32';
-import { suggest } from './features/suggest.js?v=32';
-import { reactToggle, saveToggle } from './features/toggle.js?v=32';
-import { resumeIfShared } from './features/live.js?v=32';
+import { privacyControls } from './features/privacyControls.js?v=33';
+import { interactionFeedback } from './features/haptics.js?v=33';
+import { sheetGestures } from './features/sheetGestures.js?v=33';
+import { searchPickers } from './features/searchPickers.js?v=33';
+import { heroCarousel } from './features/carousel.js?v=33';
+import { accountMenu } from './features/accountMenu.js?v=33';
+import { bell } from './features/bell.js?v=33';
+import { localizeMoments } from './features/localTime.js?v=33';
+import { $$ } from './utils/dom.js?v=33';
+import { back, joinPanel, registerServiceWorker, retry } from './features/app.js?v=33';
+import { filters, loadMore } from './features/listing.js?v=33';
+import { share } from './features/share.js?v=33';
+import { suggest } from './features/suggest.js?v=33';
+import { reactToggle, saveToggle } from './features/toggle.js?v=33';
+import { resumeIfShared } from './features/live.js?v=33';
 
 interactionFeedback();
 localizeMoments();
@@ -33,11 +33,11 @@ const FEATURES = {
   back,
   'join-panel': joinPanel,
   retry,
-  explorer: (node) => import('./features/explorer.js?v=32').then((module) => module.explorer(node)),
-  'mini-map': (node) => import('./features/eventMaps.js?v=32').then((module) => module.miniMap(node)),
-  participants: (node) => import('./features/eventMaps.js?v=32').then((module) => module.participants(node)),
-  'avatar-upload': (node) => import('./features/avatarUpload.js?v=32').then((module) => module.avatarUpload(node)),
-  'pin-picker': (node) => import('./features/eventMaps.js?v=32').then((module) => module.pinPicker(node)),
+  explorer: (node) => import('./features/explorer.js?v=33').then((module) => module.explorer(node)),
+  'mini-map': (node) => import('./features/eventMaps.js?v=33').then((module) => module.miniMap(node)),
+  participants: (node) => import('./features/eventMaps.js?v=33').then((module) => module.participants(node)),
+  'avatar-upload': (node) => import('./features/avatarUpload.js?v=33').then((module) => module.avatarUpload(node)),
+  'pin-picker': (node) => import('./features/eventMaps.js?v=33').then((module) => module.pinPicker(node)),
 };
 
 for (const node of $$('[data-feature]')) {
@@ -45,7 +45,7 @@ for (const node of $$('[data-feature]')) {
   if (start) start(node);
 }
 
-import('./features/motion.js?v=32').then((module) => module.motion()).catch(() => {});
+import('./features/motion.js?v=33').then((module) => module.motion()).catch(() => {});
 
 resumeIfShared();
 registerServiceWorker();

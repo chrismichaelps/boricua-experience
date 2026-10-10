@@ -1,9 +1,10 @@
 /** @View.Components.Notice.Messages — flash messages, empty states, and the cookie banner */
 module View.Components.Notice
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Constants.Routes as Routes
+import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Frame as Frame
 
@@ -26,6 +27,7 @@ export fn cookieBanner(frame: &Frame.Frame) -> H.Node {
       H.h2().says(Frame.t(frame, "cookies.title")),
       H.p().holding([H.span().says(Frame.t(frame, "cookies.body") + " "), H.a().class("text-link").href(Routes.COOKIES).says(Frame.t(frame, "cookies.learn_more"))]),
       H.form().action(Routes.CONSENT).method("post").class("cookie-actions").holding([
+          Form.token(frame),
           back,
           H.details().class("cookie-custom").data("feature", "privacy-controls").holding([
               H.summary().holding([H.span().says(Frame.t(frame, "cookies.customize")), Icons.sized("chevron-right", 18)]),

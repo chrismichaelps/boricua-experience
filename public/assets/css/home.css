@@ -1,7 +1,7 @@
 /* The home hero owns its navigation and leaves discovery rails in the reading shell. */
 @font-face { font-family: "Pacifico"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/pacifico-latin.woff2") format("woff2"); }
 .brand { gap: 10px; flex: none; }
-.brand img { border-radius: 0; width: 44px; height: 44px; filter: brightness(0) saturate(100%) invert(37%) sepia(96%) saturate(2320%) hue-rotate(204deg) brightness(99%) contrast(93%); }
+.brand img { border-radius: 0; width: 44px; height: 44px; filter: none; }
 .brand-name { display: grid; line-height: 1.15; }
 .brand-name strong { font: 400 26px/1.25 "Pacifico", cursive; letter-spacing: -.5px; }
 .brand-name span { font: 700 10px/1.5 var(--font); letter-spacing: 2px; text-transform: uppercase; padding-left: 3px; }
@@ -69,7 +69,7 @@
   .pill-field input, .pill-field select { font-size: 15px; }
 }
 
-.footer-brand img { filter: brightness(0) saturate(100%) invert(37%) sepia(96%) saturate(2320%) hue-rotate(204deg) brightness(99%) contrast(93%); }
+.footer-brand img { filter: none; }
 
 /* Only the photographs fade; controls remain in one stable place. */
 .hero-photos { position: absolute; inset: 0; z-index: -2; border-radius: inherit; overflow: hidden; background: #174a61; }

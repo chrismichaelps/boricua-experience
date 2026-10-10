@@ -1,6 +1,6 @@
-import { ENDPOINTS, SUGGEST } from '../constants/config.js?v=32';
-import { getJson } from '../net/http.js?v=32';
-import { create, debounce } from '../utils/dom.js?v=32';
+import { ENDPOINTS, SUGGEST } from '../constants/config.js?v=33';
+import { getJson } from '../net/http.js?v=33';
+import { create, debounce } from '../utils/dom.js?v=33';
 
 export function suggest(input) {
   const list = document.getElementById(input.getAttribute('aria-controls'));

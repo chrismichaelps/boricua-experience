@@ -1,11 +1,12 @@
 /** @View.Pages.Legal.Policies — terms, privacy, cookies, and about */
 module View.Pages.Legal
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Constants.App as App
 import Constants.Routes as Routes
+import View.Components.Form as Form
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -59,7 +60,7 @@ export fn render(frame: &Frame.Frame, document: &Document) -> Html.Html {
     ])
   let summary = if versioned { H.aside().class("legal-summary").holding([H.h2().says(Frame.t(frame, "legal.summary_title")), H.p().says(Frame.t(frame, prefix + ".summary"))]) } else { H.nothing() }
   let contents = if versioned { H.nav().class("legal-contents").label(Frame.t(frame, "legal.contents")).holding([H.p().says(Frame.t(frame, "legal.contents")), H.ol().holding(links)]) } else { H.nothing() }
-  let reset = if *document == Cookies { H.form().action(Routes.CONSENT).method("post").holding([H.input().kind("hidden").name("choice").value("reset"), H.input().kind("hidden").name("return").value(Routes.COOKIES), H.button().submit().class("button button-ghost").says(Frame.t(frame, "cookies.change"))]) } else { H.nothing() }
+  let reset = if *document == Cookies { H.form().action(Routes.CONSENT).method("post").holding([Form.token(frame), H.input().kind("hidden").name("choice").value("reset"), H.input().kind("hidden").name("return").value(Routes.COOKIES), H.button().submit().class("button button-ghost").says(Frame.t(frame, "cookies.change"))]) } else { H.nothing() }
   Layout.page(frame, &meta, Layout.Elsewhere, H.div().class(if versioned { "legal-page" } else { "legal-page is-plain" }).holding([
         contents,
         H.article().class("prose legal").holding([head, summary].concat(numbered).concat([reset]))

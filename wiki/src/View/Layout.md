@@ -84,3 +84,6 @@ The bell's count sits on its shoulder as a 16 px pill with a white ring; it is h
 
 - **Q:** What does the avatar do?
   **A:** It opens the account menu instead of loading the account page; see [[src/Public/AccountMenu]]. Members get a header linking to their public profile, then notifications (with count), activities, create, account and settings, language (current value), sign out, and the policy links. Guests get sign in and create account first. Resolved.
+
+## Colored identity Grill Log
+- **Q:** Which menu identity is shown? **A:** The mobile sheet reuses the same versioned green/red parrot and wordmark as the main header and footer. Resolved.

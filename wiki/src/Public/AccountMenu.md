@@ -43,3 +43,7 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]] · [[src/View/Layout]]
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Close synchronously clears open state and scroll lock. Escape, close button, outside tap, page hide/restore and media-query changes share this lifecycle; focus returns only for explicit dismissals. Resolved.

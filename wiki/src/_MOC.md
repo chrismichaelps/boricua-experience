@@ -181,7 +181,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Test/Location]] — browser watch lifecycle regressions.
 
-- [[src/Constants/Hero]] · [[src/View/Components/Hero]] · [[src/Public/Carousel]] · [[src/Public/BrowserMain]] · [[src/Public/BrowserConfig]] — automatic home scenes and controls.
+- [[src/Domain/Catalog]] · [[src/View/Components/Hero]] · [[src/Public/Carousel]] · [[src/Public/BrowserMain]] · [[src/Public/BrowserConfig]] — automatic home scenes and controls.
 
 - [[src/Test/Carousel]] — carousel timing, manual controls and motion regression tests.
 
@@ -212,3 +212,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Public/Http]] · [[src/Public/Toggle]] — cancellation transport and serialized interactions.
 
 - [[src/Public/PrivacyControls]] — native privacy disclosure with optional Motion.
+
+- [[src/Test/AccountMenu]]

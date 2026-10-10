@@ -65,3 +65,9 @@ Use original cotorra puertorriqueña SVG assets and optional Motion privacy disc
 ## Mobile account-menu containing block
 
 Grill Log resolved: the header backdrop filter makes a fixed descendant relative to the 64px header. While the phone menu is open, disable both backdrop-filter properties on the header so the panel spans the viewport; retain the normal header blur after closing and the desktop popover. Verify the final logout target is unobscured at phone widths.
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Brand images retain their native green/red fills on every surface. Resolved.
+
+- **Q:** Can a small phone reach the free-only filter? **A:** The horizontally scrolling filter rail retains native keyboard access and each pill has a minimum44px touch height. Resolved.

@@ -24,3 +24,7 @@ Keyboard, disabled necessary checkbox, reduced motion, narrow/short screens, off
 
 ## Referenced by
 [[src/_MOC]] · [[handoffs/homepage-refresh]]
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Every consent POST includes Form.token(frame), including authenticated necessary/all/custom submissions. Native redirect only dismisses after persistence. Resolved.
