@@ -17,3 +17,7 @@ tags: [architecture, delivery]
 ## Referenced by
 
 [[architecture/_MOC]]
+
+## Environments
+
+Development and production data are separate; see [[decisions/ADR-0008-separate-environments]]. After any production migration run `scripts/check-production-data.sh`.

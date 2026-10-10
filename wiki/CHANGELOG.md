@@ -39,3 +39,4 @@
 - 2026-10-09 · [[src/View/Pages/Notifications]] · inbox redesigned (headlines, relative times, day groups, unread dots); opening it marks shown items read.
 - 2026-10-09 · [[src/Public/Brand]] · search parrot redrawn as a peeking head with feet on the search surface; compact carousel controls.
 - 2026-10-09 · [[src/Public/AccountMenu]] · account menu replaces the avatar link (popover on desktop, full sheet on phones); the bell rings only for new notifications; translucent, hover-only header tints. Asset version 24.
+- 2026-10-09 · [[decisions/ADR-0008-separate-environments]] · development moves to the local Supabase stack with seed; production purged of seed data and guarded; owner account is the administrator.
