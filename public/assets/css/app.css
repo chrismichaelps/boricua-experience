@@ -604,7 +604,7 @@ ul { padding: 0; list-style: none; }
   .menu-sheet-head .brand-name strong { font-size: 24px; }
   .appbar .menu-sheet-head .menu-close { color: var(--color-ink); }
   .appbar .menu-panel .menu-sheet-head .brand-name span { color: var(--color-graphite); }
-  .menu-open .appbar { z-index: 120; }
+  .menu-open .appbar { z-index: 120; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .menu-member { padding: 12px 4px 16px; }
   .menu-member .avatar { width: 56px; height: 56px; font-size: 18px; }
   .menu-member strong { font-size: 20px; line-height: 26px; }

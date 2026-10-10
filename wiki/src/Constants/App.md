@@ -63,3 +63,7 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 ## Brand refresh contract
 Original compact parrot replaces the former mascot. Brand asset URLs use shared version20; changed entry/styles/Motion refresh together while unchanged map imports retain their single version19 identity. Grill: named links and native search semantics are preserved; resolved.
+
+Cache version31 refreshes the mobile account-menu style; all browser module query references remain aligned.
+
+Current cache graph: version32 aligns every browser import and shell resource for the mobile menu and refreshed map date fixes.

@@ -61,3 +61,7 @@ Header-white branding is scoped to `.appbar`; the shared footer logo and wordmar
 
 ## Parrot/privacy continuation
 Use original cotorra puertorriqueña SVG assets and optional Motion privacy disclosure without changing native checkbox submission. Grill: local assets and progressive enhancement preserve behavior; resolved.
+
+## Mobile account-menu containing block
+
+Grill Log resolved: the header backdrop filter makes a fixed descendant relative to the 64px header. While the phone menu is open, disable both backdrop-filter properties on the header so the panel spans the viewport; retain the normal header blur after closing and the desktop popover. Verify the final logout target is unobscured at phone widths.
