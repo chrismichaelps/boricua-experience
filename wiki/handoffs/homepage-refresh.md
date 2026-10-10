@@ -161,3 +161,14 @@ Architect → Implementer (separate session): own the avatar feature end to end 
 - Settings round trip: attendee-list opt-out saved and persisted; from another member's view the opted-out attendee counted as hidden; setting restored.
 - Location: a simulated reading re-centred the map on the position with the blue marker, and the viewport query refreshed the list.
 - Full suite 6/6 (136 assertions); every module checks clean; translation fixture 569 keys. Asset version 21.
+
+## Production deployment (parallel session)
+
+Architect → Implementer (separate session): own `scripts/fetch-runtime.sh`, `scripts/build-vercel.sh`, `scripts/dev.sh`, `vercel.json`-free Build Output routing, the Vercel project, its environment variables, and the production domain connection. No edits to application presentation files.
+
+### Deployment evidence
+
+- `scripts/fetch-runtime.sh` downloads the v0.1.3 musl Lambda runtime and libraries and verifies the release checksums; `scripts/build-vercel.sh` writes the Build Output (static assets with immutable caching, `sw.js` revalidated, one `provided.al2023` function); `scripts/dev.sh` runs the local server.
+- Vercel project `boricua-experience` created; production variables `BORICUA_SUPABASE_URL`, `BORICUA_SUPABASE_ANON_KEY`, `BORICUA_SUPABASE_SERVICE_KEY`, and a production-only `BORICUA_SESSION_KEY` are encrypted project variables; the site URL and log format travel with the function.
+- Production deployment answers `/health`, `/`, `/map`, search, the sitemap, an event page, assets, favicon, and manifest with 200; guest pages are cached at the edge (`x-vercel-cache: HIT`); security headers present.
+- `boricuaexperience.com` serves production over HTTPS; `www.boricuaexperience.com` redirects with 308 to the apex.
