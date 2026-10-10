@@ -202,6 +202,8 @@ Architect → Implementer → Independent Reviewer → Implementer. Own brand, a
 - Independent reviewer passes pinned0.1.3 Pudu suite and focused harnesses; parity corrections applied. Production release stages prebuilt function/static output, verifies routes and promotes tested deployment.
 - Physical GPS/haptics and exhaustive hardware coverage remain unverified. Existing repositorywide formatter differences are baseline; changed modules formatted where practical.
 
-Exact next action: verify the staged production build, promote it and record the released commit/deployment.
+Release evidence: featurePR#2 and releasePR#3 merged; tagv0.1.1 at50bd09a. Dev/main synchronized. Vercel deploymentdpl_G7CSXCDnijRXaUfvtT4uLNSc5Xrf (boricua-experience-g4ronqiio.vercel.app) promoted tohttps://boricuaexperience.com. Authenticated staging and public-domain home/map/signin/cookies/manifest/brand checks return200; www redirects toapex. Live phone menu closes/unlocks with all brand filtersnone. Accept-all/reset/necessary-only cookie choices dismiss/persist. No application source or credentials changed after the tested build.
+
+Exact next action: test join-capacity concurrency boundaries in the isolated development project; physical-phone GPS/haptics remain unverified.
 
 Release preparation: featurePR#2 merged into dev; release0.1.1 carries tested source and metadata into main. Physical deviceGPS/haptics and capacity-boundary concurrency remain separate validation work.
