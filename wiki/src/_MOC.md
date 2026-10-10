@@ -64,6 +64,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 ## Validation
 
 - [[src/Validation/Account]] — Sign-up, sign-in, recovery address, new password, onboarding, profile, and preferences.
+- [[src/Validation/Avatar]] — Decodes a base64 photo (bare or as a data address), refuses anything over 600 KB, and recognises WebP, JPEG, or PNG by their leading bytes.
 - [[src/Validation/Check]] — Runs a validator and turns its failures into `Problem.Invalid`, one field error per field, keyed by the rule's message key.
 - [[src/Validation/EventForm]] — Checks every publishing field and converts the draft into database values: coordinates, UTC timestamps, capacity, and cents.
 - [[src/Validation/Location]] — A reading must lie in Puerto Rico with an accuracy from 0 to 100 km.

@@ -41,6 +41,10 @@ Deletion: confirm presence, let the database cancel upcoming events and erase lo
 - ❌ Never deletes without confirmation.
 - ❌ Consent rows are never deleted, only unlinked.
 
+## Photos
+
+Deletion removes the stored photo before the identity is deleted.
+
 ## Edge Cases
 
 - If the identity deletion fails after preparation, the member can retry; preparation is idempotent.

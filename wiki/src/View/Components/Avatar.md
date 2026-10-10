@@ -30,6 +30,10 @@ export fn stack(names, total) -> H.Node
 - **Requires:** `Std.Html.Build`, [[src/View/Frame]], [[src/I18n/Translate]], Domain types.
 - **Consumed by:** Web handlers and other views.
 
+### Photos
+
+`face(name, photo, size)` renders the stored photo (lazy, sized, empty alt) when there is one and the initials otherwise; `stack` takes (name, photo) pairs.
+
 ## Algorithm
 
 Builds `Html` values with the trait chain; text from requests or the database goes through `says`, never `raw`.

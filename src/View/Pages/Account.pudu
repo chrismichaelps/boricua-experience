@@ -26,7 +26,7 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
   let meta = Seo.meta(Frame.t(frame, "account.title"), Frame.t(frame, "account.title"), Routes.ACCOUNT, false)
   Layout.page(frame, &meta, Layout.Me, H.div().class("narrow account").holding([
         H.header().class("profile-head").holding([
-            Avatar.avatar(me.displayName, "xl"),
+            photoEditor(frame, me),
             H.div().holding([
                 H.h1().class("page-title").says(me.displayName),
                 H.p().class("muted").says(email),
@@ -113,4 +113,21 @@ fn visibility(frame: &Frame.Frame, value: Str, title: Str, body: Str, chosen: St
   var radio = H.input().kind("radio").name("locationVisibility").id("vis-" + value).value(value)
   if value == chosen { radio = radio.checked() }
   H.labelFor().class("choice").at("for", "vis-" + value).holding([radio, H.span().holding([H.strong().says(Frame.t(frame, title)), H.small().says(Frame.t(frame, body))])])
+}
+
+/// The member's photo with a camera badge that opens the file picker, a remove option when there is a
+/// photo, and a status line the uploader writes to. Without scripts the initials simply stay.
+fn photoEditor(frame: &Frame.Frame, me: &Profile.MyProfile) -> H.Node {
+  H.div().class("photo-editor").data("feature", "avatar-upload").data("endpoint", Routes.ACCOUNT_AVATAR).data("uploading", Frame.t(frame, "account.photo_uploading")).data("done", Frame.t(frame, "flash.photo_updated")).data("error", Frame.t(frame, "problem.invalid_avatar")).holding([
+      H.div().class("photo-frame").holding([
+          Avatar.face(me.displayName, me.avatarUrl, "xl"),
+          H.labelFor().class("photo-badge").at("for", "photo-input").title(Frame.t(frame, "account.change_photo")).holding([Icons.sized("camera", 18), H.span().class("sr-only").says(Frame.t(frame, "account.change_photo"))]),
+          H.input().kind("file").id("photo-input").name("photo").at("accept", "image/jpeg,image/png,image/webp,image/heic,image/heif").class("sr-only")
+        ]),
+      match me.avatarUrl {
+        case Some(_) => H.form().class("photo-remove").action(Routes.ACCOUNT_AVATAR_REMOVE).method("post").holding([Form.token(frame), H.button().submit().class("text-link").says(Frame.t(frame, "account.remove_photo"))])
+        case None => H.nothing()
+      },
+      H.p().class("photo-status small muted").role("status").at("aria-live", "polite")
+    ])
 }

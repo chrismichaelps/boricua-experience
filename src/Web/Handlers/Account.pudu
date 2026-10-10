@@ -3,6 +3,7 @@ module Web.Handlers.Account
 
 import Std.Http as Http
 import Std.Http.Server.Route as Route
+import Std.Json as Json
 import Std.Option as Option
 import App.Assembly as Assembly
 import App.Messages as Messages
@@ -13,6 +14,7 @@ import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
+import Utils.Wire as Wire
 import Utils.Form as Form
 import View.Pages.Account as AccountPage
 import View.Pages.Auth as AuthPage
@@ -30,6 +32,8 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.post(Routes.ACCOUNT_PROFILE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveProfile(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_PREFERENCES, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| savePreferences(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_PASSWORD, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changePassword(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_AVATAR, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changeAvatar(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_AVATAR_REMOVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| removeAvatar(&held, &visitor, &session))),
     Route.get(Routes.PROFILE, Serve.page(app, |visitor: Context.Visitor| profilePage(&held, &visitor))),
     Route.get(Routes.NOTIFICATIONS, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| inbox(&held, &visitor, &session))),
     Route.post(Routes.NOTIFICATIONS_READ, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| markRead(&held, &visitor, &session))),
@@ -149,5 +153,28 @@ fn onboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sess
   match Serve.ask(app, &app.kinds.onboard, Serve.signed(session, Messages.Onboard{form: form, locale: Locale.code(&visitor.locale)})) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.welcome")
     case Err(problem) => welcome(app, &Context.resolve(app, &visitor.request, true), Some(problem))
+  }
+}
+
+/** @Web.Handlers.Account.Photo — the JSON the account page posts: a base64 image */
+type Photo = { image: Str } derives Json.Decode
+
+/// Stores a new photo; answers its address as JSON for the page to show at once.
+fn changeAvatar(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let photo: Photo = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Invalid([Problem.FieldError{field: "photo", key: "form.photo_invalid"}])) }
+  }
+  match Serve.ask(app, &app.kinds.changeAvatar, Serve.signed(session, photo.image)) {
+    case Ok(address) => Respond.json(200, &Json.object(&[("avatarUrl", Json.Text(address))]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Removes the photo and returns to the account page.
+fn removeAvatar(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.removeAvatar, Serve.signed(session, ())) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.photo_removed")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

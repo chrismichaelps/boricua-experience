@@ -35,10 +35,11 @@ export fn reactivate(runtime: &Runtime.Runtime, session: &Session.Session) -> Re
   AccountApi.reactivate(&runtime.gateway, session.accessToken)
 }
 
-/// Deletes the account after the member proves presence: upcoming events cancelled, location erased,
-/// the identity deleted, and with it the profile and personal rows.
+/// Deletes the account after the member proves presence: upcoming events cancelled, location and
+/// photo erased, the identity deleted, and with it the profile and personal rows.
 export fn delete(runtime: &Runtime.Runtime, session: &Session.Session, password: Str) -> Result[(), Problem.Problem] {
   Accounts.confirm(runtime, session, password) ?
   AccountApi.prepareDeletion(&runtime.gateway, session.accessToken) ?
+  AccountApi.deleteAvatar(&runtime.gateway, session.userId, session.accessToken) ?
   Identity.deleteUser(&runtime.gateway, session.userId)
 }

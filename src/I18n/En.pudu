@@ -487,5 +487,13 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("problem.unavailable", "We couldn't connect right now. Try again in a few seconds."),
     ("problem.flow_expired", "The link expired or was opened in another browser. Please try again."),
     ("problem.session_expired", "Your session expired. Please sign in again."),
-    ("problem.reauthenticate", "For your security, sign in again and repeat the action.")
+    ("problem.reauthenticate", "For your security, sign in again and repeat the action."),
+    ("account.change_photo", "Change photo"),
+    ("account.remove_photo", "Remove photo"),
+    ("account.photo_uploading", "Uploading your photo…"),
+    ("flash.photo_updated", "Photo updated."),
+    ("flash.photo_removed", "We removed your photo."),
+    ("problem.invalid_avatar", "We couldn't use that image. Try a JPG, PNG, or WebP photo."),
+    ("form.photo_invalid", "Choose a JPG, PNG, or WebP image."),
+    ("form.photo_too_large", "The photo is too large.")
   ])

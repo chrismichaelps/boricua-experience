@@ -147,3 +147,17 @@ Architect → Implementer: own parrot brand/search/PWA assets, curated icon geom
 - Production domain was registered but had no connected Vercel project at inspection. Production hosting/legal pages and production-endpoint login remain unverified; local .env retains localhost for correct development PKCE callbacks.
 
 Exact next action: finish and independently review the in-progress parrot/privacy asset changes, then continue disposable-account recovery testing using the now-allowlisted local callback.
+
+## Avatar upload (parallel session)
+
+Architect → Implementer (separate session): own the avatar feature end to end — `supabase/migrations/20261010013000_avatars.sql` (public `avatars` bucket, per-account folder policies, `set_my_avatar`, avatar fields in `event_attendees` and `event_requests`), Constants.Supabase avatar names, Api.Account avatar calls, Validation.Avatar, Services.Account/Privacy avatar steps, App avatar kinds, Web.Handlers.Account avatar routes, View.Components.Avatar photo rendering and its call sites, the account-page uploader, `public/assets/js/features/avatarUpload.js`, one registry line in `main.js`, and the avatar translation keys. No edits to explorer, map, location, carousel, search pickers, or Motion files.
+
+- The local map migration file was renamed from `20261010002819` to `20261010003351` to match the version already recorded remotely; contents are identical. `supabase db push` works again for every session.
+- An earlier commit (`6e88b5f`) from this session swept the then-uncommitted homepage, map, and branding files into history with `git add -A`; nothing was reverted or altered.
+
+### Avatar evidence
+
+- Migration `20261010013000_avatars.sql` applied. Mobile 390px: a generated 900×600 test image picked through the real file input was cropped to 320px, stored under the member's own folder, and shown at once in the editor and app bar; after reload it rendered in the attendee list and stack. Removal cleared the pointer and deleted the stored object (bucket count 0). Seed state restored.
+- Settings round trip: attendee-list opt-out saved and persisted; from another member's view the opted-out attendee counted as hidden; setting restored.
+- Location: a simulated reading re-centred the map on the position with the blue marker, and the viewport query refreshed the list.
+- Full suite 6/6 (136 assertions); every module checks clean; translation fixture 569 keys. Asset version 21.

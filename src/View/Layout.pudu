@@ -114,7 +114,7 @@ fn account(frame: &Frame.Frame) -> H.Node {
             Icons.sized("bell", 22),
             if member.unreadNotifications > 0 { H.span().class("badge").says(if member.unreadNotifications > 9 { "9+" } else { show(member.unreadNotifications) }) } else { H.nothing() }
           ]),
-        H.a().class("avatar-link").href(Routes.ACCOUNT).label(Frame.t(frame, "nav.profile")).holding([Avatar.avatar(member.displayName, "sm")])
+        H.a().class("avatar-link").href(Routes.ACCOUNT).label(Frame.t(frame, "nav.profile")).holding([Avatar.face(member.displayName, member.avatarUrl, "sm")])
       ])
     case None => H.a().class("button button-small").href(Routes.SIGN_IN + "?return=" + Frame.here(frame).replace("&", "%26")).says(Frame.t(frame, "nav.sign_in"))
   }

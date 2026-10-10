@@ -506,3 +506,14 @@ ul { padding: 0; list-style: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Account photo */
+.avatar-photo { object-fit: cover; background: var(--color-cloud); }
+.photo-editor { display: grid; justify-items: center; gap: 6px; }
+.photo-frame { position: relative; }
+.photo-badge { position: absolute; right: -4px; bottom: -4px; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--color-ocean); color: var(--color-white); border: 3px solid var(--color-white); cursor: pointer; }
+.photo-badge:hover { background: var(--color-ocean-deep); }
+.photo-frame:has(input:focus-visible) .photo-badge { box-shadow: var(--focus); }
+.photo-editor.is-busy .avatar { opacity: .5; }
+.photo-status:empty { display: none; }
+.photo-remove .text-link { font-size: 13px; }

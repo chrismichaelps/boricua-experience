@@ -96,7 +96,11 @@ export fn withPreference(app: &Assembly.App, response: Http.Response, name: Str,
 export fn problem(app: &Assembly.App, visitor: &Context.Visitor, found: &Problem.Problem) -> Http.Response {
   let code = Problem.code(found)
   if Context.wantsJson(visitor) {
-    return json(Problem.status(found), &Json.object(&[("error", Json.Text(code)), ("message", Json.Text(Problem.messageKey(found)))]))
+    let key = match Option.fromArray(&Problem.fieldErrors(found)) {
+      case Some(first) => first.key
+      case None => Problem.messageKey(found)
+    }
+    return json(Problem.status(found), &Json.object(&[("error", Json.Text(code)), ("message", Json.Text(key))]))
   }
   match found {
     case Problem.SignedOut => redirect(Routes.SIGN_IN + "?return=" + visitor.request.path)

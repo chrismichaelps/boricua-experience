@@ -46,5 +46,7 @@ export const REFRESH_MARGIN_SECONDS: Int = 60
 export const RECENT_SIGN_IN_SECONDS: Int = 600
 /// Milliseconds reference data is kept per instance.
 export const CATALOG_TTL_MILLIS: Int = 600000
-/// Largest request body read, in bytes.
-export const BODY_BYTES_MAX: Int = 65536
+/// Largest request body read, in bytes; room for one base64 photo.
+export const BODY_BYTES_MAX: Int = 1048576
+/// Largest accepted photo after the browser resizes it, in bytes.
+export const AVATAR_BYTES_MAX: Int = 614400

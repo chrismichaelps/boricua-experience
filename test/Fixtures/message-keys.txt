@@ -12,6 +12,7 @@ about.title
 account.attendee_lists
 account.attendee_lists_body
 account.change_password
+account.change_photo
 account.delete
 account.delete_body
 account.delete_history
@@ -45,10 +46,12 @@ account.pause
 account.pause_body
 account.pause_yes
 account.paused_notice
+account.photo_uploading
 account.preferences
 account.privacy
 account.profile
 account.reactivate
+account.remove_photo
 account.save
 account.sharing_now
 account.title
@@ -225,6 +228,8 @@ flash.history_deleted
 flash.joined
 flash.password_changed
 flash.paused
+flash.photo_removed
+flash.photo_updated
 flash.published
 flash.reactivated
 flash.rejected
@@ -275,6 +280,8 @@ form.municipality_required
 form.name_length
 form.password_length
 form.password_mismatch
+form.photo_invalid
+form.photo_too_large
 form.price_invalid
 form.privacy_required
 form.private_requires_approval
@@ -435,6 +442,7 @@ problem.event_ended
 problem.event_full
 problem.flow_expired
 problem.forbidden
+problem.invalid_avatar
 problem.invalid_category
 problem.invalid_coordinates
 problem.invalid_credentials

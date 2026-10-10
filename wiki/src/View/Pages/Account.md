@@ -29,6 +29,10 @@ export fn render(frame, me, catalog, email, usesPassword, problem) -> Html.Html
 - **Requires:** `Std.Html.Build`, [[src/View/Frame]], [[src/I18n/Translate]], Domain types.
 - **Consumed by:** Web handlers and other views.
 
+### Photo editor
+
+The header photo carries a camera badge labelling a hidden file input; `avatarUpload.js` crops to a 320 px square, encodes WebP (JPEG where unsupported), posts JSON with the form token, and swaps the photo into the editor and the app bar. A remove link appears when there is a photo. Without scripts the initials remain.
+
 ## Algorithm
 
 Builds `Html` values with the trait chain; text from requests or the database goes through `says`, never `raw`.

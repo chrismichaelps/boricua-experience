@@ -8,7 +8,9 @@ import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
 import Services.Runtime as Runtime
+import Utils.Time as Time
 import Validation.Account as Rules
+import Validation.Avatar as AvatarRules
 
 /// The signed-in account.
 export fn me(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Profile.MyProfile, Problem.Problem] {
@@ -46,4 +48,19 @@ export fn notifications(runtime: &Runtime.Runtime, session: &Session.Session) ->
 /// Marks the inbox read.
 export fn markRead(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
   AccountApi.markRead(&runtime.gateway, session.accessToken)
+}
+
+/// Stores a new photo for the member and answers its public address.
+export fn changeAvatar(runtime: &Runtime.Runtime, encoded: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
+  let (image, mediaType) = AvatarRules.photo(encoded) ?
+  AccountApi.uploadAvatar(&runtime.gateway, session.userId, &image, mediaType, session.accessToken) ?
+  let address = AccountApi.avatarAddress(&runtime.gateway, session.userId, show(Time.nowSeconds()))
+  AccountApi.setAvatar(&runtime.gateway, Some(address), session.accessToken) ?
+  Ok(address)
+}
+
+/// Removes the member's photo; initials show again.
+export fn removeAvatar(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  AccountApi.setAvatar(&runtime.gateway, None, session.accessToken) ?
+  AccountApi.deleteAvatar(&runtime.gateway, session.userId, session.accessToken)
 }

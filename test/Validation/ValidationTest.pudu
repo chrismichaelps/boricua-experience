@@ -2,13 +2,16 @@
 module Validation.ValidationTest
 
 import Std.Io as Io
+import Std.Option as Option
 import Std.Result as Result
 import Std.Test as Test
 import Domain.Credentials as Credentials
 import Domain.Draft as Draft
 import Domain.Location as Location
 import Domain.Problem as Problem
+import Std.Bytes as Bytes
 import Validation.Account as Account
+import Validation.Avatar as Avatar
 import Validation.EventForm as EventForm
 import Validation.Location as LocationRules
 import Validation.Participation as ParticipationRules
@@ -67,6 +70,12 @@ fn main() -> Int {
       Test.equals("a reaction of two is refused", &refused(&ParticipationRules.reaction(2)), &["reaction"]),
       Test.succeeded("a reading in San Juan passes", &LocationRules.position(&Location.Position{lat: 18.46, lng: -66.1, accuracyM: 20.0})),
       Test.equals("a reading in Miami is refused", &refused(&LocationRules.position(&Location.Position{lat: 25.76, lng: -80.19, accuracyM: 20.0})), &["position"]),
+      Test.equals("a WebP photo is recognised", &Result.map(Avatar.photo(Bytes.encodeBase64(&Bytes.fromText("RIFF0000WEBPVP8 data"))), |found| found[1]), &Ok("image/webp")),
+      Test.equals("a JPEG photo in a data address is recognised", &Result.map(Avatar.photo("data:image/jpeg;base64," + Bytes.encodeBase64(&Bytes.fromArray(&[255u8, 216u8, 255u8, 224u8]))), |found| found[1]), &Ok("image/jpeg")),
+      Test.equals("a PNG photo is recognised", &Option.isSome(&Avatar.mediaType(&Bytes.fromArray(&[137u8, 80u8, 78u8, 71u8, 13u8]))), &true),
+      Test.equals("text is not a photo", &refused(&Avatar.photo(Bytes.encodeBase64(&Bytes.fromText("hello")))), &["photo"]),
+      Test.equals("broken base64 is not a photo", &refused(&Avatar.photo("%%%")), &["photo"]),
+      Test.equals("an oversized photo is refused", &Result.map(Result.swap(Avatar.photo(Bytes.encodeBase64(&Bytes.concat(&Bytes.fromArray(&[255u8, 216u8, 255u8]), &Bytes.fromText("x".repeat(700000)))))), |p| Problem.errorFor(&Problem.fieldErrors(&p), "photo")), &Ok(Some("form.photo_too_large"))),
       Test.equals("a refused field carries its message key", &Result.map(Result.swap(EventForm.check(&Draft.Draft{..goodDraft(), title: "No"})), |p| Problem.errorFor(&Problem.fieldErrors(&p), "title")), &Ok(Some("form.title_length")))
     ])
   let ran = Test.run(&checks)

@@ -44,10 +44,17 @@ export const DELETE_MY_ACCOUNT: Str = "delete_my_account"
 export const ADMIN_OVERVIEW: Str = "admin_overview"
 export const ADMIN_REPORTS: Str = "admin_reports"
 export const ADMIN_RESOLVE_REPORT: Str = "admin_resolve_report"
+export const SET_MY_AVATAR: Str = "set_my_avatar"
 
 /// Path prefixes under the project address.
 export const RPC_PATH: Str = "rest/v1/rpc/"
 export const AUTH_PATH: Str = "auth/v1/"
+/// Storage paths: writes go to `STORAGE_OBJECT`, public reads come from `STORAGE_PUBLIC`.
+export const STORAGE_OBJECT: Str = "storage/v1/object/"
+export const STORAGE_PUBLIC: Str = "storage/v1/object/public/"
+/// The bucket of member photos and the file each member's photo is stored as.
+export const AVATAR_BUCKET: Str = "avatars"
+export const AVATAR_FILE: Str = "avatar.webp"
 
 /// Identity endpoints, relative to `AUTH_PATH`.
 export const AUTH_SIGN_UP: Str = "signup"

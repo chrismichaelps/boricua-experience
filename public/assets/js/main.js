@@ -30,6 +30,7 @@ const FEATURES = {
   explorer: (node) => import('./features/explorer.js?v=19').then((module) => module.explorer(node)),
   'mini-map': (node) => import('./features/eventMaps.js?v=19').then((module) => module.miniMap(node)),
   participants: (node) => import('./features/eventMaps.js?v=19').then((module) => module.participants(node)),
+  'avatar-upload': (node) => import('./features/avatarUpload.js?v=1').then((module) => module.avatarUpload(node)),
   'pin-picker': (node) => import('./features/eventMaps.js?v=19').then((module) => module.pinPicker(node)),
 };
 

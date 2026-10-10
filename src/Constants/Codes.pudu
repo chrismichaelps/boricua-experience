@@ -37,7 +37,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
   ("unavailable", "problem.unavailable"),
   ("flow_expired", "problem.flow_expired"),
   ("session_expired", "problem.session_expired"),
-  ("reauthenticate", "problem.reauthenticate")
+  ("reauthenticate", "problem.reauthenticate"),
+  ("invalid_avatar", "problem.invalid_avatar")
 ])
 
 /// Codes the server itself raises.

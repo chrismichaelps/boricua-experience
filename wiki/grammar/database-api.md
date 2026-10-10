@@ -46,6 +46,11 @@ them are private; this page states the conventions every function keeps.
 | `export_my_data`, `log_data_request`, `pause_my_account`, `reactivate_my_account`, `delete_my_account` | member | data-subject rights |
 | `admin_overview`, `admin_reports`, `admin_resolve_report` | administrator | metrics and moderation |
 
+| `set_my_avatar` | member | points the profile at a photo in the member's own `avatars` folder, or clears it |
+| `map_events` | anyone | events inside the visible rectangle, capped, with a `limited` flag |
+
+Photos live in the public `avatars` bucket (1 MB, WebP, JPEG, PNG); storage policies allow each account to write only inside the folder named by its id. `event_attendees` and `event_requests` carry `avatar_url`.
+
 ## Scheduled jobs
 
 Reminders every 15 minutes, popularity rankings every 10, position pruning hourly (30-day history,

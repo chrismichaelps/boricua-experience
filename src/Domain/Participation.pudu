@@ -5,7 +5,7 @@ import Std.Json as Json
 import Domain.Event as Event
 
 /** @Domain.Participation.PersonRef — a member named on a request */
-export type PersonRef = { id: Str, @json("display_name") displayName: Str } derives Json.Decode
+export type PersonRef = { id: Str, @json("display_name") displayName: Str, @json("avatar_url") avatarUrl: Option[Str] } derives Json.Decode
 
 /** @Domain.Participation.MyRequest — a member's own request with its event */
 export type MyRequest = {

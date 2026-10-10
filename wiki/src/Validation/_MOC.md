@@ -8,6 +8,7 @@ tags: [moc]
 Validators for every form and command; each answers the value or `Invalid` with message keys.
 
 - [[src/Validation/Account]]
+- [[src/Validation/Avatar]]
 - [[src/Validation/Check]]
 - [[src/Validation/EventForm]]
 - [[src/Validation/Location]]

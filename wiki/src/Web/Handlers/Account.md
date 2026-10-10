@@ -29,6 +29,10 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route]
 - **Requires:** [[src/Web/Serve]], [[src/Web/Context]], [[src/Web/Respond]], [[src/App/Messages]], and the pages it renders.
 - **Consumed by:** [[src/Web/Router]].
 
+### Photo routes
+
+`POST /account/avatar` reads `{image}` JSON and answers `{avatarUrl}`; `POST /account/avatar/remove` redirects with a flash.
+
 ## Algorithm
 
 Read the request, send one message through the mediator, render the outcome or answer the problem.

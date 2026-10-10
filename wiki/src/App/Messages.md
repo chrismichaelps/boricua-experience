@@ -34,6 +34,8 @@ export fn kinds() -> Kinds
 - **Requires:** `pudu-lang-mediator`, Domain types, service result types.
 - **Consumed by:** [[src/App/Assembly]], [[src/App/Pipeline]], App handlers, [[src/Web/Serve]] and every web handler.
 
+Account kinds include `changeAvatar` (`Signed[Str]` → address) and `removeAvatar`.
+
 ## Algorithm
 
 Kinds are made once at assembly and shared by the mediator and the routes.

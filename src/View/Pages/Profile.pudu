@@ -35,7 +35,7 @@ export fn render(frame: &Frame.Frame, person: &Profile.PublicProfile) -> Html.Ht
   let stat = |count: Int, key: Str| H.li().holding([H.strong().says(show(count)), H.span().says(Translate.count(&frame.locale, key, count))])
   Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("profile").holding([
         H.header().class("profile-head").holding([
-            Avatar.avatar(person.displayName, "xl"),
+            Avatar.face(person.displayName, person.avatarUrl, "xl"),
             H.div().holding([
                 H.h1().class("page-title").says(person.displayName),
                 H.p().class("muted").says([Option.unwrapOr(person.municipality, ""), since].filter(|part: Str| !part.isEmpty()).join(" · ")),

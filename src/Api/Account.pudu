@@ -2,6 +2,9 @@
 module Api.Account
 
 import Std.Json as Json
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
 import Api.Supabase.Gateway as Gateway
 import Constants.App as App
 import Constants.Supabase as Supabase
@@ -99,5 +102,44 @@ export fn recordConsent(gateway: &Gateway.Gateway, subject: Str, kind: Str, gran
         ("p_version", Gateway.text(version)),
         ("p_source", Gateway.text(source))
       ], token, Gateway.Write) ?
+  Ok(())
+}
+
+/// The public address of a member's photo, with a version so a replaced photo is fetched again.
+export fn avatarAddress(gateway: &Gateway.Gateway, userId: Str, version: Str) -> Str {
+  gateway.base + "/" + Supabase.STORAGE_PUBLIC + Supabase.AVATAR_BUCKET + "/" + userId + "/" + Supabase.AVATAR_FILE + "?v=" + version
+}
+
+/// Stores the member's photo in their own folder, replacing any earlier one.
+export fn uploadAvatar(gateway: &Gateway.Gateway, userId: Str, image: &Bytes, mediaType: Str, token: Str) -> Result[(), Problem.Problem] {
+  let request = Request.post(Supabase.STORAGE_OBJECT + Supabase.AVATAR_BUCKET + "/" + userId + "/" + Supabase.AVATAR_FILE, Content.bytes(image, mediaType))
+    .setHeader(Supabase.API_KEY_HEADER, gateway.anonKey)
+    .setHeader("x-upsert", "true")
+    .setHeader("cache-control", "max-age=31536000")
+    .withBearer(token)
+  let _stored = Gateway.sent(&gateway.http, request) ?
+  Ok(())
+}
+
+/// Removes the member's stored photo; a photo that is already gone is not a failure.
+export fn deleteAvatar(gateway: &Gateway.Gateway, userId: Str, token: Str) -> Result[(), Problem.Problem] {
+  let request = Request.delete(Supabase.STORAGE_OBJECT + Supabase.AVATAR_BUCKET + "/" + userId + "/" + Supabase.AVATAR_FILE)
+    .setHeader(Supabase.API_KEY_HEADER, gateway.anonKey)
+    .withBearer(token)
+  match Gateway.sent(&gateway.http, request) {
+    case Ok(_) => Ok(())
+    case Err(Problem.Missing) => Ok(())
+    case Err(Problem.Refused(_)) => Ok(())
+    case Err(problem) => Err(problem)
+  }
+}
+
+/// Points the profile at a photo address, or clears it.
+export fn setAvatar(gateway: &Gateway.Gateway, address: Option[Str], token: Str) -> Result[(), Problem.Problem] {
+  let value = match address {
+    case Some(found) => Json.Text(found)
+    case None => Json.Null
+  }
+  let _answer = Gateway.call(gateway, Supabase.SET_MY_AVATAR, &[("p_url", value)], Some(token), Gateway.Write) ?
   Ok(())
 }

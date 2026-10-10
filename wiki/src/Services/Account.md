@@ -29,6 +29,10 @@ export fn me, publicProfile, onboard, updateProfile, updatePreferences, notifica
 - **Requires:** [[src/Api/Account]], [[src/Validation/Account]].
 - **Consumed by:** [[src/App/Handlers/Account]].
 
+### Photos
+
+`changeAvatar(runtime, encoded, session) -> Result[Str, Problem]` validates with [[src/Validation/Avatar]], stores the file in the member's folder, and points the profile at its public address with a version query; `removeAvatar` clears the pointer, then deletes the file.
+
 ## Algorithm
 
 Validate then call.

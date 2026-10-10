@@ -33,7 +33,7 @@ export fn organizer(frame: &Frame.Frame, host: &Option[Event.Organizer], curated
       H.section().class("panel organizer").at("aria-labelledby", "organizer-title").holding([
           H.h2().class("section-title").id("organizer-title").says(Frame.t(frame, "event.hosted_by")),
           H.div().class("organizer-head").holding([
-              Avatar.avatar(found.displayName, "lg"),
+              Avatar.face(found.displayName, found.avatarUrl, "lg"),
               H.div().holding([
                   heading,
                   H.p().class("muted").says([Option.unwrapOr(found.municipality, ""), since].filter(|part: Str| !part.isEmpty()).join(" · "))
@@ -59,7 +59,7 @@ export fn attendees(frame: &Frame.Frame, going: &Event.Attendees, signInHref: St
     return H.section().class("panel").at("aria-labelledby", "going-title").holding([
         title,
         H.div().class("going-locked").holding([
-            Avatar.stack(&["?", "?", "?"], going.total),
+            Avatar.stack(&[("?", None), ("?", None), ("?", None)], going.total),
             H.p().holding([Icons.sized("lock", 16), H.span().says(Frame.t(frame, if Frame.signedIn(frame) { "event.going_private" } else { "event.going_sign_in" }))]),
             if Frame.signedIn(frame) { H.nothing() } else { H.a().class("text-link").href(signInHref).says(Frame.t(frame, "nav.sign_in")) }
           ])
@@ -67,9 +67,9 @@ export fn attendees(frame: &Frame.Frame, going: &Event.Attendees, signInHref: St
   }
   H.section().class("panel").at("aria-labelledby", "going-title").holding([
       title,
-      Avatar.stack(&going.people.map(|person: Event.Attendee| person.displayName), going.total),
+      Avatar.stack(&going.people.map(|person: Event.Attendee| (person.displayName, person.avatarUrl)), going.total),
       H.ul().class("people").holding(going.people.map(|person: Event.Attendee| H.li().class("person").holding([
-              Avatar.avatar(person.displayName, "md"),
+              Avatar.face(person.displayName, person.avatarUrl, "md"),
               H.div().holding([
                   H.strong().says(if person.isViewer { Frame.tf(frame, "event.you", &[("name", person.displayName)]) } else { person.displayName }),
                   H.span().class("muted").says(Option.unwrapOr(person.municipality, ""))

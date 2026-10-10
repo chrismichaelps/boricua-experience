@@ -30,6 +30,10 @@ export fn me, publicProfile, completeOnboarding, updateProfile, updatePreference
 - **Requires:** [[src/Api/Supabase/Gateway]], [[src/Constants/App]], [[src/Domain/Profile]], [[src/Domain/Notification]].
 - **Consumed by:** [[src/Services/Account]], [[src/Services/Privacy]], [[src/Services/Auth/Accounts]].
 
+### Photos
+
+`avatarAddress`, `uploadAvatar` (POST to `storage/v1/object/avatars/<id>/avatar.webp` with `x-upsert`, as the member), `deleteAvatar` (a missing file is not a failure), and `setAvatar` (`set_my_avatar`).
+
 ## Algorithm
 
 Direct mapping; onboarding always sends the current policy versions from [[src/Constants/App]].

@@ -28,7 +28,7 @@ fn row(frame: &Frame.Frame, request: &Participation.IncomingRequest, returnTo: S
   let decide = Routes.REQUEST_DECIDE.replace(":id", request.requestId)
   H.li().class("request request-" + request.status).holding([
       H.div().class("request-who").holding([
-          Avatar.avatar(request.requester.displayName, "md"),
+          Avatar.face(request.requester.displayName, request.requester.avatarUrl, "md"),
           H.div().holding([
               H.strong().says(request.requester.displayName),
               H.span().class("muted small").says(when + " · " + Frame.t(frame, "status." + request.status))

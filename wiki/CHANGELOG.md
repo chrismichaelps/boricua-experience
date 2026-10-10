@@ -28,3 +28,4 @@
 - Final map soak: filter sheet transition events by target/property to stop automatic camera read loops; regression passes. Cache version19.
 
 - 2026-10-09 · [[handoffs/homepage-refresh]] · approved hosted Google OAuth web client/provider configuration and public audience; production/local exact callbacks saved. Local login-form Google flow returns authenticated onboarding; application consent and production deployment remain unverified. No OAuth secret stored in source or app environment.
+- 2026-10-09 · [[src/Validation/Avatar]] · member photos: storage bucket and policies, upload and removal, photos in app bar, account, organizer card, attendees, and request queue · risk LOW · issue #1

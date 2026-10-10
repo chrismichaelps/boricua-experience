@@ -17,17 +17,34 @@ fn hueOf(name: Str) -> Str {
   HUES[sum % HUES.length()]
 }
 
-/// One avatar of a size class (`sm`, `md`, `lg`).
+/// Pixel width of each size class, for the photo's intrinsic size.
+const PIXELS: Map[Str, Str] = mapOf([("sm", "32"), ("md", "40"), ("lg", "56"), ("xl", "80")])
+
+/// One avatar of a size class (`sm`, `md`, `lg`, `xl`): initials in a coloured circle.
 export fn avatar(name: Str, size: Str) -> H.Node {
   H.span().class("avatar avatar-" + size).at("style", "background:" + hueOf(name)).at("aria-hidden", "true").says(Text.initials(name))
 }
 
-/// Up to four overlapping avatars and a count of the rest.
-export fn stack(names: &Array[Str], total: Int) -> H.Node {
+/// The person's photo when they have one, their initials otherwise.
+export fn face(name: Str, photo: Option[Str], size: Str) -> H.Node {
+  match photo {
+    case Some(address) => {
+      let pixels = match PIXELS.get(size) {
+        case Some(found) => found
+        case None => "40"
+      }
+      H.img().class("avatar avatar-photo avatar-" + size).src(address).alt("").at("width", pixels).at("height", pixels).at("loading", "lazy").at("decoding", "async")
+    }
+    case None => avatar(name, size)
+  }
+}
+
+/// Up to four overlapping faces, as (name, photo) pairs, and a count of the rest.
+export fn stack(people: &Array[(Str, Option[Str])], total: Int) -> H.Node {
   var shown: Array[H.Node] = []
   var index = 0
-  for name in *names {
-    if index < 4 { shown = shown.push(avatar(name, "sm")) }
+  for person in *people {
+    if index < 4 { shown = shown.push(face(person[0], person[1], "sm")) }
     index = index + 1
   }
   let rest = total - shown.length()

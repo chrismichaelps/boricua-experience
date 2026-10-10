@@ -14,6 +14,8 @@ aliases: [Profile, Member]
 - **Deletion:** upcoming events cancelled, location erased, the identity deleted, profile cascades;
   past events show "Deleted user"; consent rows remain unlinked as legal record.
 
+- **Photo:** optional; stored in the member's own folder, shown wherever the member appears, removed with the account. Without one, initials on a stable colour.
+
 ## Referenced by
 
 [[domain/_MOC]] · [[subsystems/Privacy]] · [[src/Domain/Profile]]

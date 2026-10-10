@@ -1,0 +1,34 @@
+/** @Validation.Avatar.Photo — an uploaded photo checked before it is stored */
+module Validation.Avatar
+
+import Std.Bytes as Bytes
+import Constants.Limits as Limits
+import Domain.Problem as Problem
+
+/// The leading bytes that identify each accepted image format.
+const PNG: Array[UInt8] = [137u8, 80u8, 78u8, 71u8]
+const JPEG: Array[UInt8] = [255u8, 216u8, 255u8]
+const RIFF: Array[UInt8] = [82u8, 73u8, 70u8, 70u8]
+const WEBP: Array[UInt8] = [87u8, 69u8, 66u8, 80u8]
+
+/// The media type of an image by its leading bytes, when it is WebP, JPEG, or PNG.
+export fn mediaType(image: &Bytes) -> Option[Str] {
+  if Bytes.startsWith(image, &Bytes.fromArray(&RIFF)) && Bytes.slice(image, 8, 12) == Bytes.fromArray(&WEBP) { return Some("image/webp") }
+  if Bytes.startsWith(image, &Bytes.fromArray(&JPEG)) { return Some("image/jpeg") }
+  if Bytes.startsWith(image, &Bytes.fromArray(&PNG)) { return Some("image/png") }
+  None
+}
+
+/// The photo and its media type, or `Invalid` on the `photo` field: not an image, or too large.
+export fn photo(encoded: Str) -> Result[(Bytes, Str), Problem.Problem] {
+  let text = if encoded.contains(",") { encoded.drop(encoded.indexOf(",") + 1) } else { encoded }
+  let image = match Bytes.decodeBase64(text.trim()) {
+    case Ok(found) => found
+    case Err(_) => { return Err(Problem.Invalid([Problem.FieldError{field: "photo", key: "form.photo_invalid"}])) }
+  }
+  if image.length() > Limits.AVATAR_BYTES_MAX { return Err(Problem.Invalid([Problem.FieldError{field: "photo", key: "form.photo_too_large"}])) }
+  match mediaType(&image) {
+    case Some(kind) => Ok((image, kind))
+    case None => Err(Problem.Invalid([Problem.FieldError{field: "photo", key: "form.photo_invalid"}]))
+  }
+}
