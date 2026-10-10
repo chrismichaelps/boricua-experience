@@ -23,6 +23,7 @@ Reference lists.
 ```pudu
 export fn categories(gateway) -> Result[Array[Catalog.Category], Problem.Problem]
 export fn municipalities(gateway) -> Result[Array[Catalog.Municipality], Problem.Problem]
+export fn scenes(gateway) -> Result[Array[Catalog.Scene], Problem.Problem]
 ```
 
 ### Linkage
@@ -55,3 +56,7 @@ SHALLOW: one typed function per database function; the argument names and decodi
 ## Referenced by
 
 [[src/_MOC]]
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** featured_destinations() returns at most eight active scenes in database order through the existing typed read gateway. Resolved.

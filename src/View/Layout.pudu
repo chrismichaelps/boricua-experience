@@ -183,7 +183,7 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
       H.summary().class("menu-trigger").label(Frame.t(frame, "nav.menu")).holding(trigger),
       H.div().class("menu-panel").role("menu").label(Frame.t(frame, "nav.menu")).holding([
           H.div().class("menu-sheet-head").holding([
-              H.span().class("brand-name").holding([H.strong().says("boricua"), H.span().says("experience")]),
+              H.span().class("brand").holding([H.img().src("/assets/brand/cotorra-mark.svg?v=" + App.ASSET_VERSION).alt("").at("width", "44").at("height", "44"), H.span().class("brand-name").holding([H.strong().says("boricua"), H.span().says("experience")])]),
               H.button().kind("button").class("icon-button menu-close").label(Frame.t(frame, "nav.close_menu")).data("menu", "close").holding([Icons.sized("x", 22)])
             ])
         ].concat(body))

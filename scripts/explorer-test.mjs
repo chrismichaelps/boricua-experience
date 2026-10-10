@@ -24,9 +24,9 @@ const map={setPadding:()=>{},setMaxBounds:()=>{},on:(name,fn)=>events[name]=fn,p
 class Bounds {extend(){return this;}}
 const makeMarker=(element)=>({element,marker:{addTo(){return this;},remove(){}}});
 const live={onReading:fn=>{readings.add(fn);return()=>readings.delete(fn);},onStatus:fn=>{statuses.add(fn);return()=>statuses.delete(fn);},startWatching:()=>{watches++;for(const fn of statuses)fn('waiting');},stopWatching:()=>{stops++;for(const fn of statuses)fn('stopped');},isSharing:()=>sharing,startSharing:()=>{sharing=true;live.startWatching();},stopSharing:async()=>{sharing=false;live.stopWatching();}};
-const scope={console,URLSearchParams,AbortController,location:{search:'?category=cultura&when=weekend&free=1'},document:{activeElement:null},window:{addEventListener:(name,fn)=>lifecycle[name]=fn},matchMedia:()=>({matches:true}),MAP:{clusterMaxZoom:13,clusterRadius:56,viewportDelayMs:300,viewportCacheMs:30000,viewportCacheSize:8,focusZoom:11,searchBounds:[[-67.5,17.5],[-65.1,18.7]]},ENDPOINTS:{map:'/api/map'},LIVE:{},message:k=>k,toast:()=>{},live,create:(tag,attrs,text)=>new Node(attrs,text),localizeMoment:()=>{},$:s=>nodes[s],$$:(s,root)=>root===list?list.children.filter(n=>n.className==='sheet-item'):[],createMap:async()=>({map,maplibregl:{LngLatBounds:Bounds}}),clusterPins:ps=>ps.map(p=>[p]),priceMarker:()=>makeMarker(new Node()),clusterMarker:()=>makeMarker(new Node()),meMarker:()=>({setLngLat(p){mePosition=p;return this;},addTo(){return this;},getElement:()=>me}),accuracyCircle:()=>({}),visiblePins:(ps,project,width,height)=>ps.filter(p=>{const point=project([p.lng,p.lat]);return point.x>=0&&point.x<=width&&point.y>=0&&point.y<=height;}),viewportBounds:()=>({west:-66.3+offset/10000,east:-65.9+offset/10000,north:18.5,south:18.2}),getJson:(url,options)=>new Promise(resolve=>requests.push({url,resolve,signal:options.signal})),setTimeout:fn=>{timers.set(++tid,fn);return tid;},clearTimeout:id=>timers.delete(id)};
+const scope={console,URLSearchParams,AbortController,location:{search:'?category=cultura&when=weekend&free=1'},document:{activeElement:null},window:{addEventListener:(name,fn)=>lifecycle[name]=fn},matchMedia:()=>({matches:true}),MAP:{clusterMaxZoom:13,clusterRadius:56,viewportDelayMs:300,viewportCacheMs:30000,viewportCacheSize:8,focusZoom:11,selfZoom:15,searchBounds:[[-67.5,17.5],[-65.1,18.7]]},ENDPOINTS:{map:'/api/map'},LIVE:{},message:k=>k,toast:()=>{},live,create:(tag,attrs,text)=>new Node(attrs,text),localizeMoment:()=>{},$:s=>nodes[s],$$:(s,root)=>root===list?list.children.filter(n=>n.className==='sheet-item'):[],createMap:async()=>({map,maplibregl:{LngLatBounds:Bounds}}),clusterPins:ps=>ps.map(p=>[p]),priceMarker:()=>makeMarker(new Node()),clusterMarker:()=>makeMarker(new Node()),meMarker:()=>({setLngLat(p){mePosition=p;return this;},addTo(){return this;},getElement:()=>me}),accuracyCircle:()=>({}),visiblePins:(ps,project,width,height)=>ps.filter(p=>{const point=project([p.lng,p.lat]);return point.x>=0&&point.x<=width&&point.y>=0&&point.y<=height;}),viewportBounds:()=>({west:-66.3+offset/10000,east:-65.9+offset/10000,north:18.5,south:18.2}),getJson:(url,options)=>new Promise(resolve=>requests.push({url,resolve,signal:options.signal})),setTimeout:fn=>{timers.set(++tid,fn);return tid;},clearTimeout:id=>timers.delete(id)};
 const source=readFileSync(new URL('../public/assets/js/features/explorer.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
-vm.runInNewContext(source+'\nthis.run=explorer;',scope);
+vm.runInNewContext(source+'\nthis.run=explorer;this.renderItem=sheetItem;',scope);
 await scope.run(page);
 locate.handlers.click();
 for(const fn of readings)fn({lat:18.4,lng:-66.1,accuracy:12});
@@ -63,3 +63,57 @@ lifecycle.pagehide();assert.equal(readings.size,0);assert.equal(statuses.size,0)
 lifecycle.pageshow({persisted:true});assert.equal(readings.size,1);assert.equal(statuses.size,1);
 for(const fn of readings)fn({lat:18.42,lng:-66.12,accuracy:8});assert.equal(mePosition[0],-66.12,'restored sharing updates the map');
 console.log('PASS: pending map location, marker/center, viewport movement, retained filters, stale responses, error/retry and off');
+
+async function emptyLocatedView() {
+  readings.clear(); statuses.clear(); timers.clear(); requests.length=0; eases.length=0;
+  for (const key of Object.keys(events)) delete events[key];
+  zoom=15; offset=0; sharing=false;
+  nodes['#map-pins'].textContent='[]';
+  map.easeTo=options=>{eases.push(options);zoom=options.zoom;};
+  scope.viewportBounds=()=>({west:-66.3-zoom/1000+offset/10000,east:-65.9+zoom/1000+offset/10000,north:18.5,south:18.2});
+  await scope.run(page);
+  events.load(); locate.handlers.click();
+  for (const fn of readings) fn({lat:18.4,lng:-66.1,accuracy:12});
+  assert.equal(zoom,15,'a first precise fix starts at street level');
+}
+function settleCamera() {
+  events.moveend();
+  for (const fn of timers.values()) fn();
+  timers.clear();
+}
+async function respond(items) {
+  requests.at(-1).resolve({items,limited:false});
+  await Promise.resolve();await Promise.resolve();
+}
+await emptyLocatedView();
+settleCamera(); await respond([]);
+assert.equal(zoom,13,'an empty located view steps out two levels');
+settleCamera(); await respond([]);
+assert.equal(zoom,11,'empty results widen only as far as the regional floor');
+const floorEases=eases.length;
+settleCamera(); await respond([]);
+assert.equal(eases.length,floorEases,'the regional floor ends automatic widening');
+
+await emptyLocatedView();
+settleCamera(); await respond([pins[0]]);
+assert.equal(zoom,15,'nonempty results retain street zoom');
+const foundEases=eases.length;
+const foundRequests=requests.length;
+offset=1;settleCamera();
+assert.equal(requests.length,foundRequests+1,'a later camera view must send a fresh request');
+await respond([]);
+assert.equal(eases.length,foundEases,'later empty views do not restart completed widening');
+
+await emptyLocatedView();
+settleCamera();events.dragstart({originalEvent:{}});await respond([]);
+assert.equal(zoom,15,'a visitor pan cancels widening even with a pending empty response');
+console.log('PASS: empty located view widens to regional floor, stops on results and respects visitor movement');
+
+const rendered=scope.renderItem({...pins[0],when:'Dom 18 oct · 6:00 PM',starts:'2026-10-18T22:00:00Z',ends:'2026-10-19T00:00:00Z'});
+const dateLine=rendered.children[0].children[0].children[1].children[0];
+assert.equal(dateLine.children.length,1,'a refreshed card date appends the time element instead of stringifying it');
+const dateNode=dateLine.children[0];
+assert.equal(dateNode.attrs.datetime,'2026-10-18T22:00:00Z');
+assert.equal(dateNode.dataset.moment,'when');
+assert.equal(dateNode.textContent,'Dom 18 oct · 6:00 PM');
+console.log('PASS: refreshed map cards preserve the semantic date child and readable text');

@@ -52,3 +52,17 @@
 - 2026-10-10 · [[src/View/Pages/Account]] · signed-in flows tested end to end against `boricua-experience-dev`: Google sign-in and onboarding, profile and preference saves (verified in the database), photo upload (stored as WebP) and removal (file deleted). Fixes: profile saves say “Profile saved.”; “Remove photo” appears right after an upload; phone toasts rise above the tab bar. Development Google client “Boricua Experience (Development)” allows only localhost and the dev project's callback. Asset/cache version 29.
 - 2026-10-10 · [[decisions/ADR-0008-separate-environments]] · production redirect list now holds only `https://boricuaexperience.com/auth/callback`; production Google sign-in verified to use its own client and callback.
 - 2026-10-10 · [[src/Public/Explorer]] · after “Near me” locates the visitor, an empty street-level view steps out two zoom levels at a time (down to zoom 11) until activities show; a manual pan or zoom stops it. Verified in the browser at Fajardo on the development data. Asset/cache version 30.
+
+- 2026-10-10 · [[handoffs/homepage-refresh]] · development participation journey verified; phone account-menu containing block and refreshed-map dates fixed. Widening/date-child regressions independently reviewed;145assertions/allbrowserharnesses pass. Cache32; no production deployment.
+
+## 2026-10-10 — mobile dismissal and database-owned destinations
+
+- Fix authenticated cookie consent/reset forms by carrying the session CSRF token.
+- Keep phone menu disclosure and scroll lock synchronized across close, Escape, outside tap, rotation and page restoration.
+- Use one original green/red cotorra identity in headers, mobile menu, footer, favicon and install/social assets; remove blue recoloring.
+- Read featured scenes/captions from Supabase's bounded public content RPC; derive regions from municipalities and remove embedded destination tuples/footer town slugs. Private migration remains ignored; guests/members have function access only.
+- Regression gate:6/6 suites,152 assertions; complete browser harnesses and timezone checks; independent bounded review found no functional/security issue. Corrected wiki interface parity findings. Asset graph33.
+
+## Release0.1.1
+
+Promotes reviewed mobile navigation/privacy fixes, original green/red cotorra assets and database-owned featured destinations. Includes semantic map dates and the prior phone header clipping fix. Additive content RPC deployed to both databases before app rollout; no business-content seed or credentials committed. No changes to account/provider permissions or event-location policy.

@@ -11,10 +11,12 @@ import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Search as Search
 import View.Components.Hero as Hero
+import View.Components.Notice as Notice
 import View.Components.Search as Controls
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Pages.Auth as Auth
+import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
 import View.Pages.Search as SearchPage
 import View.Seo as Seo
@@ -28,7 +30,16 @@ fn visitor(locale: Locale.Locale, path: Str) -> Frame.Frame {
 fn main() -> Int {
   let en = visitor(Locale.En, "/")
   let es = visitor(Locale.Es, "/")
-  let catalog = Catalog.Catalog{categories: [], municipalities: []}
+  let emptyCatalog = Catalog.Catalog{categories: [], municipalities: [], scenes: []}
+  let catalog = Catalog.Catalog{categories: [], municipalities: [], scenes: [
+      Catalog.Scene{image: "/assets/img/luquillo-photo.webp", captionEs: "Luquillo, Puerto Rico", captionEn: "Luquillo, Puerto Rico", town: "luquillo"},
+      Catalog.Scene{image: "/assets/img/san-juan-photo.webp", captionEs: "Viejo San Juan", captionEn: "Old San Juan", town: "san-juan"}
+    ] }
+  let tokenFrame = Frame.Frame{..es, formToken: "session-token"}
+  let consentForm = Html.render(&Notice.cookieBanner(&tokenFrame).html())
+  let cookiePage = Html.render(&Legal.render(&tokenFrame, &Legal.Cookies))
+  let emptyHero = Html.render(&Hero.render(&en, &emptyCatalog).html())
+  let englishHero = Html.render(&Hero.render(&en, &catalog).html())
   let filters = Search.Filters{..Search.everything(), query: "<script>bad</script>", category: "cultura", freeOnly: true}
   let english = Html.render(&Controls.pill(&en, &catalog, &filters).html())
   let spanish = Html.render(&Controls.pill(&es, &catalog, &Search.everything()).html())
@@ -43,6 +54,13 @@ fn main() -> Int {
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
   let checks = Test.suite("Presentation", &[
+      Test.equals("consent carries the session token", &consentForm.contains("name=\"_token\" value=\"session-token\""), &true),
+      Test.equals("cookie reset and banner each carry a token", &cookiePage.split("name=\"_token\"").length(), &3),
+      Test.equals("empty destinations keep functional search", &emptyHero.contains("action=\"/search\""), &true),
+      Test.equals("empty destinations have no broken caption", &emptyHero.contains("hero-place"), &false),
+      Test.equals("empty destinations have no carousel controls", &emptyHero.contains("hero-controls"), &false),
+      Test.equals("English destination comes from the catalog", &englishHero.contains("Old San Juan"), &true),
+      Test.equals("regions come from supplied municipalities", &Catalog.regions(&Catalog.Catalog{..emptyCatalog, municipalities: [Catalog.Municipality{slug: "test", name: "Test", region: "sur", lat: 0.0, lng: 0.0}]}), &["sur"]),
       Test.equals("auth header retains curved branding", &login.contains("/assets/brand/cotorra-mark.svg"), &true),
       Test.equals("auth form has no duplicate brand", &login.contains("auth-brand"), &false),
       Test.equals("auth uses the official Google asset", &login.contains("/assets/brand/google-mark.svg"), &true),
@@ -54,7 +72,7 @@ fn main() -> Int {
       Test.equals("search exposes translated picker labels", &spanish.contains("Buscar un pueblo"), &true),
       Test.equals("picker stylesheet is versioned", &home.contains("/assets/css/search.css?v=" + App.ASSET_VERSION), &true),
       Test.equals("footer exposes filtered free discovery", &home.contains("href=\"/search?free=1\""), &true),
-      Test.equals("footer exposes Puerto Rico towns", &home.contains("href=\"/pueblo/rio-grande\""), &true),
+      Test.equals("footer links to the database town directory", &home.contains("href=\"/#towns\""), &true),
       Test.equals("footer exposes account recovery", &home.contains("href=\"/recover\""), &true),
       Test.equals("footer credits real photography", &home.contains("/assets/img/credits.html"), &true),
       Test.equals("hero uses a real Luquillo photograph", &hero.contains("luquillo-photo.webp"), &true),
@@ -62,7 +80,7 @@ fn main() -> Int {
       Test.equals("obsolete AI notice is removed", &home.contains("AI-generated images"), &false),
       Test.equals("map sheet has a named keyboard button", &map.contains("Expand or collapse the activity list"), &true),
       Test.equals("map sheet exposes its controlled list", &map.contains("aria-controls=\"map-list\""), &true),
-      Test.equals("carousel renders four dot controls", &hero.split("data-slide=").length(), &5),
+      Test.equals("carousel uses the supplied destination count", &hero.split("data-slide=").length(), &3),
       Test.equals("carousel starts with Luquillo", &hero.contains("Luquillo, Puerto Rico"), &true),
       Test.equals("carousel has a translated pause control", &hero.contains("Pausar imágenes"), &true),
       Test.equals("map link retains the landing municipality", &listing.contains("pueblo=ponce"), &true),

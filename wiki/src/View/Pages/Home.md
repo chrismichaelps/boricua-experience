@@ -49,7 +49,7 @@ MEDIUM.
 ## Grill Log
 
 - **Q:** How does the lower homepage use the reference without copying its content?
-  **A:** Spacious activity cards, local destination tiles and a collapsible full municipality directory preserve discovery routes. The footer has Boricua discovery, towns, participation and legal links; no invented social accounts or copied third-party product copy. Generated destination imagery is disclosed in both locales. Mobile search gives the date enough width.
+  **A:** Spacious activity cards, local destination tiles and a collapsible full municipality directory preserve discovery routes. The footer has Boricua discovery, towns, participation and legal links; no invented social accounts or copied third-party product copy. All destination photos are real; public credits preserve attribution. Mobile search gives the date enough width.
 
 - **Q:** How is the hero carousel integrated?
   **A:** [[src/View/Components/Hero]] owns the fixed search surface and four scene controls. [[src/Public/Carousel]] rotates local images and captions. New controls have Spanish/English labels; asset version 3 refreshes cached scripts and styles.
@@ -73,4 +73,8 @@ Real destination assets now use `*-photo.webp`; location and licenses are record
 - **Q:** Why replace the collapsible directory?
   **A:** A default disclosure triangle opening onto 78 thin links in columns read as an unfinished list. Seven region tabs over a grid of town rows (name and chevron, 52 px rows, four columns on desktop, three on tablet, two on phone) make every municipality reachable in at most two taps. Resolved.
 - **Q:** How does it work before any script runs?
-  **A:** Region tabs are native radio inputs inside a fieldset with a hidden legend; `:has(:checked)` reveals the matching panel. Arrow keys move between regions natively. The fieldset overrides its default `min-inline-size` so the tab strip scrolls instead of widening the page. Region order is `Domain.Catalog.REGIONS`; labels are the run-time `region.*` message family listed in `scripts/message-keys.sh`. Resolved.
+  **A:** Region tabs are native radio inputs inside a fieldset with a hidden legend; `:has(:checked)` reveals the matching panel. Arrow keys move between regions natively. The fieldset overrides its default `min-inline-size` so the tab strip scrolls instead of widening the page. Region order derives from `Domain.Catalog.regions(catalog)`; labels are the run-time `region.*` message family listed in `scripts/message-keys.sh`. Resolved.
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Destination tiles use Catalog scenes and bilingual captions; region tabs derive from municipalities, first available region selected. Resolved.

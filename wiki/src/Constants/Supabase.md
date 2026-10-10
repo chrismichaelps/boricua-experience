@@ -50,3 +50,7 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 - **Q:** What is the resolved mobile and scaling contract?
   **A:** Add MAP_EVENTS for the dedicated spatial RPC. Resolved.
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** FEATURED_DESTINATIONS names the bounded public read-only content RPC. Resolved.

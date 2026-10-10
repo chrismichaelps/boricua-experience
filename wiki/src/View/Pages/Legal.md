@@ -62,3 +62,7 @@ MEDIUM.
   **A:** As documents. Each has a version and effective date, an “In short” summary, a contents list (sticky beside the text on desktop) linking to numbered sections, and prose paragraphs in a 680 px reading measure. No contact address is published; contact runs through reports and account settings. Resolved.
 - **Q:** How are the texts kept in sync with the product?
   **A:** Every claim names a feature that exists: neutral age screen, address reveal on approval, attendee-list opt-out, live location audience and 30-day history, “Near me” positions not stored, providers (Supabase, Vercel, Google, OpenFreeMap), each cookie by name, data export and deletion. The minors sections follow adult-only community platforms: accounts 18+, family activities only with a guardian who holds the account, no collection of minors' data, “Involves minors” reports reviewed first, deletion within 30 days, and immediately for under 13. Puerto Rico's age of majority (21) is addressed in eligibility. Resolved.
+
+## Mobile/content correction Grill Log
+
+- **Q:** What is the resolved contract? **A:** Cookie reset POST carries the session token and expires consent before returning to the policy page. Resolved.

@@ -1,14 +1,14 @@
-import { clusterPins } from './mapClusters.js?v=30';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=30';
-import { message } from '../constants/messages.js?v=30';
-import { getJson } from '../net/http.js?v=30';
-import { $, $$, create } from '../utils/dom.js?v=30';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=30';
-import { toast } from './toast.js?v=30';
-import { createMap } from './mapLoader.js?v=30';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=30';
-import * as live from './live.js?v=30';
-import { localizeMoment } from './localTime.js?v=30';
+import { clusterPins } from './mapClusters.js?v=33';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=33';
+import { message } from '../constants/messages.js?v=33';
+import { getJson } from '../net/http.js?v=33';
+import { $, $$, create } from '../utils/dom.js?v=33';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=33';
+import { toast } from './toast.js?v=33';
+import { createMap } from './mapLoader.js?v=33';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=33';
+import * as live from './live.js?v=33';
+import { localizeMoment } from './localTime.js?v=33';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -18,7 +18,9 @@ function sheetItem(pin) {
   const body = create('div', { class: 'card-body' });
   const when = create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends }, pin.when);
   localizeMoment(when);
-  body.append(create('p', { class: 'card-when' }, when), create('h3', { class: 'card-title' }, pin.title), create('p', { class: 'card-place' }, pin.place));
+  const date = create('p', { class: 'card-when' });
+  date.append(when);
+  body.append(date, create('h3', { class: 'card-title' }, pin.title), create('p', { class: 'card-place' }, pin.place));
   link.append(media, body);
   const card = create('article', { class: 'card' });
   card.append(link);
