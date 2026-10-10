@@ -33,8 +33,8 @@ session key. A development sign-in can never produce a session production accept
   non-production project; production auth settings are edited in the dashboard.
 - Google sign-in uses one OAuth client per environment. The development client allows only the
   development project's callback and `http://localhost:8080`; the production client allows only
-  production addresses. Once development works, `http://localhost:8080` is removed from the
-  production project's redirect list.
+  production addresses. `http://localhost:8080` was removed from the production project's redirect
+  list on 2026-10-10, once development sign-in worked.
 - `scripts/check-production-data.sh` fails when any `@boricua.test` account or `source = 'seed'`
   event exists in production; run it after every production migration.
 - Seed accounts use the reserved `.test` domain, so they can never receive mail or collide with a
@@ -52,6 +52,11 @@ shows up before production. Supabase branching becomes the preview environment w
 previews need a hosted database.
 
 ## Consequences
+
+Development project `boricua-experience-dev` (`mywghuwpkhbjdqyeuubr`, us-east-1) was created on
+2026-10-10 with the Google client "Boricua Experience (Development)"; Google sign-in, onboarding,
+profile and preference saves, and photo upload and removal were tested end to end against it.
+
 
 Production was purged on 2026-10-09: 12 seed accounts, 46 events, and their consent, data-request,
 and audit rows were removed in one transaction; the two real accounts were kept. The owner account
