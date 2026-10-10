@@ -166,3 +166,15 @@ button[disabled] { cursor: wait; }
 .cookie-custom > .button { width: 100%; margin-top: 8px; }
 .cookie-actions .button { min-height: 44px; }
 @media (prefers-reduced-motion: reduce) { .privacy-switch-track, .privacy-switch-track::after, .cookie-custom summary .icon { transition: none; } }
+
+/* Touch targets: small text controls keep their look and gain a 44px-tall hit area. */
+@media (pointer: coarse) {
+  .report summary, .confirm summary { padding-block: 12px; margin-block: -12px; }
+  .profile-head .text-link { padding-block: 12px; }
+}
+
+/* Segmented tabs fill the phone width in equal parts instead of scrolling. */
+@media (max-width: 599px) {
+  .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; width: 100%; overflow: hidden; }
+  .segmented .tab-link { padding-inline: 6px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

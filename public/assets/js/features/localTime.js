@@ -1,4 +1,4 @@
-import { message } from '../constants/messages.js?v=25';
+import { message } from '../constants/messages.js?v=26';
 
 const PUERTO_RICO = 'America/Puerto_Rico';
 const DAY_MS = 86400000;
