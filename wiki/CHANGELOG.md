@@ -66,3 +66,5 @@
 ## Release0.1.1
 
 Promotes reviewed mobile navigation/privacy fixes, original green/red cotorra assets and database-owned featured destinations. Includes semantic map dates and the prior phone header clipping fix. Additive content RPC deployed to both databases before app rollout; no business-content seed or credentials committed. No changes to account/provider permissions or event-location policy.
+
+Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live route checks pass. Both dev and main contain the release; no secrets/private content migration committed.
