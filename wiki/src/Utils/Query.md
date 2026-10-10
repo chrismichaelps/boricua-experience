@@ -27,7 +27,7 @@ export fn render(pairs: &Array[(Str, Str)]) -> Str
 ### Linkage
 
 - **Requires:** `Std.Url`.
-- **Consumed by:** [[src/View/Pages/Search]], [[src/View/Components/Filters]].
+- **Consumed by:** [[src/View/Pages/Search]], [[src/View/Components/Search]].
 
 ## Algorithm
 

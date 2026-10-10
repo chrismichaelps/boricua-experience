@@ -39,7 +39,7 @@ The first range naming `es` or `en` wins; anything else is Spanish.
 
 ## Negative Logic (Prohibited Paths)
 
-- ❌ No third language without a full table in [[src/I18n/_MOC]].
+- ❌ No third language without a full table in [[src/I18n/Translate]].
 
 ## Edge Cases
 

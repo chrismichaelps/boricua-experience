@@ -33,7 +33,7 @@ export fn isNarrowed(filters: &Filters) -> Bool
 ### Linkage
 
 - **Requires:** nothing.
-- **Consumed by:** [[src/Services/Discovery]], [[src/Web/Handlers/Discover]], [[src/View/Components/Filters]].
+- **Consumed by:** [[src/Services/Discovery]], [[src/Web/Handlers/Discover]], [[src/View/Components/Search]].
 
 ## Algorithm
 
@@ -59,3 +59,11 @@ MEDIUM: typed values with their decoding, so no caller reads raw JSON.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Native / spatial follow-up Grill Log
+
+- **Q:** What is the resolved mobile and scaling contract?
+  **A:** Add typed optional viewport bounds to the existing filters; other discovery flows default to None. Bounds are validated before dispatch. Resolved.
+
+## Reviewed refinement
+Map results preserve the server limited flag and show a bilingual zoom-in notice. Reaction forms lock their shared group; horizontal handle drags suppress the ensuing click. Existing public coordinate visibility remains unchanged. Grill Log: reviewed edge contracts resolved.

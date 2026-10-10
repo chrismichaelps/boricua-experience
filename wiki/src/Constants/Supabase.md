@@ -45,3 +45,8 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 ## Referenced by
 
 [[src/_MOC]]
+
+## Native / spatial follow-up Grill Log
+
+- **Q:** What is the resolved mobile and scaling contract?
+  **A:** Add MAP_EVENTS for the dedicated spatial RPC. Resolved.

@@ -22,7 +22,7 @@ async function send(url, init) {
   return body;
 }
 
-export const getJson = (url) => send(url, { method: 'GET' });
+export const getJson = (url, options = {}) => send(url, { ...options, method: 'GET' });
 
 export function postJson(url, data, keepalive = false) {
   return send(url, { method: 'POST', keepalive, headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() }, body: JSON.stringify(data ?? {}) });

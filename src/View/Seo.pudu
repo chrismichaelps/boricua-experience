@@ -16,7 +16,7 @@ import View.Frame as Frame
 export type Meta = { title: Str, description: Str, path: Str, indexable: Bool, image: Str, structured: Array[Json.Json] }
 
 /// Social image used when a page has none of its own.
-export const SOCIAL_IMAGE: Str = "/assets/brand/social.png"
+export const SOCIAL_IMAGE: Str = "/assets/brand/social.png?v=" + App.ASSET_VERSION
 
 /// A page's metadata with the default image and no structured data.
 export fn meta(title: Str, description: Str, path: Str, indexable: Bool) -> Meta {
@@ -80,7 +80,7 @@ export fn website(siteUrl: Str) -> Json.Json {
                 ("@id", Json.Text(siteUrl + "/#organization")),
                 ("name", Json.Text(App.SITE_NAME)),
                 ("url", Json.Text(siteUrl)),
-                ("logo", Json.Text(siteUrl + "/assets/brand/icon-512.png")),
+                ("logo", Json.Text(siteUrl + "/assets/brand/icon-512.png?v=" + App.ASSET_VERSION)),
                 ("areaServed", Json.Text("Puerto Rico"))
               ])
           ]))
@@ -198,9 +198,9 @@ export fn manifest(locale: &Locale.Locale, description: Str, shortcuts: &Array[(
         ("theme_color", Json.Text(App.THEME_COLOR)),
         ("categories", Json.list(&[Json.Text("events"), Json.Text("social"), Json.Text("travel")])),
         ("icons", Json.list(&[
-              icon("/assets/brand/icon-192.png", "192x192", "any"),
-              icon("/assets/brand/icon-512.png", "512x512", "any"),
-              icon("/assets/brand/maskable-512.png", "512x512", "maskable")
+              icon("/assets/brand/icon-192.png?v=" + App.ASSET_VERSION, "192x192", "any"),
+              icon("/assets/brand/icon-512.png?v=" + App.ASSET_VERSION, "512x512", "any"),
+              icon("/assets/brand/maskable-512.png?v=" + App.ASSET_VERSION, "512x512", "maskable")
             ])),
         ("shortcuts", Json.list(&shortcuts.map(|pair: (Str, Str)| Json.object(&[("name", Json.Text(pair[0])), ("url", Json.Text(pair[1]))]))))
       ]))

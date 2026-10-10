@@ -1,8 +1,8 @@
-const VERSION = 'bx-v1';
-const SHELL = ['/offline', '/assets/css/app.css?v=1', '/assets/js/main.js?v=1', '/assets/fonts/nunito-sans.woff2', '/assets/brand/logo.svg', '/assets/brand/icon-192.png', '/assets/img/hero.svg'];
+const VERSION = 'bx-v20';
+const SHELL = ['/assets/css/experience.css?v=20', '/assets/js/features/motion.js?v=20', '/assets/js/vendor/motion-14.1.0.js', '/assets/brand/cotorra-mark.svg?v=20', '/assets/brand/google-mark.svg', '/assets/css/search.css?v=20', '/assets/js/features/searchPickers.js?v=19', '/offline', '/assets/css/app.css?v=20', '/assets/css/home.css?v=20', '/assets/js/main.js?v=20', '/assets/js/features/carousel.js?v=3', '/assets/js/constants/config.js?v=3', '/assets/fonts/nunito-sans.woff2', '/assets/brand/logo.svg?v=20', '/assets/brand/icon-192.png?v=20', '/assets/img/luquillo-photo.webp', '/assets/img/san-juan-photo.webp', '/assets/img/el-yunque-photo.webp', '/assets/img/culebra-photo.webp', '/assets/brand/cotorra-search.svg?v=20', '/assets/fonts/pacifico.ttf'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(SHELL.map((path) => new Request(path, { credentials: 'omit' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -29,12 +29,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).then((response) => {
-      if (response.ok && !url.pathname.startsWith('/account') && !url.pathname.startsWith('/admin')) {
-        const copy = response.clone();
-        caches.open(VERSION).then((cache) => cache.put(request, copy));
-      }
-      return response;
-    }).catch(() => caches.match(request).then((cached) => cached || caches.match('/offline'))));
+    event.respondWith(fetch(request).catch(() => caches.match('/offline')));
   }
 });

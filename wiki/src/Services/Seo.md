@@ -28,7 +28,7 @@ export fn entries(runtime) -> Result[Array[Entry], Problem.Problem]
 ### Linkage
 
 - **Requires:** [[src/Api/Events]], [[src/Services/Catalog]].
-- **Consumed by:** [[src/App/Handlers/Seo]].
+- **Consumed by:** [[src/App/Handlers/Discover]].
 
 ## Algorithm
 

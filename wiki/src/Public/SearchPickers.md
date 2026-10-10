@@ -1,0 +1,52 @@
+---
+type: module
+fidelity: Active
+grammar: "[[grammar/browser]]"
+tags: [module, presentation, search]
+---
+
+# SearchPickers
+
+## Purpose
+
+Progressively enhance existing named selects with app-style searchable option dialogs. Shared by the main search pill and results filter bar.
+
+## Interface
+
+`searchPickers(form)`. Requires native dialog support; otherwise retains the original controls. Consumed by [[src/Public/BrowserMain]].
+
+## Algorithm
+
+Read translated labels and select options from rendered DOM. Build each dialog using textContent; a trigger displays selected text. Municipality search folds accents. Option selection updates the original select, synchronizes pressed state, closes and restores focus before dispatching change. Existing result filter auto-submit continues to work. Desktop positions the panel near the trigger, mobile presents a bottom sheet. Native modal dialog traps focus; Escape/outside/close restore the trigger. Dialog stays under the form so carousel focus suspension applies.
+
+## Negative Logic
+
+No copied third-party copy, invented calendar filters, HTML injection, server calls or duplicate named controls. Do not replace controls when native dialog support is missing.
+
+## Edge Cases
+
+No scripts, empty/long option lists, accented queries, zero matches, selected options, reset/change synchronization, keyboard traversal, narrow viewport, unsupported dialog, multiple forms, browser resize and scrolling.
+
+## Depth
+
+MEDIUM: bounded select enhancement, independent of server filter semantics.
+
+## Grill Log
+
+- **Q:** How is motion added without making basic flows fragile?
+  **A:** Local pinned Motion 14.1.0 loads through an optional feature. Page/card entry, button feedback and picker transitions respect reduced motion and settle on page hide. No CSS hides content before enhancement. Picker exit has a bounded fallback and never delays filter submission. Authentication retains email/password contracts; curved cotorra and official Google assets remain local.
+
+- **Q:** Why retain the original select?
+  **A:** It remains the canonical value and GET field, with native fallback when enhancement cannot run.
+- **Q:** Why not copy the reference calendar?
+  **A:** The application filters by existing date windows; the panel presents those working choices rather than offering unsupported exact dates.
+- **Q:** How does a dialog work inside a clipping hero?
+  **A:** showModal promotes it to the browser top layer while retaining DOM ancestry for form and carousel focus behavior.
+
+## Referenced by
+
+[[src/_MOC]] · [[subsystems/Presentation]] · [[src/View/Components/Search]]
+
+Independent review resolutions: Enter inside municipality search selects the first visible choice and never implicitly submits the surrounding form; empty results remain open. Default Soon is omitted to preserve server relevance for text searches. Keyboard-visible focus restores the segment outline.
+
+Browser verification: first Escape closes the dialog even from a search input. Positioned field wrappers contain hidden select/label boxes so they cannot widen the mobile document.

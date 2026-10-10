@@ -46,3 +46,8 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 ## Referenced by
 
 [[src/_MOC]]
+
+## Native / spatial follow-up Grill Log
+
+- **Q:** What is the resolved mobile and scaling contract?
+  **A:** Add API_MAP for the viewport read endpoint. Resolved.

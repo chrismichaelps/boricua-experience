@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const source = readFileSync(new URL('../public/assets/js/features/mapClusters.js', import.meta.url), 'utf8');
+const { clusterPins } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+const pins = [{slug:'a',lng:0,lat:0},{slug:'b',lng:3,lat:4},{slug:'c',lng:10,lat:10},{slug:'d',lng:0,lat:0}];
+const before = JSON.stringify(pins);
+const groups = clusterPins(pins, ([x,y]) => ({x,y}), 5);
+assert.deepEqual(groups.map(group => group.map(pin => pin.slug)), [['a','b','d'],['c']]);
+assert.equal(JSON.stringify(pins), before, 'grouping must preserve the original pin data');
+assert.deepEqual(groups.flat().map(pin => pin.slug).sort(), ['a','b','c','d'], 'every activity appears exactly once');
+assert.deepEqual(clusterPins([], ([x,y]) => ({x,y}), 5), []);
+assert.equal(clusterPins(pins.slice(0,2), ([x,y]) => ({x,y}), 4.99).length, 2, 'outside radius stays separate');
+console.log('PASS: overview grouping, radius boundary, identical locations, empty input, no pin loss or mutation');

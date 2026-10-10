@@ -1,9 +1,9 @@
 /** @View.Pages.Search.Results — filtered listings, with category and town landing pages */
 module View.Pages.Search
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
@@ -93,7 +93,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
           ]),
         H.div().class("results-head").holding([
             H.h1().class("page-title").says(title),
-            H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, landing, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
+            H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, &Open, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
           ]),
         SearchControls.filterBar(frame, catalog, filters),
         if page.items.isEmpty() {

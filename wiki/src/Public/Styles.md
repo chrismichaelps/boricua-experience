@@ -1,0 +1,63 @@
+---
+type: module
+fidelity: Active
+grammar: "[[grammar/browser]]"
+tags: [module, presentation]
+---
+
+# Styles
+
+## Purpose
+
+Responsive homepage hero, transparent home navigation, local Pacifico wordmark, shared search pill and existing component styles.
+
+## Interface
+
+`app.css` holds base components; `home.css` holds the refresh and is loaded after it. The refresh stylesheet stays under 500 lines; the pre-existing base stylesheet is retained.
+
+Public static assets served by [[src/Web/Static]] and used by [[src/View/Layout]].
+
+## Algorithm
+
+Styles use mobile-first rules; SVG assets are decorative with empty alt text. The worker precaches versioned public resources only.
+
+## Negative Logic
+
+No secrets, remote tracking, or private page caching. No inert controls.
+
+## Edge Cases
+
+Small screens, keyboard focus, reduced motion, offline navigation and upgrades from the old cache.
+
+## Depth
+
+MEDIUM: presentation and offline shell boundary.
+
+## Grill Log
+
+- **Q:** How do the app-style search controls preserve filtering?
+  **A:** Native named selects remain the submission source and no-script fallback. Progressive picker dialogs expose a searchable municipality list and existing date windows with translated labels, keyboard dismissal and focus restoration. Pill submission retains category, free, sort and coordinates. Version 7 refreshes entry/styles; unchanged carousel modules keep their version 3 imports.
+
+- **Q:** How does the lower homepage use the reference without copying its content?
+  **A:** Spacious activity cards, local destination tiles and a collapsible full municipality directory preserve discovery routes. The footer has Boricua discovery, towns, participation and legal links; no invented social accounts or copied third-party product copy. Real destination photography is credited in both locales. Mobile search gives the date enough width.
+
+- **Q:** How is the hero carousel integrated?
+  **A:** [[src/View/Components/Hero]] owns the fixed search surface and four scene controls. [[src/Public/Carousel]] rotates local images and captions. New controls have Spanish/English labels; asset version 3 refreshes cached scripts and styles.
+
+
+- **Q:** Should signed-in HTML be persisted for offline use?
+  **A:** No. Only the generic offline page is stored; participant locations and account information must not remain after sign-out.
+- **Q:** How does branding remain sharp?
+  **A:** Local SVGs and a locally hosted font avoid bitmap scaling and third-party font requests.
+
+## Referenced by
+
+[[subsystems/Presentation]] · [[src/_MOC]]
+
+Header-white branding is scoped to `.appbar`; the shared footer logo and wordmark retain blue contrast on the light footer.
+
+- **Q:** How are colors and footer rhythm refined?
+  **A:** Existing ocean blue, ink and neutral surfaces provide the shared palette. Desktop footer links use 32px rows without accumulated list gaps; mobile targets remain 44px. Real photographs replace the generated scenes, with public credits linked in the footer.
+
+## Parrot/privacy continuation
+Use original cotorra puertorriqueña SVG assets and optional Motion privacy disclosure without changing native checkbox submission. Grill: local assets and progressive enhancement preserve behavior; resolved.

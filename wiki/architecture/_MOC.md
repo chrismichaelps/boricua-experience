@@ -13,8 +13,8 @@ A request arrives from the hosting platform ([[src/Function]]) or a local socket
 ([[src/Main]]) as a `Route.Request`. [[src/Web/Router]] matches it, [[src/Web/Context]] resolves
 the visitor (locale, sealed session, consent) and refreshes an expiring session, and a handler in
 `Web/Handlers` turns the request into a typed message sent through the mediator
-([[src/App/Mediator]]). Every message passes the same pipeline — logging, validation, and the
-fault boundary — before its handler in [[src/App/Handlers]] calls a service. Services compose calls
+([[src/App/Assembly]]). Every message passes the same pipeline — logging, validation, and the
+fault boundary — before its handler in [[src/App/Handlers/Discover]] calls a service. Services compose calls
 to the database API and the identity provider (`Api/`), and answer `Result[T, Problem]`. The Web
 handler renders the outcome through `View/` and [[src/Web/Respond]] adds cookies, security
 headers, and cache policy.

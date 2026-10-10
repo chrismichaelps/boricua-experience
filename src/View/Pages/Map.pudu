@@ -1,16 +1,16 @@
 /** @View.Pages.Map.Explorer — the map of what is happening, with live location */
 module View.Pages.Map
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Json as Json
+import Std.Time as StdTime
 import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Event as Event
 import I18n.Dates as Dates
 import I18n.Format as Format
-import Std.Time as StdTime
 import View.Components.EventCard as EventCard
 import View.Components.Icons as Icons
 import View.Frame as Frame
@@ -21,25 +21,25 @@ import View.Seo as Seo
 export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json {
   let now = StdTime.instantOf(frame.nowMillis)
   Json.list(&cards.map(|card: Event.Card| Json.object(&[
-            ("slug", Json.Text(card.slug)),
-            ("title", Json.Text(card.title)),
-            ("when", Json.Text(Dates.when(&frame.locale, card.startsAt, card.endsAt, &now))),
-            ("price", Json.Text(Format.price(&frame.locale, card.priceCents))),
-            ("place", Json.Text(card.venueName + " · " + card.municipality.name)),
-            ("icon", Json.Text(card.category.icon)),
-            ("cover", Json.Text(EventCard.coverOf(&card))),
-            ("lat", Json.Fractional(show(card.lat))),
-            ("lng", Json.Fractional(show(card.lng)))
-          ])))
+          ("slug", Json.Text(card.slug)),
+          ("title", Json.Text(card.title)),
+          ("when", Json.Text(Dates.when(&frame.locale, card.startsAt, card.endsAt, &now))),
+          ("price", Json.Text(Format.price(&frame.locale, card.priceCents))),
+          ("place", Json.Text(card.venueName + " · " + card.municipality.name)),
+          ("icon", Json.Text(card.category.icon)),
+          ("cover", Json.Text(EventCard.coverOf(&card))),
+          ("lat", Json.Fractional(show(card.lat))),
+          ("lng", Json.Fractional(show(card.lng)))
+        ])))
 }
 
 /// The pins as JSON text safe inside a script element.
 fn pinsJson(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Str { Json.encode(&pinsValue(frame, cards)).replace("</", "<\\/") }
 
 /// The map page: the map, the live-location switch, and a sheet listing the pins.
-export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], startNear: Bool) -> Html.Html {
+export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, startNear: Bool) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "map.title"), Frame.t(frame, "map.description"), Routes.MAP, true)
-  Layout.page(frame, &meta, Layout.MapView, H.div().class("map-page").data("feature", "explorer").data("near", if startNear { "1" } else { "0" }).data("member", if Frame.signedIn(frame) { "1" } else { "0" }).holding([
+  Layout.page(frame, &meta, Layout.MapView, H.div().class("map-page").data("feature", "explorer").data("count-one", Frame.t(frame, "map.count_one")).data("limited", if limited { "1" } else { "0" }).data("cluster-label", Frame.t(frame, "map.cluster")).data("fit", if frame.query.isEmpty() || startNear { "island" } else { "pins" }).data("near", if startNear { "1" } else { "0" }).data("member", if Frame.signedIn(frame) { "1" } else { "0" }).holding([
         H.div().class("map-canvas").id("map").data("lat", show(App.MAP_CENTER_LAT)).data("lng", show(App.MAP_CENTER_LNG)).role("application").label(Frame.t(frame, "map.label")),
         H.script().kind("application/json").id("map-pins").raw(pinsJson(frame, cards)),
         H.div().class("map-controls").holding([
@@ -51,8 +51,9 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], startNear: Bool
             }
           ]),
         H.section().class("map-sheet").label(Frame.t(frame, "map.list")).holding([
-            H.div().class("sheet-handle").at("aria-hidden", "true"),
+            H.button().kind("button").class("sheet-handle").label(Frame.t(frame, "map.sheet_toggle")).at("aria-expanded", "false").at("aria-controls", "map-list").holding([H.span().at("aria-hidden", "true")]),
             H.p().class("sheet-title").id("map-count").says(Frame.tf(frame, "map.count", &[("count", show(cards.length()))])),
+            H.p().class("map-limit" + (if limited { "" } else { " is-hidden" })).id("map-limit").role("status").says(Frame.t(frame, "map.limited")),
             H.div().class("sheet-list").id("map-list").holding(cards.map(|card: Event.Card| H.div().class("sheet-item").data("slug", card.slug).holding([EventCard.card(frame, &card)])))
           ]),
         H.p().class("map-privacy small").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "map.privacy"))])

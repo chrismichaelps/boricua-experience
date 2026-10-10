@@ -5,7 +5,7 @@ tags: [moc, handoff]
 
 # Handoffs
 
-(none in flight)
+- [[handoffs/homepage-refresh]] — homepage styling and integration verification.
 
 ## Referenced by
 

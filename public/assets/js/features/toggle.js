@@ -1,4 +1,5 @@
-import { postForm } from '../net/http.js';
+import { haptic } from './haptics.js?v=19';
+import { postForm } from '../net/http.js?v=19';
 import { message } from '../constants/messages.js';
 import { toast } from './toast.js';
 
@@ -6,13 +7,21 @@ export function saveToggle(form) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const button = form.querySelector('button');
+    if (form.getAttribute('aria-busy') === 'true') return;
+    form.setAttribute('aria-busy', 'true');
+    const controls = [...form.querySelectorAll('button')];
+    controls.forEach((control) => { control.disabled = true; });
     try {
       const { saved } = await postForm(form);
       button.classList.toggle('is-on', saved);
       button.setAttribute('aria-pressed', String(saved));
-      navigator.vibrate?.(10);
+      haptic('success');
     } catch {
+      haptic('error');
       toast(message('tryAgain'));
+    } finally {
+      form.setAttribute('aria-busy', 'false');
+      controls.forEach((control) => { control.disabled = false; });
     }
   });
 }
@@ -20,6 +29,11 @@ export function saveToggle(form) {
 export function reactToggle(form) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const group = form.closest('.reactions');
+    if (group.getAttribute('aria-busy') === 'true') return;
+    group.setAttribute('aria-busy', 'true');
+    const controls = [...group.querySelectorAll('button')];
+    controls.forEach((control) => { control.disabled = true; });
     try {
       const { reaction, likeCount } = await postForm(form);
       for (const other of form.closest('.reactions').querySelectorAll('form[data-feature="react"]')) {
@@ -32,9 +46,13 @@ export function reactToggle(form) {
         const count = button.querySelector('.count');
         if (count) count.textContent = String(likeCount);
       }
-      navigator.vibrate?.(10);
+      haptic('success');
     } catch {
+      haptic('error');
       toast(message('tryAgain'));
+    } finally {
+      group.setAttribute('aria-busy', 'false');
+      controls.forEach((control) => { control.disabled = false; });
     }
   });
 }

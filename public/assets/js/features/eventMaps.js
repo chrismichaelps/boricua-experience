@@ -1,7 +1,7 @@
-import { LIVE, MAP } from '../constants/config.js';
-import { getJson } from '../net/http.js';
-import { createMap } from './mapLoader.js';
-import { accuracyCircle, personMarker } from './markers.js';
+import { LIVE, MAP } from '../constants/config.js?v=19';
+import { getJson } from '../net/http.js?v=19';
+import { createMap } from './mapLoader.js?v=19';
+import { accuracyCircle, personMarker } from './markers.js?v=19';
 
 function whenVisible(element, action) {
   const observer = new IntersectionObserver((entries) => {

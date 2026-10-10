@@ -1,0 +1,86 @@
+/** @Test.View.Presentation — search and shell output boundaries */
+module View.PresentationTest
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Test as Test
+import Constants.App as App
+import Domain.Catalog as Catalog
+import Domain.Event as Event
+import Domain.Locale as Locale
+import Domain.Search as Search
+import View.Components.Hero as Hero
+import View.Components.Search as Controls
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Pages.Auth as Auth
+import View.Pages.Map as MapPage
+import View.Pages.Search as SearchPage
+import View.Seo as Seo
+
+/// A visitor without a session.
+fn visitor(locale: Locale.Locale, path: Str) -> Frame.Frame {
+  Frame.Frame{locale: locale, siteUrl: "http://localhost:8080", path: path, query: "", member: None, formToken: "", consent: None, flash: "", nowMillis: 0}
+}
+
+/// Runs rendered-output regressions without database calls.
+fn main() -> Int {
+  let en = visitor(Locale.En, "/")
+  let es = visitor(Locale.Es, "/")
+  let catalog = Catalog.Catalog{categories: [], municipalities: []}
+  let filters = Search.Filters{..Search.everything(), query: "<script>bad</script>", category: "cultura", freeOnly: true}
+  let english = Html.render(&Controls.pill(&en, &catalog, &filters).html())
+  let spanish = Html.render(&Controls.pill(&es, &catalog, &Search.everything()).html())
+  let meta = Seo.meta("Home", "Description", "/", true)
+  let home = Html.render(&Layout.page(&en, &meta, Layout.Explore, H.div().says("Home")))
+  let failure = Html.render(&Layout.page(&en, &meta, Layout.Elsewhere, H.div().says("Failure")))
+  let results = Html.render(&Layout.page(&visitor(Locale.En, "/search"), &meta, Layout.Explore, H.div().says("Results")))
+  let town = Catalog.Municipality{name: "Ponce", slug: "ponce", region: "sur", lat: 18.011, lng: -66.614}
+  let narrowed = Search.Filters{..Search.everything(), municipality: "ponce", category: "musica", query: "salsa", freeOnly: true, window: Search.Weekend}
+  let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}))
+  let hero = Html.render(&Hero.render(&es, &catalog).html())
+  let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let map = Html.render(&MapPage.render(&en, &[], false, false))
+  let checks = Test.suite("Presentation", &[
+      Test.equals("auth header retains curved branding", &login.contains("/assets/brand/cotorra-mark.svg"), &true),
+      Test.equals("auth form has no duplicate brand", &login.contains("auth-brand"), &false),
+      Test.equals("auth uses the official Google asset", &login.contains("/assets/brand/google-mark.svg"), &true),
+      Test.equals("auth keeps email/password fields", &login.contains("autocomplete=\"current-password\""), &true),
+      Test.equals("auth retains the return path", &login.contains("value=\"/activity\""), &true),
+      Test.equals("text searches keep default relevance ordering", &english.contains("name=\"sort\" value=\"\""), &true),
+      Test.equals("search retains the active category", &english.contains("name=\"category\" value=\"cultura\""), &true),
+      Test.equals("search retains free-only", &english.contains("name=\"free\" value=\"1\""), &true),
+      Test.equals("search exposes translated picker labels", &spanish.contains("Buscar un pueblo"), &true),
+      Test.equals("picker stylesheet is versioned", &home.contains("/assets/css/search.css?v=" + App.ASSET_VERSION), &true),
+      Test.equals("footer exposes filtered free discovery", &home.contains("href=\"/search?free=1\""), &true),
+      Test.equals("footer exposes Puerto Rico towns", &home.contains("href=\"/pueblo/rio-grande\""), &true),
+      Test.equals("footer exposes account recovery", &home.contains("href=\"/recover\""), &true),
+      Test.equals("footer credits real photography", &home.contains("/assets/img/credits.html"), &true),
+      Test.equals("hero uses a real Luquillo photograph", &hero.contains("luquillo-photo.webp"), &true),
+      Test.equals("footer has cookie preferences", &home.contains("Cookie preferences"), &true),
+      Test.equals("obsolete AI notice is removed", &home.contains("AI-generated images"), &false),
+      Test.equals("map sheet has a named keyboard button", &map.contains("Expand or collapse the activity list"), &true),
+      Test.equals("map sheet exposes its controlled list", &map.contains("aria-controls=\"map-list\""), &true),
+      Test.equals("carousel renders four dot controls", &hero.split("data-slide=").length(), &5),
+      Test.equals("carousel starts with Luquillo", &hero.contains("Luquillo, Puerto Rico"), &true),
+      Test.equals("carousel has a translated pause control", &hero.contains("Pausar imágenes"), &true),
+      Test.equals("map link retains the landing municipality", &listing.contains("pueblo=ponce"), &true),
+      Test.equals("map link retains category", &listing.contains("category=musica"), &true),
+      Test.equals("map link retains free-only", &listing.contains("free=1"), &true),
+      Test.equals("map link retains the date window", &listing.contains("when=weekend"), &true),
+      Test.equals("home has its overlay header", &home.contains("app-home"), &true),
+      Test.equals("home failures keep standard navigation", &failure.contains("app-home"), &false),
+      Test.equals("results keep standard navigation", &results.contains("app-home"), &false),
+      Test.equals("search submits to the existing endpoint", &english.contains("action=\"/search\""), &true),
+      Test.equals("search remains a GET form", &english.contains("method=\"get\""), &true),
+      Test.equals("query retains its field name", &english.contains("name=\"q\""), &true),
+      Test.equals("municipality retains its field name", &english.contains("name=\"pueblo\""), &true),
+      Test.equals("date retains its field name", &english.contains("name=\"when\""), &true),
+      Test.equals("query text is escaped", &english.contains("<script>bad</script>"), &false),
+      Test.equals("mascot is present", &english.contains("cotorra-search.svg"), &true),
+      Test.equals("Spanish search remains translated", &spanish.contains("Dónde"), &true),
+      Test.equals("local refresh styles are versioned", &home.contains("/assets/css/home.css?v=" + App.ASSET_VERSION), &true)
+    ])
+  Test.report(&Test.run(&checks))
+}

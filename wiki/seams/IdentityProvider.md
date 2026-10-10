@@ -11,7 +11,7 @@ tags: [seam, critical]
 # IdentityProvider (seam)
 
 Email and password, Google with PKCE, refresh, recovery, password change, sign-out, and
-administrative deletion, through [[src/Api/Supabase/Auth]] and [[src/Api/Supabase/Admin]]. The
+administrative deletion, through [[src/Api/Supabase/Identity]] and [[src/Api/Supabase/Identity]]. The
 server never sees a Google credential.
 
 ## Referenced by

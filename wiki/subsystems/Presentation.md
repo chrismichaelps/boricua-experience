@@ -13,3 +13,11 @@ Server-rendered pages in Spanish (default) or English, an app bar and a bottom t
 ## Referenced by
 
 [[subsystems/_MOC]] · [[grammar/styles]] · [[grammar/browser]]
+
+- [[src/Public/Styles]] · [[src/Public/Brand]] · [[src/Public/ServiceWorker]] — homepage and offline shell.
+
+- [[src/View/Components/Footer]] — branded app navigation and legal footer.
+
+- [[src/Public/SearchPickers]] · [[src/Public/SearchStyles]] — progressive search selectors.
+
+- [[src/Public/Motion]] · [[src/Public/MotionVendor]] · [[src/Public/ExperienceStyles]] · [[src/Public/Covers]] — native feedback and design refinement.

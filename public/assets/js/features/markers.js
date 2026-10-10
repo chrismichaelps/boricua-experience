@@ -1,7 +1,7 @@
 import { create } from '../utils/dom.js';
 
 export function priceMarker(maplibregl, pin, onSelect) {
-  const element = create('button', { type: 'button', class: 'price-marker', 'aria-label': `${pin.title}, ${pin.price}` }, pin.price);
+  const element = create('button', { type: 'button', class: 'price-marker', 'data-count': '1', 'aria-label': `${pin.title}, ${pin.price}` }, pin.price);
   element.addEventListener('click', (event) => {
     event.stopPropagation();
     onSelect(pin.slug);
@@ -32,4 +32,12 @@ export function accuracyCircle(center, meters, steps = 48) {
     coordinates.push([center.lng + lngRadius * Math.cos(angle), center.lat + latRadius * Math.sin(angle)]);
   }
   return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coordinates] }, properties: {} };
+}
+
+export function clusterMarker(maplibregl, pins, label, onSelect) {
+  const element = create('button', { type: 'button', class: 'map-cluster', 'data-count': String(pins.length), 'aria-label': label }, String(pins.length));
+  element.addEventListener('click', (event) => { event.stopPropagation(); onSelect(); });
+  const center = pins.reduce((sum, pin) => [sum[0] + pin.lng / pins.length, sum[1] + pin.lat / pins.length], [0, 0]);
+  const marker = new maplibregl.Marker({ element }).setLngLat(center);
+  return { marker, element };
 }

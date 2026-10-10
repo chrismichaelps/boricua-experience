@@ -31,3 +31,5 @@ map, install prompts, optimistic toggles, and instant search suggestions.
 ## Referenced by
 
 [[grammar/_MOC]] · [[subsystems/Location]] · [[subsystems/Presentation]]
+
+Pinned upstream animation code may live under `vendor/`; feature modules may import it directly. Optional Motion loading must not prevent existing feature startup if it fails.

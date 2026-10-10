@@ -1,10 +1,13 @@
-import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js';
-import { message } from '../constants/messages.js';
-import { postJson } from '../net/http.js';
+import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js?v=19';
+import { message } from '../constants/messages.js?v=19';
+import { postJson } from '../net/http.js?v=19';
 import { distanceM, readingOf } from '../utils/geo.js';
 import { toast } from './toast.js';
 
 const listeners = new Set();
+const statuses = new Set();
+const status = (value) => { for (const listener of statuses) listener(value); };
+let readingAt = 0;
 let watchId = null;
 let sharing = false;
 let lastSent = null;
@@ -32,29 +35,44 @@ async function maybeSend(reading) {
 
 function onPosition(position) {
   lastReading = readingOf(position);
+  readingAt = Date.now();
+  status('ready');
   for (const listener of listeners) listener(lastReading);
   maybeSend(lastReading);
 }
 
 function onError(error) {
   toast(message(error.code === 1 ? 'locationDenied' : 'locationUnavailable'));
-  if (error.code === 1) stopWatching();
+  stopWatching();
+  status('error');
+  if (sharing) stopSharing();
 }
 
 export function onReading(listener) {
   listeners.add(listener);
-  if (lastReading) listener(lastReading);
+  if (lastReading && Date.now() - readingAt <= LIVE.watch.maximumAge) listener(lastReading);
   return () => listeners.delete(listener);
 }
 
+export function onStatus(listener) {
+  statuses.add(listener);
+  return () => statuses.delete(listener);
+}
+
 export function startWatching() {
-  if (watchId !== null || !navigator.geolocation) return;
-  watchId = navigator.geolocation.watchPosition(onPosition, onError, LIVE.watch);
+  if (document.visibilityState === 'hidden' || watchId !== null) return;
+  if (!navigator.geolocation) { onError({ code: 2 }); return; }
+  status('waiting');
+  try { watchId = navigator.geolocation.watchPosition(onPosition, onError, LIVE.watch); }
+  catch { onError({ code: 2 }); }
 }
 
 export function stopWatching() {
   if (watchId !== null) navigator.geolocation.clearWatch(watchId);
   watchId = null;
+  lastReading = null;
+  readingAt = 0;
+  status('stopped');
 }
 
 export function startSharing() {
@@ -63,11 +81,12 @@ export function startSharing() {
   remember(true);
   badge(true);
   startWatching();
-  if (lastReading) maybeSend(lastReading);
+  if (lastReading && Date.now() - readingAt <= LIVE.watch.maximumAge) maybeSend(lastReading);
 }
 
 export async function stopSharing() {
   sharing = false;
+  stopWatching();
   remember(false);
   badge(false);
   try { await postJson(ENDPOINTS.locationStop, {}); } catch { /* the server expires stale positions */ }
@@ -80,10 +99,12 @@ export function resumeIfShared() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && sharing) {
-    postJson(ENDPOINTS.locationStop, {}, true).catch(() => {});
+  if (document.visibilityState === 'hidden') {
+    if (sharing) postJson(ENDPOINTS.locationStop, {}, true).catch(() => {});
     stopWatching();
   } else if (document.visibilityState === 'visible' && sharing) {
     startWatching();
   }
 });
+
+window.addEventListener('pagehide', stopWatching);

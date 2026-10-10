@@ -13,4 +13,4 @@ aliases: [Host, Anfitrión]
 
 ## Referenced by
 
-[[domain/_MOC]] · [[src/View/Components/OrganizerCard]] · [[src/Domain/Profile]]
+[[domain/_MOC]] · [[src/View/Components/People]] · [[src/Domain/Profile]]

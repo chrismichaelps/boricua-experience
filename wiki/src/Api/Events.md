@@ -66,3 +66,11 @@ MEDIUM: one typed function per database function; the argument names and decodin
 ## Referenced by
 
 [[src/_MOC]]
+
+## Native / spatial follow-up Grill Log
+
+- **Q:** What is the resolved mobile and scaling contract?
+  **A:** Add inView calling map_events with filtered dates, text, price, category/town and validated bounds; decode the same bounded Event.Page. Existing search calls unchanged. Resolved.
+
+## Reviewed refinement
+Map results preserve the server limited flag and show a bilingual zoom-in notice. Reaction forms lock their shared group; horizontal handle drags suppress the ensuing click. Existing public coordinate visibility remains unchanged. Grill Log: reviewed edge contracts resolved.

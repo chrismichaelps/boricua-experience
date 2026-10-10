@@ -7,6 +7,7 @@ import Constants.Supabase as Supabase
 import Domain.Draft as Draft
 import Domain.Event as Event
 import Domain.Problem as Problem
+import Domain.Search as Search
 
 /** @Api.Events.SearchArgs — the arguments `search_events` reads */
 export type SearchArgs = {
@@ -51,13 +52,25 @@ export fn search(gateway: &Gateway.Gateway, args: &SearchArgs, token: Option[Str
     ], token, Gateway.Read)
 }
 
+/// A bounded page of public cards inside the camera's rectangle.
+export fn inView(gateway: &Gateway.Gateway, args: &SearchArgs, box: &Search.Viewport) -> Result[Search.Pins, Problem.Problem] {
+  Gateway.query(gateway, Supabase.MAP_EVENTS, &[
+      ("p_south", Gateway.fraction(Some(box.south))), ("p_west", Gateway.fraction(Some(box.west))),
+      ("p_north", Gateway.fraction(Some(box.north))), ("p_east", Gateway.fraction(Some(box.east))),
+      ("p_query", Gateway.textOrNull(args.query)), ("p_category", Gateway.textOrNull(args.category)),
+      ("p_municipality", Gateway.textOrNull(args.municipality)), ("p_from", Gateway.textOrNull(args.from)),
+      ("p_to", Gateway.textOrNull(args.to)), ("p_max_price_cents", Gateway.whole(args.maxPriceCents)),
+      ("p_limit", Json.Number(args.limit))
+    ], None, Gateway.Read)
+}
+
 /// Recommendations for the viewer, nearer ones first when a position is known.
 export fn recommended(gateway: &Gateway.Gateway, lat: Option[Float64], lng: Option[Float64], limit: Int, token: Option[Str]) -> Result[Array[Event.Card], Problem.Problem] {
   let found: Recommended = Gateway.query(gateway, Supabase.RECOMMENDED_EVENTS, &[
-        ("p_lat", Gateway.fraction(lat)),
-        ("p_lng", Gateway.fraction(lng)),
-        ("p_limit", Json.Number(limit))
-      ], token, Gateway.Read) ?
+      ("p_lat", Gateway.fraction(lat)),
+      ("p_lng", Gateway.fraction(lng)),
+      ("p_limit", Json.Number(limit))
+    ], token, Gateway.Read) ?
   Ok(found.items)
 }
 

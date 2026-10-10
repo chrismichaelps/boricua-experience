@@ -1,14 +1,15 @@
 /** @View.Pages.Home.Front — search first, then rails of what is happening */
 module View.Pages.Home
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Constants.Hero as Scenes
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
-import Domain.Search as Search
 import Services.Discovery as Discovery
 import View.Components.EventCard as EventCard
+import View.Components.Hero as Hero
 import View.Components.Icons as Icons
 import View.Components.Search as SearchControls
 import View.Frame as Frame
@@ -20,16 +21,10 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
   let meta = Seo.Meta{..Seo.meta(Frame.t(frame, "home.title"), Frame.t(frame, "home.description"), Routes.HOME, true), structured: [Seo.website(frame.siteUrl)]}
   Layout.page(frame, &meta, Layout.Explore, H.div().class("home").holding([
         H.section().class("hero").holding([
-            H.div().class("hero-frame").holding([
-                H.div().class("hero-copy").holding([
-                    H.h1().says(Frame.t(frame, "home.headline")),
-                    H.p().says(Frame.t(frame, "home.subhead"))
-                  ]),
-                SearchControls.pill(frame, catalog, &Search.everything())
-              ])
+            Hero.render(frame, catalog)
           ]),
         SearchControls.chips(frame, catalog, ""),
-        EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, ""),
+        EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, Routes.SEARCH),
         EventCard.rail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
         nearTile(frame),
         EventCard.rail(frame, "rail-soon", Frame.t(frame, "home.soon"), &home.soon, Routes.SEARCH),
@@ -65,6 +60,14 @@ fn createTile(frame: &Frame.Frame) -> H.Node {
 fn directory(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
   H.section().class("directory").at("aria-labelledby", "directory-title").holding([
       H.h2().class("section-title").id("directory-title").says(Frame.t(frame, "home.towns")),
-      H.ul().class("directory-list").holding(catalog.municipalities.map(|town: Catalog.Municipality| H.li().holding([H.a().href(Routes.TOWN_PREFIX + town.slug).says(town.name)])))
+      H.p().class("directory-intro").says(Frame.t(frame, "home.towns_body")),
+      H.div().class("destination-grid").holding(Scenes.SLIDES.map(|scene: (Str, Str, Str)| H.a().class("destination-card").href(Routes.TOWN_PREFIX + scene[2]).holding([
+              H.img().src(scene[0]).alt("").at("loading", "lazy").at("width", "640").at("height", "480"),
+              H.span().class("destination-copy").holding([H.strong().says(scene[1]), H.span().holding([H.span().says(Frame.t(frame, "home.discover_town")), Icons.sized("chevron-right", 18)])])
+            ]))),
+      H.details().class("town-directory").holding([
+          H.summary().says(Frame.t(frame, "home.all_towns")),
+          H.ul().class("directory-list").holding(catalog.municipalities.map(|town: Catalog.Municipality| H.li().holding([H.a().href(Routes.TOWN_PREFIX + town.slug).says(town.name)])))
+        ])
     ])
 }

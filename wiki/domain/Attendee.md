@@ -14,4 +14,4 @@ aliases: [Participant, Going]
 
 ## Referenced by
 
-[[domain/_MOC]] · [[src/View/Components/Attendees]] · [[src/Domain/Event]]
+[[domain/_MOC]] · [[src/View/Components/People]] · [[src/Domain/Event]]

@@ -1,0 +1,70 @@
+---
+type: module
+path: "@root/src/View/Pages/Map.pudu"
+fidelity: Active
+grammar: "[[grammar/pudu]]"
+layer: View
+depth_status: MEDIUM
+tags: [module, view, medium]
+---
+
+# View.Pages.Map
+
+> /** @View.Pages.Map.Explorer — the map of what is happening, with live location */
+
+## Purpose
+
+Full-screen map, near-me and live switches, the pin data as inline JSON, and the bottom sheet of cards.
+
+## Interface
+
+### Signatures
+
+```pudu
+export fn pinsValue(frame, cards) -> Json.Json
+export fn render(frame, cards, startNear) -> Html.Html
+```
+
+### Linkage
+
+- **Requires:** `Std.Html.Build`, [[src/View/Frame]], [[src/I18n/Translate]], Domain types.
+- **Consumed by:** Web handlers and other views.
+
+## Algorithm
+
+Builds `Html` values with the trait chain; text from requests or the database goes through `says`, never `raw`.
+
+## Negative Logic (Prohibited Paths)
+
+- ❌ No service calls: a view renders what it is given.
+- ❌ No inline scripts; behaviour attaches by `data-feature`.
+
+## Edge Cases
+
+- Every interactive control has a visible label or `aria-label`; touch targets are at least 44 px.
+
+## Depth
+
+MEDIUM.
+
+## Grill Log
+
+- **Q:** Templates or values?
+  **A:** Values: a page is an `Html` tree, so escaping cannot be forgotten and pages are testable with fixtures.
+
+## Referenced by
+
+[[src/_MOC]]
+
+- **Q:** Why replace the decorative drag handle?
+  **A:** A real labeled toggle exposes the sheet action to keyboard and screen-reader users, with expanded state and controlled list id.
+
+Map root carries the translated cluster label template; JS fills its count without injecting HTML.
+
+## Native / spatial follow-up Grill Log
+
+- **Q:** What is the resolved mobile and scaling contract?
+  **A:** Initial unfiltered map fits island bounds; filtered maps may fit matching pins. This prevents the first dense 60-result batch shrinking the camera to one town. Resolved.
+
+## Reviewed refinement
+Map results preserve the server limited flag and show a bilingual zoom-in notice. Reaction forms lock their shared group; horizontal handle drags suppress the ensuing click. Existing public coordinate visibility remains unchanged. Grill Log: reviewed edge contracts resolved.

@@ -1,8 +1,9 @@
 /** @View.Components.Search.Controls — the search pill, category chips, and the filter bar */
 module View.Components.Search
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.App as App
 import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
@@ -49,7 +50,13 @@ fn windowSelect(frame: &Frame.Frame, chosen: &Search.When, id: Str) -> H.Node {
 
 /// The white search pill: what, where, when, and the round blue submit.
 export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters) -> H.Node {
-  H.form().class("search-pill").action(Routes.SEARCH).method("get").role("search").label(Frame.t(frame, "search.label")).holding([
+  H.form().class("search-pill").action(Routes.SEARCH).method("get").role("search").label(Frame.t(frame, "search.label")).data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).holding([
+      H.input().kind("hidden").name("category").value(filters.category),
+      H.input().kind("hidden").name("free").value(if filters.freeOnly { "1" } else { "" }),
+      H.input().kind("hidden").name("sort").value(if filters.sort == Search.Soon { "" } else { Search.sortName(&filters.sort) }),
+      H.input().kind("hidden").name("lat").value(match filters.lat { case Some(value) => show(value) case None => "" }),
+      H.input().kind("hidden").name("lng").value(match filters.lng { case Some(value) => show(value) case None => "" }),
+      H.img().class("search-cotorra").src("/assets/brand/cotorra-search.svg?v=" + App.ASSET_VERSION).alt("").at("width", "112").at("height", "90"),
       H.div().class("pill-field pill-what").holding([
           H.labelFor().at("for", "pill-q").says(Frame.t(frame, "search.what")),
           H.input().kind("search").name("q").id("pill-q").value(filters.query).placeholder(Frame.t(frame, "search.what_placeholder")).at("maxlength", show(Limits.QUERY_MAX)).at("autocomplete", "off").data("feature", "suggest").at("aria-autocomplete", "list").at("aria-controls", "suggestions")
@@ -93,7 +100,7 @@ export fn filterBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Se
   }
   var free = H.input().kind("checkbox").name("free").id("filter-free").value("1")
   if filters.freeOnly { free = free.checked() }
-  H.form().class("filter-bar").action(Routes.SEARCH).method("get").data("feature", "filters").holding([
+  H.form().class("filter-bar").action(Routes.SEARCH).method("get").data("feature", "filters").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).holding([
       H.input().kind("hidden").name("q").value(filters.query),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-when").class("sr-only").says(Frame.t(frame, "search.when")), windowSelect(frame, &filters.window, "filter-when")]),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-category").class("sr-only").says(Frame.t(frame, "search.category")), categorySelect]),

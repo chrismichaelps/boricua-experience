@@ -1,7 +1,6 @@
 /** @App.Messages.Vocabulary — every request the application answers */
 module App.Messages
 
-import PuduLangMediator.Request as Request
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
 import Domain.Credentials as Credentials
@@ -14,6 +13,7 @@ import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Search as Search
 import Domain.Session as Session
+import PuduLangMediator.Request as Request
 import Services.Admin as AdminService
 import Services.Auth.Accounts as Accounts
 import Services.Discovery as Discovery
@@ -67,7 +67,7 @@ export type Kinds = {
   home: Request.Kind[Visit[Place], Discovery.Home, Problem.Problem],
   search: Request.Kind[Visit[Search.Filters], Event.Page, Problem.Problem],
   suggest: Request.Kind[Str, Array[Event.Card], Problem.Problem],
-  pins: Request.Kind[Place, Array[Event.Card], Problem.Problem],
+  pins: Request.Kind[Search.Filters, Search.Pins, Problem.Problem],
   catalog: Request.Kind[(), Catalog.Catalog, Problem.Problem],
   event: Request.Kind[Visit[Str], Event.Detail, Problem.Problem],
   attendees: Request.Kind[Visit[Str], Event.Attendees, Problem.Problem],

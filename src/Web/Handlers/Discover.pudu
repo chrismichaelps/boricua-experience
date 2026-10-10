@@ -6,6 +6,8 @@ import Std.Http.Server.Route as Route
 import Std.Json as Json
 import Std.Option as Option
 import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.App as App
 import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
@@ -19,7 +21,6 @@ import View.Pages.Search as SearchPage
 import Web.Context as Context
 import Web.Respond as Respond
 import Web.Serve as Serve
-import App.Messages as Messages
 
 /// The filters a query string describes.
 export fn filtersOf(visitor: &Context.Visitor) -> Search.Filters {
@@ -39,6 +40,7 @@ export fn filtersOf(visitor: &Context.Visitor) -> Search.Filters {
     window: Search.windowFrom(read("when")),
     freeOnly: read("free") == "1",
     maxPriceCents: None,
+    viewport: None,
     lat: if located { lat } else { None },
     lng: if located { lng } else { None },
     radiusM: if located { Some(Limits.NEARBY_RADIUS_M * 2) } else { None },
@@ -57,6 +59,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.TOWN, Serve.page(app, |visitor: Context.Visitor| landingPage(&held, &visitor, false))),
     Route.get(Routes.MAP, Serve.page(app, |visitor: Context.Visitor| map(&held, &visitor))),
     Route.get(Routes.API_SUGGEST, Serve.api(app, |visitor: Context.Visitor| suggest(&held, &visitor))),
+    Route.get(Routes.API_MAP, Serve.api(app, |visitor: Context.Visitor| viewport(&held, &visitor))),
     Route.get(Routes.API_NEARBY, Serve.api(app, |visitor: Context.Visitor| nearby(&held, &visitor)))
   ]
 }
@@ -121,9 +124,9 @@ fn landingPage(app: &Assembly.App, visitor: &Context.Visitor, byCategory: Bool) 
 
 /// The map, with pins for the filters' position or the next events.
 fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
-  let filters = filtersOf(visitor)
-  match Serve.ask(app, &app.kinds.pins, Messages.Place{lat: filters.lat, lng: filters.lng, radiusM: filters.radiusM}) {
-    case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards, Serve.query(visitor, "near") == "1"))
+  let filters = Search.Filters{..filtersOf(visitor), viewport: Some(Search.Viewport{south: App.BOUNDS_SOUTH, west: App.BOUNDS_WEST, north: App.BOUNDS_NORTH, east: App.BOUNDS_EAST})}
+  match Serve.ask(app, &app.kinds.pins, filters) {
+    case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards.items, cards.limited, Serve.query(visitor, "near") == "1"))
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
@@ -132,10 +135,10 @@ fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 fn suggest(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.suggest, Serve.query(visitor, "q")) {
     case Ok(cards) => Http.Response{..Respond.json(200, &Json.list(&cards.map(|card: Event.Card| Json.object(&[
-                  ("title", Json.Text(card.title)),
-                  ("place", Json.Text(card.municipality.name)),
-                  ("href", Json.Text(Routes.EVENT_PREFIX + card.slug))
-                ])))), headers: [("content-type", "application/json; charset=utf-8"), ("cache-control", "public, max-age=0, s-maxage=60")]}
+                ("title", Json.Text(card.title)),
+                ("place", Json.Text(card.municipality.name)),
+                ("href", Json.Text(Routes.EVENT_PREFIX + card.slug))
+              ])))), headers: [("content-type", "application/json; charset=utf-8"), ("cache-control", "public, max-age=0, s-maxage=60")] }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
@@ -144,8 +147,28 @@ fn suggest(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 fn nearby(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   let filters = filtersOf(visitor)
   if filters.lat == None { return Respond.problem(app, visitor, &Problem.Refused("invalid_coordinates")) }
-  match Serve.ask(app, &app.kinds.pins, Messages.Place{lat: filters.lat, lng: filters.lng, radiusM: Some(Option.unwrapOr(Serve.query(visitor, "radius").toInt(), Limits.NEARBY_RADIUS_M))}) {
-    case Ok(cards) => Respond.json(200, &MapPage.pinsValue(&Context.frame(app, visitor), &cards))
+  let requested = Option.unwrapOr(Serve.query(visitor, "radius").toInt(), Limits.NEARBY_RADIUS_M)
+  let radius = if requested <= 0 { Limits.NEARBY_RADIUS_M } else if requested > Limits.RADIUS_MAX_M { Limits.RADIUS_MAX_M } else { requested }
+  match Serve.ask(app, &app.kinds.pins, Search.Filters{..filters, sort: Search.Near, radiusM: Some(radius)}) {
+    case Ok(cards) => Respond.json(200, &MapPage.pinsValue(&Context.frame(app, visitor), &cards.items))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Validated camera reads never load an unbounded catalogue.
+fn viewport(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let read = |name: Str| Geo.parseDegrees(Serve.query(visitor, name))
+  let box = match (read("south"), read("west"), read("north"), read("east")) {
+    case (Some(s), Some(w), Some(n), Some(e)) => {
+      if !(s >= -85.0 && s <= 85.0 && n >= -85.0 && n <= 85.0 && w >= -180.0 && w <= 180.0 && e >= -180.0 && e <= 180.0 && s < n && w < e) { return Respond.problem(app, visitor, &Problem.Refused("invalid_coordinates")) }
+      Search.Viewport{south: s, west: w, north: n, east: e}
+    }
+    case _ => { return Respond.problem(app, visitor, &Problem.Refused("invalid_coordinates")) }
+  }
+  if box.north < App.BOUNDS_SOUTH || box.south > App.BOUNDS_NORTH || box.east < App.BOUNDS_WEST || box.west > App.BOUNDS_EAST { return Respond.json(200, &Json.object(&[("items", Json.list(&[])), ("limited", Json.Boolean(false))])) }
+  let filters = Search.Filters{..filtersOf(visitor), viewport: Some(box), after: ""}
+  match Serve.ask(app, &app.kinds.pins, filters) {
+    case Ok(cards) => Respond.json(200, &Json.object(&[("items", MapPage.pinsValue(&Context.frame(app, visitor), &cards.items)), ("limited", Json.Boolean(cards.limited))]))
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

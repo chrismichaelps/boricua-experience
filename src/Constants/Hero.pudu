@@ -1,0 +1,10 @@
+/** @Constants.Hero.Scenes — local hero images and their discovery destinations */
+module Constants.Hero
+
+/// Image URL, location caption, and municipality slug for each scene.
+export const SLIDES: Array[(Str, Str, Str)] = [
+  ("/assets/img/luquillo-photo.webp", "Luquillo, Puerto Rico", "luquillo"),
+  ("/assets/img/san-juan-photo.webp", "Viejo San Juan, Puerto Rico", "san-juan"),
+  ("/assets/img/el-yunque-photo.webp", "El Yunque, Puerto Rico", "rio-grande"),
+  ("/assets/img/culebra-photo.webp", "Culebra, Puerto Rico", "culebra")
+]

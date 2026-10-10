@@ -2,6 +2,7 @@
 module Constants.Supabase
 
 /// Database functions, called at `/rest/v1/rpc/<name>`.
+export const MAP_EVENTS: Str = "map_events"
 export const SEARCH_EVENTS: Str = "search_events"
 export const RECOMMENDED_EVENTS: Str = "recommended_events"
 export const EVENTS_NEAR: Str = "events_near"

@@ -1,11 +1,20 @@
 /** @Domain.Search.Filters — what a visitor asked a listing for */
 module Domain.Search
 
+import Std.Json as Json
+import Domain.Event as Event
+
+/** @Domain.Search.Pins — bounded camera results with explicit truncation */
+export type Pins = { items: Array[Event.Card], limited: Bool } derives Json.Decode
+
 /** @Domain.Search.Sort — the order of a listing */
 export type Sort = Soon | Near | Relevant
 
 /** @Domain.Search.When — a date window chosen from presets */
 export type When = Anytime | Today | Tomorrow | Weekend | Week | Month
+
+/** @Domain.Search.Viewport — the camera rectangle in decimal degrees */
+export type Viewport = { south: Float64, west: Float64, north: Float64, east: Float64 }
 
 /** @Domain.Search.Filters — every filter of a listing, empty when unused */
 export type Filters = {
@@ -18,6 +27,7 @@ export type Filters = {
   lat: Option[Float64],
   lng: Option[Float64],
   radiusM: Option[Int],
+  viewport: Option[Viewport],
   sort: Sort,
   after: Str
 }
@@ -34,6 +44,7 @@ export fn everything() -> Filters {
     lat: None,
     lng: None,
     radiusM: None,
+    viewport: None,
     sort: Soon,
     after: ""
   }

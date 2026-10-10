@@ -29,7 +29,7 @@ export type Participant = { displayName, lat, lng, accuracyM, recordedAt }
 ### Linkage
 
 - **Requires:** `Std.Json`.
-- **Consumed by:** [[src/Services/Location]], [[src/Web/Handlers/Api]].
+- **Consumed by:** [[src/Services/Location]], [[src/Web/Handlers/Location]].
 
 ## Algorithm
 

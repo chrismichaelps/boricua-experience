@@ -1,0 +1,42 @@
+/** @View.Components.Footer.Navigation — island discovery and community links */
+module View.Components.Footer
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.App as App
+import Constants.Routes as Routes
+import View.Frame as Frame
+
+/// A translated group of working application destinations.
+fn group(frame: &Frame.Frame, title: Str, links: Array[(Str, Str)]) -> H.Node {
+  H.div().class("footer-column").holding([
+      H.h2().says(Frame.t(frame, title)),
+      H.ul().holding(links.map(|link: (Str, Str)| H.li().holding([H.a().href(link[0]).says(Frame.t(frame, link[1]))])))
+    ])
+}
+
+/// The shared brand, app navigation, cookie preferences and photography credits.
+export fn render(frame: &Frame.Frame) -> H.Node {
+  H.footer().class("footer").holding([
+      H.div().class("footer-inner").holding([
+          H.div().class("footer-top").holding([
+              H.a().class("footer-brand brand").href(Routes.HOME).label(App.SITE_NAME).holding([
+                  H.img().src("/assets/brand/cotorra-mark.svg?v=" + App.ASSET_VERSION).alt("").at("width", "44").at("height", "44"),
+                  H.span().class("brand-name").holding([H.strong().says("boricua"), H.span().says("experience")])
+                ]),
+              H.p().class("footer-tagline").says(Frame.t(frame, "footer.tagline"))
+            ]),
+          H.nav().class("footer-grid").label(Frame.t(frame, "footer.navigation")).holding([
+              group(frame, "footer.discover", [(Routes.SEARCH, "nav.explore"), (Routes.SEARCH + "?when=weekend", "home.weekend"), (Routes.SEARCH + "?free=1", "footer.free"), (Routes.MAP, "nav.map")]),
+              group(frame, "home.towns", [(Routes.TOWN_PREFIX + "san-juan", "footer.san_juan"), (Routes.TOWN_PREFIX + "luquillo", "footer.luquillo"), (Routes.TOWN_PREFIX + "rio-grande", "footer.rio_grande"), (Routes.TOWN_PREFIX + "culebra", "footer.culebra")]),
+              group(frame, "footer.community", [(Routes.CREATE, "nav.create"), (Routes.ACTIVITY, "nav.activity"), (Routes.ACCOUNT, "nav.profile"), (Routes.ABOUT, "footer.about")]),
+              group(frame, "footer.legal", [(Routes.TERMS, "footer.terms"), (Routes.PRIVACY, "footer.privacy"), (Routes.COOKIES, "footer.cookies"), (Routes.RECOVER, "footer.recover")])
+            ]),
+          H.div().class("footer-bottom").holding([
+              H.a().class("footer-preferences").href(Routes.COOKIES).says(Frame.t(frame, "footer.preferences")),
+              H.p().class("footer-note").says(Frame.t(frame, "footer.adults")),
+              H.a().class("footer-credits").href("/assets/img/credits.html").says(Frame.t(frame, "footer.photography"))
+            ])
+        ])
+    ])
+}

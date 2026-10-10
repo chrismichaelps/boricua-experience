@@ -70,6 +70,7 @@ export const ROBOTS: Str = "/robots.txt"
 export const MANIFEST: Str = "/manifest.webmanifest"
 export const HEALTH: Str = "/health"
 /// JSON endpoints read by the browser scripts.
+export const API_MAP: Str = "/api/map"
 export const API_NEARBY: Str = "/api/nearby"
 export const API_SUGGEST: Str = "/api/suggest"
 export const API_LOCATION: Str = "/api/location"

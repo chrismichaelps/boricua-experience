@@ -91,7 +91,7 @@ export fn home(runtime: &Runtime.Runtime, lat: Option[Float64], lng: Option[Floa
         || { let _set = Sync.set(&soon, Result.map(rail(everything), |page: Event.Page| page.items)) },
         || { let _set = Sync.set(&weekend, Result.map(rail(Search.Filters{..everything, window: Search.Weekend}), |page: Event.Page| page.items)) },
         || { let _set = Sync.set(&free, Result.map(rail(Search.Filters{..everything, freeOnly: true, window: Search.Week}), |page: Event.Page| page.items)) }
-      ])
+    ])
   if Result.isErr(&ran) { return Err(Problem.Unavailable("the home rails could not run")) }
   Ok(Home {
       recommended: read(&recommended) ?,
@@ -117,11 +117,14 @@ export fn suggest(runtime: &Runtime.Runtime, query: Str) -> Result[Array[Event.C
   Ok(page.items)
 }
 
-/// Pins for the map: nearest first around a position, or the next events island-wide.
-export fn pins(runtime: &Runtime.Runtime, lat: Option[Float64], lng: Option[Float64], radiusM: Option[Int]) -> Result[Array[Event.Card], Problem.Problem] {
-  let page = match (lat, lng) {
-    case (Some(y), Some(x)) => EventsApi.near(&runtime.gateway, y, x, Option.unwrapOr(radiusM, Limits.NEARBY_RADIUS_M), Limits.MAP_PINS) ?
-    case _ => EventsApi.search(&runtime.gateway, &argumentsFor(&Search.everything(), Limits.MAP_PINS, &Time.now()), None) ?
+/// Map pins for the same filters as a listing, up to the map's bound.
+export fn pins(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[Search.Pins, Problem.Problem] {
+  let args = argumentsFor(filters, Limits.MAP_PINS, &Time.now())
+  match filters.viewport {
+    case Some(box) => EventsApi.inView(&runtime.gateway, &args, &box)
+    case None => {
+      let page = EventsApi.search(&runtime.gateway, &args, None) ?
+      Ok(Search.Pins{items: page.items, limited: page.next != None})
+    }
   }
-  Ok(page.items)
 }

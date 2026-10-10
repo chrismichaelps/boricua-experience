@@ -2,6 +2,7 @@ export const REQUESTED_WITH = ['x-requested-with', 'boricua'];
 export const ENDPOINTS = {
   suggest: '/api/suggest',
   nearby: '/api/nearby',
+  map: '/api/map',
   location: '/api/location',
   locationStop: '/api/location/stop',
 };
@@ -11,9 +12,16 @@ export const MAP = {
   stylesheet: '/assets/vendor/maplibre-gl.css',
   center: [-66.4, 18.22],
   zoom: 8.3,
-  focusZoom: 14,
-  bounds: [[-67.6, 17.4], [-65.0, 18.8]],
+  focusZoom: 11,
+  bounds: [[-70, 12], [-62, 24]],
   pinZoom: 15,
+  viewportDelayMs: 300,
+  viewportCacheMs: 30000,
+  viewportCacheSize: 8,
+  maxRadiusM: 200000,
+  searchBounds: [[-67.5, 17.5], [-65.1, 18.7]],
+  clusterRadius: 56,
+  clusterMaxZoom: 13,
 };
 export const LIVE = {
   minIntervalMs: 15000,
@@ -24,3 +32,5 @@ export const LIVE = {
 };
 export const SUGGEST = { minLength: 2, delayMs: 180 };
 export const STORAGE = { liveKey: 'bx-live' };
+
+export const CAROUSEL = { intervalMs: 6000 };

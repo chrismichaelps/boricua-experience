@@ -1,0 +1,69 @@
+.search-pill { box-shadow: 0 8px 28px rgba(20,45,60,.09); border: 1px solid #e6eaed; isolation: isolate; }
+.search-pill .pill-field { cursor: pointer; transition: background-color .15s; border-radius: 999px; gap: 4px; }
+.search-pill .pill-field:hover, .search-pill .pill-field:focus-within { background: #f3f5f6; box-shadow: none; }
+.search-pill .pill-field label { color: #778086; font-size: 13px; font-weight: 600; letter-spacing: 0; cursor: pointer; }
+.search-pill .pill-field input, .search-pill .pill-field select { color: #182c36; font-size: 17px; line-height: 1.4; min-height: 28px; }
+.search-pill .pill-field input::placeholder { color: #92999e; }
+.picker-native { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip-path: inset(50%) !important; padding: 0 !important; border: 0 !important; }
+.picker-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-width: 0; min-height: 30px; padding: 0; border: 0; background: transparent; text-align: left; color: #182c36; font: inherit; font-size: 17px; cursor: pointer; }
+.picker-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.picker-arrow { flex: none; color: #8b9499; font-size: 17px; line-height: 1; }
+.picker-trigger:focus-visible { outline: 2px solid var(--color-ocean); outline-offset: 4px; border-radius: 6px; }
+.search-pill .pill-submit { background: #1875f0; box-shadow: 0 3px 8px rgba(24,117,240,.18); border: 4px solid white; }
+.search-pill .pill-submit:hover { background: #0763db; }
+.search-pill .suggestions { border-radius: 24px; box-shadow: 0 16px 48px rgba(20,45,60,.16); padding: 12px; text-align: left; }
+.search-pill .suggestions a { display: grid; gap: 5px; padding: 14px 18px; border-radius: 14px; }
+.search-pill .suggestions li[aria-selected="true"] a, .search-pill .suggestions a:hover { background: #f0f6fe; }
+.search-pill .suggestions strong { font-size: 16px; }
+.search-pill .suggestions span { color: #778086; font-size: 13px; }
+.filter-bar .filter { flex: none; }
+.filter-bar .picker-trigger { min-height: 44px; padding: 10px 16px; width: auto; border: 1px solid #e2e7eb; border-radius: 999px; background: white; font-size: 14px; gap: 12px; }
+.filter-bar .picker-trigger:hover { background: #f3f5f6; }
+.picker-open { overflow: hidden; }
+.search-picker { position: fixed; margin: 0; padding: 24px; border: 1px solid #e4e9ed; border-radius: 28px; color: #182c36; background: white; box-shadow: 0 20px 80px rgba(12,37,53,.22); overflow-y: auto; overscroll-behavior: contain; }
+.search-picker::backdrop { background: rgba(9,29,42,.18); }
+.picker-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.picker-title { font-size: 24px; font-weight: 800; letter-spacing: -.4px; }
+.picker-close { display: grid; place-items: center; width: 44px; height: 44px; flex: none; padding: 0; border: 0; border-radius: 50%; background: #f2f5f6; color: #243b47; font-size: 28px; cursor: pointer; }
+.picker-search { width: 100%; border: 1px solid #dde5ea; border-radius: 16px; min-height: 52px; padding: 14px 16px; margin-bottom: 16px; background: #f8fafb; font-size: 16px; }
+.picker-search:focus { outline: 2px solid var(--color-ocean); outline-offset: 1px; }
+.picker-options { display: grid; gap: 6px; }
+.picker-option { display: flex; gap: 16px; align-items: center; justify-content: space-between; text-align: left; width: 100%; min-height: 54px; border: 1px solid transparent; border-radius: 16px; padding: 14px 16px; background: #f6f8f9; color: #243b47; font-size: 16px; cursor: pointer; }
+.picker-option:hover { background: #edf3f8; }
+.picker-option[aria-pressed="true"] { background: #eef5ff; color: #156ce0; border-color: #9dc3f9; font-weight: 700; }
+.picker-option:focus-visible, .picker-close:focus-visible { outline: 2px solid var(--color-ocean); outline-offset: 2px; }
+.picker-check { color: #156ce0; opacity: 0; flex: none; }
+.picker-option[aria-pressed="true"] .picker-check { opacity: 1; }
+.picker-empty { padding: 16px 4px; color: #68777f; font-size: 15px; }
+.search-picker [hidden] { display: none !important; }
+@media (min-width: 700px) {
+  .search-pill { grid-template-columns: 1.2fr 1fr 1fr; padding: 8px; border-radius: 999px; min-height: 88px; }
+  .search-pill .pill-field { padding: 10px 24px; align-content: center; }
+  .search-pill .pill-what { grid-column: auto; border-bottom: 0; }
+  .search-pill .pill-what, .search-pill .pill-where { border-right: 1px solid #e4e8eb; }
+  .search-pill .pill-when { padding-right: 80px; }
+  .search-pill .pill-submit { width: 70px; height: 70px; top: 50%; right: 8px; bottom: auto; transform: translateY(-50%); }
+}
+@media (max-width: 699px) {
+  .search-pill { grid-template-columns: 1fr; padding: 8px; border-radius: 28px; }
+  .search-pill .pill-field { padding: 10px 18px; border-radius: 18px; min-height: 64px; }
+  .search-pill .pill-what, .search-pill .pill-where { grid-column: 1; border-right: 0; border-bottom: 1px solid #e9edef; }
+  .search-pill .pill-when { padding-right: 74px; }
+  .search-pill .pill-submit { width: 54px; height: 54px; right: 14px; bottom: 14px; top: auto; transform: none; }
+  .search-pill .pill-field input, .search-pill .picker-trigger { font-size: 16px; }
+  .search-picker { inset: auto 0 0; width: 100%; max-width: none; max-height: 84svh; padding: 24px 20px calc(24px + env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; border-bottom: 0; }
+  .search-picker::backdrop { background: rgba(9,29,42,.35); }
+  .search-top { padding-top: 64px; }
+  .app-home .hero-frame { gap: 48px; padding-top: 128px; }
+}
+@media (prefers-reduced-motion: reduce) { .search-pill .pill-field { transition: none; } }
+
+.search-pill .pill-field:has(:focus-visible) { box-shadow: inset 0 0 0 2px var(--color-ocean); }
+
+.search-pill .pill-field, .filter-bar .filter { position: relative; }
+
+.search-pill .pill-field input:focus-visible { outline: none; }
+@media (min-width: 700px) {
+  .search-pill .pill-what, .search-pill .pill-where { border-right: 0; }
+  .search-pill .pill-what::after, .search-pill .pill-where::after { content: ''; position: absolute; right: 0; top: 16px; bottom: 16px; width: 1px; background: #e4e8eb; pointer-events: none; }
+}

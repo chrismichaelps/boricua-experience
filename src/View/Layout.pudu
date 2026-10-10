@@ -1,14 +1,15 @@
 /** @View.Layout.Shell — the document every page is rendered inside */
 module View.Layout
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Locale as Locale
 import Domain.Profile as Profile
 import View.Components.Avatar as Avatar
+import View.Components.Footer as Footer
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Frame as Frame
@@ -21,11 +22,11 @@ export type Section = Explore | MapView | Create | Activity | Me | Elsewhere
 export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: H.Node) -> Html.Html {
   H.html().lang(Locale.tag(&frame.locale)).holding([
       H.head().holding(headTags(frame).concat(Seo.head(frame, meta))),
-      H.body().class(bodyClass(&section)).holding([
+      H.body().class(bodyClass(&section) + (if frame.path == Routes.HOME && section == Explore { " app-home" } else { "" })).holding([
           H.a().class("skip").href("#content").says(Frame.t(frame, "nav.skip")),
           appBar(frame, &section),
           H.main().id("content").class("shell").at("tabindex", "-1").holding([content]),
-          footer(frame),
+          Footer.render(frame),
           tabBar(frame, &section),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
@@ -54,13 +55,16 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.meta().name("mobile-web-app-capable").at("content", "yes"),
     H.meta().name("apple-mobile-web-app-status-bar-style").at("content", "default"),
     H.meta().name("apple-mobile-web-app-title").at("content", App.SHORT_NAME),
-    H.link().rel("icon").href(Routes.FAVICON).at("sizes", "48x48"),
-    H.link().rel("icon").href("/assets/brand/icon.svg").kind("image/svg+xml"),
-    H.link().rel("icon").href("/assets/brand/icon-192.png").kind("image/png").at("sizes", "192x192"),
-    H.link().rel("apple-touch-icon").href("/assets/brand/apple-touch-icon.png").at("sizes", "180x180"),
+    H.link().rel("icon").href(Routes.FAVICON + version).at("sizes", "48x48"),
+    H.link().rel("icon").href("/assets/brand/icon.svg" + version).kind("image/svg+xml"),
+    H.link().rel("icon").href("/assets/brand/icon-192.png" + version).kind("image/png").at("sizes", "192x192"),
+    H.link().rel("apple-touch-icon").href("/assets/brand/apple-touch-icon.png" + version).at("sizes", "180x180"),
     H.link().rel("manifest").href(Routes.MANIFEST),
     H.link().rel("preload").href("/assets/fonts/nunito-sans.woff2").at("as", "font").kind("font/woff2").at("crossorigin", "anonymous"),
     H.link().rel("stylesheet").href("/assets/css/app.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/home.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/search.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }
@@ -76,8 +80,8 @@ fn navLink(href: Str, icon: Str, label: Str, current: Bool, className: Str) -> H
 fn appBar(frame: &Frame.Frame, section: &Section) -> H.Node {
   H.header().class("appbar").holding([
       H.a().class("brand").href(Routes.HOME).label(App.SITE_NAME).holding([
-          H.img().src("/assets/brand/logo.svg").alt("").at("width", "32").at("height", "32"),
-          H.span().class("brand-name").holding([H.strong().says("Boricua"), H.span().says(" Experience")])
+          H.img().src("/assets/brand/cotorra-mark.svg?v=" + App.ASSET_VERSION).alt("").at("width", "48").at("height", "48"),
+          H.span().class("brand-name").holding([H.strong().says("boricua"), H.span().says("experience")])
         ]),
       H.nav().class("topnav").label(Frame.t(frame, "nav.main")).holding([
           navLink(Routes.HOME, "search", Frame.t(frame, "nav.explore"), *section == Explore, "topnav-link"),
@@ -124,25 +128,6 @@ fn tabBar(frame: &Frame.Frame, section: &Section) -> H.Node {
       navLink(Routes.CREATE, "plus", Frame.t(frame, "nav.create"), *section == Create, "tab tab-create"),
       navLink(Routes.ACTIVITY, "ticket", Frame.t(frame, "nav.activity"), *section == Activity, "tab"),
       navLink(if Frame.signedIn(frame) { Routes.ACCOUNT } else { Routes.SIGN_IN }, "user", Frame.t(frame, "nav.profile"), *section == Me, "tab")
-    ])
-}
-
-/// The footer: what the app is, legal pages, and cookie settings.
-fn footer(frame: &Frame.Frame) -> H.Node {
-  H.footer().class("footer").holding([
-      H.div().class("footer-inner").holding([
-          H.div().class("footer-brand").holding([
-              H.img().src("/assets/brand/logo.svg").alt("").at("width", "28").at("height", "28"),
-              H.p().says(Frame.t(frame, "footer.tagline"))
-            ]),
-          H.nav().class("footer-links").label(Frame.t(frame, "footer.legal")).holding([
-              H.a().href(Routes.ABOUT).says(Frame.t(frame, "footer.about")),
-              H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms")),
-              H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy")),
-              H.a().href(Routes.COOKIES).says(Frame.t(frame, "footer.cookies"))
-            ]),
-          H.p().class("footer-note").says(Frame.t(frame, "footer.adults"))
-        ])
     ])
 }
 

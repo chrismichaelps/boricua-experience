@@ -29,7 +29,7 @@ export fn decode(value: Str, version: Str) -> Option[Choice]
 ### Linkage
 
 - **Requires:** nothing.
-- **Consumed by:** [[src/Web/Context]], [[src/Web/Handlers/Privacy]], [[src/View/Components/CookieBanner]].
+- **Consumed by:** [[src/Web/Context]], [[src/Web/Handlers/Privacy]], [[src/View/Components/Notice]].
 
 ## Algorithm
 
