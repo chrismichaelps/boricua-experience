@@ -55,3 +55,7 @@ DEEP.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Catalogue split
+
+Lookup reads the interface, account ([[src/I18n/EsAccount]], [[src/I18n/EnAccount]]), and policy catalogues in that order, Spanish as fallback.

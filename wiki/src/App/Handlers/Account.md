@@ -31,7 +31,7 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
 
 ## Algorithm
 
-For each of me, profile, onboard, updateProfile, updatePreferences, notifications, markRead: `Registration.handler(&kinds.<kind>, |message, context| Messaging.lift(Service.call(...)))`.
+For each of me, profile, onboard, updateProfile, updatePreferences, notifications: `Registration.handler(&kinds.<kind>, |message, context| Messaging.lift(Service.call(...)))`.
 
 ## Negative Logic (Prohibited Paths)
 

@@ -33,3 +33,9 @@
 - 2026-10-09 · [[src/View/Pages/Home]] · region-tab town browser replaces the raw directory list; works without scripts.
 - 2026-10-09 · [[src/Public/Brand]] · redrawn animated search parrot (rise, blink, glance, breathe; reduced-motion safe).
 - 2026-10-09 · [[src/Public/Photographs]] · real public-domain Puerto Rican parrot photograph on the Río Grande slide and tile; hero copy scrim. Asset/cache version 22.
+- 2026-10-09 · [[src/Web/Platform]] · production cookies restored (consent banner closes, sessions persist); guest HTML no longer stored at the CDN.
+- 2026-10-09 · [[src/Validation/Account]] · neutral date-of-birth age gate; minors refused without storing anything, a day-long browser lockout, and Google-created minor accounts deleted.
+- 2026-10-09 · [[src/View/Pages/Legal]] · policies rewritten as numbered documents in sync with the product, with an “In short” summary and contents; no published contact address.
+- 2026-10-09 · [[src/View/Pages/Notifications]] · inbox redesigned (headlines, relative times, day groups, unread dots); opening it marks shown items read.
+- 2026-10-09 · [[src/Public/Brand]] · search parrot redrawn as a peeking head with feet on the search surface; compact carousel controls.
+- 2026-10-09 · [[src/Public/AccountMenu]] · account menu replaces the avatar link (popover on desktop, full sheet on phones); the bell rings only for new notifications; translucent, hover-only header tints. Asset version 24.

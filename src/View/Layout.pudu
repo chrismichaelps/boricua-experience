@@ -10,6 +10,7 @@ import Domain.Locale as Locale
 import Domain.Profile as Profile
 import View.Components.Avatar as Avatar
 import View.Components.Footer as Footer
+import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Frame as Frame
@@ -96,7 +97,7 @@ fn appBar(frame: &Frame.Frame, section: &Section) -> H.Node {
     ])
 }
 
-/// A one-button form switching between Spanish and English.
+/// A one-button form switching between Spanish and English; wide screens only, the menu holds it on phones.
 fn languageSwitch(frame: &Frame.Frame) -> H.Node {
   let other = if frame.locale == Locale.Es { "en" } else { "es" }
   H.form().action(Routes.LANGUAGE).method("post").class("lang-switch").holding([
@@ -106,17 +107,94 @@ fn languageSwitch(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
-/// The inbox and the member's avatar, or the sign-in button.
+/// The bell with its unread count; `data-unread` lets the page ring it when the count has grown.
+fn bell(frame: &Frame.Frame, unread: Int) -> H.Node {
+  let shown = if Frame.here(frame) == Routes.NOTIFICATIONS { 0 } else { unread }
+  H.a().class("icon-button bell").href(Routes.NOTIFICATIONS).label(Frame.t(frame, "nav.notifications")).data("feature", "bell").data("unread", show(shown)).holding([
+      H.span().class("bell-icon").holding([Icons.sized("bell", 22)]),
+      if shown > 0 { H.span().class("badge").says(if shown > 9 { "9+" } else { show(shown) }) } else { H.nothing() }
+    ])
+}
+
+/// One row of the account menu.
+fn menuLink(href: Str, icon: Str, label: Str, trailing: H.Node) -> H.Node {
+  H.a().class("menu-row").href(href).role("menuitem").holding([Icons.sized(icon, 20), H.span().says(label), trailing])
+}
+
+/// The language row: a one-button form naming the current language and switching to the other.
+fn languageRow(frame: &Frame.Frame) -> H.Node {
+  let other = if frame.locale == Locale.Es { "en" } else { "es" }
+  H.form().action(Routes.LANGUAGE).method("post").class("menu-form").holding([
+      H.input().kind("hidden").name("lang").value(other),
+      H.input().kind("hidden").name("return").value(Frame.here(frame)),
+      H.button().submit().class("menu-row").role("menuitem").label(Frame.t(frame, "nav.language")).holding([
+          Icons.sized("globe", 20),
+          H.span().says(Frame.t(frame, "nav.language_row")),
+          H.span().class("menu-value").says(Frame.t(frame, "nav.language_current")),
+          Icons.sized("chevron-right", 16)
+        ])
+    ])
+}
+
+/// The account menu: a disclosure that is a popover on wide screens and a full sheet on phones.
+fn accountMenu(frame: &Frame.Frame) -> H.Node {
+  let legal = H.div().class("menu-foot").holding([
+      H.a().href(Routes.ABOUT).says(Frame.t(frame, "footer.about")),
+      H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms")),
+      H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy"))
+    ])
+  let (trigger, body) = match frame.member {
+    case Some(member) => (
+      [Icons.sized("menu", 18), Avatar.face(member.displayName, member.avatarUrl, "sm")],
+      [
+        H.a().class("menu-member").href(Routes.PROFILE_PREFIX + member.id).role("menuitem").holding([
+            Avatar.face(member.displayName, member.avatarUrl, "md"),
+            H.span().holding([H.strong().says(member.displayName), H.span().says(Frame.t(frame, "nav.view_profile"))])
+          ]),
+        H.div().class("menu-group").holding([
+            menuLink(Routes.NOTIFICATIONS, "bell", Frame.t(frame, "nav.notifications"), if member.unreadNotifications > 0 { H.span().class("menu-count").says(show(member.unreadNotifications)) } else { H.nothing() }),
+            menuLink(Routes.ACTIVITY, "ticket", Frame.t(frame, "nav.my_activity"), H.nothing()),
+            menuLink(Routes.CREATE, "plus", Frame.t(frame, "nav.create_activity"), H.nothing())
+          ]),
+        H.div().class("menu-group").holding([
+            menuLink(Routes.ACCOUNT, "settings", Frame.t(frame, "nav.account_settings"), H.nothing()),
+            languageRow(frame)
+          ]),
+        H.div().class("menu-group").holding([
+            H.form().action(Routes.SIGN_OUT).method("post").class("menu-form").holding([Form.token(frame), H.button().submit().class("menu-row").role("menuitem").holding([Icons.sized("logout", 20), H.span().says(Frame.t(frame, "nav.sign_out"))])])
+          ]),
+        legal
+      ])
+    case None => (
+      [Icons.sized("menu", 18), H.span().class("menu-guest").holding([Icons.sized("user", 18)])],
+      [
+        H.div().class("menu-group menu-cta").holding([
+            H.a().class("button button-block").href(Routes.SIGN_IN + "?return=" + Frame.here(frame).replace("&", "%26")).says(Frame.t(frame, "nav.sign_in")),
+            H.a().class("button button-block button-ghost").href(Routes.SIGN_UP).says(Frame.t(frame, "nav.create_account"))
+          ]),
+        H.div().class("menu-group").holding([
+            menuLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), H.nothing()),
+            languageRow(frame)
+          ]),
+        legal
+      ])
+  }
+  H.details().class("account-menu").data("feature", "account-menu").holding([
+      H.summary().class("menu-trigger").label(Frame.t(frame, "nav.menu")).holding(trigger),
+      H.div().class("menu-panel").role("menu").label(Frame.t(frame, "nav.menu")).holding([
+          H.div().class("menu-sheet-head").holding([
+              H.span().class("brand-name").holding([H.strong().says("boricua"), H.span().says("experience")]),
+              H.button().kind("button").class("icon-button menu-close").label(Frame.t(frame, "nav.close_menu")).data("menu", "close").holding([Icons.sized("x", 22)])
+            ])
+        ].concat(body))
+    ])
+}
+
+/// The inbox and the account menu for a member; the menu alone for a guest.
 fn account(frame: &Frame.Frame) -> H.Node {
   match frame.member {
-    case Some(member) => H.div().class("appbar-member").holding([
-        H.a().class("icon-button").href(Routes.NOTIFICATIONS).label(Frame.t(frame, "nav.notifications")).holding([
-            Icons.sized("bell", 22),
-            if member.unreadNotifications > 0 && Frame.here(frame) != Routes.NOTIFICATIONS { H.span().class("badge").says(if member.unreadNotifications > 9 { "9+" } else { show(member.unreadNotifications) }) } else { H.nothing() }
-          ]),
-        H.a().class("avatar-link").href(Routes.ACCOUNT).label(Frame.t(frame, "nav.profile")).holding([Avatar.face(member.displayName, member.avatarUrl, "sm")])
-      ])
-    case None => H.a().class("button button-small").href(Routes.SIGN_IN + "?return=" + Frame.here(frame).replace("&", "%26")).says(Frame.t(frame, "nav.sign_in"))
+    case Some(member) => H.div().class("appbar-member").holding([bell(frame, member.unreadNotifications), accountMenu(frame)])
+    case None => accountMenu(frame)
   }
 }
 

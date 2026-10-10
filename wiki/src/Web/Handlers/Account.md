@@ -58,3 +58,10 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Inbox and age gate Grill Log
+
+- **Q:** Why is there no “mark all read” route?
+  **A:** Opening the inbox marks read everything it shows, as native inboxes do; the button, its route, and its message kind were removed with it. Resolved.
+- **Q:** What does onboarding do with a minor's date of birth?
+  **A:** It deletes the account Google just created and refuses; see [[src/Validation/Account]]. Resolved.

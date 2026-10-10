@@ -53,3 +53,7 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Rewrite
+
+Sections now match [[src/View/Pages/Legal]]: terms (16), privacy (13), cookies (6), each with a summary; texts are prose, not lists.

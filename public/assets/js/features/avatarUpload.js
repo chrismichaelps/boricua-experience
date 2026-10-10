@@ -51,7 +51,7 @@ function asDataUrl(blob) {
 }
 
 function showPhoto(editor, address) {
-  for (const holder of [editor.querySelector('.photo-frame'), document.querySelector('.avatar-link')]) {
+  for (const holder of [editor.querySelector('.photo-frame'), document.querySelector('.menu-trigger'), document.querySelector('.menu-member')]) {
     const current = holder?.querySelector('.avatar');
     if (!current) continue;
     const image = document.createElement('img');

@@ -1,13 +1,13 @@
-import { clusterPins } from './mapClusters.js?v=22';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=22';
+import { clusterPins } from './mapClusters.js?v=24';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=24';
 import { message } from '../constants/messages.js';
-import { getJson } from '../net/http.js?v=22';
+import { getJson } from '../net/http.js?v=24';
 import { $, $$, create } from '../utils/dom.js';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=22';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=24';
 import { toast } from './toast.js';
-import { createMap } from './mapLoader.js?v=22';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=22';
-import * as live from './live.js?v=22';
+import { createMap } from './mapLoader.js?v=24';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=24';
+import * as live from './live.js?v=24';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });

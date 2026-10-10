@@ -69,3 +69,8 @@ DEEP: one module hides timestamp grammar, the offset, and weekday arithmetic fro
 ## Referenced by
 
 [[src/_MOC]]
+
+## Birth date Grill Log
+
+- **Q:** How is age counted?
+  **A:** `yearsOld` parses `YYYY-MM-DD`, rejects impossible days (leap years included) and years before 1900, and subtracts one when the birthday has not yet come this year. A future date gives none. Resolved.

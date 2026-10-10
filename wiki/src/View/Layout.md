@@ -75,3 +75,12 @@ Use original cotorra puertorriqueña SVG assets and optional Motion privacy disc
 
 ## Brand refresh contract
 Original compact parrot replaces the former mascot. Brand asset URLs use shared version20; changed entry/styles/Motion refresh together while unchanged map imports retain their single version19 identity. Grill: named links and native search semantics are preserved; resolved.
+
+## Inbox badge
+
+The bell's count sits on its shoulder as a 16 px pill with a white ring; it is hidden on the inbox itself, which marks everything shown as read.
+
+## Account menu Grill Log
+
+- **Q:** What does the avatar do?
+  **A:** It opens the account menu instead of loading the account page; see [[src/Public/AccountMenu]]. Members get a header linking to their public profile, then notifications (with count), activities, create, account and settings, language (current value), sign out, and the policy links. Guests get sign in and create account first. Resolved.

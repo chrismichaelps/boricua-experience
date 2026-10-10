@@ -61,3 +61,7 @@ DEEP: callers name a use case; validation, calls, and composition stay inside.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Age gate
+
+See [[src/Validation/Account]] for the age gate contract this module takes part in.

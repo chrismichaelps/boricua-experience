@@ -54,3 +54,8 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Inbox redesign Grill Log
+
+- **Q:** How does a row read?
+  **A:** A short headline (“You're in”, “Ana wants to join”, “Coming up · Today · 7:30 PM”) over the activity title, the organizer's note as a message bubble, and a compact relative time (`5 min`, `3 h`, `Yesterday`, a weekday, a date) with an unread dot. A join request leads with the requester's initials; other kinds lead with a tinted squircle icon. Rows group into Today, This week, and Earlier. Resolved.

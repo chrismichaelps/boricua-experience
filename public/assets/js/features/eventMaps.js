@@ -1,8 +1,8 @@
-import { LIVE, MAP } from '../constants/config.js?v=22';
-import { getJson } from '../net/http.js?v=22';
-import { message } from '../constants/messages.js?v=22';
-import { createMap } from './mapLoader.js?v=22';
-import { accuracyCircle, personMarker } from './markers.js?v=22';
+import { LIVE, MAP } from '../constants/config.js?v=24';
+import { getJson } from '../net/http.js?v=24';
+import { message } from '../constants/messages.js?v=24';
+import { createMap } from './mapLoader.js?v=24';
+import { accuracyCircle, personMarker } from './markers.js?v=24';
 import { toast } from './toast.js';
 
 function whenVisible(element, action) {

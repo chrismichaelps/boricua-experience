@@ -1,4 +1,4 @@
-import { MAP } from '../constants/config.js?v=22';
+import { MAP } from '../constants/config.js?v=24';
 import { distanceM } from '../utils/geo.js';
 
 export function visiblePins(pins, project, width, height, covered = 0) {

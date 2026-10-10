@@ -21,7 +21,7 @@ Account reads and writes, notifications, consent records, and the data-subject o
 ### Signatures
 
 ```pudu
-export fn me, publicProfile, completeOnboarding, updateProfile, updatePreferences, notifications, markRead,
+export fn me, publicProfile, completeOnboarding, updateProfile, updatePreferences, notifications, markReadUpTo,
           exportData, pause, reactivate, prepareDeletion, recordConsent
 ```
 

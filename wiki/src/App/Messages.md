@@ -24,7 +24,7 @@ The message records and the `Kinds` record: one typed request kind per use case,
 export type Visit[T] = { session: Option[Session.Session], input: T }
 export type Signed[T] = { session: Session.Session, input: T }
 export type Place, Decision, Edit, Joining, Reacting, Reporting, SignUp, Provider, Callback, Onboard, CookieChoice, Resolution
-export type Kinds = { home, search, suggest, pins, catalog, event, attendees, publish, editable, update, cancel, join, withdraw, decide, queue, save, react, report, activity, recordPosition, stopSharing, eraseLocation, participants, me, profile, onboard, updateProfile, updatePreferences, notifications, markRead, cookies, exportData, pause, reactivate, deleteAccount, signIn, signUp, provider, callback, recover, changePassword, signOut, sitemap, dashboard, resolve }
+export type Kinds = { home, search, suggest, pins, catalog, event, attendees, publish, editable, update, cancel, join, withdraw, decide, queue, save, react, report, activity, recordPosition, stopSharing, eraseLocation, participants, me, profile, onboard, updateProfile, updatePreferences, notifications, cookies, exportData, pause, reactivate, deleteAccount, refuseMinor, signIn, signUp, provider, callback, recover, changePassword, signOut, sitemap, dashboard, resolve }
 export const READ, COMMAND, IDENTITY: Str
 export fn kinds() -> Kinds
 ```
@@ -67,3 +67,7 @@ DEEP: the application's full vocabulary in one place.
 
 ## Reviewed refinement
 Map results preserve the server limited flag and show a bilingual zoom-in notice. Reaction forms lock their shared group; horizontal handle drags suppress the ensuing click. Existing public coordinate visibility remains unchanged. Grill Log: reviewed edge contracts resolved.
+
+## Age gate
+
+See [[src/Validation/Account]] for the age gate contract this module takes part in.

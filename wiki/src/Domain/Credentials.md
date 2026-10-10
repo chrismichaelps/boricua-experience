@@ -53,3 +53,8 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Birth date Grill Log
+
+- **Q:** Why does the form carry `birthDate` and not `adult`?
+  **A:** The age is computed from the date during validation; a boolean the browser sends could be forged or pre-ticked. Resolved.

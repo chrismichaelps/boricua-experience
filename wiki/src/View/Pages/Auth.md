@@ -65,3 +65,7 @@ Real destination assets now use `*-photo.webp`; location and licenses are record
 
 - **Q:** What contract fixes the reported gap?
   **A:** Remove duplicate auth-brand markup from the shared identity form shell; retain global header brand, all field names, return target and consent requirements. Mobile photo is the surrounding container; desktop stays two columns. Resolved.
+
+## Age gate
+
+See [[src/Validation/Account]] for the age gate contract this module takes part in.

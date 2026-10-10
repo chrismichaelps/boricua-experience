@@ -21,7 +21,7 @@ Profile reads and edits, preferences, onboarding, and notifications.
 ### Signatures
 
 ```pudu
-export fn me, publicProfile, onboard, updateProfile, updatePreferences, notifications, markRead
+export fn me, publicProfile, onboard, updateProfile, updatePreferences, notifications
 ```
 
 ### Linkage
@@ -57,3 +57,8 @@ MEDIUM: callers name a use case; validation, calls, and composition stay inside.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Inbox Grill Log
+
+- **Q:** How does opening the inbox clear the badge without losing new notifications?
+  **A:** After reading the inbox, the service marks read up to the newest unread id it fetched (`mark_notifications_read(p_up_to)`). Anything arriving later stays unread. The page renders the read flags as they were on arrival, so new items still show their dot. A failed mark leaves the badge for the next visit. Resolved.

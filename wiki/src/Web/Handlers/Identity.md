@@ -54,3 +54,7 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Age gate
+
+See [[src/Validation/Account]] for the age gate contract this module takes part in.

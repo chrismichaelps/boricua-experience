@@ -54,3 +54,12 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Age gate Grill Log
+
+- **Q:** Why a date of birth instead of an “I am 18” box?
+  **A:** A checkbox signals the expected answer. A neutral date field does not, which is the age screen regulators describe. The date is checked once (`Utils.Time.yearsOld` against today in Puerto Rico) and never stored; only the adult confirmation reaches the database. Resolved.
+- **Q:** What happens to a minor?
+  **A:** Sign-up refuses before anything is sent: the unavailable page, the session ended, and `bx_age` closing sign-up to that browser for a day, so the back button cannot change the answer. Google creates the identity before onboarding, so an under-age onboarding, or any onboarding while `bx_age` is set, deletes that fresh account through `privacy.refuse_minor` before refusing. Resolved.
+- **Q:** How is an impossible date told apart from a minor?
+  **A:** Two rules on `birthDate`: `birthDateOk` rejects text that is not a real past date after 1900, and `adultOk` passes unreadable dates so only one error shows. `underage` is true only for a real date under `App.MINIMUM_AGE`. Resolved.
