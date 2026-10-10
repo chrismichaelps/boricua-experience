@@ -46,3 +46,4 @@
 - 2026-10-10 · scripts/test.sh · one command runs the Pudu suites and every browser harness; two stale harnesses repaired.
 - 2026-10-10 · [[src/Database/MapEvents]] · map reads are nearest-first straight from the spatial index (whole-island view 85 ms → 0.2 ms at 500,000 events) and category filters get a category-and-location index · migration `20261010050000_map_nearest_first.sql`, not yet applied to production.
 - 2026-10-10 · [[src/Public/ExperienceStyles]] · signed-in pages checked at phone width from fixtures: account, inbox, and activity fit 375 px; pause/delete account and the public-profile link get 44px touch targets; activity tabs share the phone width instead of scrolling. Asset/cache version 26.
+- 2026-10-10 · [[src/Public/ExperienceStyles]] · desktop map privacy note moves to the map's bottom-left, clear of the attribution; public pages checked at 1440 px. Asset/cache version 27.

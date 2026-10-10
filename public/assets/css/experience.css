@@ -81,7 +81,7 @@
   .map-controls { left: 16px; }
   .map-sheet .sheet-handle { display: none; }
   .sheet-list { gap: 6px; padding: 0 10px 14px; }
-  .map-privacy { bottom: 12px; right: 56px; }
+  .map-privacy { bottom: 12px; left: 408px; right: auto; }
 }
 @media (max-width: 959px) {
   .map-sheet { max-height: 36%; }

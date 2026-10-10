@@ -1,14 +1,14 @@
-import { clusterPins } from './mapClusters.js?v=26';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=26';
-import { message } from '../constants/messages.js?v=26';
-import { getJson } from '../net/http.js?v=26';
-import { $, $$, create } from '../utils/dom.js?v=26';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=26';
-import { toast } from './toast.js?v=26';
-import { createMap } from './mapLoader.js?v=26';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=26';
-import * as live from './live.js?v=26';
-import { localizeMoment } from './localTime.js?v=26';
+import { clusterPins } from './mapClusters.js?v=27';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=27';
+import { message } from '../constants/messages.js?v=27';
+import { getJson } from '../net/http.js?v=27';
+import { $, $$, create } from '../utils/dom.js?v=27';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=27';
+import { toast } from './toast.js?v=27';
+import { createMap } from './mapLoader.js?v=27';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=27';
+import * as live from './live.js?v=27';
+import { localizeMoment } from './localTime.js?v=27';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });

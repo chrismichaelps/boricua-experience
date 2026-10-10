@@ -1,8 +1,8 @@
-import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js?v=26';
-import { message } from '../constants/messages.js?v=26';
-import { postJson } from '../net/http.js?v=26';
-import { distanceM, readingOf } from '../utils/geo.js?v=26';
-import { toast } from './toast.js?v=26';
+import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js?v=27';
+import { message } from '../constants/messages.js?v=27';
+import { postJson } from '../net/http.js?v=27';
+import { distanceM, readingOf } from '../utils/geo.js?v=27';
+import { toast } from './toast.js?v=27';
 
 const listeners = new Set();
 const statuses = new Set();
