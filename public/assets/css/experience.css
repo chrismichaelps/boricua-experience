@@ -131,7 +131,7 @@
   .map-sheet.is-expanded { height: 76%; }
   .map-page .maplibregl-ctrl-bottom-right { bottom: calc(36% + 12px); }
   .map-page.is-sheet-expanded .maplibregl-ctrl-bottom-right { bottom: calc(76% + 12px); }
-  .map-privacy { left: 12px; right: 64px; width: fit-content; max-width: calc(100% - 84px); }
+  .map-privacy { left: 12px; right: 64px; bottom: calc(36% + 52px); width: fit-content; max-width: calc(100% - 84px); }
 }
 
 @media (max-width: 959px) {

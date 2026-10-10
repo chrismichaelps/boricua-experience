@@ -41,3 +41,6 @@
 - 2026-10-09 · [[src/Public/AccountMenu]] · account menu replaces the avatar link (popover on desktop, full sheet on phones); the bell rings only for new notifications; translucent, hover-only header tints. Asset version 24.
 - 2026-10-09 · [[decisions/ADR-0008-separate-environments]] · development moves to the local Supabase stack with seed; production purged of seed data and guarded; owner account is the administrator.
 - 2026-10-09 · [[decisions/ADR-0009-event-expiry]] · events are marked ended by a five-minute job after their end time, kept as history, final, and removed from search engines.
+- 2026-10-10 · [[src/Public/LocalTime]] · dates and times on cards, event pages, and the map sheet show in the reader's time zone with its abbreviation; Puerto Rico readers and pages without scripts keep the server text.
+- 2026-10-10 · [[src/Public/Explorer]] · a second tap on the locate button while waiting for the first fix turns location off instead of re-centering; re-centering applies only after the visitor panned away.
+- 2026-10-10 · scripts/test.sh · one command runs the Pudu suites and every browser harness; two stale harnesses repaired.

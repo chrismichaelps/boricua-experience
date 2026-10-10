@@ -17,13 +17,15 @@ import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
 
-/// The pins the map script reads: slug, title, when, price, place, icon, cover, and position.
+/// The pins the map script reads: slug, title, when (with the instants it was written from), price, place, icon, cover, and position.
 export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json {
   let now = StdTime.instantOf(frame.nowMillis)
   Json.list(&cards.map(|card: Event.Card| Json.object(&[
           ("slug", Json.Text(card.slug)),
           ("title", Json.Text(card.title)),
           ("when", Json.Text(Dates.when(&frame.locale, card.startsAt, card.endsAt, &now))),
+          ("starts", Json.Text(card.startsAt)),
+          ("ends", Json.Text(card.endsAt)),
           ("price", Json.Text(Format.price(&frame.locale, card.priceCents))),
           ("place", Json.Text(card.venueName + " · " + card.municipality.name)),
           ("icon", Json.Text(card.category.icon)),

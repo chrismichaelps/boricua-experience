@@ -120,6 +120,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/View/Calendar]] — An iCalendar file for one event, with its page address.
 - [[src/View/Components/Avatar]] — Initials avatars with a stable colour per name, and overlapping stacks with a count.
 - [[src/View/Components/EventCard]] — The event card (cover, price, policy flag, time line, title, place, going, likes, seats, distance), sideways rails, and grids.
+- [[src/View/Components/Moment]] — dates and times as `<time>` elements the browser rewrites in the reader's zone.
 - [[src/View/Components/Form]] — Labelled inputs, text areas, selects, checkboxes, switches, the hidden form token, and the problem banner, wired with `aria-invalid` and `aria-describedby`.
 - [[src/View/Components/Icons]] — Original line icons as inline SVG, hidden from assistive software; a const table of path data.
 - [[src/View/Components/Notice]] — The polite toast, empty states, and the cookie choice (accept, necessary only, customize).
@@ -205,6 +206,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/MapViewport]] · [[src/Test/MapViewport]] — viewport discovery and regression boundaries.
 
+- [[src/Public/LocalTime]] — dates and times in the reader's own zone.
 - [[src/Public/Haptics]] · [[src/Public/SheetGestures]] · [[src/Database/MapEvents]] · [[src/Test/Interactions]] — native mobile input and spatial read boundaries.
 
 - [[src/Public/Http]] · [[src/Public/Toggle]] — cancellation transport and serialized interactions.

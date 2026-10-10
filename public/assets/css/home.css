@@ -23,7 +23,7 @@
 .app-home .menu-trigger { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.14); color: white; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .app-home .badge { box-shadow: none; }
 .app-home .appbar-actions > a.button { background: transparent; border: 1px solid rgba(255,255,255,.85); color: white; min-height: 48px; border-radius: 18px; }
-.app-home .hero-frame { min-height: 640px; height: calc(100svh - 16px); max-height: 940px; border-radius: 32px; justify-content: center; align-items: center; padding: 150px 20px 100px; gap: 72px; background-image: url("/assets/img/luquillo-photo.webp"); background-position: center; overflow: visible; isolation: isolate; }
+.app-home .hero-frame { min-height: 640px; height: calc(100svh - 16px); max-height: 940px; border-radius: 32px; justify-content: center; align-items: center; padding: 150px 20px 100px; gap: 72px; background-image: url("/assets/img/luquillo-photo.webp"); background-position: center; overflow: visible; overflow-x: clip; isolation: isolate; }
 .app-home .hero-frame::before { border-radius: inherit; background: linear-gradient(180deg,rgba(7,34,47,.45),rgba(7,34,47,.08) 45%,rgba(7,34,47,.18)); z-index: -1; }
 .app-home .hero-copy { text-align: center; max-width: 800px; }
 .app-home .hero-copy::before { content: ""; position: absolute; inset: -48px -96px; z-index: -1; background: radial-gradient(closest-side, rgba(7,34,47,.42), rgba(7,34,47,0)); pointer-events: none; }

@@ -10,6 +10,7 @@ import Domain.Event as Event
 import I18n.Dates as Dates
 import I18n.Format as Format
 import View.Components.Icons as Icons
+import View.Components.Moment as Moment
 import View.Frame as Frame
 
 /// The cover an event shows, its own or its category's illustration.
@@ -33,7 +34,7 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
               if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
             ]),
           H.div().class("card-body").holding([
-              H.p().class("card-when").says(Dates.when(&locale, event.startsAt, event.endsAt, &now)),
+              H.p().class("card-when").holding([Moment.when(frame, event.startsAt, event.endsAt, &now)]),
               H.h3().class("card-title").says(event.title),
               H.p().class("card-place").holding([Icons.sized("pin", 14), H.span().says(event.venueName + " · " + event.municipality.name)]),
               H.div().class("card-meta").holding([

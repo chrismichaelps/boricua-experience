@@ -53,8 +53,8 @@ const carouselSource = readFileSync(new URL('../public/assets/js/features/carous
 const mainSource = readFileSync(new URL('../public/assets/js/main.js', import.meta.url), 'utf8');
 const specifier = carouselSource.match(/from ['"]([^'"]+)['"]/)[1];
 const rootSpecifier = mainSource.match(/heroCarousel.*from ['"]([^'"]+)['"]/)[1];
-assert(rootSpecifier.includes('?v=3'), 'new entrypoint must not use an old cached carousel module');
-const requestUrl = new URL(specifier, 'https://boricua.test/assets/js/features/carousel.js?v=3').href;
+assert(/\?v=\d+$/.test(rootSpecifier), 'the entrypoint must version the carousel module so browsers drop an old cached copy');
+const requestUrl = new URL(specifier, new URL(rootSpecifier, 'https://boricua.test/assets/js/main.js')).href;
 const oldCache = new Map([['https://boricua.test/assets/js/constants/config.js', oldConfig]]);
 const fetched = oldCache.get(requestUrl) ?? currentConfig;
 const dataUrl = (code) => 'data:text/javascript;base64,' + Buffer.from(code).toString('base64');

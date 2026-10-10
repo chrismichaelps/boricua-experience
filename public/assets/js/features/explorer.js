@@ -1,13 +1,14 @@
-import { clusterPins } from './mapClusters.js?v=24';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=24';
-import { message } from '../constants/messages.js';
-import { getJson } from '../net/http.js?v=24';
-import { $, $$, create } from '../utils/dom.js';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=24';
-import { toast } from './toast.js';
-import { createMap } from './mapLoader.js?v=24';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=24';
-import * as live from './live.js?v=24';
+import { clusterPins } from './mapClusters.js?v=25';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=25';
+import { message } from '../constants/messages.js?v=25';
+import { getJson } from '../net/http.js?v=25';
+import { $, $$, create } from '../utils/dom.js?v=25';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=25';
+import { toast } from './toast.js?v=25';
+import { createMap } from './mapLoader.js?v=25';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=25';
+import * as live from './live.js?v=25';
+import { localizeMoment } from './localTime.js?v=25';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -15,7 +16,9 @@ function sheetItem(pin) {
   const media = create('div', { class: 'card-media' });
   media.append(create('img', { src: pin.cover, alt: '', loading: 'lazy' }), create('span', { class: 'pill pill-light card-price' }, pin.price));
   const body = create('div', { class: 'card-body' });
-  body.append(create('p', { class: 'card-when' }, pin.when), create('h3', { class: 'card-title' }, pin.title), create('p', { class: 'card-place' }, pin.place));
+  const when = create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends }, pin.when);
+  localizeMoment(when);
+  body.append(create('p', { class: 'card-when' }, when), create('h3', { class: 'card-title' }, pin.title), create('p', { class: 'card-place' }, pin.place));
   link.append(media, body);
   const card = create('article', { class: 'card' });
   card.append(link);
@@ -249,7 +252,7 @@ export async function explorer(page) {
   let stopLocateReading = null;
   let stopShareReading = null;
   locate?.addEventListener('click', () => {
-    if (following && !follow) {
+    if (following && !follow && locate.classList.contains('is-detached')) {
       follow = true;
       precise = false;
       locate.classList.remove('is-detached');
