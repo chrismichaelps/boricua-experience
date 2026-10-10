@@ -8,22 +8,23 @@ PostGIS), and the site runs on Vercel as a single function plus static assets.
 
 ## Run it locally
 
-You need the Pudu 0.1.3 compiler, Docker, and the Supabase CLI.
+You need the Pudu 0.1.3 compiler and the Supabase CLI.
 
 ```bash
-supabase start
 cp .env.example .env
+scripts/dev-db.sh
 scripts/dev.sh
 ```
 
-`supabase start` brings up a local database with the schema and test data; copy its URL and keys
-into `.env`. The app runs on <http://localhost:8080>. `dev.sh` refuses to run against a hosted
-database unless you set `BORICUA_ALLOW_REMOTE_DB=1`.
+Fill `.env` with the development project's URL, keys, and database password, and the development
+Google OAuth client. `dev-db.sh` applies the migrations, the test data, and the auth settings to
+that project. The app runs on <http://localhost:8080>. Both scripts refuse the production project,
+whose secrets live only in Vercel. With Docker, `supabase start` gives a local database instead.
 
 ## Test
 
 ```bash
-pudu test
+scripts/test.sh
 ```
 
 ## Deploy
