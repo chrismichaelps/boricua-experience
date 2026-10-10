@@ -62,7 +62,7 @@ fn directory(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
       H.h2().class("section-title").id("directory-title").says(Frame.t(frame, "home.towns")),
       H.p().class("directory-intro").says(Frame.t(frame, "home.towns_body")),
       H.div().class("destination-grid").holding(Scenes.SLIDES.map(|scene: (Str, Str, Str)| H.a().class("destination-card").href(Routes.TOWN_PREFIX + scene[2]).holding([
-              H.img().src(scene[0]).alt("").at("loading", "lazy").at("width", "640").at("height", "480"),
+              H.img().src(scene[0]).at("srcset", Hero.photoSet(scene[0])).at("sizes", "(max-width: 599px) 100vw, 33vw").alt("").at("loading", "lazy").at("width", "640").at("height", "480"),
               H.span().class("destination-copy").holding([H.strong().says(scene[1]), H.span().holding([H.span().says(Frame.t(frame, "home.discover_town")), Icons.sized("chevron-right", 18)])])
             ]))),
       townBrowser(frame, catalog)

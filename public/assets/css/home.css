@@ -1,5 +1,5 @@
 /* The home hero owns its navigation and leaves discovery rails in the reading shell. */
-@font-face { font-family: "Pacifico"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/pacifico.ttf") format("truetype"); }
+@font-face { font-family: "Pacifico"; font-style: normal; font-weight: 400; font-display: swap; src: url("/assets/fonts/pacifico-latin.woff2") format("woff2"); }
 .brand { gap: 10px; flex: none; }
 .brand img { border-radius: 0; width: 44px; height: 44px; filter: brightness(0) saturate(100%) invert(37%) sepia(96%) saturate(2320%) hue-rotate(204deg) brightness(99%) contrast(93%); }
 .brand-name { display: grid; line-height: 1.15; }
@@ -23,7 +23,7 @@
 .app-home .menu-trigger { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.14); color: white; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .app-home .badge { box-shadow: none; }
 .app-home .appbar-actions > a.button { background: transparent; border: 1px solid rgba(255,255,255,.85); color: white; min-height: 48px; border-radius: 18px; }
-.app-home .hero-frame { min-height: 640px; height: calc(100svh - 16px); max-height: 940px; border-radius: 32px; justify-content: center; align-items: center; padding: 150px 20px 100px; gap: 72px; background-image: url("/assets/img/luquillo-photo.webp"); background-position: center; overflow: visible; overflow-x: clip; isolation: isolate; }
+.app-home .hero-frame { min-height: 640px; height: calc(100svh - 16px); max-height: 940px; border-radius: 32px; justify-content: center; align-items: center; padding: 150px 20px 100px; gap: 72px; background-image: url("/assets/img/luquillo-photo-1300.webp"); background-position: center; overflow: visible; overflow-x: clip; isolation: isolate; }
 .app-home .hero-frame::before { border-radius: inherit; background: linear-gradient(180deg,rgba(7,34,47,.45),rgba(7,34,47,.08) 45%,rgba(7,34,47,.18)); z-index: -1; }
 .app-home .hero-copy { text-align: center; max-width: 800px; }
 .app-home .hero-copy::before { content: ""; position: absolute; inset: -48px -96px; z-index: -1; background: radial-gradient(closest-side, rgba(7,34,47,.42), rgba(7,34,47,0)); pointer-events: none; }
@@ -109,7 +109,7 @@
 .app-home .card-title { font-size: 18px; }
 .app-home .card-meta { padding-top: 4px; gap: 8px; }
 .app-home .card-when { font-size: 11px; letter-spacing: .6px; }
-.app-home .promo { min-height: 280px; padding: 48px; background: linear-gradient(90deg,rgba(8,43,54,.9),rgba(8,43,54,.45)),url('/assets/img/san-juan-photo.webp') center 60% / cover; border-radius: 28px; }
+.app-home .promo { min-height: 280px; padding: 48px; background: linear-gradient(90deg,rgba(8,43,54,.9),rgba(8,43,54,.45)),url('/assets/img/san-juan-photo-1300.webp') center 60% / cover; border-radius: 28px; }
 .app-home .promo-copy { max-width: 560px; display: grid; gap: 12px; }
 .app-home .promo h2, .app-home .create-tile h2 { font-size: clamp(26px,3vw,38px); line-height: 1.2; letter-spacing: -.6px; }
 .app-home .create-tile { min-height: 240px; border-radius: 28px; background: #eff7f3; padding: 48px; gap: 24px; }
@@ -187,3 +187,5 @@
 .footer-column ul { gap: 0; list-style: none; padding: 0; margin: 0; }
 .footer-credits { color: #687176; font-size: 13px; width: fit-content; text-decoration: underline; }
 @media (max-width: 699px) { .footer-column a { min-height: 44px; } }
+
+@media (min-width: 960px) { .app-home .promo { background-image: linear-gradient(90deg,rgba(8,43,54,.9),rgba(8,43,54,.45)), url('/assets/img/san-juan-photo.webp'); } }

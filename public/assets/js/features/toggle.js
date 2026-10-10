@@ -1,7 +1,7 @@
-import { haptic } from './haptics.js?v=27';
-import { postForm } from '../net/http.js?v=27';
-import { message } from '../constants/messages.js?v=27';
-import { toast } from './toast.js?v=27';
+import { haptic } from './haptics.js?v=28';
+import { postForm } from '../net/http.js?v=28';
+import { message } from '../constants/messages.js?v=28';
+import { toast } from './toast.js?v=28';
 
 export function saveToggle(form) {
   form.addEventListener('submit', async (event) => {

@@ -12,12 +12,15 @@ import View.Components.Search as Controls
 import View.Frame as Frame
 
 /// The home hero with labelled carousel controls and a first scene usable without scripts.
+/// The photo at phone width (1300px) and at full width (2200px), for `srcset`.
+export fn photoSet(src: Str) -> Str { src.replace(".webp", "-1300.webp") + " 1300w, " + src + " 2200w" }
+
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
   var images: Array[H.Node] = []
   var dots: Array[H.Node] = []
   for index in 0..Hero.SLIDES.length() {
     let scene = Hero.SLIDES[index]
-    images = images.push(H.img().class(if index == 0 { "hero-slide is-current" } else { "hero-slide" }).src(scene[0]).alt("").at("loading", if index == 0 { "eager" } else { "lazy" }).at("decoding", "async").at("fetchpriority", if index == 0 { "high" } else { "low" }).data("place", scene[1]).data("href", Routes.TOWN_PREFIX + scene[2]))
+    images = images.push(H.img().class(if index == 0 { "hero-slide is-current" } else { "hero-slide" }).src(scene[0]).at("srcset", photoSet(scene[0])).at("sizes", "100vw").alt("").at("loading", if index == 0 { "eager" } else { "lazy" }).at("decoding", "async").at("fetchpriority", if index == 0 { "high" } else { "low" }).data("place", scene[1]).data("href", Routes.TOWN_PREFIX + scene[2]))
     dots = dots.push(H.button().kind("button").class("hero-dot").data("slide", show(index)).label(Frame.tf(frame, "home.slide", &[("place", scene[1])])).at("aria-pressed", if index == 0 { "true" } else { "false" }).holding([H.span().at("aria-hidden", "true")]))
   }
   H.div().class("hero-frame").data("feature", "hero-carousel").role("region").label(Frame.t(frame, "home.carousel")).at("aria-roledescription", Frame.t(frame, "home.carousel_role")).holding([
