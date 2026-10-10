@@ -1,14 +1,14 @@
-import { clusterPins } from './mapClusters.js?v=29';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=29';
-import { message } from '../constants/messages.js?v=29';
-import { getJson } from '../net/http.js?v=29';
-import { $, $$, create } from '../utils/dom.js?v=29';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=29';
-import { toast } from './toast.js?v=29';
-import { createMap } from './mapLoader.js?v=29';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=29';
-import * as live from './live.js?v=29';
-import { localizeMoment } from './localTime.js?v=29';
+import { clusterPins } from './mapClusters.js?v=30';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=30';
+import { message } from '../constants/messages.js?v=30';
+import { getJson } from '../net/http.js?v=30';
+import { $, $$, create } from '../utils/dom.js?v=30';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=30';
+import { toast } from './toast.js?v=30';
+import { createMap } from './mapLoader.js?v=30';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=30';
+import * as live from './live.js?v=30';
+import { localizeMoment } from './localTime.js?v=30';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -31,6 +31,8 @@ export async function explorer(page) {
   const list = $('#map-list', page);
   const count = $('#map-count', page);
   let limited = page.dataset.limited === '1';
+  // After locating, an empty street-level view steps out until it shows activities, as native map apps do.
+  let widening = false;
   const limitNotice = $('#map-limit', page);
   let pins = JSON.parse($('#map-pins', page)?.textContent || '[]');
   const { map, maplibregl } = await createMap(canvas);
@@ -116,6 +118,13 @@ export async function explorer(page) {
     }
   };
 
+  function widenIfEmpty() {
+    if (!widening) return;
+    if (pins.length || map.getZoom() <= MAP.focusZoom + 0.01) { widening = false; return; }
+    const center = lastMe ? [lastMe.lng, lastMe.lat] : map.getCenter();
+    map.easeTo({ center, zoom: Math.max(MAP.focusZoom, map.getZoom() - 2), padding: sheetPadding(), duration: motionMs(350) });
+  }
+
   const refreshViewport = async (ticket) => {
     const query = new URLSearchParams(location.search);
     const rect = canvas.getBoundingClientRect();
@@ -133,6 +142,7 @@ export async function explorer(page) {
       limited = cached.limited;
       list.setAttribute('aria-busy', 'false');
       render();
+      widenIfEmpty();
       return;
     }
     requestController = new AbortController();
@@ -147,6 +157,7 @@ export async function explorer(page) {
       queryCache.set(key, { pins: found.items, limited: found.limited, at: Date.now() });
       if (queryCache.size > MAP.viewportCacheSize) queryCache.delete(queryCache.keys().next().value);
       render();
+      widenIfEmpty();
     } catch {
       if (ticket === queryTicket) toast(message('mapRefreshFailed'));
     } finally {
@@ -180,6 +191,7 @@ export async function explorer(page) {
       return;
     }
     const zoom = !precise ? MAP.selfZoom : Math.max(map.getZoom(), 12);
+    if (!precise) widening = true;
     precise = true;
     map.easeTo({ center: [reading.lng, reading.lat], zoom, padding: sheetPadding(), duration: motionMs(first ? 450 : 300) });
   };
@@ -221,6 +233,7 @@ export async function explorer(page) {
   // A pan or zoom by the visitor ends following, as in native map apps; the locate button resumes it.
   for (const type of ['dragstart', 'zoomstart', 'rotatestart']) {
     map.on(type, (event) => {
+      if (event.originalEvent) widening = false;
       if (!event.originalEvent || !follow) return;
       follow = false;
       $('[data-feature="locate"]', page)?.classList.add('is-detached');

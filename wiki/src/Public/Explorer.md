@@ -19,6 +19,10 @@ public/assets/js/features/explorer.js, wired by [[src/View/Pages/Map]] and main.
 
 Start watches only from an explicit location action or a previously enabled sharing session. Stop watches on off/page hide. Map reads the current search query when refreshing nearby.
 
+## Widening after locating
+
+The first precise fix frames the visitor at street zoom. If that viewport returns no activities, the map eases out two zoom levels around the visitor and asks again, stopping at the first non-empty view, at zoom 11, or when the visitor pans or zooms.
+
 ## Negative Logic
 
 No public sharing of all users, no watch remaining active after disabling location, no discarded discovery filters.
