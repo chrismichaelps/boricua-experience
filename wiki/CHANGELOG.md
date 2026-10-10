@@ -44,3 +44,4 @@
 - 2026-10-10 · [[src/Public/LocalTime]] · dates and times on cards, event pages, and the map sheet show in the reader's time zone with its abbreviation; Puerto Rico readers and pages without scripts keep the server text.
 - 2026-10-10 · [[src/Public/Explorer]] · a second tap on the locate button while waiting for the first fix turns location off instead of re-centering; re-centering applies only after the visitor panned away.
 - 2026-10-10 · scripts/test.sh · one command runs the Pudu suites and every browser harness; two stale harnesses repaired.
+- 2026-10-10 · [[src/Database/MapEvents]] · map reads are nearest-first straight from the spatial index (whole-island view 85 ms → 0.2 ms at 500,000 events) and category filters get a category-and-location index · migration `20261010050000_map_nearest_first.sql`, not yet applied to production.
