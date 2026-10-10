@@ -178,3 +178,9 @@ button[disabled] { cursor: wait; }
   .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; width: 100%; overflow: hidden; }
   .segmented .tab-link { padding-inline: 6px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* Phones show confirmations above the tab bar, rising from the bottom, clear of page titles. */
+@media (max-width: 959px) {
+  .toast { top: auto; bottom: calc(var(--tabbar) + var(--safe-bottom) + 12px); max-width: calc(100% - 32px); animation-name: toast-rise; }
+  @keyframes toast-rise { 0% { opacity: 0; transform: translate(-50%, 8px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 8px); pointer-events: none; } }
+}

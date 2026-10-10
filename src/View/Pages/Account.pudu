@@ -116,6 +116,11 @@ fn visibility(frame: &Frame.Frame, value: Str, title: Str, body: Str, chosen: St
 }
 
 /// The member's photo with a camera badge that opens the file picker, a remove option when there is a
+/// The form that removes the photo; the upload script reveals it once a photo is set.
+fn removePhoto(frame: &Frame.Frame) -> H.Node {
+  H.form().class("photo-remove").action(Routes.ACCOUNT_AVATAR_REMOVE).method("post").holding([Form.token(frame), H.button().submit().class("text-link").says(Frame.t(frame, "account.remove_photo"))])
+}
+
 /// photo, and a status line the uploader writes to. Without scripts the initials simply stay.
 fn photoEditor(frame: &Frame.Frame, me: &Profile.MyProfile) -> H.Node {
   H.div().class("photo-editor").data("feature", "avatar-upload").data("endpoint", Routes.ACCOUNT_AVATAR).data("uploading", Frame.t(frame, "account.photo_uploading")).data("done", Frame.t(frame, "flash.photo_updated")).data("error", Frame.t(frame, "problem.invalid_avatar")).holding([
@@ -125,8 +130,8 @@ fn photoEditor(frame: &Frame.Frame, me: &Profile.MyProfile) -> H.Node {
           H.input().kind("file").id("photo-input").name("photo").at("accept", "image/jpeg,image/png,image/webp,image/heic,image/heif").class("sr-only")
         ]),
       match me.avatarUrl {
-        case Some(_) => H.form().class("photo-remove").action(Routes.ACCOUNT_AVATAR_REMOVE).method("post").holding([Form.token(frame), H.button().submit().class("text-link").says(Frame.t(frame, "account.remove_photo"))])
-        case None => H.nothing()
+        case Some(_) => removePhoto(frame)
+        case None => removePhoto(frame).at("hidden", "hidden")
       },
       H.p().class("photo-status small muted").role("status").at("aria-live", "polite")
     ])

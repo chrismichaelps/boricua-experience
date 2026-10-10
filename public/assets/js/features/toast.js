@@ -1,4 +1,4 @@
-import { create } from '../utils/dom.js?v=28';
+import { create } from '../utils/dom.js?v=29';
 
 export function toast(text) {
   document.querySelector('.toast')?.remove();

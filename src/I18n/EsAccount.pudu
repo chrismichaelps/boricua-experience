@@ -186,6 +186,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("flash.email_confirmed", "Correo confirmado. Entra para continuar."),
     ("flash.signed_out", "Cerraste sesión."),
     ("flash.saved_settings", "Preferencias guardadas."),
+    ("flash.saved_profile", "Perfil guardado."),
     ("flash.password_changed", "Contraseña actualizada."),
     ("flash.history_deleted", "Borramos tu historial de ubicación."),
     ("flash.paused", "Tu cuenta está en pausa."),

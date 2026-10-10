@@ -1,4 +1,4 @@
-import { postJson } from '../net/http.js?v=28';
+import { postJson } from '../net/http.js?v=29';
 
 const SIDE = 320;
 const QUALITY = 0.86;
@@ -74,6 +74,7 @@ export function avatarUpload(editor) {
       const blob = await encode(squareCrop(await decode(file)));
       const { avatarUrl } = await postJson(editor.dataset.endpoint, { image: await asDataUrl(blob) });
       showPhoto(editor, avatarUrl);
+      editor.querySelector('.photo-remove')?.removeAttribute('hidden');
       status.textContent = editor.dataset.done;
       navigator.vibrate?.(10);
     } catch {

@@ -77,7 +77,7 @@ fn saveProfile(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.
   let fields = Serve.fields(visitor)
   let edit = Profile.ProfileEdit{displayName: Form.text(&fields, "displayName"), bio: Form.paragraph(&fields, "bio"), homeMunicipality: Form.text(&fields, "town"), locale: Locale.code(&Locale.fromCode(Form.text(&fields, "locale")))}
   match Serve.ask(app, &app.kinds.updateProfile, Serve.signed(session, edit)) {
-    case Ok(_) => Respond.withPreference(app, Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.saved_settings"), Cookies.LOCALE, edit.locale)
+    case Ok(_) => Respond.withPreference(app, Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.saved_profile"), Cookies.LOCALE, edit.locale)
     case Err(problem) => refused(app, visitor, session, &problem)
   }
 }
