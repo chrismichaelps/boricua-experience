@@ -3,9 +3,9 @@ module View.Components.Hero
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
-import Constants.Hero as Hero
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Locale as Locale
 import Domain.Search as Search
 import View.Components.Icons as Icons
 import View.Components.Search as Controls
@@ -18,10 +18,11 @@ export fn photoSet(src: Str) -> Str { src.replace(".webp", "-1300.webp") + " 130
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
   var images: Array[H.Node] = []
   var dots: Array[H.Node] = []
-  for index in 0..Hero.SLIDES.length() {
-    let scene = Hero.SLIDES[index]
-    images = images.push(H.img().class(if index == 0 { "hero-slide is-current" } else { "hero-slide" }).src(scene[0]).at("srcset", photoSet(scene[0])).at("sizes", "100vw").alt("").at("loading", if index == 0 { "eager" } else { "lazy" }).at("decoding", "async").at("fetchpriority", if index == 0 { "high" } else { "low" }).data("place", scene[1]).data("href", Routes.TOWN_PREFIX + scene[2]))
-    dots = dots.push(H.button().kind("button").class("hero-dot").data("slide", show(index)).label(Frame.tf(frame, "home.slide", &[("place", scene[1])])).at("aria-pressed", if index == 0 { "true" } else { "false" }).holding([H.span().at("aria-hidden", "true")]))
+  for index in 0..catalog.scenes.length() {
+    let scene = catalog.scenes[index]
+    let caption = if frame.locale == Locale.Es { scene.captionEs } else { scene.captionEn }
+    images = images.push(H.img().class(if index == 0 { "hero-slide is-current" } else { "hero-slide" }).src(scene.image).at("srcset", photoSet(scene.image)).at("sizes", "100vw").alt("").at("loading", if index == 0 { "eager" } else { "lazy" }).at("decoding", "async").at("fetchpriority", if index == 0 { "high" } else { "low" }).data("place", caption).data("href", Routes.TOWN_PREFIX + scene.town))
+    dots = dots.push(H.button().kind("button").class("hero-dot").data("slide", show(index)).label(Frame.tf(frame, "home.slide", &[("place", caption)])).at("aria-pressed", if index == 0 { "true" } else { "false" }).holding([H.span().at("aria-hidden", "true")]))
   }
   H.div().class("hero-frame").data("feature", "hero-carousel").role("region").label(Frame.t(frame, "home.carousel")).at("aria-roledescription", Frame.t(frame, "home.carousel_role")).holding([
       H.div().class("hero-photos").at("aria-hidden", "true").holding(images),
@@ -31,14 +32,14 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
         ]),
       Controls.pill(frame, catalog, &Search.everything()),
       H.div().class("hero-bottom").holding([
-          H.a().class("hero-place").data("carousel", "place").href(Routes.TOWN_PREFIX + Hero.SLIDES[0][2]).says(Hero.SLIDES[0][1]),
-          H.div().class("hero-controls").holding([
-              H.div().class("hero-dots").role("group").label(Frame.t(frame, "home.carousel")).holding(dots),
-              H.button().kind("button").class("hero-pause").data("carousel", "pause").data("pause-label", Frame.t(frame, "home.pause_slides")).data("play-label", Frame.t(frame, "home.play_slides")).label(Frame.t(frame, "home.pause_slides")).holding([
-                  H.span().class("carousel-pause-symbol").at("aria-hidden", "true").holding([Icons.sized("pause", 16)]),
-                  H.span().class("carousel-play-symbol").at("aria-hidden", "true").says("▶")
-                ])
-            ])
+          if catalog.scenes.isEmpty() { H.nothing() } else { H.a().class("hero-place").data("carousel", "place").href(Routes.TOWN_PREFIX + catalog.scenes[0].town).says(if frame.locale == Locale.Es { catalog.scenes[0].captionEs } else { catalog.scenes[0].captionEn }) },
+          if catalog.scenes.length() < 2 { H.nothing() } else { H.div().class("hero-controls").holding([
+                H.div().class("hero-dots").role("group").label(Frame.t(frame, "home.carousel")).holding(dots),
+                H.button().kind("button").class("hero-pause").data("carousel", "pause").data("pause-label", Frame.t(frame, "home.pause_slides")).data("play-label", Frame.t(frame, "home.play_slides")).label(Frame.t(frame, "home.pause_slides")).holding([
+                    H.span().class("carousel-pause-symbol").at("aria-hidden", "true").holding([Icons.sized("pause", 16)]),
+                    H.span().class("carousel-play-symbol").at("aria-hidden", "true").says("▶")
+                  ])
+              ]) }
         ])
     ])
 }

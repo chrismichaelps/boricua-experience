@@ -15,3 +15,8 @@ export fn categories(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Category
 export fn municipalities(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Municipality], Problem.Problem] {
   Gateway.query(gateway, Supabase.LIST_MUNICIPALITIES, &[], None, Gateway.Read)
 }
+
+/// The active homepage destinations in their database display order.
+export fn scenes(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Scene], Problem.Problem] {
+  Gateway.query(gateway, Supabase.FEATURED_DESTINATIONS, &[], None, Gateway.Read)
+}

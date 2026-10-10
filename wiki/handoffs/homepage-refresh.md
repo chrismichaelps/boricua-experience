@@ -178,3 +178,28 @@ Architect → Implementer (separate session): own `scripts/fetch-runtime.sh`, `s
 Architect → Implementer (this session, while the other session is idle): owns `public/assets/js/features/explorer.js` location framing, `eventMaps.js` pin-here, `cotorra-search.svg`, `cotorra-photo.webp`, the home town browser (`View.Pages.Home.directory`, `Domain.Catalog.REGIONS`, `home.css` directory rules), the hero copy scrim, photo credits, and the asset/cache version bump to 22. Any session resuming homepage work starts from these files as they are now.
 
 Exact next action: deploy version 22 to production and verify location follow mode on a physical phone.
+
+## Development continuation — 2026-10-10
+
+Architect → Implementer → Independent Reviewer → Implementer. Recovered Claude session Boricua Experience PWA (5d112371-dddf-40bd-b475-58adf451f232). Own mobile menu CSS, refreshed map dates, explorer regressions and cache graph. Development project mywghuwpkhbjdqyeuubr only; production untouched.
+
+- Browser: published disposable activity prueba-dev-recorrido-de-participacion-3ba99a, Carlos and Sofia requested, Maria approved/rejected with note. Queue and participant notifications reflected decisions. Directions/instructions were hidden before approval, revealed after approval and hidden after withdrawal. Re-request/re-approval, edited summary and cancellation notification verified. Test activity remains canceled in dev.
+- Phone account menu was trapped in the blurred64px header. Disable both backdrop filters while open;390px menu now spans viewport with reachable logout/no overflow; logout also works320px. Desktop300px popover retains header blur.
+- Map zoom narrowed40activities to17cards. Refreshed cards formerly stringified HTMLTimeElement; now append semantic time child with readable dates and retained datetime.
+- Added widening15→13→11/floor/result/manual-pan regression and semantic date-child regression. Independent review found a cached-response false-positive in the test; corrected bounds and fresh-request assertion. Reviewer reran harness; no outstanding bounded findings.
+- Full suite6/6,145assertions; allbrowserharnesses and timezone checks pass. Compiler0.1.3 required (default0.1.2). Compiler check and whitespace pass. Repository-wide formatter reports pre-existing differences; unedited HEAD Constants/App also fails. No unrelated format sweep. Asset graph32.
+- Physical GPS/haptics, representative traffic, recovery/deletion and official/bulk import remain unverified in this pass. No auth/provider settings or production deployment changed.
+
+Exact next action: test open-entry join/capacity boundaries and event-change notifications in the isolated development project.
+
+## Authorized dev/production release — 2026-10-10
+
+Architect → Implementer → Independent Reviewer → Implementer. Own brand, account-menu dismissal, cookie form tokens, catalogue featured-content API and matching views/tests/docs. User explicitly requests push to dev and production; isolated dev tests precede promotion.
+
+- Phone320/390: authenticated cookie reset/accept-all/necessary-only dismiss and persist after reload; menu repeated close/Escape and desktop/phone rotation unlock scrolling.
+- Destination/date/free-only filters survive search→map; zoom, sheet expansion and event navigation work. Dev save/reaction toggles restored; open-entry withdrawal/rejoin restores Carlos participation.
+- Database featured destinations capped8; local licensed image paths, bilingual captions and municipality references. Empty active set returns[]; no hardcoded fallback. Tables retain RLS/no guest or member direct privileges. Additive migration applied to isolated dev and production before deploying dependent code.
+- Independent reviewer passes pinned0.1.3 Pudu suite and focused harnesses; parity corrections applied. Production release stages prebuilt function/static output, verifies routes and promotes tested deployment.
+- Physical GPS/haptics and exhaustive hardware coverage remain unverified. Existing repositorywide formatter differences are baseline; changed modules formatted where practical.
+
+Exact next action: verify the staged production build, promote it and record the released commit/deployment.

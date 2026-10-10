@@ -86,3 +86,7 @@ Only the sheet itself ending a height/max-height transition updates map padding.
   **A:** The locate control starts follow mode. Every reading re-frames the camera until the visitor pans, zooms, or rotates; only events carrying `originalEvent` count, so programmatic easing never cancels following. A detached state keeps the control pressed with an outline; pressing it again re-frames the last reading at once. A reading less precise than 500 m fits the camera to its accuracy circle, mutes the halo, and shows a one-time approximate-location toast. A precise first fix opens at zoom 15, and later fixes keep the visitor's zoom. Hover and selected price markers scale through the independent `scale` property. Resolved.
 - **Q:** What proves it?
   **A:** A simulated 2.5 km reading framed the circle and showed the toast; a 25 m reading switched to precise and centred the marker in the unobscured canvas. A real drag detached following and a later reading left the camera alone; pressing locate re-centred. Resolved.
+
+## Refreshed card date node
+
+Grill resolved: `create` accepts text, not DOM children. Append the localized semantic `<time>` to a separate date paragraph before appending that paragraph to the card. This preserves datetime/data-moment attributes and prevents stringifying an HTMLTimeElement after viewport queries. Test the child node contract and verify live refreshed cards.

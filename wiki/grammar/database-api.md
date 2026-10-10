@@ -35,7 +35,7 @@ them are private; this page states the conventions every function keeps.
 | `event_detail` | anyone | card plus description, organizer card, attendees preview, viewer state; location and instructions only when revealed |
 | `event_attendees` | anyone | `{total, people, hidden, can_view}` |
 | `public_profile` | anyone | organizer profile with hosting record and upcoming events |
-| `list_categories`, `list_municipalities`, `sitemap_events` | anyone | reference data and sitemap rows |
+| `list_categories`, `list_municipalities`, `featured_destinations`, `sitemap_events` | anyone | reference data and sitemap rows |
 | `record_event_view`, `record_consent` | anyone | view count; consent ledger row |
 | `my_profile`, `my_events`, `my_requests`, `my_saved_events`, `my_notifications` | member | the account's own data |
 | `create_event`, `update_event`, `cancel_event` | member | `{id, slug}` |
@@ -59,3 +59,5 @@ live positions older than an hour), and monthly history partitions created ahead
 ## Referenced by
 
 [[grammar/_MOC]] · [[seams/DatabaseApi]] · [[src/Api/Supabase/Gateway]] · [[src/Constants/Supabase]]
+
+Featured destinations are active public editorial records, at most eight in stored display order, with local licensed image paths, bilingual captions and municipality references. Private table remains protected by RLS with no direct guest/member grants.

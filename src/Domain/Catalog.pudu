@@ -15,11 +15,20 @@ export type Category = {
 /** @Domain.Catalog.Municipality — one of the 78 municipalities */
 export type Municipality = { slug: Str, name: Str, region: Str, lat: Float64, lng: Float64 } derives Json.Decode
 
-/// The island's regions in the order a visitor reads them: the metro area first, the offshore islands last.
-export const REGIONS: Array[Str] = ["metro", "norte", "este", "centro", "sur", "oeste", "islas"]
+/** @Domain.Catalog.Scene — a featured destination selected by the database */
+export type Scene = { image: Str, @json("caption_es") captionEs: Str, @json("caption_en") captionEn: Str, town: Str } derives Json.Decode
+
+/// Regions represented by the current municipality catalogue, in its database order.
+export fn regions(catalog: &Catalog) -> Array[Str] {
+  var found: Array[Str] = []
+  for town in catalog.municipalities {
+    if !found.contains(town.region) { found = found.push(town.region) }
+  }
+  found
+}
 
 /** @Domain.Catalog.Catalog — both reference lists, loaded together */
-export type Catalog = { categories: Array[Category], municipalities: Array[Municipality] }
+export type Catalog = { categories: Array[Category], municipalities: Array[Municipality], scenes: Array[Scene] }
 
 /// The category with a slug.
 export fn category(catalog: &Catalog, slug: Str) -> Option[Category] {
