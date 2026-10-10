@@ -14,9 +14,9 @@ import View.Seo as Seo
 export type Document = Terms | Privacy | Cookies | About
 
 /// The section keys of each document, in reading order.
-const TERMS_SECTIONS: Array[Str] = ["eligibility", "accounts", "events", "joining", "conduct", "safety", "minors", "content", "liability", "termination", "changes", "contact"]
-const PRIVACY_SECTIONS: Array[Str] = ["collect", "use", "location", "sharing", "retention", "rights", "deletion", "cookies", "security", "minors", "contact"]
-const COOKIES_SECTIONS: Array[Str] = ["what", "necessary", "analytics", "marketing", "choices"]
+const TERMS_SECTIONS: Array[Str] = ["service", "eligibility", "account", "publishing", "joining", "minors", "conduct", "safety", "content", "moderation", "disclaimers", "liability", "indemnity", "changes", "law", "contact"]
+const PRIVACY_SECTIONS: Array[Str] = ["scope", "collect", "use", "visibility", "location", "providers", "retention", "rights", "deletion", "security", "minors", "transfers", "changes"]
+const COOKIES_SECTIONS: Array[Str] = ["what", "necessary", "storage", "optional", "third", "choices"]
 const ABOUT_SECTIONS: Array[Str] = ["mission", "how", "safety", "privacy"]
 
 /// The key prefix, sections, path, and whether it carries a version line.
@@ -29,7 +29,8 @@ fn shape(document: &Document) -> (Str, Array[Str], Str, Bool) {
   }
 }
 
-/// A policy page.
+/// A policy page: title, version, summary, contents, then numbered sections. The about page has no
+/// version, summary, or contents.
 export fn render(frame: &Frame.Frame, document: &Document) -> Html.Html {
   let (prefix, sections, path, versioned) = shape(document)
   let title = Frame.t(frame, prefix + ".title")
@@ -39,14 +40,28 @@ export fn render(frame: &Frame.Frame, document: &Document) -> Html.Html {
     case Cookies => App.COOKIE_POLICY_VERSION
     case _ => App.TERMS_VERSION
   }
-  Layout.page(frame, &meta, Layout.Elsewhere, H.article().class("narrow prose legal").holding([
-        H.h1().class("page-title").says(title),
-        if versioned { H.p().class("muted small").says(Frame.tf(frame, "legal.version", &[("version", version), ("email", App.PRIVACY_EMAIL)])) } else { H.nothing() },
-        H.p().class("lead").says(Frame.t(frame, prefix + ".intro"))
-      ].concat(sections.map(|section: Str| H.section().holding([
-              H.h2().says(Frame.t(frame, prefix + "." + section + ".title")),
-              H.div().holding(Frame.t(frame, prefix + "." + section + ".body").split("\n\n").map(|paragraph: Str| H.p().says(paragraph)))
-            ]))).concat([
-        if *document == Cookies { H.form().action(Routes.CONSENT).method("post").holding([H.input().kind("hidden").name("choice").value("reset"), H.input().kind("hidden").name("return").value(Routes.COOKIES), H.button().submit().class("button button-ghost").says(Frame.t(frame, "cookies.change"))]) } else { H.nothing() }
-      ])))
+  var numbered: Array[H.Node] = []
+  var links: Array[H.Node] = []
+  for index in 0..sections.length() {
+    let section = sections[index]
+    let anchor = "s-" + section
+    let heading = Frame.t(frame, prefix + "." + section + ".title")
+    let number = if versioned { show(index + 1) + ". " } else { "" }
+    links = links.push(H.li().holding([H.a().href("#" + anchor).says(number + heading)]))
+    numbered = numbered.push(H.section().id(anchor).class("legal-section").holding([
+          H.h2().says(number + heading)
+        ].concat(Frame.t(frame, prefix + "." + section + ".body").split("\n\n").map(|paragraph: Str| H.p().says(paragraph)))))
+  }
+  let head = H.header().class("legal-head").holding([
+      H.h1().class("page-title").says(title),
+      if versioned { H.p().class("legal-version").says(Frame.tf(frame, "legal.version", &[("version", version)])) } else { H.nothing() },
+      H.p().class("lead").says(Frame.t(frame, prefix + ".intro"))
+    ])
+  let summary = if versioned { H.aside().class("legal-summary").holding([H.h2().says(Frame.t(frame, "legal.summary_title")), H.p().says(Frame.t(frame, prefix + ".summary"))]) } else { H.nothing() }
+  let contents = if versioned { H.nav().class("legal-contents").label(Frame.t(frame, "legal.contents")).holding([H.p().says(Frame.t(frame, "legal.contents")), H.ol().holding(links)]) } else { H.nothing() }
+  let reset = if *document == Cookies { H.form().action(Routes.CONSENT).method("post").holding([H.input().kind("hidden").name("choice").value("reset"), H.input().kind("hidden").name("return").value(Routes.COOKIES), H.button().submit().class("button button-ghost").says(Frame.t(frame, "cookies.change"))]) } else { H.nothing() }
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class(if versioned { "legal-page" } else { "legal-page is-plain" }).holding([
+        contents,
+        H.article().class("prose legal").holding([head, summary].concat(numbered).concat([reset]))
+      ]))
 }

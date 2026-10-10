@@ -1,10 +1,12 @@
 /** @Validation.Account.Identity — identity and profile forms checked */
 module Validation.Account
 
+import Constants.App as App
 import Constants.Limits as Limits
 import Domain.Credentials as Credentials
 import Domain.Problem as Problem
 import Domain.Profile as Profile
+import Utils.Time as Time
 import Validation.Check as Check
 
 /// Message keys of the identity forms.
@@ -12,6 +14,7 @@ const NAME: Str = "form.name_length"
 const EMAIL: Str = "form.email_invalid"
 const PASSWORD: Str = "form.password_length"
 const CONFIRMATION: Str = "form.password_mismatch"
+const BIRTH_DATE: Str = "form.birth_date_invalid"
 const ADULT: Str = "form.adult_required"
 const TERMS: Str = "form.terms_required"
 const PRIVACY: Str = "form.privacy_required"
@@ -27,6 +30,23 @@ export fn isEmail(text: Str) -> Bool {
   !domain.contains("@") && domain.indexOf(".") > 0 && !domain.endsWith(".")
 }
 
+/// The age a birth date gives today in Puerto Rico.
+fn ageOf(birthDate: Str) -> Option[Int] { Time.yearsOld(birthDate, &Time.local(&Time.now())) }
+
+/// Whether a birth date is a real date in the past.
+fn birthDateOk(birthDate: Str) -> Bool { ageOf(birthDate) != None }
+
+/// Whether a valid birth date belongs to an adult; an invalid one is reported by `birthDateOk`.
+fn adultOk(birthDate: Str) -> Bool {
+  match ageOf(birthDate) {
+    case Some(age) => age >= App.MINIMUM_AGE
+    case None => true
+  }
+}
+
+/// Whether a birth date is real and belongs to someone under the minimum age.
+export fn underage(birthDate: Str) -> Bool { !adultOk(birthDate) }
+
 /// Whether a password has an acceptable length.
 fn passwordOk(text: Str) -> Bool { text.length() >= Limits.PASSWORD_MIN && text.length() <= Limits.PASSWORD_MAX }
 
@@ -36,7 +56,8 @@ export fn signUp(form: &Credentials.SignUp) -> Result[Credentials.SignUp, Proble
         Check.rule("displayName", |f: Credentials.SignUp| f.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
         Check.rule("email", |f: Credentials.SignUp| f.email, isEmail, EMAIL),
         Check.rule("password", |f: Credentials.SignUp| f.password, passwordOk, PASSWORD),
-        Check.rule("adult", |f: Credentials.SignUp| f.adult, |v: Bool| v, ADULT),
+        Check.rule("birthDate", |f: Credentials.SignUp| f.birthDate, birthDateOk, BIRTH_DATE),
+        Check.rule("birthDate", |f: Credentials.SignUp| f.birthDate, adultOk, ADULT),
         Check.rule("terms", |f: Credentials.SignUp| f.terms, |v: Bool| v, TERMS),
         Check.rule("privacy", |f: Credentials.SignUp| f.privacy, |v: Bool| v, PRIVACY)
       ]), *form)
@@ -67,7 +88,8 @@ export fn newPassword(form: &Credentials.NewPassword) -> Result[Credentials.NewP
 export fn onboarding(form: &Credentials.Onboarding) -> Result[Credentials.Onboarding, Problem.Problem] {
   Check.run(&Check.all(&[
         Check.rule("displayName", |f: Credentials.Onboarding| f.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
-        Check.rule("adult", |f: Credentials.Onboarding| f.adult, |v: Bool| v, ADULT),
+        Check.rule("birthDate", |f: Credentials.Onboarding| f.birthDate, birthDateOk, BIRTH_DATE),
+        Check.rule("birthDate", |f: Credentials.Onboarding| f.birthDate, adultOk, ADULT),
         Check.rule("terms", |f: Credentials.Onboarding| f.terms, |v: Bool| v, TERMS),
         Check.rule("privacy", |f: Credentials.Onboarding| f.privacy, |v: Bool| v, PRIVACY)
       ]), *form)

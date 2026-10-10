@@ -18,7 +18,7 @@ Media types, cache policies, the scripts' request marker, the content security p
 
 ## Interface
 
-`HTML`, `JSON`, `XML`, `TEXT`, `MANIFEST`, `CALENDAR`; `CACHE_PRIVATE`, `CACHE_PUBLIC_PAGE`, `CACHE_REFERENCE`; `REQUESTED_WITH`/`REQUESTED_WITH_VALUE`; `CONTENT_SECURITY_POLICY`; `SECURITY_HEADERS`.
+`HTML`, `JSON`, `XML`, `TEXT`, `MANIFEST`, `CALENDAR`; `CACHE_PRIVATE`, `CACHE_GUEST_PAGE`, `CACHE_REFERENCE`; `REQUESTED_WITH`/`REQUESTED_WITH_VALUE`; `CONTENT_SECURITY_POLICY`; `SECURITY_HEADERS`.
 
 ### Linkage
 
@@ -46,3 +46,8 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 ## Referenced by
 
 [[src/_MOC]]
+
+## Guest page cache Grill Log
+
+- **Q:** Why are guest pages no longer stored at the CDN?
+  **A:** The CDN keys by URL and refuses `Vary: Cookie`. Guest HTML depends on the language cookie, the consent banner, and the flash, so a stored copy served one visitor's state to everyone, including a banner that came back after a choice. `CACHE_GUEST_PAGE` is `private, no-cache`; cookie-independent JSON (suggestions, reference documents) keeps its CDN lifetime. Resolved.

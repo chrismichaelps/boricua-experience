@@ -35,6 +35,12 @@ export fn reactivate(runtime: &Runtime.Runtime, session: &Session.Session) -> Re
   AccountApi.reactivate(&runtime.gateway, session.accessToken)
 }
 
+/// Deletes an account that a provider created for a minor, before any confirmation was recorded.
+export fn refuseMinor(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
+  AccountApi.prepareDeletion(&runtime.gateway, session.accessToken) ?
+  Identity.deleteUser(&runtime.gateway, session.userId)
+}
+
 /// Deletes the account after the member proves presence: upcoming events cancelled, location and
 /// photo erased, the identity deleted, and with it the profile and personal rows.
 export fn delete(runtime: &Runtime.Runtime, session: &Session.Session, password: Str) -> Result[(), Problem.Problem] {

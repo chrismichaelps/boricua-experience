@@ -5,8 +5,10 @@ import Std.Io as Io
 import Std.Test as Test
 import Domain.Locale as Locale
 import I18n.En as En
+import I18n.EnAccount as EnAccount
 import I18n.EnLegal as EnLegal
 import I18n.Es as Es
+import I18n.EsAccount as EsAccount
 import I18n.EsLegal as EsLegal
 import I18n.Translate as Translate
 import Support.Fixtures as Fixtures
@@ -23,8 +25,8 @@ fn placeholders(message: Str) -> Array[Str] {
 /// Runs the suite.
 fn main() -> Int {
   let used = Fixtures.text("message-keys.txt").split("\n").filter(|key: Str| !key.isEmpty())
-  let spanishKeys = Es.MESSAGES.keys().concat(EsLegal.MESSAGES.keys())
-  let englishKeys = En.MESSAGES.keys().concat(EnLegal.MESSAGES.keys())
+  let spanishKeys = Es.MESSAGES.keys().concat(EsAccount.MESSAGES.keys()).concat(EsLegal.MESSAGES.keys())
+  let englishKeys = En.MESSAGES.keys().concat(EnAccount.MESSAGES.keys()).concat(EnLegal.MESSAGES.keys())
   let missingEs = used.filter(|key: Str| !Translate.has(&Locale.Es, key))
   let missingEn = used.filter(|key: Str| !Translate.has(&Locale.En, key))
   let onlyEs = spanishKeys.filter(|key: Str| !Translate.has(&Locale.En, key))

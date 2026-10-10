@@ -56,7 +56,7 @@ export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.
       H.input().kind("hidden").name("sort").value(if filters.sort == Search.Soon { "" } else { Search.sortName(&filters.sort) }),
       H.input().kind("hidden").name("lat").value(match filters.lat { case Some(value) => show(value) case None => "" }),
       H.input().kind("hidden").name("lng").value(match filters.lng { case Some(value) => show(value) case None => "" }),
-      H.img().class("search-cotorra").src("/assets/brand/cotorra-search.svg?v=" + App.ASSET_VERSION).alt("").at("width", "112").at("height", "90"),
+      H.img().class("search-cotorra").src("/assets/brand/cotorra-search.svg?v=" + App.ASSET_VERSION).alt("").at("width", "84").at("height", "60"),
       H.div().class("pill-field pill-what").holding([
           H.labelFor().at("for", "pill-q").says(Frame.t(frame, "search.what")),
           H.input().kind("search").name("q").id("pill-q").value(filters.query).placeholder(Frame.t(frame, "search.what_placeholder")).at("maxlength", show(Limits.QUERY_MAX)).at("autocomplete", "off").data("feature", "suggest").at("aria-autocomplete", "list").at("aria-controls", "suggestions")

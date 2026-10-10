@@ -16,6 +16,7 @@ import Domain.Profile as Profile
 import Domain.Session as Session
 import Utils.Wire as Wire
 import Utils.Form as Form
+import Validation.Account as AccountRules
 import View.Pages.Account as AccountPage
 import View.Pages.Auth as AuthPage
 import View.Pages.Notifications as NotificationsPage
@@ -36,7 +37,6 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.post(Routes.ACCOUNT_AVATAR_REMOVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| removeAvatar(&held, &visitor, &session))),
     Route.get(Routes.PROFILE, Serve.page(app, |visitor: Context.Visitor| profilePage(&held, &visitor))),
     Route.get(Routes.NOTIFICATIONS, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| inbox(&held, &visitor, &session))),
-    Route.post(Routes.NOTIFICATIONS_READ, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| markRead(&held, &visitor, &session))),
     Route.get(Routes.ONBOARDING, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| welcome(&held, &visitor, None))),
     Route.post(Routes.ONBOARDING, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| onboard(&held, &visitor, &session)))
   ]
@@ -126,14 +126,6 @@ fn inbox(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessio
   }
 }
 
-/// Marks the inbox read.
-fn markRead(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
-  match Serve.ask(app, &app.kinds.markRead, Serve.signed(session, ())) {
-    case Ok(_) => Respond.redirect(Routes.NOTIFICATIONS)
-    case Err(problem) => Respond.problem(app, visitor, &problem)
-  }
-}
-
 /// The onboarding page.
 fn welcome(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
   let name = match visitor.member {
@@ -143,13 +135,25 @@ fn welcome(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Proble
   if Option.holds(&visitor.member, |member: Profile.MyProfile| member.onboarded) && problem == None {
     return Respond.redirect(Respond.returnPath(Route.queryParam(&visitor.request, "return")))
   }
+  if visitor.cookies.containsKey(Cookies.AGE_GATE) {
+    if let Some(session) = visitor.session { return refuseMinor(app, visitor, &session) }
+  }
   Respond.page(if problem == None { 200 } else { 422 }, &AuthPage.welcome(&Context.frame(app, visitor), name, Respond.returnPath(Option.orElse(Route.queryParam(&visitor.request, "return"), Route.fieldsOf(&visitor.request).get("return"))), &problem))
+}
+
+/// Deletes an account a provider created for someone the date of birth shows is a minor, then refuses.
+fn refuseMinor(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.refuseMinor, Serve.signed(session, ())) {
+    case Ok(_) => Respond.underage(app, &AuthPage.unavailable(&Context.frame(app, visitor)))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
 }
 
 /// Records the confirmations and continues.
 fn onboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let fields = Serve.fields(visitor)
-  let form = Credentials.Onboarding{displayName: Form.text(&fields, "displayName"), adult: Form.flag(&fields, "adult"), terms: Form.flag(&fields, "terms"), privacy: Form.flag(&fields, "privacy")}
+  let form = Credentials.Onboarding{displayName: Form.text(&fields, "displayName"), birthDate: Form.text(&fields, "birthDate"), terms: Form.flag(&fields, "terms"), privacy: Form.flag(&fields, "privacy")}
+  if AccountRules.underage(form.birthDate) { return refuseMinor(app, visitor, session) }
   match Serve.ask(app, &app.kinds.onboard, Serve.signed(session, Messages.Onboard{form: form, locale: Locale.code(&visitor.locale)})) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.welcome")
     case Err(problem) => welcome(app, &Context.resolve(app, &visitor.request, true), Some(problem))

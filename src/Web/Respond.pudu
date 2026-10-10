@@ -86,6 +86,13 @@ export fn withFlash(app: &Assembly.App, response: Http.Response, key: Str) -> Ht
   withCookie(response, Cookie.render(Cookies.FLASH, key, &preference(app, Cookies.FLASH_MAX_AGE)))
 }
 
+/// The refusal for a date of birth that shows a minor: the unavailable page, the session ended, and
+/// sign-up closed to this browser for a day.
+export fn underage(app: &Assembly.App, view: &Html.Html) -> Http.Response {
+  let refused = withCookie(page(200, view), Cookie.render(Cookies.AGE_GATE, "1", &preference(app, Cookies.AGE_GATE_MAX_AGE)))
+  withoutSession(app, refused)
+}
+
 /// The response remembering a preference cookie for a year.
 export fn withPreference(app: &Assembly.App, response: Http.Response, name: Str, value: Str) -> Http.Response {
   withCookie(response, Cookie.render(name, value, &preference(app, Cookies.PREFERENCE_MAX_AGE)))
@@ -129,7 +136,7 @@ export fn finish(app: &Assembly.App, visitor: &Context.Visitor, response: Http.R
   let cacheable = finished.status.code == 200 && visitor.request.message.method == Http.Get && !personal
   var headers = finished.headers.concat(HttpConstants.SECURITY_HEADERS)
   if !Http.hasHeader(&headers, "cache-control") {
-    headers = headers.push(("cache-control", if cacheable { HttpConstants.CACHE_PUBLIC_PAGE } else { HttpConstants.CACHE_PRIVATE }))
+    headers = headers.push(("cache-control", if cacheable { HttpConstants.CACHE_GUEST_PAGE } else { HttpConstants.CACHE_PRIVATE }))
   }
   if !cacheable { headers = headers.push(("vary", "cookie")) }
   Http.Response{..finished, headers: headers}

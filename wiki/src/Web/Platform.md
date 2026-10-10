@@ -14,7 +14,7 @@ tags: [module, web, medium]
 
 ## Purpose
 
-Reads the request from an invocation (wrapped `Action: Invoke` bodies or gateway shapes, base64 bodies, list headers) and writes the answer with every `Set-Cookie` in `multiValueHeaders`.
+Reads the request from an invocation (wrapped `Action: Invoke` bodies or gateway shapes, base64 bodies, list headers) and writes the answer with every `Set-Cookie` as one list inside `headers`, the only object the platform launcher reads.
 
 ## Interface
 
@@ -32,7 +32,7 @@ export fn answered(response: &Http.Response) -> Str
 
 ## Algorithm
 
-Reads the request from an invocation (wrapped `Action: Invoke` bodies or gateway shapes, base64 bodies, list headers) and writes the answer with every `Set-Cookie` in `multiValueHeaders`.
+Reads the request from an invocation (wrapped `Action: Invoke` bodies or gateway shapes, base64 bodies, list headers) and writes the answer with every `Set-Cookie` as one list inside `headers`, the only object the platform launcher reads.
 
 ## Negative Logic (Prohibited Paths)
 
@@ -55,3 +55,8 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Production cookie Grill Log
+
+- **Q:** Why did no cookie reach a production browser?
+  **A:** The launcher reads `statusCode`, `headers`, and `body`; it ignores `multiValueHeaders`, so every `Set-Cookie` (consent, language, session) was dropped and the cookie banner could never close. Cookies are now one `set-cookie` list inside `headers`. Resolved.

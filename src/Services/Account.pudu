@@ -40,14 +40,17 @@ export fn updatePreferences(runtime: &Runtime.Runtime, chosen: &Profile.Preferen
   AccountApi.updatePreferences(&runtime.gateway, &valid, session.accessToken)
 }
 
-/// The inbox, newest first.
+/// The inbox, newest first, as it was before this visit; opening it marks read everything it shows,
+/// so the badge clears while notifications that arrive later stay unread.
 export fn notifications(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Array[Notification.Notification], Problem.Problem] {
-  AccountApi.notifications(&runtime.gateway, session.accessToken)
-}
-
-/// Marks the inbox read.
-export fn markRead(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[(), Problem.Problem] {
-  AccountApi.markRead(&runtime.gateway, session.accessToken)
+  let notes = AccountApi.notifications(&runtime.gateway, session.accessToken) ?
+  var newest = 0
+  for note in notes {
+    if !note.read && note.id > newest { newest = note.id }
+  }
+  // A failed mark leaves the badge for the next visit; the inbox itself still opens.
+  if newest > 0 { let _marked = AccountApi.markReadUpTo(&runtime.gateway, newest, session.accessToken) }
+  Ok(notes)
 }
 
 /// Stores a new photo for the member and answers its public address.

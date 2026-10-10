@@ -64,9 +64,9 @@ export fn notifications(gateway: &Gateway.Gateway, token: Str) -> Result[Array[N
   Gateway.query(gateway, Supabase.MY_NOTIFICATIONS, &[], Some(token), Gateway.Read)
 }
 
-/// Marks every notification read.
-export fn markRead(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
-  let _answer = Gateway.call(gateway, Supabase.MARK_NOTIFICATIONS_READ, &[], Some(token), Gateway.Write) ?
+/// Marks read every notification up to and including the one with this id.
+export fn markReadUpTo(gateway: &Gateway.Gateway, upTo: Int, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.MARK_NOTIFICATIONS_READ, &[("p_up_to", Json.Number(upTo))], Some(token), Gateway.Write) ?
   Ok(())
 }
 

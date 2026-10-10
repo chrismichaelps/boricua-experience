@@ -14,11 +14,12 @@ out="$root/test/Fixtures/message-keys.txt"
     notification.event_reminder notification.event_changed notification.event_cancelled; do echo "$family"; done
   for counted in event.going event.spots_left event.going_title event.more_people event.manage_requests \
     profile.events_hosted profile.guests_hosted profile.upcoming profile.likes; do echo "$counted.one"; echo "$counted.other"; done
-  for section in eligibility accounts events joining conduct safety minors content liability termination changes contact; do echo "legal.terms.$section.title"; echo "legal.terms.$section.body"; done
-  for section in collect use location sharing retention rights deletion cookies security minors contact; do echo "legal.privacy.$section.title"; echo "legal.privacy.$section.body"; done
-  for section in what necessary analytics marketing choices; do echo "legal.cookies.$section.title"; echo "legal.cookies.$section.body"; done
+  for section in service eligibility account publishing joining minors conduct safety content moderation disclaimers liability indemnity changes law contact; do echo "legal.terms.$section.title"; echo "legal.terms.$section.body"; done
+  for section in scope collect use visibility location providers retention rights deletion security minors transfers changes; do echo "legal.privacy.$section.title"; echo "legal.privacy.$section.body"; done
+  for section in what necessary storage optional third choices; do echo "legal.cookies.$section.title"; echo "legal.cookies.$section.body"; done
   for region in metro norte este centro sur oeste islas; do echo "region.$region"; done
   for section in mission how safety privacy; do echo "about.$section.title"; echo "about.$section.body"; done
   for doc in legal.terms legal.privacy legal.cookies about; do echo "$doc.title"; echo "$doc.description"; echo "$doc.intro"; done
+  for doc in legal.terms legal.privacy legal.cookies; do echo "$doc.summary"; done
 } | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|event\.going|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
 echo "$(wc -l < "$out" | tr -d ' ') keys written to $out"

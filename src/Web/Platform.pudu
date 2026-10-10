@@ -71,14 +71,15 @@ fn headersIn(request: &Json.Json) -> Array[(Str, Str)] {
 /// A text field of a JSON object.
 fn textAt(document: &Json.Json, name: Str) -> Option[Str] { Json.asText(&Json.field(document, name) ?) }
 
-/// The answer document: status, single headers, every cookie in `multiValueHeaders`, and the body
-/// (base64 when it is binary).
+/// The answer document: status, headers, and the body (base64 when it is binary). Cookies travel as
+/// one `set-cookie` list inside `headers`; the platform launcher reads only that object.
 export fn answered(response: &Http.Response) -> Str {
   var single: Array[(Str, Json.Json)] = []
   var cookies: Array[Json.Json] = []
   for header in response.headers {
     if header[0].toLower() == "set-cookie" { cookies = cookies.push(Json.Text(header[1])) } else { single = single.push((header[0], Json.Text(header[1]))) }
   }
+  if cookies.length() > 0 { single = single.push(("set-cookie", Json.list(&cookies))) }
   let (body, binary) = match response.binaryBody {
     case Some(bytes) => (ByteSeq.encodeBase64(&bytes), true)
     case None => (response.body, false)
@@ -86,7 +87,6 @@ export fn answered(response: &Http.Response) -> Str {
   Json.encode(&Json.object(&[
         ("statusCode", Json.Number(response.status.code)),
         ("headers", Json.object(&single)),
-        ("multiValueHeaders", Json.object(&[("set-cookie", Json.list(&cookies))])),
         ("body", Json.Text(body)),
         ("isBase64Encoded", Json.Boolean(binary))
       ]))

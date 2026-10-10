@@ -16,8 +16,9 @@ export const CALENDAR: Str = "text/calendar; charset=utf-8"
 
 /// Pages that depend on who is asking: never stored by a shared cache.
 export const CACHE_PRIVATE: Str = "private, no-store"
-/// Pages a guest sees: the CDN keeps them a minute and serves stale for ten while it refreshes.
-export const CACHE_PUBLIC_PAGE: Str = "public, max-age=0, s-maxage=60, stale-while-revalidate=600"
+/// Pages a guest sees: the browser may keep them but revalidates; no shared cache stores them, since
+/// the language, the cookie banner, and the flash follow the visitor's cookies and a CDN keys by URL.
+export const CACHE_GUEST_PAGE: Str = "private, no-cache"
 /// Reference documents (sitemap, manifest, robots): an hour at the CDN.
 export const CACHE_REFERENCE: Str = "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
 

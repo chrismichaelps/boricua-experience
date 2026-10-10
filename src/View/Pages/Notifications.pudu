@@ -5,11 +5,12 @@ import Std.Html as Html
 import Std.Html.Build as H
 import Std.Html.Build {Building}
 import Std.Option as Option
+import Std.Time as StdTime
 import Constants.Routes as Routes
 import Domain.Notification as Notification
 import I18n.Dates as Dates
 import Utils.Time as Time
-import View.Components.Form as Form
+import View.Components.Avatar as Avatar
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Frame as Frame
@@ -26,42 +27,97 @@ const KIND_ICONS: Map[Str, Str] = mapOf([
   ("event_cancelled", "x")
 ])
 
+/// Where a notification leads: the request queue for organizers, otherwise the activity.
+fn target(note: &Notification.Notification) -> Str {
+  match note.event {
+    case Some(event) => if note.kind == "request_received" { Routes.EVENT_PREFIX + event.slug + "/requests" } else { Routes.EVENT_PREFIX + event.slug }
+    case None => Routes.ACTIVITY
+  }
+}
+
+/// How long ago, in the compact form an inbox uses: `Ahora`, `5 min`, `3 h`, `Ayer`, a weekday, or a date.
+fn ago(frame: &Frame.Frame, at: &StdTime.Instant, now: &StdTime.Instant) -> Str {
+  let minutes = (now.millis - at.millis) / 60000
+  if minutes < 1 { return Frame.t(frame, "notifications.ago_now") }
+  if minutes < 60 { return Frame.tf(frame, "notifications.ago_minutes", &[("count", show(minutes))]) }
+  let days = Time.dayNumber(now) - Time.dayNumber(at)
+  if days == 0 { return Frame.tf(frame, "notifications.ago_hours", &[("count", show(minutes / 60))]) }
+  if days == 1 { return Frame.t(frame, "notifications.yesterday") }
+  let local = Time.local(at)
+  if days < 7 { return Dates.weekday(&frame.locale, local.weekday) }
+  Dates.short(&frame.locale, &local)
+}
+
+/// The headline of a notification; a reminder names when the activity starts.
+fn headline(frame: &Frame.Frame, note: &Notification.Notification, now: &StdTime.Instant) -> Str {
+  let starts = match note.event {
+    case Some(event) => match Time.parseTimestamp(event.startsAt) {
+      case Some(at) => Dates.relativeDay(&frame.locale, &at, now) + " · " + Time.clock12(&Time.local(&at))
+      case None => ""
+    }
+    case None => ""
+  }
+  Frame.tf(frame, "notification." + note.kind, &[("name", Option.unwrapOr(note.actorName, "")), ("when", starts)])
+}
+
+/// The leading picture: the requester's initials for a join request, otherwise the kind's icon.
+fn badge(note: &Notification.Notification) -> H.Node {
+  if note.kind == "request_received" {
+    return H.span().class("note-lead").holding([Avatar.face(Option.unwrapOr(note.actorName, "?"), None, "md")])
+  }
+  H.span().class("note-lead note-icon note-" + note.kind).holding([Icons.sized(Option.unwrapOr(KIND_ICONS.get(note.kind), "bell"), 20)])
+}
+
 /// One notification as a linked row.
-fn item(frame: &Frame.Frame, note: &Notification.Notification) -> H.Node {
+fn item(frame: &Frame.Frame, note: &Notification.Notification, now: &StdTime.Instant) -> H.Node {
   let title = match note.event {
     case Some(event) => event.title
     case None => ""
   }
-  let href = match note.event {
-    case Some(event) => if note.kind == "request_received" { Routes.EVENT_PREFIX + event.slug + "/requests" } else { Routes.EVENT_PREFIX + event.slug }
-    case None => Routes.ACTIVITY
-  }
-  let when = match Time.parseTimestamp(note.createdAt) {
-    case Some(at) => Dates.short(&frame.locale, &Time.local(&at)) + " · " + Time.clock12(&Time.local(&at))
-    case None => ""
-  }
   let extra = Notification.note(note)
-  H.li().class(if note.read { "note" } else { "note note-unread" }).holding([
-      H.a().href(href).holding([
-          H.span().class("note-icon note-" + note.kind).holding([Icons.sized(Option.unwrapOr(KIND_ICONS.get(note.kind), "bell"), 18)]),
+  let created = Time.parseTimestamp(note.createdAt)
+  H.li().class(if note.read { "note" } else { "note is-unread" }).holding([
+      H.a().href(target(note)).holding([
+          badge(note),
           H.span().class("note-body").holding([
-              H.strong().says(Frame.tf(frame, "notification." + note.kind, &[("event", title), ("name", Option.unwrapOr(note.actorName, ""))])),
-              if extra.isEmpty() || extra == "cancelled" { H.nothing() } else { H.span().class("muted").says("“" + extra + "”") },
-              H.span().class("muted small").says(when)
+              H.span().class("note-headline").says(headline(frame, note, now)),
+              if title.isEmpty() { H.nothing() } else { H.span().class("note-event").says(title) },
+              if extra.isEmpty() || extra == "cancelled" { H.nothing() } else { H.span().class("note-quote").says(extra) }
+            ]),
+          H.span().class("note-side").holding([
+              match created {
+                case Some(at) => H.time().at("datetime", note.createdAt).says(ago(frame, &at, now))
+                case None => H.nothing()
+              },
+              if note.read { H.nothing() } else { H.span().class("note-dot").holding([H.span().class("sr-only").says(Frame.t(frame, "notifications.unread"))]) }
             ])
         ])
     ])
 }
 
-/// The inbox page.
+/// The inbox page, grouped by when each notification arrived.
 export fn render(frame: &Frame.Frame, notes: &Array[Notification.Notification]) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "notifications.title"), Frame.t(frame, "notifications.title"), Routes.NOTIFICATIONS, false)
-  let unread = notes.filter(|n: Notification.Notification| !n.read).length()
-  Layout.page(frame, &meta, Layout.Activity, H.div().class("narrow").holding([
-        H.div().class("results-head").holding([
-            H.h1().class("page-title").says(Frame.t(frame, "notifications.title")),
-            if unread > 0 { H.form().action(Routes.NOTIFICATIONS_READ).method("post").holding([Form.token(frame), H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "notifications.mark_read"))]) } else { H.nothing() }
-          ]),
-        if notes.isEmpty() { Notice.empty("bell", Frame.t(frame, "notifications.empty_title"), Frame.t(frame, "notifications.empty_body"), H.nothing()) } else { H.ul().class("notes").holding(notes.map(|n: Notification.Notification| item(frame, &n))) }
+  let now = Time.now()
+  let today = Time.dayNumber(&now)
+  let age = |n: Notification.Notification| match Time.parseTimestamp(n.createdAt) {
+    case Some(at) => today - Time.dayNumber(&at)
+    case None => 7
+  }
+  Layout.page(frame, &meta, Layout.Activity, H.div().class("narrow inbox").holding([
+        H.h1().class("page-title").says(Frame.t(frame, "notifications.title")),
+        if notes.isEmpty() { Notice.empty("bell", Frame.t(frame, "notifications.empty_title"), Frame.t(frame, "notifications.empty_body"), H.nothing()) } else { H.nothing() },
+        group(frame, "notifications.today", &notes.filter(|n: Notification.Notification| age(n) == 0), &now),
+        group(frame, "notifications.week", &notes.filter(|n: Notification.Notification| age(n) > 0 && age(n) < 7), &now),
+        group(frame, "notifications.earlier", &notes.filter(|n: Notification.Notification| age(n) >= 7), &now)
       ]))
+}
+
+/// One titled group of rows; nothing when the group is empty.
+fn group(frame: &Frame.Frame, title: Str, notes: &Array[Notification.Notification], now: &StdTime.Instant) -> H.Node {
+  if notes.isEmpty() { return H.nothing() }
+  H.section().class("note-group").holding([
+      H.h2().class("note-group-title").says(Frame.t(frame, title)),
+      H.ul().class("notes").holding(notes.map(|n: Notification.Notification| item(frame, &n, now)))
+    ])
 }

@@ -43,6 +43,25 @@ fn zoneMinutes(zone: Str) -> Option[Int] {
   Some(sign * (hours * 60 + minutes))
 }
 
+/// Whole years from a `YYYY-MM-DD` birth date to a day; none when the text is not a real past date.
+export fn yearsOld(birthDate: Str, today: &Local) -> Option[Int] {
+  let parts = birthDate.trim().split("-")
+  if parts.length() != 3 { return None }
+  let year = parts[0].toInt() ?
+  let month = parts[1].toInt() ?
+  let day = parts[2].toInt() ?
+  if year < 1900 || month < 1 || month > 12 || day < 1 || day > daysIn(year, month) { return None }
+  let birthday = month * 100 + day
+  let years = today.year - year - (if today.month * 100 + today.day < birthday { 1 } else { 0 })
+  if years < 0 { None } else { Some(years) }
+}
+
+/// Days in a month of a year.
+fn daysIn(year: Int, month: Int) -> Int {
+  if month == 2 { return if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 { 29 } else { 28 } }
+  if month == 4 || month == 6 || month == 9 || month == 11 { 30 } else { 31 }
+}
+
 /// The instant as a UTC timestamp the database reads.
 export fn toTimestamp(instant: &Time.Instant) -> Str {
   Result.unwrapOr(Time.toRfc3339(instant), "")

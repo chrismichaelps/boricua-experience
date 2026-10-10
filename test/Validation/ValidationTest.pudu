@@ -45,7 +45,7 @@ fn refused[T](outcome: &Result[T, Problem.Problem]) -> Array[Str] {
 /// Runs the suite.
 fn main() -> Int {
   let ready = EventForm.check(&goodDraft())
-  let signUp = Credentials.SignUp{displayName: "Ana", email: "ana@example.com", password: "boricua2026", adult: true, terms: true, privacy: true}
+  let signUp = Credentials.SignUp{displayName: "Ana", email: "ana@example.com", password: "boricua2026", birthDate: "1990-05-17", terms: true, privacy: true}
   let checks = Test.suite("Validation", &[
       Test.succeeded("a complete draft is ready", &ready),
       Test.equals("a ready draft carries UTC timestamps", &Result.map(ready, |r| r.startsAt), &Ok("2026-12-05T23:00:00Z")),
@@ -59,12 +59,18 @@ fn main() -> Int {
       Test.equals("an empty capacity is unlimited", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), capacity: ""}), |r| r.capacity), &Ok(None)),
       Test.equals("a malformed price is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), price: "doce"})), &["price"]),
       Test.succeeded("a complete sign-up passes", &Account.signUp(&signUp)),
-      Test.equals("a sign-up without the age confirmation is refused", &refused(&Account.signUp(&Credentials.SignUp{..signUp, adult: false})), &["adult"]),
+      Test.equals("a sign-up without a date of birth is refused", &refused(&Account.signUp(&Credentials.SignUp{..signUp, birthDate: ""})), &["birthDate"]),
+      Test.equals("an impossible date of birth is refused", &refused(&Account.signUp(&Credentials.SignUp{..signUp, birthDate: "1990-02-30"})), &["birthDate"]),
+      Test.equals("a date of birth in the future is refused", &refused(&Account.signUp(&Credentials.SignUp{..signUp, birthDate: "2999-01-01"})), &["birthDate"]),
+      Test.equals("a minor's date of birth is refused", &refused(&Account.signUp(&Credentials.SignUp{..signUp, birthDate: "2015-06-01"})), &["birthDate"]),
+      Test.that("a minor's date of birth reads as underage", Account.underage("2015-06-01")),
+      Test.that("an adult's date of birth does not read as underage", !Account.underage("1990-05-17")),
+      Test.that("an unreadable date does not read as underage", !Account.underage("tomorrow")),
       Test.equals("a sign-up with a short password is refused", &refused(&Account.signUp(&Credentials.SignUp{..signUp, password: "corta"})), &["password"]),
       Test.equals("an address without a domain is refused", &Account.isEmail("ana@local"), &false),
       Test.equals("an address with a domain passes", &Account.isEmail("ana.rivera@correo.pr"), &true),
       Test.equals("mismatched passwords are refused", &refused(&Account.newPassword(&Credentials.NewPassword{password: "boricua2026", confirmation: "boricua2027"})), &["confirmation"]),
-      Test.equals("onboarding requires every confirmation", &refused(&Account.onboarding(&Credentials.Onboarding{displayName: "Ana", adult: true, terms: false, privacy: false})), &["terms", "privacy"]),
+      Test.equals("onboarding requires every confirmation", &refused(&Account.onboarding(&Credentials.Onboarding{displayName: "Ana", birthDate: "1990-05-17", terms: false, privacy: false})), &["terms", "privacy"]),
       Test.equals("a long join message is refused", &refused(&ParticipationRules.message("x".repeat(501))), &["message"]),
       Test.equals("an unknown report reason is refused", &refused(&ParticipationRules.report(&ParticipationRules.Report{reason: "boring", detail: ""})), &["reason"]),
       Test.equals("a reaction of two is refused", &refused(&ParticipationRules.reaction(2)), &["reaction"]),

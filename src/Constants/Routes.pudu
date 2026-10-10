@@ -35,7 +35,6 @@ export const CREATE: Str = "/create"
 /// The member's requests, saved events, and organized events.
 export const ACTIVITY: Str = "/activity"
 export const NOTIFICATIONS: Str = "/notifications"
-export const NOTIFICATIONS_READ: Str = "/notifications/read"
 /// The member's profile and settings.
 export const ACCOUNT: Str = "/account"
 export const ACCOUNT_PROFILE: Str = "/account/profile"

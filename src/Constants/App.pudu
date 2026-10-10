@@ -28,8 +28,6 @@ export const MINIMUM_AGE: Int = 18
 /// Query suffix appended to stylesheet and script addresses so a deployment replaces cached copies.
 export const ASSET_VERSION: Str = "22"
 
-/// The contact address for privacy and legal requests.
-export const PRIVACY_EMAIL: Str = "privacidad@boricuaexperience.com"
 
 /// The bounding box of Puerto Rico and its islands: south, north, west, east.
 export const BOUNDS_SOUTH: Float64 = 17.5

@@ -11,6 +11,8 @@ export const LOCALE: Str = "bx_lang"
 export const CONSENT: Str = "bx_consent"
 /// An anonymous browser id used only to record consent choices.
 export const VISITOR: Str = "bx_visitor"
+/// Set when a date of birth shows a minor; sign-up stays closed to that browser while it lasts.
+export const AGE_GATE: Str = "bx_age"
 /// A one-time message shown on the next page.
 export const FLASH: Str = "bx_flash"
 
@@ -20,5 +22,7 @@ export const SESSION_MAX_AGE: Int = 2592000
 export const FLOW_MAX_AGE: Int = 600
 /// Language and consent lifetime in seconds: 365 days.
 export const PREFERENCE_MAX_AGE: Int = 31536000
+/// Age gate lifetime in seconds: one day.
+export const AGE_GATE_MAX_AGE: Int = 86400
 /// Flash lifetime in seconds.
 export const FLASH_MAX_AGE: Int = 60

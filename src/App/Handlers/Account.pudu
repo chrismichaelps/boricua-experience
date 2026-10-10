@@ -20,7 +20,6 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.updatePreferences, |asked: Messages.Signed[Profile.Preferences], _context: Context.Context| Messaging.lift(Account.updatePreferences(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.changeAvatar, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Account.changeAvatar(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.removeAvatar, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.removeAvatar(&held, &asked.session))),
-    Registration.handler(&kinds.notifications, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.notifications(&held, &asked.session))),
-    Registration.handler(&kinds.markRead, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.markRead(&held, &asked.session)))
+    Registration.handler(&kinds.notifications, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.notifications(&held, &asked.session)))
   ]
 }

@@ -112,7 +112,7 @@ fn account(frame: &Frame.Frame) -> H.Node {
     case Some(member) => H.div().class("appbar-member").holding([
         H.a().class("icon-button").href(Routes.NOTIFICATIONS).label(Frame.t(frame, "nav.notifications")).holding([
             Icons.sized("bell", 22),
-            if member.unreadNotifications > 0 { H.span().class("badge").says(if member.unreadNotifications > 9 { "9+" } else { show(member.unreadNotifications) }) } else { H.nothing() }
+            if member.unreadNotifications > 0 && Frame.here(frame) != Routes.NOTIFICATIONS { H.span().class("badge").says(if member.unreadNotifications > 9 { "9+" } else { show(member.unreadNotifications) }) } else { H.nothing() }
           ]),
         H.a().class("avatar-link").href(Routes.ACCOUNT).label(Frame.t(frame, "nav.profile")).holding([Avatar.face(member.displayName, member.avatarUrl, "sm")])
       ])

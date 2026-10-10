@@ -5,7 +5,7 @@
 .brand-name { display: grid; line-height: 1.15; }
 .brand-name strong { font: 400 26px/1.25 "Pacifico", cursive; letter-spacing: -.5px; }
 .brand-name span { font: 700 10px/1.5 var(--font); letter-spacing: 2px; text-transform: uppercase; padding-left: 3px; }
-.search-cotorra { position: absolute; width: 112px; height: 90px; left: 50%; bottom: calc(100% - 20px); transform: translateX(-50%); pointer-events: none; }
+.search-cotorra { position: absolute; z-index: 2; width: 84px; height: 60px; left: 50%; bottom: calc(100% - 9px); transform: translateX(-50%); pointer-events: none; }
 .search-top { padding-top: 68px; }
 .pill-field label { font-size: 14px; font-weight: 600; color: var(--color-graphite); }
 .pill-field input, .pill-field select { font-size: 17px; min-height: 28px; }
@@ -52,7 +52,7 @@
   .app-home .appbar .brand img { width: 36px; height: 36px; }
   .app-home .appbar .brand { gap: 6px; }
   .app-home .lang-switch .icon-button { padding-inline: 6px; }
-  .search-cotorra { width: 96px; height: 78px; bottom: calc(100% - 16px); }
+  .search-cotorra { width: 72px; height: 52px; bottom: calc(100% - 8px); }
   .hero-place { font-size: 13px; right: 20px; bottom: 16px; }
 }
 @media (max-width: 380px) {
@@ -73,20 +73,23 @@
 .hero-slide.is-current { opacity: 1; }
 .hero-bottom { position: absolute; right: 28px; bottom: 24px; left: 28px; display: flex; align-items: center; justify-content: flex-end; gap: 22px; }
 .hero-bottom .hero-place { position: static; font-size: 18px; line-height: 1.3; text-align: right; text-shadow: 0 1px 8px rgba(0,0,0,.45); }
-.hero-controls { display: flex; align-items: center; border-radius: 999px; padding: 0 8px; background: rgba(255,255,255,.23); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.hero-controls { display: flex; align-items: center; height: 28px; padding: 0 4px 0 6px; border-radius: 999px; background: rgba(255,255,255,.22); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .hero-dots { display: flex; }
-.hero-dot, .hero-pause { display: grid; place-items: center; flex: none; width: 44px; height: 44px; padding: 0; background: transparent; border: 0; color: white; border-radius: 50%; cursor: pointer; }
-.hero-dot span { width: 8px; height: 8px; background: rgba(255,255,255,.45); border-radius: 50%; transition: background-color .2s ease, transform .2s ease; }
-.hero-dot[aria-pressed="true"] span { background: white; transform: scale(1.2); }
-.hero-dot:hover, .hero-pause:hover { background: rgba(255,255,255,.15); }
-.hero-pause { border-left: 1px solid rgba(255,255,255,.3); border-radius: 0 999px 999px 0; }
-.carousel-play-symbol { display: none; font-size: 12px; }
+.hero-dot, .hero-pause { position: relative; display: grid; place-items: center; flex: none; width: 18px; height: 28px; padding: 0; background: transparent; border: 0; color: white; cursor: pointer; }
+.hero-dot::before, .hero-pause::before { content: ""; position: absolute; inset: -8px -3px; }
+.hero-dot span { width: 6px; height: 6px; background: rgba(255,255,255,.5); border-radius: 50%; transition: background-color .2s ease, width .25s ease; }
+.hero-dot[aria-pressed="true"] span { width: 14px; border-radius: 3px; background: white; }
+.hero-dot[aria-pressed="true"] { width: 24px; }
+.hero-dot:hover span { background: rgba(255,255,255,.85); }
+.hero-dot:focus-visible, .hero-pause:focus-visible { outline: 2px solid white; outline-offset: 1px; border-radius: 6px; }
+.hero-pause { width: 24px; margin-left: 4px; border-left: 1px solid rgba(255,255,255,.3); }
+.hero-pause .icon { width: 12px; height: 12px; }
+.carousel-play-symbol { display: none; font-size: 9px; }
 .hero-pause.is-paused .carousel-play-symbol { display: block; }
 .hero-pause.is-paused .carousel-pause-symbol { display: none; }
 @media (max-width: 959px) {
   .hero-bottom { left: 20px; right: 20px; bottom: 16px; gap: 8px; flex-wrap: wrap; }
   .hero-bottom .hero-place { font-size: 14px; }
-  .hero-controls { padding-inline: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { .hero-slide, .hero-dot span { transition: none; } }
 

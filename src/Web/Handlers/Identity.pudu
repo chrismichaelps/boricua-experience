@@ -16,6 +16,7 @@ import Domain.Session as Session
 import Services.Auth.Accounts as Accounts
 import Services.Auth.Sealer as Sealer
 import Utils.Form as Form
+import Validation.Account as AccountRules
 import View.Pages.Auth as AuthPage
 import Web.Context as Context
 import Web.Respond as Respond
@@ -74,6 +75,7 @@ fn signIn(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 fn signUpPage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   let wanted = typed(visitor, "", "")
   if visitor.session != None { return Respond.redirect(wanted.returnTo) }
+  if visitor.cookies.containsKey(Cookies.AGE_GATE) { return Respond.page(200, &AuthPage.unavailable(&Context.frame(app, visitor))) }
   Respond.page(200, &AuthPage.signUp(&Context.frame(app, visitor), &wanted, &None))
 }
 
@@ -84,9 +86,13 @@ fn signUp(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
     displayName: Form.text(&fields, "displayName"),
     email: Form.text(&fields, "email"),
     password: Option.unwrapOr(fields.get("password"), ""),
-    adult: Form.flag(&fields, "adult"),
+    birthDate: Form.text(&fields, "birthDate"),
     terms: Form.flag(&fields, "terms"),
     privacy: Form.flag(&fields, "privacy")
+  }
+  // A minor is refused before anything is sent or stored; the date itself is never kept.
+  if visitor.cookies.containsKey(Cookies.AGE_GATE) || AccountRules.underage(form.birthDate) {
+    return Respond.underage(app, &AuthPage.unavailable(&Context.frame(app, visitor)))
   }
   let wanted = typed(visitor, form.displayName, form.email)
   match Serve.ask(app, &app.kinds.signUp, Messages.SignUp{form: form, locale: Locale.code(&visitor.locale), returnTo: wanted.returnTo}) {
