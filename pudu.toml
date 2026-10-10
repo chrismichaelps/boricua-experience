@@ -2,7 +2,7 @@
 name = "@chrismichaelps/boricua-experience"
 version = "0.1.0"
 description = "Boricua Experience: discover, join, and create activities and events across Puerto Rico"
-license = "Apache-2.0"
+license = "LicenseRef-Proprietary"
 keywords = ["events", "puerto-rico", "pwa", "pudu"]
 language = ">=0.1.3 <0.2.0"
 source = "src"

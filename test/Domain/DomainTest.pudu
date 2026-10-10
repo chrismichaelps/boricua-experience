@@ -62,6 +62,9 @@ fn main() -> Int {
       Test.equals("sorts round-trip by name", &Search.sortFrom(Search.sortName(&Search.Near)), &Search.Near),
       Test.equals("windows round-trip by name", &Search.windowFrom(Search.windowName(&Search.Weekend)), &Search.Weekend),
       Test.equals("no filter is not narrowed", &Search.isNarrowed(&Search.everything()), &false),
+      Test.equals("an event is over once its end time passes", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: "2026-10-09T20:00:00Z"}, 1791576000000 + 1))), &Ok(Some(true))),
+      Test.equals("an event before its end time is not over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: "2026-10-09T20:00:00Z"}, 1791576000000 - 1))), &Ok(Some(false))),
+      Test.equals("an event the job marked ended is over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "ended", endsAt: "2999-01-01T00:00:00Z"}, 0))), &Ok(Some(true))),
       Test.equals("seats left never go below zero", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.seatsLeft(&Event.Card{..card, capacity: Some(1), approvedCount: 3}))), &Ok(Some(Some(0))))
     ])
   let ran = Test.run(&checks)

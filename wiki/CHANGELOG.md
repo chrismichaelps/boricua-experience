@@ -40,3 +40,4 @@
 - 2026-10-09 · [[src/Public/Brand]] · search parrot redrawn as a peeking head with feet on the search surface; compact carousel controls.
 - 2026-10-09 · [[src/Public/AccountMenu]] · account menu replaces the avatar link (popover on desktop, full sheet on phones); the bell rings only for new notifications; translucent, hover-only header tints. Asset version 24.
 - 2026-10-09 · [[decisions/ADR-0008-separate-environments]] · development moves to the local Supabase stack with seed; production purged of seed data and guarded; owner account is the administrator.
+- 2026-10-09 · [[decisions/ADR-0009-event-expiry]] · events are marked ended by a five-minute job after their end time, kept as history, final, and removed from search engines.

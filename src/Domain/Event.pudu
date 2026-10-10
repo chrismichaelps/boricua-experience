@@ -2,6 +2,7 @@
 module Domain.Event
 
 import Std.Json as Json
+import Utils.Time as Time
 
 /** @Domain.Event.CategoryRef — the category a card names */
 export type CategoryRef = {
@@ -149,6 +150,15 @@ export fn isFree(card: &Card) -> Bool { card.priceCents == 0 }
 
 /// Whether joining waits for the organizer.
 export fn needsApproval(card: &Card) -> Bool { card.joinPolicy == "approval" }
+
+/// Whether an event is over at a moment: marked ended by the expiry job, or past its end time before the job ran.
+export fn hasEnded(card: &Card, nowMillis: Int) -> Bool {
+  if card.status == "ended" { return true }
+  match Time.parseTimestamp(card.endsAt) {
+    case Some(end) => end.millis <= nowMillis
+    case None => false
+  }
+}
 
 /// Whether an event was cancelled.
 export fn isCancelled(card: &Card) -> Bool { card.status == "cancelled" }

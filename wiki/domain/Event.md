@@ -21,3 +21,7 @@ aliases: [Activity, Evento]
 ## Referenced by
 
 [[domain/_MOC]] · [[domain/Card]] · [[subsystems/Publishing]] · [[src/Domain/Event]]
+
+## Lifecycle
+
+`draft` → `published` → `ended` (by [[decisions/ADR-0009-event-expiry]]) or `cancelled` (by the organizer). `ended` and `cancelled` are final.

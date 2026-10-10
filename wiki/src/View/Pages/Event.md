@@ -54,3 +54,7 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Expiry
+
+Only a public, published event that has not ended is indexable; ended and cancelled pages render for people with the link and carry `noindex`. See [[decisions/ADR-0009-event-expiry]].

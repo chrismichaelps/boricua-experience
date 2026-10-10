@@ -26,7 +26,8 @@ import View.Seo as Seo
 export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> Html.Html {
   let card = detail.card
   let path = Routes.EVENT_PREFIX + card.slug
-  let indexable = card.visibility == "public"
+  // Only a public activity that is still on is offered to search engines; ended and cancelled pages stay reachable by link.
+  let indexable = card.visibility == "public" && card.status == "published" && !Event.hasEnded(&card, frame.nowMillis)
   let meta = Seo.Meta {
     ..Seo.meta(card.title, Text.truncate(card.summary, 160), path, indexable),
     image: EventCard.coverOf(&card),
@@ -200,10 +201,7 @@ fn report(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> H.Node {
   let card = detail.card
   let base = Routes.EVENT_PREFIX + card.slug
-  let ended = match Time.parseTimestamp(card.endsAt) {
-    case Some(ends) => ends.millis < frame.nowMillis
-    case None => false
-  }
+  let ended = Event.hasEnded(&card, frame.nowMillis)
   let price = H.div().class("join-price").holding([H.strong().says(Format.price(&frame.locale, card.priceCents)), H.span().says(Format.seats(&frame.locale, &card))])
   let refusal = match problem {
     case Some(found) => H.p().class("field-error").role("alert").says(Frame.t(frame, Problem.messageKey(&found)))
