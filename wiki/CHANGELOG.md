@@ -62,3 +62,7 @@
 - Use one original green/red cotorra identity in headers, mobile menu, footer, favicon and install/social assets; remove blue recoloring.
 - Read featured scenes/captions from Supabase's bounded public content RPC; derive regions from municipalities and remove embedded destination tuples/footer town slugs. Private migration remains ignored; guests/members have function access only.
 - Regression gate:6/6 suites,152 assertions; complete browser harnesses and timezone checks; independent bounded review found no functional/security issue. Corrected wiki interface parity findings. Asset graph33.
+
+## Release0.1.1
+
+Promotes reviewed mobile navigation/privacy fixes, original green/red cotorra assets and database-owned featured destinations. Includes semantic map dates and the prior phone header clipping fix. Additive content RPC deployed to both databases before app rollout; no business-content seed or credentials committed. No changes to account/provider permissions or event-location policy.

@@ -203,3 +203,5 @@ Architect → Implementer → Independent Reviewer → Implementer. Own brand, a
 - Physical GPS/haptics and exhaustive hardware coverage remain unverified. Existing repositorywide formatter differences are baseline; changed modules formatted where practical.
 
 Exact next action: verify the staged production build, promote it and record the released commit/deployment.
+
+Release preparation: featurePR#2 merged into dev; release0.1.1 carries tested source and metadata into main. Physical deviceGPS/haptics and capacity-boundary concurrency remain separate validation work.
