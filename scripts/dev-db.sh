@@ -25,6 +25,10 @@ fi
 : "${SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET:?set the development Google OAuth client secret}"
 
 password="$(python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["BORICUA_DB_PASSWORD"], safe=""))')"
-supabase db push --include-seed --yes --db-url "postgresql://postgres.$ref:$password@$POOLER_HOST:5432/postgres"
+supabase db push --yes --db-url "postgresql://postgres.$ref:$password@$POOLER_HOST:5432/postgres"
+# psql runs the seed statement by statement; the CLI's batched seeding cannot see the temporary
+# tables the seed creates. The seed replaces its own rows, so running it again is safe.
+PGPASSWORD="$BORICUA_DB_PASSWORD" psql "host=$POOLER_HOST port=5432 user=postgres.$ref dbname=postgres sslmode=require" \
+  -v ON_ERROR_STOP=1 -q -f supabase/seed.sql
 supabase config push --project-ref "$ref" --yes
 echo "Development project $ref is up to date."
