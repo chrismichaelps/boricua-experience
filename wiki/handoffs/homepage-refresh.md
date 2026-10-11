@@ -235,3 +235,8 @@ Implementer → Independent Reviewer → Implementer: stale sharing-restoration 
 
 ## Local CLI configuration · #35
 Architect → Implementer: own existing supabase/config.toml, local ignore file and complete mirror. Restore safe configuration to Git; no hosted settings applied. Independent review required.
+
+## Full-width search · #36
+Architect → Implementer: own Layout search body class, Search image sizes, SearchStyles width/rail rules and mechanical cache graph42. Supabase local files committed/reviewed separately. Independent review required.
+
+Implementer → Independent Reviewer → Implementer: review clear;193assertions/allbrowserharnesses pass. Search bounds measured1440px→1424px(left8),390px→374px(left8), no horizontal overflow, oneh1. Category/town shells unchanged.

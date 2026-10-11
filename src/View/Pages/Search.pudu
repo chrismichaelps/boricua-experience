@@ -93,7 +93,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
   Layout.page(frame, &meta, Layout.Explore, H.div().class("search-page").holding([
         if photographic {
           H.section().class("search-hero").holding([
-              H.img().class("search-hero-photo").src(scene.image).at("srcset", Hero.photoSet(scene.image)).at("sizes", "(min-width: 1280px) 1200px, 100vw").alt("").at("fetchpriority", "high"),
+              H.img().class("search-hero-photo").src(scene.image).at("srcset", Hero.photoSet(scene.image)).at("sizes", "100vw").alt("").at("fetchpriority", "high"),
               H.div().class("search-hero-content").holding([H.h1().says(title), H.p().says(description), SearchControls.pill(frame, catalog, filters)]),
               H.a().class("search-hero-place").href(Routes.TOWN_PREFIX + scene.town).says(if frame.locale == Locale.Es { scene.captionEs } else { scene.captionEn })
             ])
