@@ -46,14 +46,16 @@
  .activity { max-width:1040px;margin-inline:auto;width:100%;min-width:0; }
 .activity .activity-item { padding:0 0 16px;gap:12px;min-width:0; }
 .activity .card,.activity .card-body,.activity .card-media { min-width:0; }
-.activity .card-media { width:100%; }
+.activity .card-link { width:100%;min-width:0;grid-template-columns:minmax(0,1fr); }
+.activity .card-media { width:100%;max-width:100%; }
 .activity .card-media img { display:block;max-width:100%; }
 .activity .card-title { overflow-wrap:anywhere; }
 @media(min-width:760px) {
  .activity .card-grid { grid-template-columns:minmax(0,1fr);gap:24px; }
  .activity .card-link { grid-template-columns:160px minmax(0,1fr);align-items:start;gap:18px; }
  .activity .card-media { height:128px;min-height:0;aspect-ratio:auto; }
- .activity .card-body { padding:4px 0; }
+ .activity .card-link > .card-media { grid-column:1;grid-row:1;max-width:160px; }
+ .activity .card-link > .card-body { grid-column:2;grid-row:1;padding:4px 0; }
  .activity .card-flag { top:48px;left:10px;right:auto;max-width:calc(100% - 20px); }
  .activity .card-flag span { overflow:hidden;text-overflow:ellipsis; }
 }
