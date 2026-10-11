@@ -2,10 +2,12 @@
 module App.Handlers.Discover
 
 import App.Messages as Messages
+import Domain.Assistant as Conversation
 import Domain.Search as Search
 import PuduLangMediator.Context as Context
 import PuduLangMediator as Messaging
 import PuduLangMediator.Registration as Registration
+import Services.Assistant as Assistant
 import Services.Catalog as Catalog
 import Services.Discovery as Discovery
 import Services.Events as Events
@@ -16,6 +18,8 @@ import Services.Seo as Seo
 export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
   let held = *runtime
   [
+    Registration.handler(&kinds.assistantTool, |asked: Messages.Signed[Conversation.Tool], _context: Context.Context| Messaging.lift(Assistant.runTool(&held, &asked.session, &asked.input))),
+    Registration.handler(&kinds.assistant, |asked: Messages.Signed[(Conversation.Input, Str)], _context: Context.Context| Messaging.lift(Assistant.prepare(&held, &asked.session, &asked.input[0], asked.input[1]))),
     Registration.handler(&kinds.home, |asked: Messages.Visit[Messages.Place], _context: Context.Context| Messaging.lift(Discovery.home(&held, asked.input.lat, asked.input.lng, Events.tokenOf(&asked.session)))),
     Registration.handler(&kinds.search, |asked: Messages.Visit[Search.Filters], _context: Context.Context| Messaging.lift(Discovery.search(&held, &asked.input, Events.tokenOf(&asked.session)))),
     Registration.handler(&kinds.suggest, |asked: Str, _context: Context.Context| Messaging.lift(Discovery.suggest(&held, asked))),

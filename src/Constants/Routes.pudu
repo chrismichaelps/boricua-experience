@@ -82,3 +82,6 @@ export const API_PARTICIPANTS: Str = "/api/e/:slug/positions"
 export const ASSETS_PREFIX: Str = "/assets/"
 export const SERVICE_WORKER: Str = "/sw.js"
 export const FAVICON: Str = "/favicon.ico"
+
+/// Member-only live activity assistant.
+export const API_ASSISTANT: Str = "/api/assistant"

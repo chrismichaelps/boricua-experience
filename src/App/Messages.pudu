@@ -1,6 +1,8 @@
 /** @App.Messages.Vocabulary — every request the application answers */
 module App.Messages
 
+import Std.Json as Json
+import Domain.Assistant as Conversation
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
 import Domain.Credentials as Credentials
@@ -64,6 +66,8 @@ export type Resolution = { reportId: Int, act: Bool }
 
 /** @App.Messages.Kinds — every kind of request, made once and shared by the mediator and the routes */
 export type Kinds = {
+  assistant: Request.Kind[Signed[(Conversation.Input, Str)], Json.Json, Problem.Problem],
+  assistantTool: Request.Kind[Signed[Conversation.Tool], Json.Json, Problem.Problem],
   home: Request.Kind[Visit[Place], Discovery.Home, Problem.Problem],
   search: Request.Kind[Visit[Search.Filters], Event.Page, Problem.Problem],
   suggest: Request.Kind[Str, Array[Event.Card], Problem.Problem],
@@ -124,6 +128,8 @@ fn kind[Q, R](name: Str, tag: Str) -> Request.Kind[Q, R, Problem.Problem] { Requ
 /// Every kind, made once.
 export fn kinds() -> Kinds {
   Kinds {
+    assistant: kind("assistant.prepare", READ),
+    assistantTool: kind("assistant.tool", READ),
     home: kind("discover.home", READ),
     search: kind("discover.search", READ),
     suggest: kind("discover.suggest", READ),
