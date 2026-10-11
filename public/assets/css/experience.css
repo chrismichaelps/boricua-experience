@@ -198,3 +198,17 @@ button[disabled] { cursor: wait; }
 .map-privacy summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
 .map-privacy details[open] p { padding: 4px 0 8px; }
 #map-location-status:empty { display: none; }
+
+/* About keeps its reading measure beneath an independent photographic header. */
+.legal-page.about-page { grid-template-columns: minmax(0, 1fr); max-width: 1200px; gap: 40px; }
+.about-page .legal { width: 100%; margin-inline: auto; }
+.about-hero { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 16px; min-height: 500px; padding: 48px; border-radius: 32px; color: white; background: #173d51; }
+.about-hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; z-index: -2; }
+.about-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,25,35,.12), rgba(7,25,35,.78)); z-index: -1; }
+.about-hero h1 { max-width: 760px; font-size: clamp(32px,4vw,52px); line-height: 1.12; text-wrap: balance; }
+.about-hero .lead { max-width: 660px; color: white; line-height: 1.6; }
+@media (max-width: 699px) {
+  .about-hero { min-height: 560px; border-radius: 24px; padding: 28px 24px; }
+  .about-hero-photo { object-position: 52% center; }
+  .about-hero .lead { font-size: 16px; }
+}

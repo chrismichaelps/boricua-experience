@@ -76,3 +76,6 @@ Resolved: activity grids explicitly constrain link width, image max-width and th
 
 ## Location controls Grill Log
 Resolved: compact expandable purpose help and live status fit narrow map viewports without covering the whole map.
+
+## Photographic page refinement Grill Log · #31
+Resolved: search matches home viewport height, minimum640px and rounded corners on desktop/phone. Auth and About use the attributed real El Morro flags photograph with responsive local WebP derivatives, retained CC BY-SA4.0 license and no altered scenery. About has one header/title; policy documents retain their reading layout. Cookie explanations lead with human labels while naming actual cookies. Asset graph advances atomically to41. Forms and database-driven destination ordering remain unchanged.

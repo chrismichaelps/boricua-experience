@@ -1,4 +1,4 @@
-import { REQUESTED_WITH } from '../constants/config.js?v=40';
+import { REQUESTED_WITH } from '../constants/config.js?v=41';
 
 export class RequestFailed extends Error {
   constructor(status, code) {
