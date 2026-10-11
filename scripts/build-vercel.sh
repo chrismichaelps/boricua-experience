@@ -21,6 +21,11 @@ find "$output/static" -name '*.md' -delete
 for library in ld-musl-x86_64.so.1 libffi.so.8 libz.so.1 libncursesw.so.6 libgmp.so.10; do
   cp "$runtime/$library" "$function_dir/$library"
 done
+mkdir -p "$output/functions/chat.func"
+cp "$root/server/assistant.mjs" "$output/functions/chat.func/index.mjs"
+cat > "$output/functions/chat.func/.vc-config.json" <<JSON
+{"runtime":"nodejs22.x","handler":"index.mjs","launcherType":"Nodejs","supportsResponseStreaming":true,"maxDuration":120,"environment":{"BORICUA_SITE_URL":"$site_url"}}
+JSON
 chmod 755 "$function_dir/bootstrap" "$function_dir/ld-musl-x86_64.so.1"
 
 # Settings that are not secret travel with the function; keys are project environment variables.
@@ -30,7 +35,7 @@ cat > "$function_dir/.vc-config.json" <<JSON
   "handler": "bootstrap",
   "architecture": "x86_64",
   "memory": 1024,
-  "maxDuration": 30,
+  "maxDuration": 120,
   "environment": {
     "BORICUA_SITE_URL": "$site_url",
     "BORICUA_LOG_FORMAT": "json",
@@ -48,6 +53,7 @@ cat > "$output/config.json" <<'JSON'
     { "src": "^/assets/(.*)$", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "continue": true },
     { "src": "^/sw\\.js$", "headers": { "cache-control": "no-cache", "service-worker-allowed": "/" }, "continue": true },
     { "src": "^/favicon\\.ico$", "headers": { "cache-control": "public, max-age=86400" }, "continue": true },
+    { "src": "^/api/chat$", "dest": "/chat" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/app" }
   ]
