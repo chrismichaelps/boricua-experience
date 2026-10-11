@@ -42,4 +42,7 @@ let retries=0;const recovered=provider([tool('search_activities'),answer]);
 await runConversation(context,async()=>({result:{searched:true,activities:[]},sources:[]}), 'fixture',signal,async()=>{},async(...args)=>{if(retries++===0)return{ok:false,status:503};return recovered(...args);});
 assert.equal(retries,3,'retry and tool rounds share a three-attempt budget');
 await assert.rejects(()=>runConversation(context,async()=>{},'fixture',signal,async()=>{},provider([[{choices:[{delta:{content:'unfinished'}}]}]])),ChatFailure);
+const metadata=[];
+await assert.rejects(()=>runConversation(context,async()=>{},'fixture',signal,async()=>{},provider([[{error:{code:{secret:'malformed'}}}]]),value=>metadata.push(value)),ChatFailure);
+assert.ok(!JSON.stringify(metadata).includes('malformed'));
 console.log('PASS: free-only stream, UTF-8 framing, live-data gate, unknown-tool rejection, quota errors and upstream cancellation');

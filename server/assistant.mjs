@@ -57,11 +57,11 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
     const calls = new Map();
     let content = '', finished = false, model, finishReason;
     for await (const chunk of sseData(response.body)) {
-      if (chunk.error) { report({ stage: 'provider_error', round, code: chunk.error.code }); throw new ChatFailure(); }
-      if (typeof chunk.model === 'string') model = chunk.model;
+      if (chunk.error) { report({ stage: 'provider_error', round, code: Number.isSafeInteger(chunk.error.code) ? chunk.error.code : undefined }); throw new ChatFailure(); }
+      if (typeof chunk.model === 'string' && /^[a-zA-Z0-9._/-]{1,140}:free$/.test(chunk.model)) model = chunk.model;
       const first = chunk.choices?.[0];
       if (!first) continue;
-      if (first.finish_reason) { finished = true; finishReason = first.finish_reason; }
+      if (first.finish_reason) { finished = true; finishReason = ['stop', 'length', 'tool_calls', 'content_filter', 'error'].includes(first.finish_reason) ? first.finish_reason : 'unknown'; }
       const delta = first.delta || {};
       for (const part of delta.tool_calls || []) {
         if (!Number.isInteger(part.index) || part.index < 0 || part.index > 1) throw new ChatFailure();
