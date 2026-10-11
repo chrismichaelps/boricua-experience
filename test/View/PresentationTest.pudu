@@ -60,6 +60,8 @@ fn main() -> Int {
   let town = Catalog.Municipality{name: "Ponce", slug: "ponce", region: "sur", lat: 18.011, lng: -66.614}
   let narrowed = Search.Filters{..Search.everything(), municipality: "ponce", category: "musica", query: "salsa", freeOnly: true, window: Search.Weekend}
   let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}))
+  let openSearch = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
+  let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
@@ -70,6 +72,12 @@ fn main() -> Int {
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
   let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
   let checks = Test.suite("Presentation", &[
+      Test.equals("open search photo comes from ordered catalog", &openSearch.contains("class=\"search-hero-photo\" src=\"/assets/img/luquillo-photo.webp\""), &true),
+      Test.equals("search preserves municipality filter", &openSearch.contains("pueblo=ponce"), &true),
+      Test.equals("empty scene catalog has no broken search photo", &emptySearch.contains("search-hero-photo"), &false),
+      Test.equals("category and town landings retain their own heading", &listing.contains("search-hero-photo"), &false),
+      Test.equals("footer removes the adult-only note", &openSearch.contains("For adults 18 and over"), &false),
+      Test.equals("footer uses the frame year", &openSearch.contains("© 1969 Boricua Experience."), &true),
       Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
       Test.equals("deadline card immediately says ended", &endedOutput.contains("Esta actividad ya terminó."), &true),
       Test.equals("deadline card has no stale available seats", &endedOutput.contains("Quedan 500"), &false),

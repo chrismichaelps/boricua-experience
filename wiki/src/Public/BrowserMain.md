@@ -78,3 +78,6 @@ Assistant initializes via optional dynamic import catch; failure does not preven
 
 ## Explicit location lifecycle Grill Log
 Resolved: nearby lookup stays private; initial acquisition uses the bounded accurate/balanced fallback. Fresh readings alone enable the sharing badge. No storage restores sharing; hiding or leaving stops it. Epochs reject stale callbacks and serialized writes prevent a late update undoing stop. Map controls expose purpose/status in both languages; the map omits the assistant.
+
+## Cache graph40 Grill Log
+Resolved: all first-party browser imports, shell resources and worker revision advance together to40 for the reviewed map and discovery changes. No personal HTML or database records enter precache.

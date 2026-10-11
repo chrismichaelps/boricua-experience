@@ -83,3 +83,5 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - Revision39 refreshes the complete browser asset graph. No schema migration required; all73 application function definitions/grants match dev/prod; production seed rows0.
 
 - 2026-10-11 · #24: private map lookup uses bounded location fallback; sharing starts explicitly and stops on hide/exit. Correct independent control subscriptions, bound write/revocation ordering, expose bilingual purpose/status and omit map assistant. Full gate: 180 Pudu assertions plus browser harnesses.
+
+- 2026-10-11 · #26: Culebra leads featured destinations in both databases; open search gains a responsive real-photo hero from the ordered catalog. Credit CC BY2.0 source/derivatives, simplify current-year footer and refresh graph40. Full gate186 assertions; desktop/phone output verified.

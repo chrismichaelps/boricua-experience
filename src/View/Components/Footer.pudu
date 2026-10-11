@@ -3,8 +3,10 @@ module View.Components.Footer
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
+import Std.Time as StdTime
 import Constants.App as App
 import Constants.Routes as Routes
+import Utils.Time as Time
 import View.Frame as Frame
 
 /// A translated group of working application destinations.
@@ -33,9 +35,11 @@ export fn render(frame: &Frame.Frame) -> H.Node {
               group(frame, "footer.legal", [(Routes.TERMS, "footer.terms"), (Routes.PRIVACY, "footer.privacy"), (Routes.COOKIES, "footer.cookies"), (Routes.RECOVER, "footer.recover")])
             ]),
           H.div().class("footer-bottom").holding([
-              H.a().class("footer-preferences").href(Routes.COOKIES).says(Frame.t(frame, "footer.preferences")),
-              H.p().class("footer-note").says(Frame.t(frame, "footer.adults")),
-              H.a().class("footer-credits").href("/assets/img/credits.html").says(Frame.t(frame, "footer.photography"))
+              H.p().class("footer-note").says(Frame.tf(frame, "footer.copyright", &[("year", show(Time.local(&StdTime.instantOf(frame.nowMillis)).year))])),
+              H.div().class("footer-links").holding([
+                  H.a().class("footer-preferences").href(Routes.COOKIES).says(Frame.t(frame, "footer.preferences")),
+                  H.a().class("footer-credits").href("/assets/img/credits.html").says(Frame.t(frame, "footer.photography"))
+                ])
             ])
         ])
     ])
