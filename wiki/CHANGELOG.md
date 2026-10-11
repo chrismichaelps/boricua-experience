@@ -91,3 +91,5 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - 2026-10-11 · [[src/Api/Supabase/Gateway]] · root-anchored SQL ignore rule restores gateway/identity application modules to Git; no runtime logic changes · issue #30.
 
 - 2026-10-11 · [[src/View/Pages/Legal]] · home-sized search photograph, licensed El Morro auth/About imagery and human-readable cookie purpose labels; asset graph41 · issue #31.
+
+- 2026-10-11 · [[src/Infrastructure/SupabaseConfig]] · track reviewed local CLI TOML and ignore file; no credentials, SQL or hosted-setting changes · issue #35.

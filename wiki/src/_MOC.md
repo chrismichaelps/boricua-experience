@@ -243,3 +243,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[Public/BrowserMessages]] — localized browser location and interaction feedback.
 
 - [[src/Test/Domain]] — domain and nullable account-profile regressions.
+
+[[src/Infrastructure/SupabaseConfig]]
