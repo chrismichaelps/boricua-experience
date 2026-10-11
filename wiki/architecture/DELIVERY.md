@@ -21,3 +21,5 @@ tags: [architecture, delivery]
 ## Environments
 
 Development and production data are separate; see [[decisions/ADR-0008-separate-environments]]. After any production migration run `scripts/check-production-data.sh`.
+
+Every reviewed application schema migration must be applied to both development and production before promotion. Compare application function definitions, permissions and RLS after applying it; repeat the production seed-data check. Development-only test fixtures remain isolated.
