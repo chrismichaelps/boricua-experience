@@ -7,7 +7,7 @@ export const ENDPOINTS = {
   locationStop: '/api/location/stop',
 };
 export const MAP = {
-  style: '/assets/map/style.json?v=38',
+  style: '/assets/map/style.json?v=39',
   script: '/assets/vendor/maplibre-gl.js',
   stylesheet: '/assets/vendor/maplibre-gl.css',
   center: [-66.4, 18.22],
@@ -35,3 +35,5 @@ export const SUGGEST = { minLength: 2, delayMs: 180 };
 export const STORAGE = { liveKey: 'bx-live', unreadKey: 'bx-unread' };
 
 export const CAROUSEL = { intervalMs: 6000 };
+
+export const GEO = { precise: {enableHighAccuracy:true, maximumAge:10000, timeout:12000}, balanced: {enableHighAccuracy:false, maximumAge:60000, timeout:10000}, deadlineMs:25000, approximateM:100 };

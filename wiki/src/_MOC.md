@@ -237,3 +237,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/AssistantMarkdown]]
 - [[src/Public/Marked]]
+
+- [[src/Public/Locate]] — bounded explicit publishing location lookup.
+
+- [[Public/BrowserMessages]] — localized browser location and interaction feedback.

@@ -1,9 +1,9 @@
-import { LIVE, MAP } from '../constants/config.js?v=38';
-import { getJson } from '../net/http.js?v=38';
-import { message } from '../constants/messages.js?v=38';
-import { createMap } from './mapLoader.js?v=38';
-import { accuracyCircle, personMarker } from './markers.js?v=38';
-import { toast } from './toast.js?v=38';
+import { GEO, LIVE, MAP } from '../constants/config.js?v=39';
+import { getJson } from '../net/http.js?v=39';
+import { message } from '../constants/messages.js?v=39';
+import { createMap } from './mapLoader.js?v=39';
+import { accuracyCircle, personMarker } from './markers.js?v=39';
+import { requestLocation } from '../utils/locate.js?v=39';
 
 function whenVisible(element, action) {
   const observer = new IntersectionObserver((entries) => {
@@ -51,29 +51,42 @@ export async function pinPicker(element) {
   const form = element.closest('form');
   const latInput = form.querySelector('[data-pin="lat"]');
   const lngInput = form.querySelector('[data-pin="lng"]');
-  const start = [Number(element.dataset.lng), Number(element.dataset.lat)];
-  const chosen = latInput.value !== '' && lngInput.value !== '';
-  const { map, maplibregl } = await createMap(element, { center: start, zoom: chosen ? MAP.pinZoom : MAP.zoom });
-  const marker = new maplibregl.Marker({ color: '#e63950', draggable: true });
+  const button = form.querySelector('[data-feature="pin-here"]');
+  const notice = document.createElement('p'); notice.className = 'field-hint'; notice.setAttribute('role','status'); notice.hidden = true; button?.after(notice);
+  let lookup, map, marker, point;
+  const cancel = () => { lookup?.abort(); lookup = null; if(button) {button.disabled=false;button.removeAttribute('aria-busy');} };
   const place = (lng, lat) => {
-    marker.setLngLat([lng, lat]).addTo(map);
-    latInput.value = lat.toFixed(6);
-    lngInput.value = lng.toFixed(6);
+    point = [lng,lat]; latInput.value = lat.toFixed(6); lngInput.value = lng.toFixed(6);
+    marker?.setLngLat(point).addTo(map);
   };
-  if (chosen) place(start[0], start[1]);
-  map.on('click', (event) => place(event.lngLat.lng, event.lngLat.lat));
-  marker.on('dragend', () => { const { lng, lat } = marker.getLngLat(); place(lng, lat); });
-  const sync = () => {
-    const lat = Number(latInput.value);
-    const lng = Number(lngInput.value);
-    if (Number.isFinite(lat) && Number.isFinite(lng) && latInput.value && lngInput.value) { marker.setLngLat([lng, lat]).addTo(map); map.easeTo({ center: [lng, lat] }); }
-  };
-  latInput.addEventListener('change', sync);
-  lngInput.addEventListener('change', sync);
-  form.querySelector('[data-feature="pin-here"]')?.addEventListener('click', () => {
-    navigator.geolocation?.getCurrentPosition((position) => {
-      place(position.coords.longitude, position.coords.latitude);
-      map.easeTo({ center: [position.coords.longitude, position.coords.latitude], zoom: MAP.pinZoom });
-    }, () => toast(message('locationUnavailable')), LIVE.watch);
+  button?.addEventListener('click', async () => {
+    if (lookup) return;
+    const controller = new AbortController(); lookup = controller; button.disabled = true; button.setAttribute('aria-busy','true');
+    notice.hidden = false; notice.textContent = message('locationLocating');
+    try {
+      const position = await requestLocation(controller.signal);
+      const {latitude:lat,longitude:lng,accuracy} = position.coords;
+      const [[west,south],[east,north]] = MAP.searchBounds;
+      if(lat<south || lat>north || lng<west || lng>east) { notice.textContent=message('locationOutside'); return; }
+      place(lng,lat); map?.easeTo({center:point,zoom:MAP.pinZoom});
+      notice.textContent = accuracy>GEO.approximateM ? message('locationPinApproximate').replace(':distance', String(Math.round(accuracy))) : message('locationPinReady');
+    } catch(error) {
+      if(error.name !== 'AbortError') notice.textContent = message(error.code===1?'locationPinDenied':error.code===0?'locationUnsupported':error.code===3?'locationTimedOut':'locationPinUnavailable');
+    } finally { if(lookup===controller) cancel(); }
   });
+  window.addEventListener('pagehide', cancel);
+  const start = [Number(element.dataset.lng), Number(element.dataset.lat)];
+  if(latInput.value !== '' && lngInput.value !== '') point=start;
+  const sync = () => {
+    cancel(); notice.hidden=true; const lat=Number(latInput.value), lng=Number(lngInput.value);
+    if(Number.isFinite(lat)&&Number.isFinite(lng)&&latInput.value&&lngInput.value) { place(lng,lat);map?.easeTo({center:point}); }
+  };
+  latInput.addEventListener('change',sync); lngInput.addEventListener('change',sync);
+  try {
+    const loaded=await createMap(element,{center:point||start,zoom:point?MAP.pinZoom:MAP.zoom}); map=loaded.map;
+    marker=new loaded.maplibregl.Marker({color:'#e63950',draggable:true});
+    if(point) marker.setLngLat(point).addTo(map);
+    map.on('click',event=>{cancel();notice.hidden=true;place(event.lngLat.lng,event.lngLat.lat);});
+    marker.on('dragstart',()=>{cancel();notice.hidden=true;}); marker.on('dragend',()=>{const {lng,lat}=marker.getLngLat();place(lng,lat);});
+  } catch { notice.hidden=false;notice.textContent=message('locationMapUnavailable'); }
 }

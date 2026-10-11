@@ -1,5 +1,14 @@
 const MESSAGES = {
   es: {
+    locationLocating: 'Buscando tu ubicación…',
+    locationPinReady: 'Ubicación encontrada. Puedes ajustar el pin antes de publicar.',
+    locationPinApproximate: 'Ubicación aproximada (±:distance m). Revisa y ajusta el pin antes de publicar.',
+    locationPinDenied: 'Permite la ubicación en los ajustes del navegador y del dispositivo, o coloca el pin manualmente.',
+    locationUnsupported: 'Este navegador no permite obtener la ubicación. Coloca el pin o escribe las coordenadas.',
+    locationTimedOut: 'La ubicación tardó demasiado. Intenta otra vez o coloca el pin manualmente.',
+    locationPinUnavailable: 'El dispositivo no pudo obtener tu ubicación. Intenta otra vez o coloca el pin manualmente.',
+    locationMapUnavailable: 'El mapa no pudo cargar. Puedes usar tu ubicación o escribir las coordenadas.',
+
     copied: 'Enlace copiado',
     locationDenied: 'Activa la ubicación en tu navegador para usar esta función.',
     locationUnavailable: 'No pudimos obtener tu ubicación.',
@@ -17,6 +26,15 @@ const MESSAGES = {
     tryAgain: 'Algo no salió bien. Intenta de nuevo.',
   },
   en: {
+    locationLocating: 'Finding your location…',
+    locationPinReady: 'Location found. You can adjust the pin before publishing.',
+    locationPinApproximate: 'Approximate location (±:distance m). Check and adjust the pin before publishing.',
+    locationPinDenied: 'Allow location in browser and device settings, or place the pin manually.',
+    locationUnsupported: 'Location is unavailable in this browser. Place the pin or enter coordinates.',
+    locationTimedOut: 'Location timed out. Try again or place the pin manually.',
+    locationPinUnavailable: 'Your device could not find your location. Try again or place the pin manually.',
+    locationMapUnavailable: 'The map could not load. You can use your location or enter coordinates.',
+
     copied: 'Link copied',
     locationDenied: 'Allow location in your browser to use this feature.',
     locationUnavailable: "We couldn't get your location.",
