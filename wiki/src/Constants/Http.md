@@ -51,3 +51,6 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 - **Q:** Why are guest pages no longer stored at the CDN?
   **A:** The CDN keys by URL and refuses `Vary: Cookie`. Guest HTML depends on the language cookie, the consent banner, and the flash, so a stored copy served one visitor's state to everyone, including a banner that came back after a choice. `CACHE_GUEST_PAGE` is `private, no-cache`; cookie-independent JSON (suggestions, reference documents) keeps its CDN lifetime. Resolved.
+
+## Streaming contract Grill Log
+- **Q:** Where does streaming run? **A:** Node supplies a narrow SSE adapter and calls a body-HMAC protected Pudu bridge for authenticated preparation/tools. Pudu still checks origin, CSRF, active/onboarded member and atomic quota. Only the adapter reads provider credentials; the browser receives public sources and text. Permission policy permits microphone on this origin for explicit editable dictation. Deployment budget120s, adapter total deadline90s and browser95s; cancellation reaches every upstream fetch. Resolved.

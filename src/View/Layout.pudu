@@ -8,6 +8,7 @@ import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Locale as Locale
 import Domain.Profile as Profile
+import View.Components.Assistant as Assistant
 import View.Components.Avatar as Avatar
 import View.Components.Footer as Footer
 import View.Components.Form as Form
@@ -29,6 +30,7 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           H.main().id("content").class("shell").at("tabindex", "-1").holding([content]),
           Footer.render(frame),
           tabBar(frame, &section),
+          Assistant.render(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
           H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])
@@ -66,6 +68,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/home.css" + version),
     H.link().rel("stylesheet").href("/assets/css/search.css" + version),
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }

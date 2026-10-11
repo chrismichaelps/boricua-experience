@@ -87,3 +87,6 @@ The bell's count sits on its shoulder as a 16 px pill with a white ring; it is h
 
 ## Colored identity Grill Log
 - **Q:** Which menu identity is shown? **A:** The mobile sheet reuses the same versioned green/red parrot and wordmark as the main header and footer. Resolved.
+
+## Assistant integration Grill Log
+- **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
