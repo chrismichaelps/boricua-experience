@@ -16,6 +16,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("assistant.intro", "Cuéntame qué te gustaría hacer, en qué pueblo y cuándo. Buscaré actividades actuales para ti."),
     ("assistant.placeholder", "¿Qué puedo hacer este fin de semana?"),
     ("assistant.question", "Tu mensaje"),
+    ("assistant.stop_audio", "Detener audio"),
+    ("assistant.audio_error", "No pudimos reproducir la respuesta. Inténtalo de nuevo."),
     ("assistant.send", "Enviar"),
     ("assistant.stop", "Detener respuesta"),
     ("assistant.close", "Cerrar asistente"),

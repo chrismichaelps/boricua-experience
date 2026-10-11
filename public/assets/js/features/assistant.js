@@ -1,4 +1,4 @@
-import { renderMarkdown } from './assistantMarkdown.js?v=38';
+import { renderMarkdown } from './assistantMarkdown.js?v=39';
 
 export async function consumeChat(stream, receive) {
   const reader = stream.getReader(), decoder = new TextDecoder();
@@ -45,11 +45,13 @@ export function assistant(root) {
   const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
   let controller, active = false, recording, history = [], ticket = 0, returnFocus, listening = false, frame;
   const announce = (key = '') => { status.textContent = root.dataset[key] || ''; status.hidden = !key; };
-  const stopVoice = () => { listening = false; recording?.abort(); recording = null; voice?.setAttribute('aria-pressed', 'false'); voice?.setAttribute('aria-label', root.dataset.voice); };
+  let speakingButton = null, speakingUtterance = null;
+  const stopAudio = () => { const previous = speakingButton; speakingButton = null; speakingUtterance = null; window.speechSynthesis?.cancel(); if(previous) { previous.textContent=root.dataset.listen;previous.setAttribute('aria-pressed','false'); } };
+  const stopVoice = () => { listening = false; const previous = recording; recording = null; previous?.abort(); voice?.setAttribute('aria-pressed', 'false'); voice?.setAttribute('aria-label', root.dataset.voice); };
   const submit = form?.querySelector('[type="submit"]');
   const ready = () => { active = false; if (submit) { submit.disabled = false; submit.textContent = '↑'; submit.setAttribute('aria-label', root.dataset.send); submit.classList.remove('is-streaming'); } };
   const close = () => {
-    ticket++; controller?.abort(); stopVoice(); window.speechSynthesis?.cancel(); cancelAnimationFrame(frame); frame = null;
+    ticket++; controller?.abort(); stopVoice(); stopAudio(); cancelAnimationFrame(frame); frame = null;
     ready(); announce();
     dialog.close(); returnFocus?.focus({ preventScroll: true });
   };
@@ -72,22 +74,22 @@ export function assistant(root) {
   voice.addEventListener('click', () => {
     if (listening) { recording?.stop(); return; }
     if (!Speech) { announce('unsupported'); return; }
-    window.speechSynthesis?.cancel();
-    recording = new Speech(); recording.lang = document.documentElement.lang; recording.interimResults = true;
+    stopAudio();
+    const recognition = new Speech(); recording = recognition; recognition.lang = document.documentElement.lang.startsWith('en') ? 'en-US' : 'es-PR'; recognition.interimResults = true;
     const prefix = input.value.trim();
-    recording.onresult = event => {
-      if (!listening || !dialog.open) return;
+    recognition.onresult = event => {
+      if (recording !== recognition || !listening || !dialog.open) return;
       const transcript = [...event.results].map(result => result[0].transcript).join(' ');
       input.value = [prefix, transcript].filter(Boolean).join(' ').slice(0, 1200);
     };
-    recording.onerror = () => { stopVoice(); announce('voiceError'); };
-    recording.onend = () => { stopVoice(); if (status.textContent === root.dataset.listening) announce(); };
+    recognition.onerror = () => { if (recording !== recognition) return; stopVoice(); announce('voiceError'); };
+    recognition.onend = () => { if (recording !== recognition) return; stopVoice(); if (status.textContent === root.dataset.listening) announce(); };
     try {
       listening = true; recording.start(); voice.setAttribute('aria-pressed', 'true'); voice.setAttribute('aria-label', root.dataset.stopVoice); announce('listening');
     } catch { stopVoice(); announce('voiceError'); }
   });
   root.querySelector('[data-assistant="reset"]').addEventListener('click', () => {
-    ticket++; controller?.abort(); stopVoice(); window.speechSynthesis?.cancel(); cancelAnimationFrame(frame); frame = null; history = []; thread.replaceChildren(intro.cloneNode(true)); input.value = ''; announce(); ready(); input.focus();
+    ticket++; controller?.abort(); stopVoice(); stopAudio(); cancelAnimationFrame(frame); frame = null; history = []; thread.replaceChildren(intro.cloneNode(true)); input.value = ''; announce(); ready(); input.focus();
   });
   input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); form.requestSubmit(); } });
   const stopResponse = () => { ticket++; controller?.abort(); cancelAnimationFrame(frame); frame = null; announce(); ready(); };
@@ -98,7 +100,7 @@ export function assistant(root) {
     if (active) { stopResponse(); return; }
     const message = input.value.trim();
     if (!message || message.length > 1200) return;
-    stopVoice(); window.speechSynthesis?.cancel();
+    stopVoice(); stopAudio();
     const current = ++ticket; controller?.abort(); controller = new AbortController();
     const requestController = controller;
     const timer = setTimeout(() => requestController.abort(), 95000);
@@ -142,7 +144,15 @@ export function assistant(root) {
       input.value = ''; announce();
       if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
         const listen = document.createElement('button'); listen.type = 'button'; listen.className = 'assistant-listen'; listen.textContent = root.dataset.listen;
-        listen.addEventListener('click', () => { window.speechSynthesis.cancel(); const speech = new SpeechSynthesisUtterance(answer.replace(/[*#`]/g, '')); speech.lang = document.documentElement.lang; window.speechSynthesis.speak(speech); });
+        listen.setAttribute('aria-pressed','false');
+        listen.addEventListener('click', () => {
+          if(speakingButton===listen) { stopAudio();return; }
+          stopVoice();stopAudio();const speech=new SpeechSynthesisUtterance(answer.replace(/[*#`]/g,''));speech.lang=document.documentElement.lang.startsWith('en')?'en-US':'es-PR';
+          speakingButton=listen;speakingUtterance=speech;listen.textContent=root.dataset.stopAudio;listen.setAttribute('aria-pressed','true');
+          const finish=()=>{if(speakingUtterance===speech) {speakingButton=null;speakingUtterance=null;listen.textContent=root.dataset.listen;listen.setAttribute('aria-pressed','false');}};
+          speech.onend=finish;speech.onerror=()=>{if(speakingUtterance!==speech)return;finish();announce('audioError');};
+          try {window.speechSynthesis.speak(speech);}catch{finish();announce('audioError');}
+        });
         thread.append(listen);
       }
     } catch (error) {

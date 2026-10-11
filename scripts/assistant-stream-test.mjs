@@ -46,3 +46,11 @@ const metadata=[];
 await assert.rejects(()=>runConversation(context,async()=>{},'fixture',signal,async()=>{},provider([[{error:{code:{secret:'malformed'}}}]]),value=>metadata.push(value)),ChatFailure);
 assert.ok(!JSON.stringify(metadata).includes('malformed'));
 console.log('PASS: free-only stream, UTF-8 framing, live-data gate, unknown-tool rejection, quota errors and upstream cancellation');
+
+const catalogEvents=[];let catalogRead=false;
+await runConversation({...context,locale:'en'},async(call)=>{assert.equal(call.name,'browse_catalog');assert.equal(call.args.scope,'categories');assert.equal(call.locale,'en');catalogRead=true;return {result:{verified:true,entries:[{name:'Music',slug:'music'}],more:false},sources:[]};},'fixture',signal,async(name,value)=>catalogEvents.push([name,value]),provider([[{choices:[{delta:{tool_calls:[{index:0,id:'catalog',function:{name:'browse_catalog',arguments:'{"scope":'}}]}}]},{choices:[{delta:{tool_calls:[{index:0,function:{arguments:'"categories"}'}}]},finish_reason:'tool_calls'}]}],answer]));
+assert.ok(catalogRead);assert.equal(catalogEvents.at(-1)[0],'done');
+let oversizedBridge=false;
+await assert.rejects(()=>runConversation(context,async()=>{oversizedBridge=true;},'fixture',signal,async()=>{},provider([[{choices:[{delta:{tool_calls:[{index:0,id:'huge',function:{name:'search_activities',arguments:'x'.repeat(1201)}}]},finish_reason:'tool_calls'}]}]])),ChatFailure);
+assert.equal(oversizedBridge,false);
+console.log('PASS: catalog grounding, fragmented tool arguments and oversized-tool rejection');

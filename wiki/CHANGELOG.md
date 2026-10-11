@@ -74,3 +74,10 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - 2026-10-10 · release0.2.0 · live free-only assistant with authorized database tools, streaming Markdown, cotorra welcome, editable voice dictation, spoken replies and cover cards; native Motion controls; activity overlap and ended-action fixes. 133 source checks, 169 assertions and all browser harnesses pass. Dev live conversation verified; provider quotas limit capacity; physical voice/haptics unverified.
 
 - 2026-10-10 · [[architecture/DELIVERY]] · require reviewed schema changes in both environments before promotion; assistant release verified live, all73 application function definitions and quota privileges match across environments.
+
+## 0.2.1 — activity layout, location recovery and bilingual assistant
+
+- Activity covers and text use contained separate grid tracks; 26 live development cards verified without overlap/overflow at 360,390,768,1024,1440. Issue #18.
+- Publishing location retries a transient CoreLocation failure once with balanced accuracy, bounds waiting and preserves manual draft pins; map loading failure leaves location/manual controls usable. Issue #6.
+- Assistant reads current Supabase category/town catalog with capped results and localized labels; spoken replies and dictation isolate stale callbacks. Signed-in desktop/mobile language forms carry existing CSRF token. Issue #20.
+- Revision39 refreshes the complete browser asset graph. No schema migration required; all73 application function definitions/grants match dev/prod; production seed rows0.

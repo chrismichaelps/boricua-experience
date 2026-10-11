@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Std.Json as Json
+import Std.List as List
 import Std.Test as Test
 import Constants.App as App
 import Domain.Catalog as Catalog
@@ -44,12 +45,15 @@ fn main() -> Int {
   let tokenFrame = Frame.Frame{..es, formToken: "session-token"}
   let consentForm = Html.render(&Notice.cookieBanner(&tokenFrame).html())
   let cookiePage = Html.render(&Legal.render(&tokenFrame, &Legal.Cookies))
+  let consentForms = List.drop(&cookiePage.split("action=\"/consent\""), 1)
   let emptyHero = Html.render(&Hero.render(&en, &emptyCatalog).html())
   let englishHero = Html.render(&Hero.render(&en, &catalog).html())
   let filters = Search.Filters{..Search.everything(), query: "<script>bad</script>", category: "cultura", freeOnly: true}
   let english = Html.render(&Controls.pill(&en, &catalog, &filters).html())
   let spanish = Html.render(&Controls.pill(&es, &catalog, &Search.everything()).html())
   let meta = Seo.meta("Home", "Description", "/", true)
+  let tokenShell = Html.render(&Layout.page(&tokenFrame, &meta, Layout.Explore, H.div().says("Home")))
+  let languageForms = List.drop(&tokenShell.split("action=\"/language\""), 1)
   let home = Html.render(&Layout.page(&en, &meta, Layout.Explore, H.div().says("Home")))
   let failure = Html.render(&Layout.page(&en, &meta, Layout.Elsewhere, H.div().says("Failure")))
   let results = Html.render(&Layout.page(&visitor(Locale.En, "/search"), &meta, Layout.Explore, H.div().says("Results")))
@@ -66,12 +70,13 @@ fn main() -> Int {
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
   let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
   let checks = Test.suite("Presentation", &[
+      Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
       Test.equals("deadline card immediately says ended", &endedOutput.contains("Esta actividad ya terminó."), &true),
       Test.equals("deadline card has no stale available seats", &endedOutput.contains("Quedan 500"), &false),
       Test.equals("ended activity keeps event navigation", &endedActivity.contains("href=\"/e/" + endedCard.slug + "\""), &true),
       Test.equals("ended activity hides pending request action", &endedActivity.contains("Solicitudes pendientes:"), &false),
       Test.equals("consent carries the session token", &consentForm.contains("name=\"_token\" value=\"session-token\""), &true),
-      Test.equals("cookie reset and banner each carry a token", &cookiePage.split("name=\"_token\"").length(), &3),
+      Test.equals("cookie reset and banner each carry a token", &consentForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\" value=\"session-token\"")).length(), &2),
       Test.equals("empty destinations keep functional search", &emptyHero.contains("action=\"/search\""), &true),
       Test.equals("empty destinations have no broken caption", &emptyHero.contains("hero-place"), &false),
       Test.equals("empty destinations have no carousel controls", &emptyHero.contains("hero-controls"), &false),
