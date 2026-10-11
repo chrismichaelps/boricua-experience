@@ -3,7 +3,7 @@ module I18n.EnLegal
 
 /// English policy messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
-    ("legal.version", "Version :version · Effective October 10, 2026"),
+    ("legal.effective", "Effective October 10, 2026"),
     ("legal.contents", "On this page"),
     ("legal.summary_title", "In short"),
     ("legal.terms.title", "Terms of Use"),
@@ -37,7 +37,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("legal.terms.indemnity.title", "Your responsibility to us"),
     ("legal.terms.indemnity.body", "If a claim is brought against Boricua Experience because of an activity you organized, content you published, or your breach of these terms or of the law, you agree to cover the reasonable costs that claim causes us, including legal fees, to the extent the law allows."),
     ("legal.terms.changes.title", "Changes to these terms"),
-    ("legal.terms.changes.body", "We may update these terms as the platform changes. When a change is important we will tell you on the platform before it takes effect and ask you to accept the new version the next time you sign in. The version and effective date at the top of this page always show which terms apply."),
+    ("legal.terms.changes.body", "We may update these terms as the platform changes. When a change is important we will tell you on the platform before it takes effect and ask you to accept the new version the next time you sign in. The effective date at the top of this page always shows which terms apply."),
     ("legal.terms.law.title", "Governing law and disputes"),
     ("legal.terms.law.body", "These terms are governed by the laws of the Commonwealth of Puerto Rico and the applicable federal laws of the United States. If a disagreement arises, we ask that you first try to resolve it with us informally. If it cannot be resolved, it will be heard by the competent courts in San Juan, Puerto Rico, unless the law gives you the right to a different forum."),
     ("legal.terms.contact.title", "Talking to us"),
@@ -71,7 +71,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("legal.privacy.transfers.title", "Where it is stored"),
     ("legal.privacy.transfers.body", "Our database and website are hosted in the eastern United States. Puerto Rico is part of the United States, so your information stays under United States law."),
     ("legal.privacy.changes.title", "Changes to this policy"),
-    ("legal.privacy.changes.body", "When we change this policy in a way that matters, we will tell you on the platform before the change takes effect and, where the law requires it, ask for your consent again. The version and effective date at the top of this page show which policy applies."),
+    ("legal.privacy.changes.body", "When we change this policy in a way that matters, we will tell you on the platform before the change takes effect and, where the law requires it, ask for your consent again. The effective date at the top of this page shows which policy applies."),
     ("legal.cookies.title", "Cookie Policy"),
     ("legal.cookies.description", "The cookies and browser storage Boricua Experience uses, what each one does, and how to change your choice."),
     ("legal.cookies.intro", "Cookies are small files your browser keeps so a website can remember something between pages and visits. This page lists each one Boricua Experience uses and why."),

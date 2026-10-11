@@ -8,10 +8,10 @@
 .stack-form { gap: 22px; }
 .stack-form .field { gap: 8px; }
 .stack-form .field label { font-size: 14px; font-weight: 700; color: #35454e; }
-.stack-form .field input, .stack-form .field textarea, .stack-form .field select { background: #fbfcfc; border: 1px solid #dce3e7; border-radius: 14px; min-height: 52px; padding: 14px 16px; font-size: 16px; }
-.stack-form .field input:focus, .stack-form .field textarea:focus, .stack-form .field select:focus { border-color: #1878ec; background: white; box-shadow: 0 0 0 3px #e8f2ff; }
+.stack-form .field input, .stack-form .field textarea, .stack-form .field select { background: #fbfcfc; border: 1.5px solid #b6c2c8; border-radius: 14px; min-height: 52px; padding: 14px 16px; font-size: 16px; }
+.stack-form .field input:focus, .stack-form .field textarea:focus, .stack-form .field select:focus { border-color: #53666d; background: white; box-shadow: 0 0 0 1px #53666d; }
 .stack-form .button { border-radius: 14px; min-height: 52px; font-size: 16px; }
-.auth-card .google { border-radius: 14px; border: 1px solid #dce3e7; min-height: 52px; color: #253741; font-weight: 600; }
+.auth-card .google { border-radius: 14px; border: 1.5px solid #b6c2c8; min-height: 52px; color: #253741; font-weight: 600; }
 .auth-card .google img { width: 20px; height: 20px; }
 .auth-links { font-size: 14px; line-height: 1.6; }
 .auth-links a { min-height: 44px; display: flex; align-items: center; }

@@ -4,7 +4,6 @@ module View.Pages.Legal
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
-import Constants.App as App
 import Constants.Routes as Routes
 import View.Components.Form as Form
 import View.Components.Hero as Hero
@@ -21,7 +20,7 @@ const PRIVACY_SECTIONS: Array[Str] = ["scope", "collect", "use", "visibility", "
 const COOKIES_SECTIONS: Array[Str] = ["what", "necessary", "storage", "optional", "third", "choices"]
 const ABOUT_SECTIONS: Array[Str] = ["mission", "how", "safety", "privacy"]
 
-/// The key prefix, sections, path, and whether it carries a version line.
+/// The key prefix, sections, path, and whether it carries an effective-date line.
 fn shape(document: &Document) -> (Str, Array[Str], Str, Bool) {
   match document {
     case Terms => ("legal.terms", TERMS_SECTIONS, Routes.TERMS, true)
@@ -31,17 +30,12 @@ fn shape(document: &Document) -> (Str, Array[Str], Str, Bool) {
   }
 }
 
-/// A policy page: title, version, summary, contents, then numbered sections. The about page has no
-/// version, summary, or contents.
+/// A policy page: title, effective date, summary, contents, then numbered sections. The about page has no
+/// effective date, summary, or contents.
 export fn render(frame: &Frame.Frame, document: &Document) -> Html.Html {
   let (prefix, sections, path, versioned) = shape(document)
   let title = Frame.t(frame, prefix + ".title")
   let meta = Seo.meta(title, Frame.t(frame, prefix + ".description"), path, true)
-  let version = match document {
-    case Privacy => App.PRIVACY_VERSION
-    case Cookies => App.COOKIE_POLICY_VERSION
-    case _ => App.TERMS_VERSION
-  }
   var numbered: Array[H.Node] = []
   var links: Array[H.Node] = []
   for index in 0..sections.length() {
@@ -58,7 +52,7 @@ export fn render(frame: &Frame.Frame, document: &Document) -> Html.Html {
   let head = H.header().class(if about { "about-hero" } else { "legal-head" }).holding([
       if about { H.img().class("about-hero-photo").src("/assets/img/el-morro-flags-photo.webp").at("srcset", Hero.photoSet("/assets/img/el-morro-flags-photo.webp")).at("sizes", "(min-width: 1248px) 1200px, 100vw").alt("").at("width", "2200").at("height", "1467").at("fetchpriority", "high") } else { H.nothing() },
       H.h1().class("page-title").says(title),
-      if versioned { H.p().class("legal-version").says(Frame.tf(frame, "legal.version", &[("version", version)])) } else { H.nothing() },
+      if versioned { H.p().class("legal-version").says(Frame.t(frame, "legal.effective")) } else { H.nothing() },
       H.p().class("lead").says(Frame.t(frame, prefix + ".intro"))
     ])
   let summary = if versioned { H.aside().class("legal-summary").holding([H.h2().says(Frame.t(frame, "legal.summary_title")), H.p().says(Frame.t(frame, prefix + ".summary"))]) } else { H.nothing() }
