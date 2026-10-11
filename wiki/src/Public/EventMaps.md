@@ -39,3 +39,6 @@ MEDIUM: third-party map runtime and page boundary.
 ## Referenced by
 
 [[src/_MOC]] · [[src/Public/Explorer]]
+
+## Publishing recovery Grill Log
+Resolved: Publishing location starts only on a tap, before map-library loading. A disabled/busy button prevents duplicate requests. Navigation/manual pin edits cancel pending lookup. Transient errors use one balanced fallback; ES/EN inline status distinguishes denial, timeout, unavailable and outside-island locations. Out-of-bounds fixes never overwrite the draft. Precise/coarse successes preserve accuracy feedback; manual map/coordinate input remains available.

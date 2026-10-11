@@ -42,3 +42,6 @@ MEDIUM: observes clearWatch at the browser boundary.
 
 - **Q:** What contract fixes the reported gap?
   **A:** Extend the real-module harness to exercise fresh readings, permission denial, timeout, unsupported API, status notifications and absence of sends during local locate. Resolved.
+
+## Publishing recovery Grill Log
+Resolved: Publishing regression tests exercise first-fix success, CoreLocation failure recovery, denial without retry, bounded timeout, unsupported API, invalid fix and stale callbacks after cancel.

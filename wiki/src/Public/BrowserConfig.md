@@ -52,3 +52,6 @@ MAP.clusterRadius is 56 screen pixels; overview clustering stops at MAP.clusterM
 
 - **Q:** What contract fixes the reported gap?
   **A:** Camera query timing and focus zoom are shared constants. Viewport read requests are debounced; result radius never exceeds the server 200km bound. Location controls focus an area rather than an excessively close street. Resolved.
+
+## Publishing recovery Grill Log
+Resolved: GEO supplies high-accuracy12s and balanced10s requests, total25s deadline and100m approximate-warning threshold.
