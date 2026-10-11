@@ -58,3 +58,6 @@ DEEP.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Deleted session Grill Log
+Resolved: confirmed JSONnull from my_profile means SignedOut; malformed non-null JSON and network failures remain Unavailable. Context clears a known deleted member session, while preserving sessions on transient failures. SignedOut responses expire the cookie. No database schema or authorization guard changes.

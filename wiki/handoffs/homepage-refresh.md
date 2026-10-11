@@ -217,3 +217,10 @@ Implementer → Independent Reviewer → Implementer: subscription and stop/rest
 Architect → Implementer: own Search view/styles, Footer/home styles, localized copyright and output tests, Culebra photo/credits. Database order changes in both environments; no schema change. Independent review required.
 
 Photo review strengthened the copy-region scrim to64% over worst-case white clouds and corrected footer mirror wording. Browser1440px/390px: loaded responsive Culebra image, one h1, no overflow. Catalog order verified equal in dev/prod, no schema mutation.
+
+## 2026-10-11 account QA continuation · #28
+Architect → Implementer: own Api.Account nullable profile boundary, Web.Context session cleanup, Web.Respond cookie expiry and Domain tests. Disposable dev account deleted successfully; stale cookie503 is the regression. Preserve transient-failure sessions; independent review required.
+
+Implementer → Independent Reviewer → Implementer: null-profile and JSON cookie-expiry boundaries reviewed; mirror parity corrected. All7 suites/193 assertions pass. Disposable development account exercised password login, export, CSRF rejection, pause/reactivation, wrong-password deletion rejection and successful deletion. Both auth/profile rows are gone; stale cookie now redirects to sign-in and expires. No production account was modified.
+
+Exact next action: promote reviewed issues24/26/28 through release0.2.2 and verify public routes. Physical-device GPS remains unverified.
