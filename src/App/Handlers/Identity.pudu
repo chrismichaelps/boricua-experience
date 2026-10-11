@@ -1,11 +1,11 @@
 /** @App.Handlers.Identity.Registrations — signing up, in, out, and recovering */
 module App.Handlers.Identity
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
 import Domain.Credentials as Credentials
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Auth.Accounts as Accounts
 import Services.Runtime as Runtime
 

@@ -2,8 +2,8 @@
 module Utils.Time
 
 import Std.Result as Result
-import Std.Time as Time
 import Std.Text as StdText
+import Std.Time as Time
 import Constants.App as App
 
 /** @Utils.Time.Local — a wall-clock reading in Puerto Rico */

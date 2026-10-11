@@ -1,8 +1,8 @@
 /** @View.Components.Moment.Time — dates and times as `<time>` elements the browser rewrites in the reader's zone */
 module View.Components.Moment
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Std.Time as StdTime
 import I18n.Dates as Dates
 import Utils.Time as Time

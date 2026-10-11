@@ -5,11 +5,11 @@ import Std.Option as Option
 import Constants.Limits as Limits
 import Domain.Draft as Draft
 import Domain.Problem as Problem
+import PuduLangValidator.Validator as Validator
 import Utils.Geo as Geo
 import Utils.Money as Money
 import Utils.Time as Time
 import Validation.Check as Check
-import PuduLangValidator.Validator as Validator
 
 /// Message keys of the publishing form.
 const TITLE: Str = "form.title_length"

@@ -1,22 +1,22 @@
 /** @App.Pipeline.Behaviors — what every message passes through */
 module App.Pipeline
 
+import App.Messages as Messages
+import Constants.Limits as Limits
+import Domain.Problem as Problem
+import Domain.Search as Search
 import PuduLangLog.Logger as Logger
 import PuduLangLog.Value as Value
-import PuduLangMediator as Messaging
 import PuduLangMediator.Behaviors.Logging as Recording
 import PuduLangMediator.Behaviors.Validation as Validation
 import PuduLangMediator.Context as Context
 import PuduLangMediator.Message as Message
+import PuduLangMediator as Messaging
 import PuduLangMediator.Open as Open
 import PuduLangMediator.Registration as Registration
 import PuduLangValidator.Rule as Rule
 import PuduLangValidator.Rules.Text as TextRule
 import PuduLangValidator.Validator as Validator
-import App.Messages as Messages
-import Constants.Limits as Limits
-import Domain.Problem as Problem
-import Domain.Search as Search
 
 /// The event written for a fault of the application rather than an answer to the visitor.
 export const FAULT: Str = "\{MessageName\} failed unexpectedly: \{Failure\}"

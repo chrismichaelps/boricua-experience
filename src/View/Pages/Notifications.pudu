@@ -1,9 +1,9 @@
 /** @View.Pages.Notifications.Inbox — what happened to the member's requests and events */
 module View.Pages.Notifications
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Option as Option
 import Std.Time as StdTime
 import Constants.Routes as Routes
@@ -19,13 +19,13 @@ import View.Seo as Seo
 
 /// The icon of a notification kind.
 const KIND_ICONS: Map[Str, Str] = mapOf([
-  ("request_received", "users"),
-  ("request_approved", "check"),
-  ("request_rejected", "x"),
-  ("event_reminder", "clock"),
-  ("event_changed", "edit"),
-  ("event_cancelled", "x")
-])
+    ("request_received", "users"),
+    ("request_approved", "check"),
+    ("request_rejected", "x"),
+    ("event_reminder", "clock"),
+    ("event_changed", "edit"),
+    ("event_cancelled", "x")
+  ])
 
 /// Where a notification leads: the request queue for organizers, otherwise the activity.
 fn target(note: &Notification.Notification) -> Str {

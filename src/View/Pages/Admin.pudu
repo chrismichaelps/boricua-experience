@@ -1,9 +1,9 @@
 /** @View.Pages.Admin.Dashboard — platform counts and the moderation queue */
 module View.Pages.Admin
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Admin as Admin
@@ -39,17 +39,17 @@ export fn render(frame: &Frame.Frame, dashboard: &AdminService.Dashboard) -> Htm
         H.h2().class("section-title").says(Frame.t(frame, "admin.reports")),
         if dashboard.reports.isEmpty() { Notice.empty("check", Frame.t(frame, "admin.no_reports"), "", H.nothing()) } else {
           H.ul().class("requests").holding(dashboard.reports.map(|report: Admin.Report| H.li().class("request").holding([
-                    H.div().holding([
-                        H.a().class("text-link").href(Routes.EVENT_PREFIX + report.event.slug).says(report.event.title),
-                        H.p().class("muted small").says(Frame.t(frame, "report." + report.reason) + " · " + Option.unwrapOr(report.reporterName, "—"))
-                      ]),
-                    if report.detail.isEmpty() { H.nothing() } else { H.blockquote().says(report.detail) },
-                    H.form().class("request-actions").action(Routes.ADMIN_REPORT.replace(":id", show(report.id))).method("post").holding([
-                        Form.token(frame),
-                        H.button().submit().name("decision").value("dismiss").class("button button-ghost button-small").says(Frame.t(frame, "admin.dismiss")),
-                        H.button().submit().name("decision").value("act").class("button button-danger button-small").says(Frame.t(frame, "admin.act"))
-                      ])
-                  ])))
+                  H.div().holding([
+                      H.a().class("text-link").href(Routes.EVENT_PREFIX + report.event.slug).says(report.event.title),
+                      H.p().class("muted small").says(Frame.t(frame, "report." + report.reason) + " · " + Option.unwrapOr(report.reporterName, "—"))
+                    ]),
+                  if report.detail.isEmpty() { H.nothing() } else { H.blockquote().says(report.detail) },
+                  H.form().class("request-actions").action(Routes.ADMIN_REPORT.replace(":id", show(report.id))).method("post").holding([
+                      Form.token(frame),
+                      H.button().submit().name("decision").value("dismiss").class("button button-ghost button-small").says(Frame.t(frame, "admin.dismiss")),
+                      H.button().submit().name("decision").value("act").class("button button-danger button-small").says(Frame.t(frame, "admin.act"))
+                    ])
+                ])))
         }
       ]))
 }

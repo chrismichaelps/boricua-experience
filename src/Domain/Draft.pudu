@@ -88,13 +88,13 @@ export fn fromDetail(detail: &Event.Detail) -> Draft {
       case None => ""
     },
     lat: show(match detail.exactLat {
-      case Some(value) => value
-      case None => card.lat
-    }),
+        case Some(value) => value
+        case None => card.lat
+      }),
     lng: show(match detail.exactLng {
-      case Some(value) => value
-      case None => card.lng
-    }),
+        case Some(value) => value
+        case None => card.lng
+      }),
     startsAt: localOf(card.startsAt),
     endsAt: localOf(card.endsAt),
     visibility: card.visibility,

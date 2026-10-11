@@ -7,8 +7,8 @@ import Std.Html as Html
 import Constants.Routes as Routes
 import Domain.Problem as Problem
 import View.Components.Form as Form
-import View.Components.Icons as Icons
 import View.Components.Hero as Hero
+import View.Components.Icons as Icons
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo

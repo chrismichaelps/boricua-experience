@@ -1,10 +1,10 @@
 /** @App.Handlers.Admin.Registrations — the administrator's dashboard */
 module App.Handlers.Admin
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Admin as Admin
 import Services.Runtime as Runtime
 

@@ -1,10 +1,10 @@
 /** @App.Handlers.Privacy.Registrations — consent, export, pause, deletion */
 module App.Handlers.Privacy
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Privacy as Privacy
 import Services.Runtime as Runtime
 

@@ -1,6 +1,7 @@
 /** @Test.Validation.Suite — every form accepted and refused for the right reasons */
 module Validation.ValidationTest
 
+import Std.Bytes as Bytes
 import Std.Io as Io
 import Std.Option as Option
 import Std.Result as Result
@@ -9,7 +10,6 @@ import Domain.Credentials as Credentials
 import Domain.Draft as Draft
 import Domain.Location as Location
 import Domain.Problem as Problem
-import Std.Bytes as Bytes
 import Validation.Account as Account
 import Validation.Avatar as Avatar
 import Validation.EventForm as EventForm

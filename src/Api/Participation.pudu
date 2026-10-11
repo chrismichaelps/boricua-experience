@@ -56,9 +56,9 @@ export fn react(gateway: &Gateway.Gateway, eventId: Str, value: Int, token: Str)
 /// Reports an event for moderation.
 export fn report(gateway: &Gateway.Gateway, eventId: Str, reason: Str, detail: Str, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.REPORT_EVENT, &[
-        ("p_event_id", Gateway.text(eventId)),
-        ("p_reason", Gateway.text(reason)),
-        ("p_detail", Gateway.text(detail))
-      ], Some(token), Gateway.Write) ?
+      ("p_event_id", Gateway.text(eventId)),
+      ("p_reason", Gateway.text(reason)),
+      ("p_detail", Gateway.text(detail))
+    ], Some(token), Gateway.Write) ?
   Ok(())
 }
