@@ -1,4 +1,4 @@
-import { haptic } from './haptics.js?v=42';
+import { haptic } from './haptics.js?v=43';
 
 export function sheetGestures(handle) {
   const sheet = handle.closest('.map-sheet');

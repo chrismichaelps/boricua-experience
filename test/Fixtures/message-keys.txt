@@ -371,6 +371,7 @@ legal.cookies.third.title
 legal.cookies.title
 legal.cookies.what.body
 legal.cookies.what.title
+legal.effective
 legal.privacy.changes.body
 legal.privacy.changes.title
 legal.privacy.collect.body
@@ -438,7 +439,6 @@ legal.terms.service.body
 legal.terms.service.title
 legal.terms.summary
 legal.terms.title
-legal.version
 location.live
 manage.approve
 manage.decided

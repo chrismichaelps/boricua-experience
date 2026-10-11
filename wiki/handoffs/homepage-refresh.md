@@ -240,3 +240,8 @@ Architect → Implementer: own existing supabase/config.toml, local ignore file 
 Architect → Implementer: own Layout search body class, Search image sizes, SearchStyles width/rail rules and mechanical cache graph42. Supabase local files committed/reviewed separately. Independent review required.
 
 Implementer → Independent Reviewer → Implementer: review clear;193assertions/allbrowserharnesses pass. Search bounds measured1440px→1424px(left8),390px→374px(left8), no horizontal overflow, oneh1. Category/town shells unchanged.
+
+## Field focus · #39
+Architect → Implementer: own shared app/search/experience focus styles, Legal effective-date presentation and bilingual keys, mechanical asset graph43. Preserve accessible focus and all form/auth/filter semantics. Independent review required.
+
+Implementer → Independent Reviewer → Implementer: native-select fallback now shares parent focus only; policy change prose matches dates-only headings.193assertions/allharness pass, desktop/phone computedinputshadow none and parentone2pxinset, nooverflow. Globalfocus usesoneoutline so explicitcontroloutlines do not accumulate shadows.

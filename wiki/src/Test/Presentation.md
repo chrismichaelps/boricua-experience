@@ -76,3 +76,6 @@ Resolved: bounded acquisition and writes, immediate stop plus late-update cleanu
 Resolved: open search uses the first database-ordered featured scene, a local responsive real photograph and unchanged named filters. Category/town landing behavior stays intact. Empty scene catalogs render usable search without a broken image. Footer has current-year copyright, quiet grouped links and phone touch targets; eligibility policy is unchanged. Photograph source, CC BY2.0 attribution, resizing and crop are recorded in public credits and THIRD_PARTY_NOTICES.
 
 Deleted-session JSON output Grill: assert401, secure expired sessioncookie and unchanged503 dependency response. Resolved.
+
+## Policy key fixture Grill Log · #39
+Resolved: regenerate used-message key fixture after replacing legal.version with legal.effective; translation parity remains enforced in both languages.

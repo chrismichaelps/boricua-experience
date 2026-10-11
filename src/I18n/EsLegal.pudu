@@ -3,7 +3,7 @@ module I18n.EsLegal
 
 /// Spanish policy messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
-    ("legal.version", "Versión :version · Vigente desde el 10 de octubre de 2026"),
+    ("legal.effective", "Vigente desde el 10 de octubre de 2026"),
     ("legal.contents", "En esta página"),
     ("legal.summary_title", "En resumen"),
     ("legal.terms.title", "Términos de uso"),
@@ -37,7 +37,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("legal.terms.indemnity.title", "Tu responsabilidad con nosotros"),
     ("legal.terms.indemnity.body", "Si se presenta una reclamación contra Boricua Experience por una actividad que organizaste, por contenido que publicaste o por incumplir estos términos o la ley, aceptas cubrir los costos razonables que esa reclamación nos cause, incluidos los honorarios legales, en la medida en que la ley lo permite."),
     ("legal.terms.changes.title", "Cambios a estos términos"),
-    ("legal.terms.changes.body", "Podemos actualizar estos términos a medida que la plataforma cambie. Cuando un cambio sea importante te avisaremos en la plataforma antes de que entre en vigor y te pediremos aceptar la nueva versión la próxima vez que entres. La versión y la fecha de vigencia al principio de esta página siempre indican qué términos aplican."),
+    ("legal.terms.changes.body", "Podemos actualizar estos términos a medida que la plataforma cambie. Cuando un cambio sea importante te avisaremos en la plataforma antes de que entre en vigor y te pediremos aceptar la nueva versión la próxima vez que entres. La fecha de vigencia al principio de esta página siempre indica qué términos aplican."),
     ("legal.terms.law.title", "Ley aplicable y disputas"),
     ("legal.terms.law.body", "Estos términos se rigen por las leyes del Estado Libre Asociado de Puerto Rico y las leyes federales de Estados Unidos que apliquen. Si surge un desacuerdo, te pedimos que primero intentes resolverlo con nosotros de forma informal. Si no se puede resolver, lo atenderán los tribunales competentes de San Juan, Puerto Rico, salvo que la ley te dé derecho a otro foro."),
     ("legal.terms.contact.title", "Cómo comunicarte"),
@@ -71,7 +71,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("legal.privacy.transfers.title", "Dónde se guarda"),
     ("legal.privacy.transfers.body", "Nuestra base de datos y el sitio web están alojados en el este de Estados Unidos. Puerto Rico es parte de Estados Unidos, así que tu información sigue bajo la ley de Estados Unidos."),
     ("legal.privacy.changes.title", "Cambios a esta política"),
-    ("legal.privacy.changes.body", "Cuando cambiemos esta política de una forma que importe, te avisaremos en la plataforma antes de que el cambio entre en vigor y, cuando la ley lo exija, te pediremos tu consentimiento otra vez. La versión y la fecha de vigencia al principio de esta página indican qué política aplica."),
+    ("legal.privacy.changes.body", "Cuando cambiemos esta política de una forma que importe, te avisaremos en la plataforma antes de que el cambio entre en vigor y, cuando la ley lo exija, te pediremos tu consentimiento otra vez. La fecha de vigencia al principio de esta página indica qué política aplica."),
     ("legal.cookies.title", "Política de cookies"),
     ("legal.cookies.description", "Las cookies y el almacenamiento del navegador que usa Boricua Experience, para qué sirve cada uno y cómo cambiar tu preferencia."),
     ("legal.cookies.intro", "Las cookies son archivos pequeños que guarda tu navegador para que un sitio web recuerde algo entre páginas y visitas. Esta página enumera cada una de las que usa Boricua Experience y por qué."),
