@@ -91,3 +91,6 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - 2026-10-11 · [[src/Api/Supabase/Gateway]] · root-anchored SQL ignore rule restores gateway/identity application modules to Git; no runtime logic changes · issue #30.
 
 - 2026-10-11 · [[src/View/Pages/Legal]] · home-sized search photograph, licensed El Morro auth/About imagery and human-readable cookie purpose labels; asset graph41 · issue #31.
+
+## v0.2.2 · 2026-10-11
+Promotes reviewed issues24/26/28/30/31: explicit bounded map location lifecycle, Culebra-first database order in both environments, real licensed discovery/auth/About photographs, footer and cookie copy, deleted-account session expiry and restored tracked Supabase modules.193 assertions and all browser harnesses pass; disposable dev export/pause/reactivate/delete verified. No schema migration. Physical GPS/browser hardware coverage remains pending.
