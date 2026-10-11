@@ -13,8 +13,8 @@ class Node {
  getBoundingClientRect(){return {width:800,height:600,bottom:600,top:500};}
 }
 const pins=[{slug:'a',title:'A',lng:10,lat:20},{slug:'b',title:'B',lng:500,lat:20}];
-const canvas=new Node(),list=new Node(),count=new Node({},'2 activities'),locate=new Node(),sheet=new Node(),handle=new Node();
-const nodes={'#map':canvas,'#map-list':list,'#map-count':count,'#map-pins':{textContent:JSON.stringify(pins)},'[data-feature="locate"]':locate,'.map-sheet':sheet,'.sheet-handle':handle};
+const canvas=new Node(),list=new Node(),count=new Node({},'2 activities'),locate=new Node(),sheet=new Node(),handle=new Node(),share=new Node();
+const nodes={'#map':canvas,'#map-list':list,'#map-count':count,'#map-pins':{textContent:JSON.stringify(pins)},'[data-feature="locate"]':locate,'[data-feature="live"]':share,'.map-sheet':sheet,'.sheet-handle':handle};
 const page={classList:{toggle:()=>{}},dataset:{clusterLabel:'See :count activities',near:'0'},querySelector:s=>nodes[s]};
 let offset=0,zoom=14,sharing=false,watches=0,stops=0;
 const lifecycle={};
@@ -58,7 +58,9 @@ assert.equal(requests.length,2,'same viewport uses bounded recent cache');
 for(const fn of statuses)fn('error');assert.equal(locate.attrs['aria-pressed'],'false');assert.equal(locate.attrs['aria-busy'],'false');
 locate.handlers.click();assert.equal(watches,2,'failed locate supports retry');
 locate.handlers.click();assert.equal(stops,1,'off clears local watch');
-sharing=true;
+locate.handlers.click();share.handlers.click();locate.handlers.click();
+assert.equal(readings.size,1,'disabling private locate preserves independent sharing subscription');
+for(const fn of readings)fn({lat:18.42,lng:-66.12,accuracy:8});assert.equal(mePosition[0],-66.12);
 lifecycle.pagehide();assert.equal(readings.size,0);assert.equal(statuses.size,0);
 lifecycle.pageshow({persisted:true});assert.equal(readings.size,1);assert.equal(statuses.size,1);
 for(const fn of readings)fn({lat:18.42,lng:-66.12,accuracy:8});assert.equal(mePosition[0],-66.12,'restored sharing updates the map');

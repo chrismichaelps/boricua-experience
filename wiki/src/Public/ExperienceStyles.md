@@ -73,3 +73,6 @@ Resolved: activity cover and text occupy explicitly constrained grid tracks with
 
 ## Cover containment regression
 Resolved: activity grids explicitly constrain link width, image max-width and the desktop media track. Direct children receive explicit grid positions on wide rows; mobile uses one zero-minimum track. Browser measurements at phone, tablet and desktop widths must show no cover/text intersection or horizontal overflow.
+
+## Location controls Grill Log
+Resolved: compact expandable purpose help and live status fit narrow map viewports without covering the whole map.

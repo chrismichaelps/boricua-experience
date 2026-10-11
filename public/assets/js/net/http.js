@@ -24,8 +24,8 @@ async function send(url, init) {
 
 export const getJson = (url, options = {}) => send(url, { ...options, method: 'GET' });
 
-export function postJson(url, data, keepalive = false) {
-  return send(url, { method: 'POST', keepalive, headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() }, body: JSON.stringify(data ?? {}) });
+export function postJson(url, data, keepalive = false, options = {}) {
+  return send(url, { ...options, method: 'POST', keepalive, headers: { 'content-type': 'application/json', 'x-csrf-token': csrfToken() }, body: JSON.stringify(data ?? {}) });
 }
 
 export function postForm(form) {

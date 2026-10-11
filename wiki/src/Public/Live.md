@@ -17,7 +17,7 @@ public/assets/js/features/live.js, wired by [[src/View/Pages/Map]] and main.js.
 
 ## Algorithm
 
-Start watches only from an explicit location action or a previously enabled sharing session. Stop watches on off/page hide. Map reads the current search query when refreshing nearby.
+Start acquisition only from an explicit location action. Never restore sharing from storage. Stop watches on off/page hide. Map reads the current search query when refreshing nearby.
 
 ## Negative Logic
 
@@ -45,4 +45,7 @@ MEDIUM: browser and server boundaries.
 ## Resolved follow-up Grill Log
 
 - **Q:** What contract fixes the reported gap?
-  **A:** Expose onStatus subscriptions for waiting, ready, error and stopped. Subscribe before navigator.watchPosition. Only replay fresh cached readings; clear stale readings on stop. Denial, timeout and unavailable APIs notify subscribers and stop a failing watcher. Page hide stops local watches and notifies controls; enabled sharing alone may resume. Location look-up alone never posts a position. Resolved.
+  **A:** Expose onStatus subscriptions for waiting, ready, error and stopped. Subscribe before navigator.watchPosition. Only replay fresh cached readings; clear stale readings on stop. Denial, timeout and unavailable APIs notify subscribers and stop a failing watcher. Page hide stops local watches and notifies controls; sharing never resumes automatically. Location look-up alone never posts a position. Resolved.
+
+## Explicit location lifecycle Grill Log
+Resolved: nearby lookup stays private; initial acquisition uses the bounded accurate/balanced fallback. Fresh readings alone enable the sharing badge. No storage restores sharing; hiding or leaving stops it. Epochs reject stale callbacks and serialized writes prevent a late update undoing stop. Map controls expose purpose/status in both languages; the map omits the assistant.

@@ -30,7 +30,7 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           H.main().id("content").class("shell").at("tabindex", "-1").holding([content]),
           Footer.render(frame),
           tabBar(frame, &section),
-          Assistant.render(frame),
+          if section == MapView { H.span() } else { Assistant.render(frame) },
           Notice.cookieBanner(frame),
           Notice.flash(frame),
           H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])

@@ -45,9 +45,9 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
         H.div().class("map-canvas").id("map").data("lat", show(App.MAP_CENTER_LAT)).data("lng", show(App.MAP_CENTER_LNG)).role("application").label(Frame.t(frame, "map.label")),
         H.script().kind("application/json").id("map-pins").raw(pinsJson(frame, cards)),
         H.div().class("map-controls").holding([
-            H.button().kind("button").class("map-button").data("feature", "locate").at("aria-pressed", "false").holding([Icons.sized("crosshair", 20), H.span().says(Frame.t(frame, "map.near_me"))]),
+            H.button().kind("button").class("map-button").data("feature", "locate").at("aria-describedby", "map-location-help").at("aria-pressed", "false").holding([Icons.sized("crosshair", 20), H.span().says(Frame.t(frame, "map.near_me"))]),
             if Frame.signedIn(frame) {
-              H.button().kind("button").class("map-button").data("feature", "live").at("aria-pressed", "false").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "map.share_live"))])
+              H.button().kind("button").class("map-button").data("feature", "live").at("aria-describedby", "map-location-help").at("aria-pressed", "false").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "map.share_live"))])
             } else {
               H.a().class("map-button").href(Routes.SIGN_IN + "?return=" + Routes.MAP).holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "map.sign_in_live"))])
             }
@@ -58,6 +58,6 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
             H.p().class("map-limit" + (if limited { "" } else { " is-hidden" })).id("map-limit").role("status").says(Frame.t(frame, "map.limited")),
             H.div().class("sheet-list").id("map-list").holding(cards.map(|card: Event.Card| H.div().class("sheet-item").data("slug", card.slug).holding([EventCard.card(frame, &card)])))
           ]),
-        H.p().class("map-privacy small").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "map.privacy"))])
+        H.div().class("map-privacy small").holding([H.p().id("map-location-status").role("status").at("aria-live", "polite"), H.details().holding([H.summary().says(Frame.t(frame, "map.location_controls")), H.p().id("map-location-help").says(Frame.t(frame, "map.location_help"))])])
       ]))
 }

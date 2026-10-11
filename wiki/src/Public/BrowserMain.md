@@ -75,3 +75,6 @@ Current cache graph: version37 aligns every browser import and shell resource fo
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
 
 Assistant initializes via optional dynamic import catch; failure does not prevent existing discovery/map/consent handlers. Shared import graph advances together toversion37.
+
+## Explicit location lifecycle Grill Log
+Resolved: nearby lookup stays private; initial acquisition uses the bounded accurate/balanced fallback. Fresh readings alone enable the sharing badge. No storage restores sharing; hiding or leaving stops it. Epochs reject stale callbacks and serialized writes prevent a late update undoing stop. Map controls expose purpose/status in both languages; the map omits the assistant.

@@ -12,7 +12,6 @@ import { filters, loadMore } from './features/listing.js?v=39';
 import { share } from './features/share.js?v=39';
 import { suggest } from './features/suggest.js?v=39';
 import { reactToggle, saveToggle } from './features/toggle.js?v=39';
-import { resumeIfShared } from './features/live.js?v=39';
 
 interactionFeedback();
 localizeMoments();
@@ -48,5 +47,4 @@ for (const node of $$('[data-feature]')) {
 
 import('./features/motion.js?v=39').then((module) => module.motion()).catch(() => {});
 
-resumeIfShared();
 registerServiceWorker();

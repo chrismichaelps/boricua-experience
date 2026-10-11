@@ -456,6 +456,8 @@ map.description
 map.label
 map.limited
 map.list
+map.location_controls
+map.location_help
 map.near_me
 map.privacy
 map.share_live
