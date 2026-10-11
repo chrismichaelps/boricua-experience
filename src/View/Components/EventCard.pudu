@@ -1,8 +1,8 @@
 /** @View.Components.EventCard.Listing — an event as a card and cards as rails and grids */
 module View.Components.EventCard
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Std.Option as Option
 import Std.Time as StdTime
 import Constants.Routes as Routes
@@ -24,14 +24,15 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
   let now = StdTime.instantOf(frame.nowMillis)
   let href = Routes.EVENT_PREFIX + event.slug
   let social = Format.going(&locale, event.approvedCount)
-  let seats = Format.seats(&locale, event)
+  let ended = Event.hasEnded(event, frame.nowMillis)
+  let seats = if ended || Event.isCancelled(event) { "" } else { Format.seats(&locale, event) }
   let distance = Format.distance(&locale, event.distanceM)
   H.article().class(if Event.isCancelled(event) { "card card-cancelled" } else { "card" }).holding([
       H.a().class("card-link").href(href).holding([
           H.div().class("card-media").holding([
               H.img().src(coverOf(event)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),
               H.span().class("pill pill-light card-price").says(Format.price(&locale, event.priceCents)),
-              if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
+              if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if ended { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.ended")) } else if Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
             ]),
           H.div().class("card-body").holding([
               H.p().class("card-when").holding([Moment.when(frame, event.startsAt, event.endsAt, &now)]),
