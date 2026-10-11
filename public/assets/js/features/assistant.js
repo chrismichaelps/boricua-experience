@@ -1,4 +1,4 @@
-import { renderMarkdown } from './assistantMarkdown.js?v=40';
+import { renderMarkdown } from './assistantMarkdown.js?v=41';
 
 export async function consumeChat(stream, receive) {
   const reader = stream.getReader(), decoder = new TextDecoder();

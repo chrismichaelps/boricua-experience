@@ -227,3 +227,8 @@ Exact next action: promote reviewed issues24/26/28 through release0.2.2 and veri
 
 ## Source visibility · #30
 Architect → Implementer: own root ignore rules and restore existing Api.Supabase gateway/identity files to Git. Existing complete mirrors resolve their transport/auth contracts. Preserve private root SQL files; no credentials in source. Independent reviewer verifies scope and module parity.
+
+## Photographic pages · #31
+Architect → Implementer: own Auth/Legal page composition, search/experience styles, bilingual cookie explanations, photo provenance and mechanical asset graph41. Independent review required. Local generated Supabase configuration remains untracked; only root SQL is ignored.
+
+Implementer → Independent Reviewer → Implementer: stale sharing-restoration policy copy and singular cookie labels corrected. Reviewer reports no outstanding findings; all193 assertions/browser harnesses passed. English390px About/auth and1440px search/auth fit without horizontal overflow; photographs load, About has one h1, free-only filter submits and persists. Supabase source restoration is merged to dev.
