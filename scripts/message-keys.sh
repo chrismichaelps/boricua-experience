@@ -5,7 +5,8 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/test/Fixtures/message-keys.txt"
 {
-  grep -rhoE '"(nav|footer|home|search|when|sort|date|event|visibility|status|report|publish|manage|map|location|activity|notifications|notification|profile|account|auth|cookies|admin|error|form|flash|problem|legal|about)\.[a-z0-9_.]+"' "$root/src/View" "$root/src/Web" "$root/src/I18n/Dates.pudu" "$root/src/I18n/Format.pudu" "$root/src/Validation" "$root/src/Constants/Codes.pudu" "$root/src/App/Pipeline.pudu" | tr -d '"'
+  grep -rhoE '"(assistant|nav|footer|home|search|when|sort|date|event|visibility|status|report|publish|manage|map|location|activity|notifications|notification|profile|account|auth|cookies|admin|error|form|flash|problem|legal|about)\.[a-z0-9_.]+"' "$root/src/View" "$root/src/Web" "$root/src/I18n/Dates.pudu" "$root/src/I18n/Format.pudu" "$root/src/Validation" "$root/src/Constants/Codes.pudu" "$root/src/App/Pipeline.pudu" | tr -d '"'
+  sed -nE 's/.*\("(assistant\.[a-z_]+)",.*/\1/p' "$root/src/I18n/Es.pudu"
   for family in status.pending status.approved status.rejected status.withdrawn \
     when.anytime when.today when.tomorrow when.weekend when.week when.month \
     sort.soon sort.near sort.relevant \

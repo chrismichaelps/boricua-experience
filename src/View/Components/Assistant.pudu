@@ -1,0 +1,43 @@
+/** @View.Components.Assistant.Dialog — accessible text and voice discovery */
+module View.Components.Assistant
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.App as App
+import Constants.Routes as Routes
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// A progressively enhanced assistant with a native dialog and translated states.
+export fn render(frame: &Frame.Frame) -> H.Node {
+  let t = |key: Str| Frame.t(frame, "assistant." + key)
+  var root = H.div().class("assistant").data("feature", "assistant").data("signed-in", if Frame.signedIn(frame) { "1" } else { "0" })
+  for key in ["send", "stop", "thinking", "reading", "preferences", "busy", "error", "limit", "unsupported", "listening", "voice_error", "voice", "stop_voice", "sources", "listen"] { root = root.data(key.replace("_", "-"), t(key)) }
+  root.holding([
+      H.button().kind("button").class("assistant-launch").at("hidden", "hidden").at("aria-haspopup", "dialog").holding([Icons.sized("message", 20), H.span().says(t("launch"))]),
+      H.dialog().class("assistant-dialog").at("aria-labelledby", "assistant-title").holding([
+          H.div().class("assistant-head").holding([
+              H.div().holding([H.h2().id("assistant-title").says(t("title")), H.span().class("assistant-label").says("Boricua Experience")]),
+              H.button().kind("button").class("icon-button").data("assistant", "close").label(t("close")).holding([Icons.sized("x", 22)])
+            ]),
+          H.div().class("assistant-thread").role("log").at("aria-live", "polite").at("aria-relevant", "additions").holding([H.div().class("assistant-welcome").holding([
+                  H.img().class("assistant-mascot").src("/assets/brand/cotorra-mark.svg?v=" + App.ASSET_VERSION).alt("").at("width", "64").at("height", "64"),
+                  H.h3().says(t("welcome")), H.p().class("assistant-intro").says(t("intro")),
+                  if Frame.signedIn(frame) { H.div().class("assistant-prompts").holding(["weekend", "free", "town"].map(|key: Str| H.button().kind("button").data("assistant-prompt", t("prompt_" + key)).says(t("prompt_" + key)))) } else { H.nothing() }
+                ])]),
+          H.p().class("assistant-status").role("status").at("hidden", "hidden"),
+          H.div().class("assistant-controls").holding(if Frame.signedIn(frame) { [
+                H.form().class("assistant-form").holding([
+                    H.labelFor().at("for", "assistant-message").class("sr-only").says(t("question")),
+                    H.textarea().id("assistant-message").name("message").at("maxlength", "1200").at("rows", "1").at("placeholder", t("placeholder")).flag("required"),
+                    H.div().class("assistant-compose-actions").holding([
+                        H.button().kind("button").class("icon-button").data("assistant", "voice").label(t("voice")).at("aria-pressed", "false").holding([Icons.sized("microphone", 20), H.span().says(t("voice_short"))]),
+                        H.button().submit().class("assistant-send").label(t("send")).holding([H.span().at("aria-hidden", "true").says("↑")])
+                      ])
+                  ]),
+                H.button().kind("button").class("assistant-reset").data("assistant", "reset").says(t("new"))
+              ] } else { [H.a().class("button button-block").href(Routes.SIGN_IN + "?return=" + Frame.here(frame).replace("&", "%26")).says(t("signin"))] }),
+          H.p().class("assistant-privacy").says(t("privacy"))
+        ])
+    ])
+}

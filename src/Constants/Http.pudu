@@ -36,7 +36,7 @@ export const SECURITY_HEADERS: Array[(Str, Str)] = [
   ("content-security-policy", CONTENT_SECURITY_POLICY),
   ("x-content-type-options", "nosniff"),
   ("referrer-policy", "strict-origin-when-cross-origin"),
-  ("permissions-policy", "geolocation=(self), camera=(), microphone=(), payment=()"),
+  ("permissions-policy", "geolocation=(self), camera=(), microphone=(self), payment=()"),
   ("strict-transport-security", "max-age=63072000; includeSubDomains; preload"),
   ("cross-origin-opener-policy", "same-origin"),
   ("x-frame-options", "DENY")
