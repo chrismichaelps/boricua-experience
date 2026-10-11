@@ -93,3 +93,5 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - 2026-10-11 · [[src/View/Pages/Legal]] · home-sized search photograph, licensed El Morro auth/About imagery and human-readable cookie purpose labels; asset graph41 · issue #31.
 
 - 2026-10-11 · [[src/Infrastructure/SupabaseConfig]] · track reviewed local CLI TOML and ignore file; no credentials, SQL or hosted-setting changes · issue #35.
+
+- 2026-10-11 · [[src/Public/SearchStyles]] · open search hero fills the viewport with home-equivalent8px insets; results retain centered reading width; asset graph42 · issue #36.
