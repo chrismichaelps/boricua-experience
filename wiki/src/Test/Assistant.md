@@ -34,3 +34,6 @@ Bounded transport or verification responsibility.
 `pudu test test/Assistant`, `node scripts/assistant-stream-test.mjs`, `node scripts/assistant-markdown-test.mjs`, `node scripts/assistant-adapter-test.mjs`. Resolve: adapter tests simulate browser disconnect and invoke the actual deadline callback while a provider request awaits its signal, check stable authentication errors and forwarded refreshed cookies. Markdown tests inspect produced node types/attributes rather than output snapshots. No real microphone permission, physical haptic or paid model request occurs.
 
 Browser lifecycle harness exercises active Stop with empty required input, queued paint canceled onclose and fresh incremental paint afterreopen/reset. Sourceimage allowlist has goodlocal/Supabase and malicious/remote cases.
+
+## Bilingual tooling Grill Log
+Resolved: Localized source tests assert English/Spanish database category labels. Extended stream tests cover catalog reads, empty results, calendar labels, multiple tool fragments, forged tools and cancellation.

@@ -90,3 +90,6 @@ The bell's count sits on its shoulder as a 16 px pill with a white ring; it is h
 
 ## Assistant integration Grill Log
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+## Bilingual action Grill Log
+Resolved: both header and menu language POST forms include Form.token(frame), matching existing authenticated CSRF guards. Guests keep an empty token; no guard is relaxed.

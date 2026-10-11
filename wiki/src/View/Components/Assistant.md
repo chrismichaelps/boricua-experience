@@ -32,3 +32,5 @@ Resolved: Native dialogfocus semantics enhance optionalUI. Clientmodule owns str
 
 ## Welcome and composer Grill Log
 Resolved: welcome uses the existing green/red cotorra asset, translated greeting and three generic intent prompts (no baked-in event/town records). Rounded single composer surface, accessible arrow-send/square-stop, visible microphone label, reset action; status displays actual thinking/search/read phases rather than hidden reasoning.
+
+Readout has translated Stop audio and playback-error states; pressed state follows actual speech lifecycle. Resolved.

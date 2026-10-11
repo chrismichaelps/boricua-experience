@@ -104,6 +104,7 @@ fn appBar(frame: &Frame.Frame, section: &Section) -> H.Node {
 fn languageSwitch(frame: &Frame.Frame) -> H.Node {
   let other = if frame.locale == Locale.Es { "en" } else { "es" }
   H.form().action(Routes.LANGUAGE).method("post").class("lang-switch").holding([
+      Form.token(frame),
       H.input().kind("hidden").name("lang").value(other),
       H.input().kind("hidden").name("return").value(Frame.here(frame)),
       H.button().submit().class("icon-button").label(Frame.t(frame, "nav.language")).at("lang", other).holding([Icons.sized("globe", 20), H.span().says(other.toUpper())])
@@ -128,6 +129,7 @@ fn menuLink(href: Str, icon: Str, label: Str, trailing: H.Node) -> H.Node {
 fn languageRow(frame: &Frame.Frame) -> H.Node {
   let other = if frame.locale == Locale.Es { "en" } else { "es" }
   H.form().action(Routes.LANGUAGE).method("post").class("menu-form").holding([
+      Form.token(frame),
       H.input().kind("hidden").name("lang").value(other),
       H.input().kind("hidden").name("return").value(Frame.here(frame)),
       H.button().submit().class("menu-row").role("menuitem").label(Frame.t(frame, "nav.language")).holding([

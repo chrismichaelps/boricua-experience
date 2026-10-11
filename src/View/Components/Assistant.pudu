@@ -12,7 +12,7 @@ import View.Frame as Frame
 export fn render(frame: &Frame.Frame) -> H.Node {
   let t = |key: Str| Frame.t(frame, "assistant." + key)
   var root = H.div().class("assistant").data("feature", "assistant").data("signed-in", if Frame.signedIn(frame) { "1" } else { "0" })
-  for key in ["send", "stop", "thinking", "reading", "preferences", "busy", "error", "limit", "unsupported", "listening", "voice_error", "voice", "stop_voice", "sources", "listen"] { root = root.data(key.replace("_", "-"), t(key)) }
+  for key in ["send", "stop", "thinking", "reading", "preferences", "busy", "error", "limit", "unsupported", "listening", "voice_error", "voice", "stop_voice", "sources", "listen", "stop_audio", "audio_error"] { root = root.data(key.replace("_", "-"), t(key)) }
   root.holding([
       H.button().kind("button").class("assistant-launch").at("hidden", "hidden").at("aria-haspopup", "dialog").holding([Icons.sized("message", 20), H.span().says(t("launch"))]),
       H.dialog().class("assistant-dialog").at("aria-labelledby", "assistant-title").holding([

@@ -29,3 +29,5 @@ Resolved: Remove superseded buffered-transport constants; there is one owner for
 
 ## Referenced by
 [[src/_MOC]] · [[handoffs/assistant]]
+
+Catalog tool output is capped at CATALOG_MAX24 rows; this is a transport bound, not hardcoded business reference data. Resolved.

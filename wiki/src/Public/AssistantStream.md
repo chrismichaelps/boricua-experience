@@ -35,3 +35,6 @@ Status phase events accompany actual provider/model work and authorized tool/dat
 Provider telemetry records only round, HTTP status, model, finish reason and output/tool counts. It excludes credentials, prompts, results and member data.
 
 A free provider that ignores required tools is retried within the same three-call budget; unsupported prose is never emitted. A successful live read remains mandatory before any answer.
+
+## Bilingual tooling Grill Log
+Resolved: The tool allowlist adds browse_catalog. Tool calls include the server-prepared locale, never a client-selected provider or table. Schedule labels retain America/Puerto_Rico formatting in both languages.

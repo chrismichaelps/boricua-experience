@@ -75,3 +75,5 @@ Map results preserve the server limited flag and show a bilingual zoom-in notice
 
 ## Assistant integration Grill Log
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+Readout has translated Stop audio and playback-error states; pressed state follows actual speech lifecycle. Resolved.
