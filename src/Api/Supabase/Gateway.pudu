@@ -1,0 +1,174 @@
+/** @Api.Supabase.Gateway.Critical — database functions called over HTTPS */
+module Api.Supabase.Gateway
+
+import Std.App.Secret as Secret
+import Std.Json as Json
+import Std.Option as Option
+import Config.Settings as Settings
+import Constants.Supabase as Supabase
+import Domain.Problem as Problem
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient.Constants.Defaults as Defaults
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Factory.Builder as Builder
+import PuduLangHttpClient.Factory.Builder {Configuring}
+import PuduLangHttpClient.Factory as Factory
+import PuduLangHttpClient.Handler as Handler
+import PuduLangHttpClient.Handlers.Resilience as Resilience
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Options as RequestOptions
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
+import PuduLangHttpClient.Response as Response
+import PuduLangHttpClient.Transport as Transport
+import PuduLangResilience.CircuitBreaker as CircuitBreaker
+import PuduLangResilience.Pipeline as Pipeline
+import PuduLangResilience.Retry as Retry
+import PuduLangResilience.Timeout as Timeout
+import Utils.Wire as Wire
+
+/** @Api.Supabase.Gateway — the client every database and identity call goes through */
+export type Gateway = { http: Client.Client, base: Str, anonKey: Str, serviceKey: Str }
+
+/** @Api.Supabase.Mode — whether a call may be repeated after a transient failure */
+export type Mode = Read | Write
+
+/// The request option marking a call safe to repeat.
+fn repeatable() -> RequestOptions.Key[Bool] { RequestOptions.boolKey("boricua.repeatable") }
+
+/// Milliseconds a pooled connection is reused before it is replaced, so address changes are seen.
+const CONNECTION_LIFETIME_MILLIS: Int = 120000
+/// Connections kept open to the project at most.
+const CONNECTIONS_PER_SERVER: Int = 32
+/// Milliseconds before a retried read is sent again.
+const RETRY_DELAY_MILLIS: Int = 150
+
+/// The gateway for the configured project: pooled keep-alive connections, one retry for reads, and
+/// a circuit breaker and timeouts for every call.
+export fn create(settings: &Settings.Settings) -> Result[Gateway, Str] {
+  let reads = Pipeline.build([
+      Timeout.strategy(Timeout.after(Supabase.CALL_TIMEOUT_MILLIS)),
+      Retry.strategy(Retry.Options{..Retry.defaults(), shouldHandle: Resilience.transient(), maxRetryAttempts: 1, delay: RETRY_DELAY_MILLIS, useJitter: true}),
+      CircuitBreaker.strategy(CircuitBreaker.Options{..CircuitBreaker.defaults(), shouldHandle: Resilience.transient(), minimumThroughput: 20, failureRatio: 0.5d}),
+      Timeout.strategy(Timeout.after(Supabase.ATTEMPT_TIMEOUT_MILLIS))
+    ])
+  let writes = Pipeline.build([
+      CircuitBreaker.strategy(CircuitBreaker.Options{..CircuitBreaker.defaults(), shouldHandle: Resilience.transient(), minimumThroughput: 20, failureRatio: 0.5d}),
+      Timeout.strategy(Timeout.after(Supabase.CALL_TIMEOUT_MILLIS))
+    ])
+  let (readPipeline, writePipeline) = match (reads, writes) {
+    case (Ok(r), Ok(w)) => (r, w)
+    case _ => { return Err("the database resilience pipelines did not build") }
+  }
+  let marker = repeatable()
+  let transport = Transport.Options {
+    ..Transport.defaults(),
+    pooledConnectionLifetime: CONNECTION_LIFETIME_MILLIS,
+    maxConnectionsPerServer: CONNECTIONS_PER_SERVER,
+    automaticDecompression: true,
+    allowAutoRedirect: false
+  }
+  let builder = Builder.named(Supabase.CLIENT_NAME)
+    .withBaseAddress(settings.supabaseUrl + "/")
+    .withTimeout(Supabase.CALL_TIMEOUT_MILLIS + 1000)
+    .withTransport(transport)
+    .withHandler(Resilience.selecting(|request: Request.Request| if Request.option(&request, &marker) == Some(true) { readPipeline } else { writePipeline }))
+    .withHandlerLifetime(Defaults.INFINITE)
+    .redactingHeaders(&[Supabase.API_KEY_HEADER])
+  match Factory.build([builder]) {
+    case Ok(factory) => Ok(Gateway {
+        http: Factory.createClient(&factory, Supabase.CLIENT_NAME),
+        base: settings.supabaseUrl,
+        anonKey: Secret.reveal(&settings.anonKey),
+        serviceKey: Secret.reveal(&settings.serviceKey)
+      })
+    case Err(invalid) => Err(Factory.explain(&invalid))
+  }
+}
+
+/// A gateway sending through `send`, for tests that answer from a stub.
+export fn over(send: Handler.Send, base: Str, anonKey: Str) -> Gateway {
+  Gateway{http: Client.create(send).withBaseAddress(base + "/"), base: base, anonKey: anonKey, serviceKey: anonKey}
+}
+
+/// Calls a database function with named arguments, as the member holding `token` or as a guest.
+export fn call(gateway: &Gateway, function: Str, arguments: &Array[(Str, Json.Json)], token: Option[Str], mode: Mode) -> Result[Json.Json, Problem.Problem] {
+  let bearer = Option.unwrapOr(token, gateway.anonKey)
+  let base = Request.post(Supabase.RPC_PATH + function, Content.json(&Json.object(arguments)))
+    .setHeader(Supabase.API_KEY_HEADER, gateway.anonKey)
+    .withBearer(bearer)
+    .accepting("application/json")
+  let request = match mode {
+    case Read => base.withOption(&repeatable(), true)
+    case Write => base
+  }
+  let response = sent(&gateway.http, request) ?
+  if response.status.code == 204 { return Ok(Json.Null) }
+  match Response.json(&response) {
+    case Ok(document) => Ok(document)
+    case Err(failure) => Err(Problem.Unavailable(HttpClient.describe(&failure)))
+  }
+}
+
+/// Calls a database function and decodes its answer as the caller's type.
+export fn query[T: Json.Decode](gateway: &Gateway, function: Str, arguments: &Array[(Str, Json.Json)], token: Option[Str], mode: Mode) -> Result[T, Problem.Problem] {
+  let document = call(gateway, function, arguments, token, mode) ?
+  match Wire.decode(&document) {
+    case Ok(value) => Ok(value)
+    case Err(problem) => Err(Problem.Unavailable(function + ": " + Json.explainDecode(&problem)))
+  }
+}
+
+/// Sends a request, answering the response when it succeeded and its failure as a problem otherwise.
+export fn sent(http: &Client.Client, request: Request.Request) -> Result[Response.Response, Problem.Problem] {
+  match Client.send(http, request) {
+    case Ok(response) => {
+      if Response.isSuccess(&response) { Ok(response) } else { Err(failureOf(&response)) }
+    }
+    case Err(HttpClient.Rejected(reason)) => Err(Problem.Unavailable(reason))
+    case Err(failure) => Err(Problem.Unavailable(HttpClient.describe(&failure)))
+  }
+}
+
+/// The problem an unsuccessful answer names. The database API writes `{code, message}` and puts the
+/// stable failure code in `message`; the identity provider writes `error_code` or `error`.
+fn failureOf(response: &Response.Response) -> Problem.Problem {
+  let document = match Response.json(response) {
+    case Ok(found) => found
+    case Err(_) => Json.Null
+  }
+  let reason = Option.unwrapOr(Option.firstPresent(&[
+        textAt(&document, "error_code"),
+        textAt(&document, "error"),
+        textAt(&document, "message")
+      ]), "status_" + show(response.status.code))
+  Problem.fromApi(reason, response.status.code)
+}
+
+/// A text field of a JSON object.
+export fn textAt(document: &Json.Json, name: Str) -> Option[Str] { Json.asText(&Json.field(document, name) ?) }
+
+/// A JSON text argument.
+export fn text(value: Str) -> Json.Json { Json.Text(value) }
+
+/// A JSON text argument, or `null` when empty.
+export fn textOrNull(value: Str) -> Json.Json { if value.isEmpty() { Json.Null } else { Json.Text(value) } }
+
+/// A JSON whole-number argument, or `null`.
+export fn whole(value: Option[Int]) -> Json.Json {
+  match value {
+    case Some(number) => Json.Number(number)
+    case None => Json.Null
+  }
+}
+
+/// A JSON number argument with a fraction, such as a coordinate, or `null`.
+export fn fraction(value: Option[Float64]) -> Json.Json {
+  match value {
+    case Some(number) => Json.Fractional(show(number))
+    case None => Json.Null
+  }
+}
+
+/// A JSON truth argument.
+export fn truth(value: Bool) -> Json.Json { Json.Boolean(value) }

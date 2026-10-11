@@ -224,3 +224,6 @@ Architect → Implementer: own Api.Account nullable profile boundary, Web.Contex
 Implementer → Independent Reviewer → Implementer: null-profile and JSON cookie-expiry boundaries reviewed; mirror parity corrected. All7 suites/193 assertions pass. Disposable development account exercised password login, export, CSRF rejection, pause/reactivation, wrong-password deletion rejection and successful deletion. Both auth/profile rows are gone; stale cookie now redirects to sign-in and expires. No production account was modified.
 
 Exact next action: promote reviewed issues24/26/28 through release0.2.2 and verify public routes. Physical-device GPS remains unverified.
+
+## Source visibility · #30
+Architect → Implementer: own root ignore rules and restore existing Api.Supabase gateway/identity files to Git. Existing complete mirrors resolve their transport/auth contracts. Preserve private root SQL files; no credentials in source. Independent reviewer verifies scope and module parity.
