@@ -1,4 +1,4 @@
-import { getJson } from '../net/http.js?v=42';
+import { getJson } from '../net/http.js?v=43';
 
 export function loadMore(link) {
   link.addEventListener('click', async (event) => {

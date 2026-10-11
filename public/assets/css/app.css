@@ -35,7 +35,7 @@
   --appbar: 64px;
   --tabbar: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --focus: 0 0 0 2px var(--color-white), 0 0 0 4px var(--color-ocean);
+  --focus: 0 0 0 2px #53666d;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -56,7 +56,7 @@ a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
 h1, h2, h3, p, ul, dl, dd, figure, blockquote { margin: 0; }
 ul { padding: 0; list-style: none; }
-:focus-visible { outline: none; box-shadow: var(--focus); border-radius: 6px; }
+:focus-visible { outline: 2px solid #53666d; outline-offset: 2px; box-shadow: none; border-radius: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .skip { position: absolute; left: 16px; top: -48px; z-index: 100; background: var(--color-ink); color: var(--color-white); padding: 8px 16px; border-radius: var(--radius-pill); }
 .skip:focus { top: 12px; }
@@ -312,11 +312,11 @@ ul { padding: 0; list-style: none; }
 .field { display: grid; gap: 6px; }
 .field > label, .label { font-weight: 700; font-size: 14px; }
 .field input, .field select, .field textarea, .compact input {
-  width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--color-divider); border-radius: var(--radius-control);
+  width: 100%; min-height: 48px; padding: 12px 14px; border: 1.5px solid #b6c2c8; border-radius: var(--radius-control);
   background: var(--color-white); font-size: 16px;
 }
 .field textarea { min-height: 96px; resize: vertical; }
-.field input:focus, .field select:focus, .field textarea:focus, .compact input:focus { outline: none; border-color: var(--color-ocean); box-shadow: 0 0 0 3px var(--color-ocean-tint); }
+.field input:focus, .field select:focus, .field textarea:focus, .compact input:focus { outline: none; border-color: #53666d; box-shadow: 0 0 0 1px #53666d; }
 .field-invalid input, .field-invalid select, .field-invalid textarea { border-color: var(--color-coral); }
 .field-hint { font-size: 13px; color: var(--color-graphite); }
 .field-error { font-size: 13px; color: #c5221f; font-weight: 700; }
