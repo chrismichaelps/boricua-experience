@@ -47,3 +47,6 @@ SHALLOW.
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Close synchronously clears open state and scroll lock. Escape, close button, outside tap, page hide/restore and media-query changes share this lifecycle; focus returns only for explicit dismissals. Resolved.
+
+## Assistant integration Grill Log
+- **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.

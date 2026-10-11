@@ -61,4 +61,12 @@ assert.equal(hidden.observers(), 2, 'back-forward restoration reconnects observa
 const failed = setup(); failed.fail();
 failed.documentHandlers.get('bx:picker-close')({ detail: { dialog: {}, complete: () => completed++ }, preventDefault() {} });
 assert.equal(completed, 3, 'unsupported animation never traps an open dialog');
+const pressed=setup(); const button={disabled:false,style:{transform:''},closest:()=>null};
+pressed.documentHandlers.get('pointerdown')({button:0,isPrimary:true,pointerId:7,target:{closest:()=>button}});
+assert.equal(pressed.controls.at(-1).frames.transform,' scale(.97)');
+const held=pressed.controls.at(-1); held.resolve(); await new Promise(setImmediate);
+assert.equal(held.cancelled,0,'held feedback persists until release');
+pressed.documentHandlers.get('pointercancel')({pointerId:7});
+assert.equal(held.cancelled,1,'pointer cancel releases held feedback');
+pressed.windowHandlers.get('blur')(); assert.equal(button.style.transform,'','blur restores original transform');
 console.log('PASS: official Motion exports, reduced motion, reveal deduplication, completion, hidden-page and restoration cleanup, failed-animation fallback');

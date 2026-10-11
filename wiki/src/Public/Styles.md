@@ -71,3 +71,6 @@ Grill Log resolved: the header backdrop filter makes a fixed descendant relative
 - **Q:** What is the resolved contract? **A:** Brand images retain their native green/red fills on every surface. Resolved.
 
 - **Q:** Can a small phone reach the free-only filter? **A:** The horizontally scrolling filter rail retains native keyboard access and each pill has a minimum44px touch height. Resolved.
+
+## Home icon contrast Grill Log
+Resolved: white home icon buttons are scoped to the photo-header appbar. Assistant close/microphone controls keep ink contrast on their white dialog. Verify real phone render, not only presence of SVG paths.

@@ -69,4 +69,9 @@ Use original cotorra puertorriqueña SVG assets and optional Motion privacy disc
 ## Brand refresh contract
 Original compact parrot replaces the former mascot. Brand asset URLs use shared version20; changed entry/styles/Motion refresh together while unchanged map imports retain their single version19 identity. Grill: named links and native search semantics are preserved; resolved.
 
-Current cache graph: version32 aligns every browser import and shell resource for the mobile menu and refreshed map date fixes.
+Current cache graph: version37 aligns every browser import and shell resource for the mobile menu and refreshed map date fixes.
+
+## Assistant integration Grill Log
+- **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+Assistant initializes via optional dynamic import catch; failure does not prevent existing discovery/map/consent handlers. Shared import graph advances together toversion37.

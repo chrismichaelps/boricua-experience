@@ -49,3 +49,8 @@ Never transform an ancestor of fixed participation controls. Capture and restore
 
 ## Parrot/privacy continuation
 Use original cotorra puertorriqueña SVG assets and optional Motion privacy disclosure without changing native checkbox submission. Grill: local assets and progressive enhancement preserve behavior; resolved.
+
+## Assistant integration Grill Log
+- **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+Held-press contract: pointerdown/Enter/Space holds scale.97 until pointerup/cancel/keyup/blur. Release restores original transform and settles rebound; hidden/pagehide/reduced-motion settles both held and playing controls. Test explicitly resolves held animation and verifies it remains held until cancellation.
