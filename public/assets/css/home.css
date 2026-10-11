@@ -17,7 +17,7 @@
 .app-home .appbar { position: absolute; inset: 20px 24px auto; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border: 0; color: white; padding: 0; }
 .app-home .appbar .brand img { filter: none; }
 .app-home .appbar .brand-name span { color: white; }
-.app-home .icon-button { color: white; }
+.app-home .appbar .icon-button { color: white; }
 @media (hover: hover) { .app-home .appbar .icon-button:hover { background: rgba(255,255,255,.16); color: white; } }
 .app-home .appbar .icon-button:active { background: rgba(255,255,255,.24); }
 .app-home .menu-trigger { border-color: rgba(255,255,255,.5); background: rgba(255,255,255,.14); color: white; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }

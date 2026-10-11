@@ -38,12 +38,26 @@ export function motion() {
   const page = document.querySelector('.auth-card, .activity, .account, .event-head, [data-feature="publish"], .search-top');
   if (page) reveal(page);
   let stopViewing = inView('.card, .destination-card, .promo, .create-tile', reveal, { margin: '0px 0px -24px 0px' });
-  const press = (event) => {
-    if (event.button !== 0 || reduced.matches) return;
-    const button = event.target.closest('button, .card-link, .destination-card, .chip, .tab, .picker-option');
-    if (!button || button.disabled || button.closest('.maplibregl-marker')) return;
+  const held = new Map();
+  const release = (id) => {
+    const state = held.get(id);
+    if (!state) return;
+    held.delete(id); state.control.cancel(); state.button.style.transform = state.original;
+    play(state.button, { transform: [`${state.base} scale(.97)`, `${state.base} scale(1)`] }, .18);
+  };
+  const hold = (button, id) => {
+    if (!button || button.disabled || reduced.matches || document.hidden || button.closest('.maplibregl-marker') || held.has(id)) return;
+    playing.get(button)?.();
+    const original = button.style.transform;
     const base = getComputedStyle(button).transform === 'none' ? '' : getComputedStyle(button).transform;
-    play(button, { transform: [`${base} scale(.97)`, `${base} scale(1)`] }, .2);
+    try {
+      const control = animate(button, { transform: `${base} scale(.97)` }, { duration: .08 });
+      held.set(id, { button, base, original, control });
+    } catch { button.style.transform = original; }
+  };
+  const press = (event) => {
+    if (event.button !== 0 || event.isPrimary === false) return;
+    hold(event.target.closest('button, .card-link, .destination-card, .chip, .tab, .picker-option'), event.pointerId);
   };
   const open = (event) => {
     const dialog = event.detail.dialog;
@@ -56,9 +70,16 @@ export function motion() {
     const complete = event.detail.complete;
     play(dialog, { opacity: [1, 0], transform: ['translateY(0)', innerWidth < 700 ? 'translateY(20px)' : 'translateY(5px)'] }, .14, complete);
   };
-  const settle = () => { for (const finish of [...active]) finish(); };
+  const settle = () => { for (const id of [...held.keys()]) release(id); for (const finish of [...active]) finish(); };
   reduced.addEventListener('change', settle);
   document.addEventListener('pointerdown', press);
+  document.addEventListener('pointerup', (event) => release(event.pointerId));
+  document.addEventListener('pointercancel', (event) => release(event.pointerId));
+  document.addEventListener('keydown', (event) => { if (!event.repeat && (event.key === 'Enter' || event.key === ' ')) hold(event.target.closest('button, .chip, .tab'), 'keyboard'); });
+  document.addEventListener('keyup', (event) => { if (event.key === 'Enter' || event.key === ' ') release('keyboard'); });
+  addEventListener('blur', settle);
+  document.addEventListener('bx:assistant-open', open);
+  document.addEventListener('bx:menu-open', open);
   document.addEventListener('change', (event) => {
     if (!event.target.matches('input[type="checkbox"], input[type="radio"]')) return;
     const label = event.target.closest('label');

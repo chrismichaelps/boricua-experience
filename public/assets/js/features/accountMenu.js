@@ -12,6 +12,7 @@ export function accountMenu(details) {
   };
   details.addEventListener('toggle', () => {
     sync();
+    if (details.open) document.dispatchEvent(new CustomEvent('bx:menu-open', { detail: { dialog: details.querySelector('.menu-panel') } }));
     if (details.open) details.querySelector('[data-menu="close"], .menu-member, .menu-row, .button')?.focus({ preventScroll: true });
   });
   document.addEventListener('click', (event) => {
