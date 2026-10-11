@@ -232,3 +232,6 @@ Architect → Implementer: own root ignore rules and restore existing Api.Supaba
 Architect → Implementer: own Auth/Legal page composition, search/experience styles, bilingual cookie explanations, photo provenance and mechanical asset graph41. Independent review required. Local generated Supabase configuration remains untracked; only root SQL is ignored.
 
 Implementer → Independent Reviewer → Implementer: stale sharing-restoration policy copy and singular cookie labels corrected. Reviewer reports no outstanding findings; all193 assertions/browser harnesses passed. English390px About/auth and1440px search/auth fit without horizontal overflow; photographs load, About has one h1, free-only filter submits and persists. Supabase source restoration is merged to dev.
+
+## Local CLI configuration · #35
+Architect → Implementer: own existing supabase/config.toml, local ignore file and complete mirror. Restore safe configuration to Git; no hosted settings applied. Independent review required.
