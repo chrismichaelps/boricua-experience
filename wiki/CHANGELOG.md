@@ -106,3 +106,6 @@ Promotes reviewed issue39: shared single focus indications, stronger neutral fie
 
 ## Curated publications · #42
 #42: database-backed administrator badge and curated official-source participation; assistant distinguishes curator from event producer and omits local availability; private CSV records stay ignored. Full gate222 assertions and all browser harnesses pass.
+
+## v0.2.4 · 2026-10-11
+Promotes reviewed issue42 application changes: trusted administrator crown, official-source curated publications, safe external booking links and publisher-aware assistant replies without local availability claims. Both database migrations applied and verified before promotion.222 assertions, all browser harnesses, allsource checks and formatter pass. Cache graph44. Expanded private CSV review and production data cleanup/import remain separate pending work.
