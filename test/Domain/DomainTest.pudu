@@ -47,6 +47,8 @@ fn main() -> Int {
       Test.equals("sixteen categories decode", &Result.map(categories, |all| all.length()), &Ok(16)),
       Test.equals("seventy-eight municipalities decode", &Result.map(towns, |all| all.length()), &Ok(78)),
       Test.equals("the profile decodes with its preferences", &Result.map(mine, |p| (p.displayName, p.locationVisibility, p.onboarded)), &Ok(("Carlos Ortiz", "approved_activities", true))),
+      Test.equals("old public profile does not grant admin", &Result.map(host, |p| p.isAdmin), &Ok(false)),
+      Test.equals("old cards retain member source", &Result.map(page, |p| p.items[0].source), &Ok("member")),
       Test.equals("a public profile lists upcoming events", &Result.map(host, |p| p.upcoming.length() > 0), &Ok(true)),
       Test.succeeded("a member's requests decode", &requests),
       Test.succeeded("an organizer's queue decodes", &queue),

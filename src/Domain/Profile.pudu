@@ -30,6 +30,7 @@ export type MyProfile = {
 /** @Domain.Profile.PublicProfile — an organizer as anyone may see them */
 export type PublicProfile = {
   id: Str,
+  @default("false") @json("is_admin") isAdmin: Bool,
   @json("display_name") displayName: Str,
   bio: Str,
   @json("avatar_url") avatarUrl: Option[Str],

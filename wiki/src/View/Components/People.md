@@ -55,3 +55,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Curated publication Grill Log · #42
+Resolved: The existing curated argument selects Published by rather than Hosted by and suppresses hosting statistics for curated records.

@@ -61,3 +61,6 @@ live positions older than an hour), and monthly history partitions created ahead
 [[grammar/_MOC]] · [[seams/DatabaseApi]] · [[src/Api/Supabase/Gateway]] · [[src/Constants/Supabase]]
 
 Featured destinations are active public editorial records, at most eight in stored display order, with local licensed image paths, bilingual captions and municipality references. Private table remains protected by RLS with no direct guest/member grants.
+
+## Curated publications · #42
+public_profile exposes trusted is_admin. private.card adds source. request_join refuses curated records with external_booking before request/counter writes; security, grants and RLS are retained.

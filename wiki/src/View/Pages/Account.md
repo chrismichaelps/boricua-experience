@@ -58,3 +58,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Curated publication Grill Log · #42
+Resolved: Show the same labeled crown on the current administrator account header; permission checks remain database owned.

@@ -615,3 +615,5 @@ ul { padding: 0; list-style: none; }
   .menu-open, .menu-open body { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .menu-panel, .bell.is-ringing .bell-icon, .bell.is-ringing .badge { animation: none; } }
+
+.admin-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--color-cloud);color:var(--color-ink);font-size:13px;font-weight:800;line-height:20px;margin:8px 0}

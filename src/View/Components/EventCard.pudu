@@ -25,21 +25,21 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
   let href = Routes.EVENT_PREFIX + event.slug
   let social = Format.going(&locale, event.approvedCount)
   let ended = Event.hasEnded(event, frame.nowMillis)
-  let seats = if ended || Event.isCancelled(event) { "" } else { Format.seats(&locale, event) }
+  let seats = if event.source == "curated" || ended || Event.isCancelled(event) { "" } else { Format.seats(&locale, event) }
   let distance = Format.distance(&locale, event.distanceM)
   H.article().class(if Event.isCancelled(event) { "card card-cancelled" } else { "card" }).holding([
       H.a().class("card-link").href(href).holding([
           H.div().class("card-media").holding([
               H.img().src(coverOf(event)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),
               H.span().class("pill pill-light card-price").says(Format.price(&locale, event.priceCents)),
-              if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if ended { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.ended")) } else if Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
+              if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if ended { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.ended")) } else if event.source != "curated" && Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
             ]),
           H.div().class("card-body").holding([
               H.p().class("card-when").holding([Moment.when(frame, event.startsAt, event.endsAt, &now)]),
               H.h3().class("card-title").says(event.title),
               H.p().class("card-place").holding([Icons.sized("pin", 14), H.span().says(event.venueName + " · " + event.municipality.name)]),
               H.div().class("card-meta").holding([
-                  H.span().class("meta").holding([Icons.sized("users", 14), H.span().says(social)]),
+                  H.span().class("meta").holding([Icons.sized(if event.source == "curated" { "ticket" } else { "users" }, 14), H.span().says(if event.source == "curated" { Frame.t(frame, "event.official_source") } else { social })]),
                   if event.likeCount > 0 { H.span().class("meta").holding([Icons.sized("heart", 14), H.span().says(show(event.likeCount))]) } else { H.nothing() },
                   if seats.isEmpty() { H.nothing() } else { H.span().class("meta meta-accent").says(seats) },
                   if distance.isEmpty() { H.nothing() } else { H.span().class("meta").says(distance) }

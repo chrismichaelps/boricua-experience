@@ -58,3 +58,6 @@ MEDIUM.
 
 ## Parrot install identity
 Manifest icon and social image paths use shared asset version20 to refresh installed branding. Grill: purpose and icon sizes stay unchanged; resolved.
+
+## Curated publication Grill Log · #42
+Resolved: Curated event structured data omits offers/availability and person-organizer claims because Boricua cannot confirm external stock or represent the publisher as the producer.

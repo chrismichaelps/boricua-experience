@@ -25,3 +25,6 @@ aliases: [Activity, Evento]
 ## Lifecycle
 
 `draft` → `published` → `ended` (by [[decisions/ADR-0009-event-expiry]]) or `cancelled` (by the organizer). `ended` and `cancelled` are final.
+
+## Curated publications · #42
+Curated events are editorial publications owned by an administrator, not native bookings or claims that the curator is the producer. Only confirmed schedule/price records are imported; no invented capacity or copied images.

@@ -66,3 +66,6 @@ DEEP: every listing and event page reads these types; the wire names stay here.
 
 - **Q:** How does the page know an event is over?
   **A:** `hasEnded(card, nowMillis)` is true when the job marked it `ended`, or when its end time has passed before the job ran. It takes the moment as an argument so views stay testable. Resolved.
+
+## Curated publication Grill Log · #42
+Resolved: Card carries source, default member for older payloads. officialUrl accepts only parsed HTTPS URLs with a valid public authority; curated never falls back to native participation.

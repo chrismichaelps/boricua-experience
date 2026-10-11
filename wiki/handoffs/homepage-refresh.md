@@ -245,3 +245,10 @@ Implementer → Independent Reviewer → Implementer: review clear;193assertions
 Architect → Implementer: own shared app/search/experience focus styles, Legal effective-date presentation and bilingual keys, mechanical asset graph43. Preserve accessible focus and all form/auth/filter semantics. Independent review required.
 
 Implementer → Independent Reviewer → Implementer: native-select fallback now shares parent focus only; policy change prose matches dates-only headings.193assertions/allharness pass, desktop/phone computedinputshadow none and parentone2pxinset, nooverflow. Globalfocus usesoneoutline so explicitcontroloutlines do not accumulate shadows.
+
+## Curated publications · #42
+Architect → Implementer: own profile/event projections, curated participation views, translations, crown, private CSV and matching API migration. Production cleanup preserves confirmed administrator and required catalogs. Independent Reviewer checks contracts before import/deployment.
+
+Implementer → Independent Reviewer → Implementer: all bounded findings resolved. Curated activity management and assistant publisher roles now follow the external-source contract. Full222 assertions, browser harnesses, allsource compiler checks and formatter pass. Dev/prod curated_publications migration applied; function hashes and ACL match, production seed check0. Development rollback test rejects curated join without writes. Browser320/390: no overflow, official CTA visible, publisher label and administrator badge present. Two real-source staging entries exist only in development. Private CSV has12 pending-review dated entries; no production cleanup/import yet.
+
+Exact next action: promote the reviewed application change; import the private CSV only after publication review and guarded production cleanup. Physical GPS and hardware coverage remain unverified.

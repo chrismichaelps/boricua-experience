@@ -43,8 +43,8 @@ export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Pr
                 about(frame, detail),
                 facts(frame, detail),
                 place(frame, detail),
-                People.organizer(frame, &detail.organizer, card.organizerName == None),
-                People.attendees(frame, &detail.attendees, Routes.SIGN_IN + "?return=" + path),
+                People.organizer(frame, &detail.organizer, detail.source == "curated"),
+                if detail.source == "curated" { H.nothing() } else { People.attendees(frame, &detail.attendees, Routes.SIGN_IN + "?return=" + path) },
                 participants(frame, detail),
                 report(frame, detail)
               ]),
@@ -86,7 +86,7 @@ fn heading(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
       H.ul().class("event-lines").holding([
           H.li().holding([Icons.sized("calendar", 18), H.span().holding([Moment.schedule(frame, card.startsAt, card.endsAt)])]),
           H.li().holding([Icons.sized("pin", 18), H.span().holding([H.a().class("text-link").href(Routes.TOWN_PREFIX + card.municipality.slug).says(card.municipality.name), H.span().says(" · " + card.venueName)])]),
-          H.li().holding([Icons.sized("ticket", 18), H.span().says(Format.price(&frame.locale, card.priceCents) + " · " + Frame.t(frame, if Event.needsApproval(&card) { "event.policy_approval" } else { "event.policy_open" }))])
+          H.li().holding([Icons.sized("ticket", 18), H.span().says(Format.price(&frame.locale, card.priceCents) + " · " + Frame.t(frame, if detail.source == "curated" { "event.official_source" } else if Event.needsApproval(&card) { "event.policy_approval" } else { "event.policy_open" }))])
         ])
     ])
 }
@@ -139,8 +139,8 @@ fn facts(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
       H.dl().class("facts").holding([
           H.dt().says(Frame.t(frame, "event.when")), H.dd().holding([Moment.schedule(frame, card.startsAt, card.endsAt)]),
           H.dt().says(Frame.t(frame, "event.price")), H.dd().says(Format.price(&frame.locale, card.priceCents)),
-          H.dt().says(Frame.t(frame, "event.attendance")), H.dd().says(capacity),
-          H.dt().says(Frame.t(frame, "event.joining")), H.dd().says(Frame.t(frame, if Event.needsApproval(&card) { "event.policy_approval_long" } else { "event.policy_open_long" })),
+          if detail.source == "curated" { H.nothing() } else { H.dt().says(Frame.t(frame, "event.attendance")) }, if detail.source == "curated" { H.nothing() } else { H.dd().says(capacity) },
+          H.dt().says(Frame.t(frame, "event.joining")), H.dd().says(Frame.t(frame, if detail.source == "curated" { "event.external_body" } else if Event.needsApproval(&card) { "event.policy_approval_long" } else { "event.policy_open_long" })),
           H.dt().says(Frame.t(frame, "event.visibility")), H.dd().says(Frame.t(frame, "visibility." + card.visibility))
         ])
     ])
@@ -176,7 +176,7 @@ fn place(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 /// The co-attendees' live map, for approved attendees and the organizer while the event is near.
 fn participants(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let approved = detail.viewer.requestStatus == Some(Participation.APPROVED) || detail.viewer.isOrganizer
-  if !approved || Event.isCancelled(&detail.card) { return H.nothing() }
+  if detail.source == "curated" || !approved || Event.isCancelled(&detail.card) { return H.nothing() }
   H.section().class("panel").holding([
       H.h2().class("section-title").says(Frame.t(frame, "event.live_title")),
       H.p().class("muted").says(Frame.t(frame, "event.live_body")),
@@ -203,13 +203,23 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
   let card = detail.card
   let base = Routes.EVENT_PREFIX + card.slug
   let ended = Event.hasEnded(&card, frame.nowMillis)
-  let price = H.div().class("join-price").holding([H.strong().says(Format.price(&frame.locale, card.priceCents)), H.span().says(Format.seats(&frame.locale, &card))])
+  let price = H.div().class("join-price").holding([H.strong().says(Format.price(&frame.locale, card.priceCents)), H.span().says(if detail.source == "curated" { Frame.t(frame, "event.official_source") } else { Format.seats(&frame.locale, &card) })])
   let refusal = match problem {
     case Some(found) => H.p().class("field-error").role("alert").says(Frame.t(frame, Problem.messageKey(&found)))
     case None => H.nothing()
   }
   let body = if Event.isCancelled(&card) {
     H.p().class("banner banner-error").says(Frame.t(frame, "event.cancelled_notice"))
+  } else if ended && detail.source == "curated" {
+    H.p().class("muted").says(Frame.t(frame, "event.ended"))
+  } else if detail.source == "curated" {
+    H.div().class("join-actions").holding([
+        H.p().class("muted small").says(Frame.t(frame, "event.external_body")),
+        match Event.officialUrl(detail) {
+          case Some(url) => H.a().class("button button-block").href(url).target("_blank").at("rel", "noopener noreferrer").says(Frame.t(frame, "event.source_action"))
+          case None => H.p().class("muted").says(Frame.t(frame, "event.source_unavailable"))
+        }
+      ])
   } else if detail.viewer.isOrganizer {
     H.div().class("join-actions").holding([
         H.a().class("button").href(base + "/requests").holding([Icons.sized("users", 18), H.span().says(Translate.count(&frame.locale, "event.manage_requests", Option.unwrapOr(card.pendingCount, 0)))]),
