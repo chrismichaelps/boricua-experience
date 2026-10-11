@@ -1,11 +1,11 @@
 /** @App.Handlers.Events.Registrations — event pages and publishing */
 module App.Handlers.Events
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
 import Domain.Draft as Draft
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Events as Events
 import Services.Runtime as Runtime
 

@@ -1,8 +1,8 @@
 /** @View.Components.People.Faces — the organizer card and who is going */
 module View.Components.People
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Event as Event

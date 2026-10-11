@@ -83,3 +83,6 @@ page is corrected in the same change.
 ## Referenced by
 
 [[00-INDEX]] · [[grammar/_MOC]] · [[architecture/_MOC]]
+
+## Compiler formatting baseline
+Resolved Grill Log: the0.1.3 formatter reorders import groups and normalizes indentation relative to the existing baseline. Formatter-only delivery is isolated from feature changes; verify identical non-whitespace tokens and import sets before staging. Public APIs and mirrored algorithms remain unchanged.

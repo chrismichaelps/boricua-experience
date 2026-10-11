@@ -1,8 +1,8 @@
 /** @View.Seo.Discovery — head tags, structured data, sitemap, robots, and the manifest */
 module View.Seo
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Std.Json as Json
 import Std.Option as Option
 import Constants.App as App

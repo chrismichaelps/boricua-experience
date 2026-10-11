@@ -1,10 +1,10 @@
 /** @App.Handlers.Participation.Registrations — joining, deciding, saving, reacting, reporting */
 module App.Handlers.Participation
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Participation as Participation
 import Services.Runtime as Runtime
 

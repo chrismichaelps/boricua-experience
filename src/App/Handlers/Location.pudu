@@ -1,11 +1,11 @@
 /** @App.Handlers.Location.Registrations — live location */
 module App.Handlers.Location
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
 import Domain.Location as Position
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Location as Location
 import Services.Runtime as Runtime
 

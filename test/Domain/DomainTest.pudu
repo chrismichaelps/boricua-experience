@@ -16,8 +16,8 @@ import Domain.Participation as Participation
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Search as Search
-import Utils.Wire as Wire
 import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
 
 /// Runs the suite.
 fn main() -> Int {

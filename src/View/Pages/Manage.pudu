@@ -1,12 +1,13 @@
 /** @View.Pages.Manage.Requests — the organizer's queue for one event */
 module View.Pages.Manage
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Constants.Routes as Routes
 import Domain.Participation as Participation
 import Domain.Problem as Problem
+import I18n.Dates as Dates
 import I18n.Translate as Translate
 import Services.Participation as ParticipationService
 import Utils.Time as Time
@@ -17,7 +18,6 @@ import View.Components.Notice as Notice
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
-import I18n.Dates as Dates
 
 /// One request with approve and reject controls while it is pending.
 fn row(frame: &Frame.Frame, request: &Participation.IncomingRequest, returnTo: Str) -> H.Node {

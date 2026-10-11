@@ -1,9 +1,9 @@
 /** @View.Pages.Account.Settings — profile, preferences, location, security, and data rights */
 module View.Pages.Account
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog

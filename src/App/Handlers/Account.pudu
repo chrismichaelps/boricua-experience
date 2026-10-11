@@ -1,11 +1,11 @@
 /** @App.Handlers.Account.Registrations — profile, preferences, onboarding, inbox */
 module App.Handlers.Account
 
-import PuduLangMediator as Messaging
-import PuduLangMediator.Context as Context
-import PuduLangMediator.Registration as Registration
 import App.Messages as Messages
 import Domain.Profile as Profile
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
 import Services.Account as Account
 import Services.Runtime as Runtime
 

@@ -1,8 +1,8 @@
 /** @View.Components.Form.Fields — labelled inputs with their errors */
 module View.Components.Form
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Domain.Problem as Problem
 import View.Frame as Frame
 

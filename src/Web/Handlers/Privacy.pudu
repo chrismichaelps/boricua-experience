@@ -14,8 +14,8 @@ import Domain.Consent as Consent
 import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Session as Session
-import Utils.Form as Form
 import Utils.Cookie as Cookie
+import Utils.Form as Form
 import Web.Context as Context
 import Web.Handlers.Account as Account
 import Web.Respond as Respond
@@ -70,10 +70,10 @@ fn language(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 fn exportData(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   match Serve.ask(app, &app.kinds.exportData, Serve.signed(session, ())) {
     case Ok(document) => Http.Response{..Reply.text(200, document), headers: [
-          ("content-type", HttpConstants.JSON),
-          ("content-disposition", "attachment; filename=\"boricua-experience-data.json\""),
-          ("cache-control", HttpConstants.CACHE_PRIVATE)
-        ]}
+        ("content-type", HttpConstants.JSON),
+        ("content-disposition", "attachment; filename=\"boricua-experience-data.json\""),
+        ("cache-control", HttpConstants.CACHE_PRIVATE)
+      ] }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

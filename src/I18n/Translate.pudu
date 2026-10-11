@@ -1,8 +1,8 @@
 /** @I18n.Translate.Lookup — message keys turned into text in a language */
 module I18n.Translate
 
-import Domain.Locale as Locale
 import Std.Option as Option
+import Domain.Locale as Locale
 import I18n.En as En
 import I18n.EnAccount as EnAccount
 import I18n.EnLegal as EnLegal

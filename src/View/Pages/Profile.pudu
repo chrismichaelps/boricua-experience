@@ -1,9 +1,9 @@
 /** @View.Pages.Profile.Public — an organizer as anyone may see them */
 module View.Pages.Profile
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Json as Json
 import Std.Option as Option
 import Constants.Routes as Routes

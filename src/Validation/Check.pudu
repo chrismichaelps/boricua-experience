@@ -1,10 +1,10 @@
 /** @Validation.Check.Runner — a validator's verdict as a problem */
 module Validation.Check
 
+import Domain.Problem as Problem
 import PuduLangValidator.Result as Verdict
 import PuduLangValidator.Rule as Rule
 import PuduLangValidator.Validator as Validator
-import Domain.Problem as Problem
 
 /// The value, or `Invalid` naming each refused field with the message key its rule carries.
 export fn run[T](validator: &Validator.Validator[T], value: T) -> Result[T, Problem.Problem] {
