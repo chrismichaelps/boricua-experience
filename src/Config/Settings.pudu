@@ -4,8 +4,8 @@ module Config.Settings
 import Std.App.Secret as Secret
 import Std.Bytes as Bytes
 import Std.Result as Result
-import PuduLangEnvironment as Environment
 import PuduLangEnvironment.Binding as Binding
+import PuduLangEnvironment as Environment
 import PuduLangEnvironment.Loader as Loader
 import PuduLangEnvironment.Options as Options
 import PuduLangEnvironment.Settings as Bound
@@ -22,6 +22,7 @@ export type Settings = {
   @env("BORICUA_SUPABASE_ANON_KEY") @secret anonKey: Secret.Secret,
   @env("BORICUA_SUPABASE_SERVICE_KEY") @secret serviceKey: Secret.Secret,
   @env("BORICUA_SESSION_KEY") @secret sessionKey: Secret.Secret,
+  @env("BORICUA_OPENROUTER_KEY") @default("") @secret openRouterKey: Secret.Secret,
   @env("BORICUA_LOG_LEVEL") @default("information") logLevel: Str,
   @env("BORICUA_LOG_FORMAT") @default("text") logFormat: Str,
   @env("BORICUA_HOST") @default("127.0.0.1") host: Str,

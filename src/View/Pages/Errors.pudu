@@ -1,9 +1,9 @@
 /** @View.Pages.Errors.Answers — missing pages, failures, and the offline page */
 module View.Pages.Errors
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Constants.Routes as Routes
 import Domain.Problem as Problem
 import View.Components.Notice as Notice

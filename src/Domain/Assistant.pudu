@@ -1,0 +1,38 @@
+/** @Domain.Assistant.Conversation — bounded messages and public discovery sources */
+module Domain.Assistant
+
+import Std.Json as Json
+import Std.Option as Option
+import Constants.Assistant as Limits
+import Constants.Routes as Routes
+import Domain.Event as Event
+
+/** @Domain.Assistant.Turn — client history cannot supply system instructions or tool output */
+export type Turn = { role: Str, content: Str } derives Json.Decode, Json.Encode
+/** @Domain.Assistant.Input — a question with short conversational context */
+export type Input = { message: Str, @default("[]") history: Array[Turn] } derives Json.Decode
+
+/** @Domain.Assistant.Tool — internal server tool request, never accepted directly from a browser */
+export type Tool = { name: Str, args: Json.Json, known: Array[Str] } derives Json.Decode
+
+/// Whether every client field stays within the conversation contract.
+export fn valid(input: &Input) -> Bool {
+  if input.message.trim().isEmpty() || input.message.length() > Limits.MESSAGE_MAX || input.history.length() > Limits.HISTORY_MAX { return false }
+  for turn in input.history {
+    if !(turn.role == "user" || turn.role == "assistant") || turn.content.length() > Limits.MESSAGE_MAX { return false }
+  }
+  true
+}
+
+/// A public activity projection without coordinates, attendee names or account relations.
+export fn source(card: &Event.Card) -> Json.Json {
+  Json.object(&[
+      ("href", Json.Text(Routes.EVENT_PREFIX + card.slug)), ("slug", Json.Text(card.slug)),
+      ("image", Json.Text(Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg"))),
+      ("title", Json.Text(card.title)), ("summary", Json.Text(card.summary.take(600))),
+      ("town", Json.Text(card.municipality.name)), ("category", Json.Text(card.category.nameEs)),
+      ("starts_at", Json.Text(card.startsAt)), ("ends_at", Json.Text(card.endsAt)),
+      ("price_cents", Json.Number(card.priceCents)), ("join_policy", Json.Text(card.joinPolicy)),
+      ("spots_left", match Event.seatsLeft(card) { case Some(n) => Json.Number(n) case None => Json.Null })
+    ])
+}

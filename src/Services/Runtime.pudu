@@ -1,6 +1,7 @@
 /** @Services.Runtime.Dependencies — what every use case is given */
 module Services.Runtime
 
+import Std.App.Secret as Secret
 import Std.Bytes as Bytes
 import Std.Sync as Sync
 import Api.Supabase.Gateway as Gateway
@@ -10,6 +11,7 @@ import Domain.Catalog as Catalog
 /** @Services.Runtime.Runtime — the gateway, the session key, the site address, and caches */
 export type Runtime = {
   gateway: Gateway.Gateway,
+  assistantConfigured: Bool,
   sessionKey: Bytes,
   siteUrl: Str,
   secureCookies: Bool,
@@ -22,6 +24,7 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
   let key = Settings.keyBytes(&settings.sessionKey) ?
   Ok(Runtime {
       gateway: gateway,
+      assistantConfigured: !Secret.reveal(&settings.openRouterKey).isEmpty(),
       sessionKey: key,
       siteUrl: settings.siteUrl,
       secureCookies: Settings.isSecure(settings),
@@ -31,5 +34,5 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
 
 /// A runtime over a given gateway, for tests.
 export fn over(gateway: Gateway.Gateway, sessionKey: Bytes, siteUrl: Str) -> Runtime {
-  Runtime{gateway: gateway, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, catalog: Sync.cell(None)}
+  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, catalog: Sync.cell(None)}
 }

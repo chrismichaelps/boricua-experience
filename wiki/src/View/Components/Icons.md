@@ -59,3 +59,6 @@ MEDIUM.
 
 ## Provenance and Grill
 ISC licensed Lucide static geometry, circle/rect/line converted exactly into path primitives for existing renderer. 24px grid, rounded joins, 2px strokes; existing names remain mapped. No model-generated icon geometry. Resolved.
+
+## Streaming contract Grill Log
+- **Q:** Where does streaming run? **A:** Node supplies a narrow SSE adapter and calls a body-HMAC protected Pudu bridge for authenticated preparation/tools. Pudu still checks origin, CSRF, active/onboarded member and atomic quota. Only the adapter reads provider credentials; the browser receives public sources and text. Permission policy permits microphone on this origin for explicit editable dictation. Deployment budget120s, adapter total deadline90s and browser95s; cancellation reaches every upstream fetch. Resolved.

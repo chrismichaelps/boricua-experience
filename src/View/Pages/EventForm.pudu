@@ -1,9 +1,9 @@
 /** @View.Pages.EventForm.Publishing — the form that creates and edits an event */
 module View.Pages.EventForm
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog

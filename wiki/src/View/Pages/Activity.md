@@ -54,3 +54,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Expired organizer control Grill Log
+Resolved: ended/canceled organizer cards retain their detail link but replace the pending-request action with the existing translated final-state message. No activity record is deleted.

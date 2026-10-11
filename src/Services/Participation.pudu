@@ -75,7 +75,7 @@ export fn activity(runtime: &Runtime.Runtime, session: &Session.Session) -> Resu
         || { let _set = Sync.set(&requests, ParticipationApi.mine(&held.gateway, token)) },
         || { let _set = Sync.set(&saved, ParticipationApi.saved(&held.gateway, token)) },
         || { let _set = Sync.set(&organizing, EventsApi.mine(&held.gateway, token)) }
-      ])
+    ])
   if Result.isErr(&ran) { return Err(Problem.Unavailable("the activity lists could not run")) }
   Ok(Activity {
       requests: Result.unwrapOr(Sync.get(&requests), Err(Problem.Unavailable("lost"))) ?,

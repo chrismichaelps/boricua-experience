@@ -5,6 +5,7 @@ Boricua Experience includes the following work by others, each under its own lic
 | Work | Where | License |
 | --- | --- | --- |
 | MapLibre GL JS 4.7.1 | `public/assets/vendor/` | BSD 3-Clause, `maplibre-LICENSE.txt` |
+| Marked18.1.0 | `public/assets/js/vendor/` | MIT, `marked-LICENSE.md` |
 | Motion 14.1.0 | `public/assets/js/vendor/` | MIT, `MOTION-LICENSE.md` |
 | Lucide icons | `src/View/Components/Icons.pudu` | ISC, `public/assets/brand/LUCIDE-LICENSE.txt` |
 | Nunito Sans | `public/assets/fonts/` | SIL Open Font License 1.1, `NOTICE.txt` |

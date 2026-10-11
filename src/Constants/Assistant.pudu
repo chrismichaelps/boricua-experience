@@ -1,0 +1,10 @@
+/** @Constants.Assistant.Bounds — free inference and public discovery limits */
+module Constants.Assistant
+
+/// Conversation and transport bounds.
+export const BODY_MAX: Int = 24000
+export const MESSAGE_MAX: Int = 1200
+export const HISTORY_MAX: Int = 6
+export const RESULTS: Int = 6
+/// The service-only quota reservation RPC.
+export const QUOTA: Str = "reserve_assistant_request"

@@ -4,13 +4,13 @@ module Web.Serve
 import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Option as Option
-import PuduLangMediator.Mediator as Mediator
-import PuduLangMediator.Request as Request
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Routes as Routes
 import Domain.Problem as Problem
 import Domain.Session as Session
+import PuduLangMediator.Mediator as Mediator
+import PuduLangMediator.Request as Request
 import Web.Context as Context
 import Web.Guard as Guard
 import Web.Respond as Respond
@@ -76,8 +76,8 @@ export fn api(app: &Assembly.App, handle: fn(Context.Visitor) -> Http.Response) 
 fn gate(app: &Assembly.App, visitor: &Context.Visitor, handle: fn(Context.Visitor) -> Http.Response) -> Http.Response {
   match visitor.member {
     case Some(member) => if !member.onboarded && !OPEN_PATHS.contains(visitor.request.path) {
-        Respond.redirect(Routes.ONBOARDING + "?return=" + visitor.request.path)
-      } else { handle(*visitor) }
+      Respond.redirect(Routes.ONBOARDING + "?return=" + visitor.request.path)
+    } else { handle(*visitor) }
     case None => handle(*visitor)
   }
 }

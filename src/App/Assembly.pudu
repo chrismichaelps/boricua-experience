@@ -1,7 +1,6 @@
 /** @App.Assembly.Composition — the mediator built once over the runtime */
 module App.Assembly
 
-import PuduLangMediator.Mediator as Mediator
 import App.Handlers.Account as AccountHandlers
 import App.Handlers.Admin as AdminHandlers
 import App.Handlers.Discover as DiscoverHandlers
@@ -13,6 +12,7 @@ import App.Handlers.Privacy as PrivacyHandlers
 import App.Logging as Logging
 import App.Messages as Messages
 import App.Pipeline as Pipeline
+import PuduLangMediator.Mediator as Mediator
 import Services.Runtime as Runtime
 
 /** @App.Assembly.App — the runtime, the mediator, its kinds, and the loggers */

@@ -10,3 +10,5 @@ tags: [moc, handoff]
 ## Referenced by
 
 [[00-INDEX]]
+
+- [[handoffs/assistant]] — live assistant implementation.

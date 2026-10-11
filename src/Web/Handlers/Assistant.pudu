@@ -1,0 +1,54 @@
+/** @Web.Handlers.Assistant.Routes — internal authenticated preparation and tools for the streaming adapter */
+module Web.Handlers.Assistant
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Assistant as Limits
+import Constants.Routes as Routes
+import Domain.Assistant as Conversation
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Wire as Wire
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The internal bridge still checks the original browser origin, session and CSRF token.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [Route.post(Routes.API_ASSISTANT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| answer(&held, &visitor, &session)))]
+}
+
+/// Only a server adapter can submit a body signed with the domain-separated application key.
+export fn signedBody(key: &Bytes, body: Str, operation: Str, signature: Str) -> Bool {
+  let expected = Crypto.hmacSha256(key, &Bytes.fromText("boricua-assistant:" + operation + ":" + body))
+  match Bytes.decodeHex(signature) { case Ok(given) => Crypto.bytesMatch(&expected, &given) case Err(_) => false }
+}
+
+/// Validated input becomes a mediator message; stable errors never expose provider/database internals.
+fn answer(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let body = visitor.request.message.body
+  let operation = Option.unwrapOr(Route.header(&visitor.request, "x-assistant-operation"), "prepare")
+  if !(operation == "prepare" || operation == "tool") || body.length() > Limits.BODY_MAX || !signedBody(&app.runtime.sessionKey, body, operation, Option.unwrapOr(Route.header(&visitor.request, "x-assistant-signature"), "")) { return Respond.problem(app, visitor, &Problem.Forbidden) }
+  let result = if operation == "tool" {
+    let asked: Conversation.Tool = match Wire.parse(body) { case Ok(found) => found case Err(_) => { return Respond.problem(app, visitor, &Problem.Refused("assistant_invalid")) } }
+    Serve.ask(app, &app.kinds.assistantTool, Serve.signed(session, asked))
+  } else {
+    let input: Conversation.Input = match Wire.parse(body) { case Ok(found) => found case Err(_) => { return Respond.problem(app, visitor, &Problem.Refused("assistant_invalid")) } }
+    Serve.ask(app, &app.kinds.assistant, Serve.signed(session, (input, Locale.code(&visitor.locale))))
+  }
+  match result {
+    case Ok(value) => Respond.json(200, &value)
+    case Err(Problem.Unavailable(reason)) => {
+      let code = if reason == "assistant_limit" || reason == "assistant_not_configured" { reason } else { "assistant_unavailable" }
+      Respond.json(if code == "assistant_limit" { 429 } else { 503 }, &Json.object(&[("error", Json.Text(code))]))
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

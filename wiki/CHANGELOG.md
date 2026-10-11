@@ -68,3 +68,7 @@
 Promotes reviewed mobile navigation/privacy fixes, original green/red cotorra assets and database-owned featured destinations. Includes semantic map dates and the prior phone header clipping fix. Additive content RPC deployed to both databases before app rollout; no business-content seed or credentials committed. No changes to account/provider permissions or event-location policy.
 
 Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live route checks pass. Both dev and main contain the release; no secrets/private content migration committed.
+
+- 2026-10-10 · issue#5 · bounded authenticated live-data assistant, genuine free-model SSE, safe Markdown, editable voice dictation, source links and native composer/Motion held press. Atomic member/project quota fixes rollover using locked wall clock. Activity rows constrain covers and text; ended/canceled cards suppress seats and pending actions at deadline. Dev rollback validates expiry and pending closure.
+
+- 2026-10-10 · release0.2.0 · live free-only assistant with authorized database tools, streaming Markdown, cotorra welcome, editable voice dictation, spoken replies and cover cards; native Motion controls; activity overlap and ended-action fixes. 133 source checks, 169 assertions and all browser harnesses pass. Dev live conversation verified; provider quotas limit capacity; physical voice/haptics unverified.

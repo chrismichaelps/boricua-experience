@@ -73,10 +73,10 @@ export fn eventPage(app: &Assembly.App, visitor: &Context.Visitor, problem: Opti
 fn calendar(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.event, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
     case Ok(detail) => Http.Response{..Respond.document(HttpConstants.CALENDAR, Calendar.ics(app.runtime.siteUrl, &detail.card, Routes.EVENT_PREFIX + detail.card.slug)), headers: [
-          ("content-type", HttpConstants.CALENDAR),
-          ("content-disposition", "attachment; filename=\"" + detail.card.slug + ".ics\""),
-          ("cache-control", HttpConstants.CACHE_PRIVATE)
-        ]}
+        ("content-type", HttpConstants.CALENDAR),
+        ("content-disposition", "attachment; filename=\"" + detail.card.slug + ".ics\""),
+        ("cache-control", HttpConstants.CACHE_PRIVATE)
+      ] }
     case Err(found) => Respond.problem(app, visitor, &found)
   }
 }

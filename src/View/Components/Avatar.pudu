@@ -1,8 +1,8 @@
 /** @View.Components.Avatar.Faces — initials in a coloured circle, alone or stacked */
 module View.Components.Avatar
 
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
 import Utils.Text as Text
 
 /// Background hues avatars are drawn in, chosen by name so a person keeps their colour.

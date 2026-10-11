@@ -1,9 +1,9 @@
 /** @View.Pages.Event.Detail — one event: what, when, where, who hosts, who goes, and how to join */
 module View.Pages.Event
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Event as Event
@@ -17,8 +17,8 @@ import Utils.Time as Time
 import View.Components.EventCard as EventCard
 import View.Components.Form as Form
 import View.Components.Icons as Icons
-import View.Components.People as People
 import View.Components.Moment as Moment
+import View.Components.People as People
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -245,15 +245,15 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
           }
         ])
       case _ => if detail.isFull {
-          H.p().class("banner").says(Frame.t(frame, "event.full_notice"))
-        } else {
-          H.form().action(base + "/join").method("post").class("join-form").holding([
-              Form.token(frame),
-              if Event.needsApproval(&card) { Form.area(frame, &Form.Field{..Form.field("message", Frame.t(frame, "event.message_label"), ""), hint: Frame.t(frame, "event.message_hint")}, 3, &[]) } else { H.nothing() },
-              H.button().submit().class("button button-block").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_to_join" } else { "event.join_now" })),
-              H.p().class("muted small").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_note" } else { "event.join_note" }))
-            ])
-        }
+        H.p().class("banner").says(Frame.t(frame, "event.full_notice"))
+      } else {
+        H.form().action(base + "/join").method("post").class("join-form").holding([
+            Form.token(frame),
+            if Event.needsApproval(&card) { Form.area(frame, &Form.Field{..Form.field("message", Frame.t(frame, "event.message_label"), ""), hint: Frame.t(frame, "event.message_hint")}, 3, &[]) } else { H.nothing() },
+            H.button().submit().class("button button-block").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_to_join" } else { "event.join_now" })),
+            H.p().class("muted small").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_note" } else { "event.join_note" }))
+          ])
+      }
     }
   }
   H.div().class("join-panel").data("feature", "join-panel").holding([price, refusal, body])

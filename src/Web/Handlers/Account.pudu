@@ -14,8 +14,8 @@ import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
-import Utils.Wire as Wire
 import Utils.Form as Form
+import Utils.Wire as Wire
 import Validation.Account as AccountRules
 import View.Pages.Account as AccountPage
 import View.Pages.Auth as AuthPage

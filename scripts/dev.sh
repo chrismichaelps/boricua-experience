@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the application locally on BORICUA_PORT (8080), restarting when a source file changes.
+# Runs the public development proxy on8080 and the watched Pudu server on8082.
 # Development talks to the hosted development project or the local Supabase stack, and refuses the
 # production project outright.
 set -euo pipefail
@@ -15,4 +15,17 @@ if [ "$(project_ref "$database")" = "$PRODUCTION_PROJECT_REF" ]; then
   exit 1
 fi
 "$compiler" install --locked
-exec "$compiler" run --watch src/Main.pudu
+set -a
+. "$root/.env"
+set +a
+if [ "${BORICUA_PORT:-}" != "8082" ]; then
+  echo "Set BORICUA_PORT=8082 in .env for the internal Pudu server." >&2
+  exit 1
+fi
+export BORICUA_ASSISTANT_BRIDGE_URL=http://127.0.0.1:8082
+"$compiler" run --watch src/Main.pudu &
+pudu_pid=$!
+node --watch "$root/scripts/dev-chat.mjs" &
+proxy_pid=$!
+trap 'kill "$pudu_pid" "$proxy_pid" 2>/dev/null || true' EXIT INT TERM
+wait "$pudu_pid" "$proxy_pid"

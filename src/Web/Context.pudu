@@ -3,8 +3,6 @@ module Web.Context
 
 import Std.Http.Server.Route as Route
 import Std.Option as Option
-import PuduLangMediator as Messaging
-import PuduLangMediator.Mediator as Mediator
 import App.Assembly as Assembly
 import App.Messages as Messages
 import App.Pipeline as Pipeline
@@ -16,6 +14,8 @@ import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
+import PuduLangMediator.Mediator as Mediator
+import PuduLangMediator as Messaging
 import Services.Auth.Pkce as Pkce
 import Services.Auth.Sealer as Sealer
 import Services.Auth.Sessions as Sessions

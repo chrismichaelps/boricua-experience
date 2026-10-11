@@ -71,3 +71,8 @@ Current cache graph: version33 aligns every browser import and shell resource fo
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Asset graph version33 refreshes every changed browser import and brand asset consistently. Resolved.
+
+## Assistant integration Grill Log
+- **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+Final assistant release uses asset revision38 to invalidate earlier development UI caches.

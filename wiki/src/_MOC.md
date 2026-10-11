@@ -214,3 +214,26 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Public/PrivacyControls]] — native privacy disclosure with optional Motion.
 
 - [[src/Test/AccountMenu]]
+
+- [[src/Constants/Assistant]] — live assistant boundary.
+
+- [[src/Domain/Assistant]] — live assistant boundary.
+
+- [[src/Services/Assistant]] — live assistant boundary.
+
+- [[src/Web/Handlers/Assistant]] — live assistant boundary.
+
+- [[src/View/Components/Assistant]] — live assistant boundary.
+
+- [[src/Public/Assistant]] — live assistant boundary.
+
+- [[src/Database/AssistantQuota]] — live assistant boundary.
+
+- [[src/Public/AssistantStream]] — streaming assistant contract.
+
+- [[src/Test/Assistant]] — streaming assistant contract.
+
+- [[src/Public/AssistantStyles]] — streaming assistant contract.
+
+- [[src/Public/AssistantMarkdown]]
+- [[src/Public/Marked]]

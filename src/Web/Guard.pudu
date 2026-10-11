@@ -39,4 +39,3 @@ fn originOf(address: Str) -> Str {
 fn forbidden(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   Respond.problem(app, visitor, &Problem.Forbidden)
 }
-
