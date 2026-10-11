@@ -29,6 +29,7 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
             photoEditor(frame, me),
             H.div().holding([
                 H.h1().class("page-title").says(me.displayName),
+                if me.isAdmin { H.span().class("admin-badge").holding([Icons.sized("crown", 16), H.span().says(Frame.t(frame, "profile.admin"))]) } else { H.nothing() },
                 H.p().class("muted").says(email),
                 H.a().class("text-link").href(Routes.PROFILE_PREFIX + me.id).says(Frame.t(frame, "account.view_public"))
               ])

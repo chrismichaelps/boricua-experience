@@ -45,3 +45,6 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 ## Referenced by
 
 [[src/_MOC]]
+
+## Curated publication Grill Log · #42
+Resolved: external_booking is a stable refusal mapped to the bilingual official-source explanation.

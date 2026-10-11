@@ -16,6 +16,8 @@ import Domain.Problem as Problem
 import Domain.Session as Session
 import PuduLangHttpClient as HttpClient
 import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
+import PuduLangHttpClient.Response as Response
 import Services.Assistant as Assistant
 import Services.Runtime as Runtime
 import Support.Fixtures as Fixtures
@@ -43,7 +45,24 @@ fn main() -> Int {
   let townResult = match townAnswer { case Ok(found) => match Json.field(&found, "result") { case Some(result) => result case None => Json.Null } case Err(_) => Json.Null }
   let townEntries = match Json.field(&townResult, "entries") { case Some(Json.List(entries)) => entries case _ => [] }
   let emptyAnswer = Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: Json.object(&[("scope", Json.Text("towns")), ("query", Json.Text("missing"))]), known: [], locale: "es"})
+  let curatedCard = Event.Card{..page.items[0], source: "curated", capacity: Some(500), approvedCount: 0}
+  let detailJson = Fixtures.json("event-detail-guest.json")
+  let curatedJson = match detailJson { case Json.Object(fields) => Json.Object(fields.filter(|field: (Str, Json.Json)| field[0] != "source").push(("source", Json.Text("curated")))) case _ => panic("detail fixture") }
+  let curatedRuntime = Runtime.over(Gateway.over(|request: Request.Request, _cancel: Cancel.Token| Ok(Response.answer(&request, 200).withJson(&curatedJson)), "https://example.test", "fixture"), key, "https://example.test")
+  let nativeRuntime = Runtime.over(Gateway.over(|request: Request.Request, _cancel: Cancel.Token| Ok(Response.answer(&request, 200).withJson(&detailJson)), "https://example.test", "fixture"), key, "https://example.test")
+  let slug = "caminata-historica-por-el-viejo-san-juan-ba1961"
+  let organizerTool = Conversation.Tool{name: "organizer_details", args: Json.object(&[("slug", Json.Text(slug))]), known: [slug], locale: "en"}
+  let curatedAnswer = match Assistant.runTool(&curatedRuntime, &session, &organizerTool) { case Ok(found) => found case Err(_) => panic("curated tool fixture") }
+  let curatedResult = match Json.field(&curatedAnswer, "result") { case Some(found) => found case None => Json.Null }
+  let nativeAnswer = match Assistant.runTool(&nativeRuntime, &session, &organizerTool) { case Ok(found) => found case Err(_) => panic("native tool fixture") }
   let checks = Test.suite("Assistant", &[
+      Test.equals("curated source has no local joining", &Json.field(&Conversation.source(&curatedCard), "join_policy"), &Some(Json.Null)),
+      Test.equals("curated source has no local capacity", &Json.field(&Conversation.source(&curatedCard), "spots_left"), &Some(Json.Null)),
+      Test.equals("curated publisher is not an organizer", &Json.field(&curatedResult, "organizer"), &Some(Json.Null)),
+      Test.equals("curated publisher role is explicit", &Json.encode(&curatedResult).contains("curator"), &true),
+      Test.equals("curated publisher has no hosted statistics", &Json.encode(&curatedResult).contains("hosted_count"), &false),
+      Test.equals("native organizer retains hosted statistics", &Json.encode(&nativeAnswer).contains("hosted_count"), &true),
+      Test.equals("unsearched organizer cannot access database", &Assistant.runTool(&runtime, &session, &Conversation.Tool{..organizerTool, known: []}), &Err(Problem.Refused("assistant_invalid"))),
       Test.equals("catalog caps large results", &townEntries.length(), &24),
       Test.equals("catalog signals additional results", &Json.field(&townResult, "more"), &Some(Json.Boolean(true))),
       Test.equals("catalog filters without inventing results", &emptyAnswer, &Ok(Json.object(&[("result", Json.object(&[("verified", Json.Boolean(true)), ("entries", Json.list(&[])), ("more", Json.Boolean(false))])), ("sources", Json.list(&[]))]))),

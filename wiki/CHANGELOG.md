@@ -103,3 +103,6 @@ Promotes reviewed issues24/26/28/30/31/35/36: explicit bounded map location life
 
 ## v0.2.3 · 2026-10-11
 Promotes reviewed issue39: shared single focus indications, stronger neutral field borders and policy effective-date labels without visible versions. Includes all reviewed v0.2.2 discovery/location/account/source fixes.193 assertions and all browser harnesses pass; phone/desktop focus verified. No database/schema changes. Asset graph43.
+
+## Curated publications · #42
+#42: database-backed administrator badge and curated official-source participation; assistant distinguishes curator from event producer and omits local availability; private CSV records stay ignored. Full gate222 assertions and all browser harnesses pass.

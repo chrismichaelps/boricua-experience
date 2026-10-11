@@ -57,3 +57,6 @@ MEDIUM.
 
 ## Expired organizer control Grill Log
 Resolved: ended/canceled organizer cards retain their detail link but replace the pending-request action with the existing translated final-state message. No activity record is deleted.
+
+## Curated boundary Grill Log · #42
+Resolved: Upcoming curated publications show the official-source label instead of pending-request management; ended/canceled labels and native pending-request links remain unchanged.

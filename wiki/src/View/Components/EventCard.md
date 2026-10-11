@@ -59,3 +59,6 @@ MEDIUM.
 Resolved: `Event.hasEnded(event, frame.nowMillis)` replaces seat availability with a translated ended flag immediately at the deadline, including before cron persists status. Canceled state takes priority; expired approval badges and availability claims are suppressed.
 
 Canceled cards also suppress remaining-seat claims. Resolved: capacity is a live participation affordance, not valid for a final activity.
+
+## Curated publication Grill Log · #42
+Resolved: Curated cards label official-source publication instead of local attendance and omit seat availability and approval flags.

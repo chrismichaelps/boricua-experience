@@ -124,14 +124,14 @@ export fn event(siteUrl: Str, detail: &Event.Detail) -> Json.Json {
     ("eventAttendanceMode", Json.Text("https://schema.org/OfflineEventAttendanceMode")),
     ("location", place),
     ("image", Json.list(&[Json.Text(siteUrl + Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg"))])),
-    ("offers", offer),
     ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
   ]
+  if detail.source != "curated" { fields = fields.push(("offers", offer)) }
   if let Some(host) = detail.organizer {
-    fields = fields.push(("organizer", Json.object(&[("@type", Json.Text("Person")), ("name", Json.Text(host.displayName))])))
+    if detail.source != "curated" { fields = fields.push(("organizer", Json.object(&[("@type", Json.Text("Person")), ("name", Json.Text(host.displayName))]))) }
   }
   if let Some(total) = card.capacity {
-    fields = fields.push(("maximumAttendeeCapacity", Json.Number(total)))
+    if detail.source != "curated" { fields = fields.push(("maximumAttendeeCapacity", Json.Number(total))) }
   }
   Json.object(&fields)
 }

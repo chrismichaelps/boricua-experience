@@ -201,6 +201,7 @@ event.directions
 event.distance
 event.edit
 event.ended
+event.external_body
 event.free
 event.full
 event.full_notice
@@ -227,11 +228,13 @@ event.message_label
 event.more_people.one
 event.more_people.other
 event.not_interested
+event.official_source
 event.policy_approval
 event.policy_approval_long
 event.policy_open
 event.policy_open_long
 event.price
+event.published_by
 event.report
 event.report_detail
 event.report_reason
@@ -245,6 +248,8 @@ event.save
 event.share
 event.sign_in_to_join
 event.sign_in_why
+event.source_action
+event.source_unavailable
 event.spots_left.one
 event.spots_left.other
 event.unsave
@@ -511,6 +516,7 @@ problem.email_taken
 problem.event_cancelled
 problem.event_ended
 problem.event_full
+problem.external_booking
 problem.flow_expired
 problem.forbidden
 problem.invalid_avatar
@@ -535,6 +541,7 @@ problem.starts_in_past
 problem.too_many_events
 problem.unavailable
 problem.weak_password
+profile.admin
 profile.description
 profile.events_hosted.one
 profile.events_hosted.other
