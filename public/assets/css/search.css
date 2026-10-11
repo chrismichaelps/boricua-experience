@@ -78,7 +78,12 @@
 .search-hero-place { position: absolute; bottom: 24px; right: 28px; color: #fff; font-size: 14px; font-weight: 700; text-shadow: 0 1px 4px #16394b; min-height: 44px; display: flex; align-items: center; }
 .search-hero-place:hover { text-decoration: underline; }
 @media (max-width: 699px) {
-  .search-hero { margin-top: 16px; height: calc(100svh - 80px); padding: 80px 16px 68px; border-radius: 24px; }
+  .search-hero { margin-top: 0; height: calc(100svh - 80px); padding: 80px 16px 68px; border-radius: 24px; }
   .search-hero-content > p { margin-bottom: 48px; font-size: 14px; }
   .search-hero-place { right: 20px; bottom: 14px; }
 }
+
+/* The photo spans the viewport; result controls retain a readable measure. */
+.app-search .shell { max-width: none; padding: 8px 8px 48px; }
+.app-search .search-hero { margin: 0; }
+.app-search .search-page > :not(.search-hero) { width: calc(100% - 32px); max-width: 1200px; margin-inline: auto; }

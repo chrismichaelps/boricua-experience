@@ -92,5 +92,9 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 
 - 2026-10-11 · [[src/View/Pages/Legal]] · home-sized search photograph, licensed El Morro auth/About imagery and human-readable cookie purpose labels; asset graph41 · issue #31.
 
+- 2026-10-11 · [[src/Infrastructure/SupabaseConfig]] · track reviewed local CLI TOML and ignore file; no credentials, SQL or hosted-setting changes · issue #35.
+
+- 2026-10-11 · [[src/Public/SearchStyles]] · open search hero fills the viewport with home-equivalent8px insets; results retain centered reading width; asset graph42 · issue #36.
+
 ## v0.2.2 · 2026-10-11
-Promotes reviewed issues24/26/28/30/31: explicit bounded map location lifecycle, Culebra-first database order in both environments, real licensed discovery/auth/About photographs, footer and cookie copy, deleted-account session expiry and restored tracked Supabase modules.193 assertions and all browser harnesses pass; disposable dev export/pause/reactivate/delete verified. No schema migration. Physical GPS/browser hardware coverage remains pending.
+Promotes reviewed issues24/26/28/30/31/35/36: explicit bounded map location lifecycle, Culebra-first database order in both environments, real licensed discovery/auth/About photographs, full-width search, footer and cookie copy, deleted-account session expiry and restored tracked Supabase source/local CLI configuration.193 assertions and all browser harnesses pass; disposable dev export/pause/reactivate/delete verified. No schema migration or hosted configuration change. Asset graph42. Physical GPS/browser hardware coverage remains pending.
