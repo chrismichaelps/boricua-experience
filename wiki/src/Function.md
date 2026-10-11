@@ -53,3 +53,10 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Streaming contract Grill Log
+- **Q:** Where does streaming run? **A:** Node supplies a narrow SSE adapter and calls a body-HMAC protected Pudu bridge for authenticated preparation/tools. Pudu still checks origin, CSRF, active/onboarded member and atomic quota. Only the adapter reads provider credentials; the browser receives public sources and text. Permission policy permits microphone on this origin for explicit editable dictation. Deployment budget120s, adapter total deadline90s and browser95s; cancellation reaches every upstream fetch. Resolved.
+
+## Local streaming development
+
+Resolved Grill Log: `scripts/dev.sh` rejects the production database, starts watched Pudu on the `.env` internal port8082 and watched Node proxy on8080, and terminates both children on exit. It exports private `.env` values only to these processes. `scripts/dev-chat.mjs` forwards normal HTTP traffic and isolates `/api/chat`; proxy errors are stable and contain no credentials.
