@@ -93,3 +93,6 @@ The bell's count sits on its shoulder as a 16 px pill with a white ring; it is h
 
 ## Bilingual action Grill Log
 Resolved: both header and menu language POST forms include Form.token(frame), matching existing authenticated CSRF guards. Guests keep an empty token; no guard is relaxed.
+
+## Explicit location lifecycle Grill Log
+Resolved: nearby lookup stays private; initial acquisition uses the bounded accurate/balanced fallback. Fresh readings alone enable the sharing badge. No storage restores sharing; hiding or leaving stops it. Epochs reject stale callbacks and serialized writes prevent a late update undoing stop. Map controls expose purpose/status in both languages; the map omits the assistant.

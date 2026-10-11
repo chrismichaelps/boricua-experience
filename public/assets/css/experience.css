@@ -192,3 +192,9 @@ button[disabled] { cursor: wait; }
   .toast { top: auto; bottom: calc(var(--tabbar) + var(--safe-bottom) + 12px); max-width: calc(100% - 32px); animation-name: toast-rise; }
   @keyframes toast-rise { 0% { opacity: 0; transform: translate(-50%, 8px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 8px); pointer-events: none; } }
 }
+
+.map-privacy { display: block; max-width: min(360px, calc(100% - 84px)); border-radius: 14px; font-size: 12px; line-height: 1.45; }
+.map-privacy p { margin: 0; }
+.map-privacy summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+.map-privacy details[open] p { padding: 4px 0 8px; }
+#map-location-status:empty { display: none; }

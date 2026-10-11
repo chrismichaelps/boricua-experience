@@ -68,3 +68,6 @@ Use the declared runtime/cache asset version rather than stale fixture versions.
 Resolved: fixture renders a published card exactly at its end; it has the ended message and no remaining-seat claim. Organizer activity output has no pending-request action once ended; the event detail link stays reachable. Database expiry verification uses development-only transaction rollback fixtures for past/boundary/future and pending closure.
 
 Language-switch regression renders a token-bearing frame and checks both desktop and menu forms contain the same session token; guest and bilingual output remain covered.
+
+## Map lifecycle regression Grill Log
+Resolved: bounded acquisition and writes, immediate stop plus late-update cleanup, stop/restart barrier, separate control subscriptions, no automatic sharing restoration and map-only assistant omission.

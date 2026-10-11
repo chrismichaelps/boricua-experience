@@ -24,3 +24,6 @@ Aborted requests, duplicate submissions, missing vibration support and cached pa
 
 ## Referenced by
 [[src/_MOC]] · [[handoffs/homepage-refresh]]
+
+## Bounded live writes Grill Log
+Resolved: optional POST options forward AbortSignal without changing other callers. Live writes have a ten-second deadline. Revocation dispatches immediately with keepalive and again after the bounded in-flight write settles; no new sharing write overtakes cleanup. Server expiry remains the fallback for offline revocation.

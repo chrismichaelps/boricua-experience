@@ -1,51 +1,49 @@
-import { ENDPOINTS, LIVE, STORAGE } from '../constants/config.js?v=39';
+import { ENDPOINTS, LIVE } from '../constants/config.js?v=39';
 import { message } from '../constants/messages.js?v=39';
 import { postJson } from '../net/http.js?v=39';
 import { distanceM, readingOf } from '../utils/geo.js?v=39';
+import { requestLocation } from '../utils/locate.js?v=39';
 import { toast } from './toast.js?v=39';
 
-const listeners = new Set();
-const statuses = new Set();
-const status = (value) => { for (const listener of statuses) listener(value); };
-let readingAt = 0;
-let watchId = null;
-let sharing = false;
-let lastSent = null;
-let lastReading = null;
+const listeners = new Set(), statuses = new Set();
+const status = value => { for (const listener of statuses) listener(value); };
+let readingAt = 0, watchId = null, acquisition = null, epoch = 0;
+let sharing = false, lastSent = null, lastReading = null;
+let writes = Promise.resolve();
+const badge = visible => { const node = document.getElementById('live-badge'); if (node) node.hidden = !visible; };
 
-function badge(visible) {
-  const node = document.getElementById('live-badge');
-  if (node) node.hidden = !visible;
+function boundedPost(url, data, keepalive = false) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  return postJson(url, data, keepalive, {signal:controller.signal}).finally(() => clearTimeout(timer));
 }
-
-function remember(value) {
-  try { sessionStorage.setItem(STORAGE.liveKey, value ? '1' : '0'); } catch { /* storage unavailable */ }
-}
-
-async function maybeSend(reading) {
+function maybeSend(reading) {
   if (!sharing) return;
-  const now = Date.now();
-  const moved = lastSent ? distanceM(lastSent, reading) : Infinity;
-  if (lastSent && (now - lastSent.at < LIVE.minIntervalMs || moved < LIVE.minDistanceM)) return;
+  const now = Date.now(), ticket = epoch;
+  if (lastSent && (now - lastSent.at < LIVE.minIntervalMs || distanceM(lastSent, reading) < LIVE.minDistanceM)) return;
   lastSent = { ...reading, at: now };
-  try { await postJson(ENDPOINTS.location, reading); } catch (error) {
-    if (error.status === 401 || error.status === 403) stopSharing();
-  }
+  writes = writes.catch(() => {}).then(async () => {
+    if (!sharing || ticket !== epoch) return;
+    try { await boundedPost(ENDPOINTS.location, reading, true); }
+    catch (error) { if (ticket === epoch && [401,403].includes(error.status)) void stopSharing(); }
+  });
 }
 
 function onPosition(position) {
-  lastReading = readingOf(position);
-  readingAt = Date.now();
-  status('ready');
-  for (const listener of listeners) listener(lastReading);
-  maybeSend(lastReading);
+  const reading = readingOf(position);
+  if (![reading.lat, reading.lng, reading.accuracy].every(Number.isFinite) || Math.abs(reading.lat)>90 || Math.abs(reading.lng)>180 || reading.accuracy<0) { onError({code:2}); return; }
+  lastReading = reading; readingAt = Date.now();
+  badge(sharing); status('ready');
+  for (const listener of listeners) listener(reading);
+  maybeSend(reading);
 }
 
 function onError(error) {
-  toast(message(error.code === 1 ? 'locationDenied' : 'locationUnavailable'));
-  stopWatching();
+  const wasSharing = sharing;
+  sharing = false; badge(false); stopWatching();
+  if (wasSharing) queueStop();
   status('error');
-  if (sharing) stopSharing();
+  toast(message(error.code === 1 ? 'locationDenied' : 'locationUnavailable'));
 }
 
 export function onReading(listener) {
@@ -53,58 +51,49 @@ export function onReading(listener) {
   if (lastReading && Date.now() - readingAt <= LIVE.watch.maximumAge) listener(lastReading);
   return () => listeners.delete(listener);
 }
-
-export function onStatus(listener) {
-  statuses.add(listener);
-  return () => statuses.delete(listener);
-}
+export function onStatus(listener) { statuses.add(listener); return () => statuses.delete(listener); }
 
 export function startWatching() {
-  if (document.visibilityState === 'hidden' || watchId !== null) return;
-  if (!navigator.geolocation) { onError({ code: 2 }); return; }
-  status('waiting');
-  try { watchId = navigator.geolocation.watchPosition(onPosition, onError, LIVE.watch); }
-  catch { onError({ code: 2 }); }
+  if (document.visibilityState === 'hidden' || watchId !== null || acquisition) return;
+  const controller = new AbortController(), ticket = ++epoch;
+  acquisition = controller; status('waiting');
+  requestLocation(controller.signal).then(position => {
+    if (ticket !== epoch) return;
+    acquisition = null; onPosition(position);
+    if (ticket !== epoch) return;
+    try {
+      const id = navigator.geolocation.watchPosition(
+        next => { if (ticket === epoch) onPosition(next); },
+        error => { if (ticket === epoch) onError(error); },
+        {...LIVE.watch, enableHighAccuracy:false});
+      if (ticket === epoch) watchId = id; else navigator.geolocation.clearWatch(id);
+    } catch { if (ticket === epoch) onError({code:2}); }
+  }).catch(error => { if (ticket === epoch && error.name !== 'AbortError') onError(error); });
 }
 
 export function stopWatching() {
+  ++epoch; acquisition?.abort(); acquisition = null;
   if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-  watchId = null;
-  lastReading = null;
-  readingAt = 0;
-  status('stopped');
+  watchId = null; lastReading = null; readingAt = 0; status('stopped');
 }
 
 export function startSharing() {
-  sharing = true;
-  lastSent = null;
-  remember(true);
-  badge(true);
-  startWatching();
-  if (lastReading && Date.now() - readingAt <= LIVE.watch.maximumAge) maybeSend(lastReading);
+  if (document.visibilityState === 'hidden') return;
+  sharing = true; lastSent = null; badge(false); startWatching();
+  if (lastReading && Date.now() - readingAt <= LIVE.watch.maximumAge) { badge(true); status('ready'); maybeSend(lastReading); }
 }
-
-export async function stopSharing() {
-  sharing = false;
-  stopWatching();
-  remember(false);
-  badge(false);
-  try { await postJson(ENDPOINTS.locationStop, {}); } catch { /* the server expires stale positions */ }
+function queueStop(keepalive = false) {
+  const immediate = boundedPost(ENDPOINTS.locationStop, {}, keepalive).catch(() => {});
+  const cleanup = writes.catch(() => {}).then(() => boundedPost(ENDPOINTS.locationStop, {}, keepalive)).catch(() => {});
+  writes = Promise.all([immediate, cleanup]);
+  return writes;
 }
-
+export function stopSharing(keepalive = false) {
+  const wasSharing = sharing;
+  sharing = false; lastSent = null; badge(false); stopWatching();
+  return wasSharing ? queueStop(keepalive) : Promise.resolve();
+}
 export const isSharing = () => sharing;
-
-export function resumeIfShared() {
-  try { if (sessionStorage.getItem(STORAGE.liveKey) === '1') startSharing(); } catch { /* storage unavailable */ }
-}
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
-    if (sharing) postJson(ENDPOINTS.locationStop, {}, true).catch(() => {});
-    stopWatching();
-  } else if (document.visibilityState === 'visible' && sharing) {
-    startWatching();
-  }
-});
-
-window.addEventListener('pagehide', stopWatching);
+const leave = () => { void stopSharing(true); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') leave(); });
+window.addEventListener('pagehide', leave);

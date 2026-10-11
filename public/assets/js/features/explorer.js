@@ -287,7 +287,7 @@ export async function explorer(page) {
     precise = false;
     warnedCoarse = false;
     stopLocateReading?.();
-    stopLocateReading = live.onReading(showMe);
+    stopLocateReading = live.onReading(reading => showMe(reading));
     live.startWatching();
   });
 
@@ -301,7 +301,7 @@ export async function explorer(page) {
       if (keepLocate) {
         following = true;
         locate?.setAttribute('aria-pressed', 'true');
-        stopLocateReading = live.onReading(showMe);
+        stopLocateReading = live.onReading(reading => showMe(reading));
         live.startWatching();
       }
       share.setAttribute('aria-pressed', 'false');
@@ -311,7 +311,7 @@ export async function explorer(page) {
     centerRequested = true;
     share.setAttribute('aria-pressed', 'true');
     stopShareReading?.();
-    stopShareReading = live.onReading(showMe);
+    stopShareReading = live.onReading(reading => showMe(reading));
     live.startSharing();
   });
   if (live.isSharing()) share?.setAttribute('aria-pressed', 'true');
@@ -324,7 +324,9 @@ export async function explorer(page) {
     resizeViewport();
   });
 
+  const feedback = $('#map-location-status', page);
   const reflectStatus = (state) => {
+    if (feedback) feedback.textContent = message(state === 'waiting' ? 'locationLocating' : state === 'ready' ? (live.isSharing() ? 'locationSharing' : 'locationPrivate') : state === 'error' ? 'locationUnavailable' : 'locationStopped');
     locate?.setAttribute('aria-busy', String(following && state === 'waiting'));
     share?.setAttribute('aria-busy', String(live.isSharing() && state === 'waiting'));
     if (state === 'error' || state === 'stopped') {
@@ -334,11 +336,11 @@ export async function explorer(page) {
       locate?.setAttribute('aria-pressed', 'false');
       stopLocateReading?.();
       stopLocateReading = null;
-      if (state === 'error') share?.setAttribute('aria-pressed', 'false');
+      share?.setAttribute('aria-pressed', String(live.isSharing()));
     }
   };
   let stopStatus = live.onStatus(reflectStatus);
-  if (live.isSharing()) stopShareReading = live.onReading(showMe);
+  if (live.isSharing()) stopShareReading = live.onReading(reading => showMe(reading));
   window.addEventListener('pagehide', () => {
     clearTimeout(queryTimer);
     queryTicket++;
@@ -350,7 +352,7 @@ export async function explorer(page) {
   window.addEventListener('pageshow', (event) => {
     if (!event.persisted) return;
     stopStatus = live.onStatus(reflectStatus);
-    if (live.isSharing()) stopShareReading = live.onReading(showMe);
+    if (live.isSharing()) stopShareReading = live.onReading(reading => showMe(reading));
     schedule();
   });
   if (page.dataset.near === '1') locate?.click();

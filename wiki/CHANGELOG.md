@@ -81,3 +81,5 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - Publishing location retries a transient CoreLocation failure once with balanced accuracy, bounds waiting and preserves manual draft pins; map loading failure leaves location/manual controls usable. Issue #6.
 - Assistant reads current Supabase category/town catalog with capped results and localized labels; spoken replies and dictation isolate stale callbacks. Signed-in desktop/mobile language forms carry existing CSRF token. Issue #20.
 - Revision39 refreshes the complete browser asset graph. No schema migration required; all73 application function definitions/grants match dev/prod; production seed rows0.
+
+- 2026-10-11 · #24: private map lookup uses bounded location fallback; sharing starts explicitly and stops on hide/exit. Correct independent control subscriptions, bound write/revocation ordering, expose bilingual purpose/status and omit map assistant. Full gate: 180 Pudu assertions plus browser harnesses.

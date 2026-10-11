@@ -207,3 +207,8 @@ Release evidence: featurePR#2 and releasePR#3 merged; tagv0.1.1 at50bd09a. Dev/m
 Exact next action: test join-capacity concurrency boundaries in the isolated development project; physical-phone GPS/haptics remain unverified.
 
 Release preparation: featurePR#2 merged into dev; release0.1.1 carries tested source and metadata into main. Physical deviceGPS/haptics and capacity-boundary concurrency remain separate validation work.
+
+## 2026-10-11 map continuation · #24
+Architect → Implementer: own Live, Explorer, BrowserMain, Map, Layout and bilingual status messages. Independent review required.
+
+Implementer → Independent Reviewer → Implementer: subscription and stop/restart ordering findings resolved; reviewer reports no actionable findings. Browser nearby lookup failed cleanly with unchecked control and retry guidance. Phone map at390px has no horizontal overflow and no assistant. Physical GPS remains unverified; Chrome automation was unavailable because its request-header policy could not load.
