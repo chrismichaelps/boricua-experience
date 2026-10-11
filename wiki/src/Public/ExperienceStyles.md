@@ -70,3 +70,6 @@ Use original cotorra puertorriqueña SVG assets and optional Motion privacy disc
 
 ## Activity grid Grill Log
 Resolved: activity cover and text occupy explicitly constrained grid tracks with min-width0. Cover width is100%, a fixed128px height on wide rows and image remains inside overflow-hidden media. Compact rows use one column through1039px, two thereafter; long titles/labels wrap and flags stack below price within narrow covers.
+
+## Cover containment regression
+Resolved: activity grids explicitly constrain link width, image max-width and the desktop media track. Direct children receive explicit grid positions on wide rows; mobile uses one zero-minimum track. Browser measurements at phone, tablet and desktop widths must show no cover/text intersection or horizontal overflow.

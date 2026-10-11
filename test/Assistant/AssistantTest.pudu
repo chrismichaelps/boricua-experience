@@ -5,9 +5,12 @@ import Std.Bytes as Bytes
 import Std.Concurrent.Cancel as Cancel
 import Std.Crypto as Crypto
 import Std.Json as Json
+import Std.List as List
+import Std.Sync as Sync
 import Std.Test as Test
 import Api.Supabase.Gateway as Gateway
 import Domain.Assistant as Conversation
+import Domain.Catalog as Reference
 import Domain.Event as Event
 import Domain.Problem as Problem
 import Domain.Session as Session
@@ -16,6 +19,7 @@ import PuduLangHttpClient.Request as Request
 import Services.Assistant as Assistant
 import Services.Runtime as Runtime
 import Support.Fixtures as Fixtures
+import Utils.Time as Time
 import Utils.Wire as Wire
 import Web.Handlers.Assistant as Bridge
 
@@ -30,7 +34,24 @@ fn main() -> Int {
   let projection = Json.encode(&Conversation.source(&page.items[0]))
   let body = "test body"
   let signature = Bytes.encodeHex(&Crypto.hmacSha256(&key, &Bytes.fromText("boricua-assistant:prepare:" + body)))
+  let category = Reference.Category{slug: page.items[0].category.slug, nameEs: page.items[0].category.nameEs, nameEn: page.items[0].category.nameEn, icon: "music", upcoming: 1}
+  let towns = [Reference.Municipality{slug: "fixture-town", name: "Fixture Town", region: "fixture", lat: 18.4, lng: -66.1}].concat(List.replicate(30, Reference.Municipality{slug: "other", name: "Other", region: "other", lat: 18.4, lng: -66.1}))
+  let _cached = Sync.set(&runtime.catalog, Some((Time.now().millis, Reference.Catalog{categories: [category], municipalities: towns, scenes: []})))
+  let catalogArgs = Json.object(&[("scope", Json.Text("categories")), ("query", Json.Text(""))])
+  let catalogAnswer = Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: catalogArgs, known: [], locale: "en"})
+  let townAnswer = Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: Json.object(&[("scope", Json.Text("towns"))]), known: [], locale: "es"})
+  let townResult = match townAnswer { case Ok(found) => match Json.field(&found, "result") { case Some(result) => result case None => Json.Null } case Err(_) => Json.Null }
+  let townEntries = match Json.field(&townResult, "entries") { case Some(Json.List(entries)) => entries case _ => [] }
+  let emptyAnswer = Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: Json.object(&[("scope", Json.Text("towns")), ("query", Json.Text("missing"))]), known: [], locale: "es"})
   let checks = Test.suite("Assistant", &[
+      Test.equals("catalog caps large results", &townEntries.length(), &24),
+      Test.equals("catalog signals additional results", &Json.field(&townResult, "more"), &Some(Json.Boolean(true))),
+      Test.equals("catalog filters without inventing results", &emptyAnswer, &Ok(Json.object(&[("result", Json.object(&[("verified", Json.Boolean(true)), ("entries", Json.list(&[])), ("more", Json.Boolean(false))])), ("sources", Json.list(&[]))]))),
+      Test.equals("catalog reads real cached data in English", &catalogAnswer, &Ok(Json.object(&[("result", Json.object(&[("verified", Json.Boolean(true)), ("entries", Json.list(&[Json.object(&[("name", Json.Text(category.nameEn)), ("slug", Json.Text(category.slug))])])), ("more", Json.Boolean(false))])), ("sources", Json.list(&[]))]))),
+      Test.equals("invalid catalog scope is refused", &Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: Json.object(&[("scope", Json.Text("private_tables"))]), known: [], locale: "en"}), &Err(Problem.Refused("assistant_invalid"))),
+      Test.equals("English category is database-localized", &Json.field(&Conversation.sourceLocalized(&page.items[0], "en"), "category"), &Some(Json.Text(page.items[0].category.nameEn))),
+      Test.equals("Spanish category is database-localized", &Json.field(&Conversation.sourceLocalized(&page.items[0], "es"), "category"), &Some(Json.Text(page.items[0].category.nameEs))),
+      Test.equals("invalid tool locale is refused", &Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: Json.Null, known: [], locale: "bad"}), &Err(Problem.Refused("assistant_invalid"))),
       Test.equals("ordinary history is accepted", &Conversation.valid(&valid), &true),
       Test.equals("blank questions are refused", &Conversation.valid(&Conversation.Input{..valid, message: " "}), &false),
       Test.equals("oversized questions are refused", &Conversation.valid(&Conversation.Input{..valid, message: "x".repeat(1201)}), &false),
@@ -43,7 +64,7 @@ fn main() -> Int {
       Test.equals("malformed signature is refused", &Bridge.signedBody(&key, body, "prepare", "invalid"), &false),
       Test.equals("public sources exclude coordinates", &(projection.contains("\"lat\"") || projection.contains("\"lng\"")), &false),
       Test.equals("public sources exclude account/attendee relations", &(projection.contains("organizer_name") || projection.contains("pending_count") || projection.contains("attendees")), &false),
-      Test.equals("unknown tool does not access database", &Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "execute_sql", args: Json.Null, known: []}), &Ok(Json.object(&[("result", Json.object(&[("error", Json.Text("Unknown tool."))])), ("sources", Json.list(&[]))])))
+      Test.equals("unknown tool does not access database", &Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "execute_sql", args: Json.Null, known: [], locale: "es"}), &Ok(Json.object(&[("result", Json.object(&[("error", Json.Text("Unknown tool."))])), ("sources", Json.list(&[]))])))
     ])
   Test.report(&Test.run(&checks))
 }

@@ -8,3 +8,6 @@ export const HISTORY_MAX: Int = 6
 export const RESULTS: Int = 6
 /// The service-only quota reservation RPC.
 export const QUOTA: Str = "reserve_assistant_request"
+
+/// Maximum reference rows returned by a catalog tool call.
+export const CATALOG_MAX: Int = 24

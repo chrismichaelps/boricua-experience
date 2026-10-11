@@ -91,12 +91,12 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
     if (round === 2) throw new ChatFailure();
     messages.push({ role: 'assistant', content: content || null, tool_calls: [...calls.values()] });
     for (const call of calls.values()) {
-      if (!['search_activities', 'activity_details', 'my_preferences', 'organizer_details'].includes(call.function.name)) throw new ChatFailure();
+      if (!['search_activities', 'activity_details', 'my_preferences', 'organizer_details', 'browse_catalog'].includes(call.function.name)) throw new ChatFailure();
       let args;
       try { args = JSON.parse(call.function.arguments); } catch { throw new ChatFailure(); }
       if (!args || Array.isArray(args) || typeof args !== 'object') throw new ChatFailure();
       await emit('status', { state: call.function.name === 'search_activities' ? 'searching' : call.function.name === 'my_preferences' ? 'preferences' : 'reading' });
-      const result = await bridge({ name: call.function.name, args, known: [...sources.values()].map(source => source.slug) }, 'tool');
+      const result = await bridge({ name: call.function.name, args, known: [...sources.values()].map(source => source.slug), locale: context.locale === 'en' ? 'en' : 'es' }, 'tool');
       if (result.result?.searched === true || result.result?.verified === true) searched = true;
       for (const source of result.sources || []) {
         if (sources.size < 12 && typeof source.slug === 'string' && source.href === '/e/' + source.slug) sources.set(source.slug, source);

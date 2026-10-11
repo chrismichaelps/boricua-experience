@@ -21,3 +21,12 @@ Exact next action for device QA: verify microphone dictation and spoken replies 
 
 ## Referenced by
 [[handoffs/_MOC]]
+
+## 0.2.1 continuation
+Architect → Implementer: own activity grid containment, publishing location helper/picker, bilingual assistant tooling and voice lifecycle, language forms, focused tests and mirrors. No unrelated Pudu repository work.
+
+Implementer → Reviewer: independent review found stale speech utterance callbacks and missing authenticated language tokens; both corrected. Regression coverage includes capped/empty localized catalog data, fragmented/oversized tools, recognition/playback isolation, accurate/approximate/failed location and manual draft preservation. Live English catalog reply returned all16 database categories. Phone/desktop location attempts on this host reached bounded timeout recovery; successful OS GPS on physical devices remains unverified.
+
+Reviewer → Release engineer: small fixes independently reviewed; production has0 seed rows and matching73 application functions/grants. No migration needed. Exact next action: run final gate and promote reviewed0.2.1 build after deployment smoke verification.
+
+Final gate:7/7 suites,178 assertions; all browser harnesses and three timezone checks passed;133 source modules checked before final two-line layout fix, then Function transitively checked. Format and whitespace checks clean.

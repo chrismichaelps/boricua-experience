@@ -89,6 +89,7 @@ admin.requests_pending
 admin.requests_week
 admin.title
 admin.views_week
+assistant.audio_error
 assistant.busy
 assistant.close
 assistant.error
@@ -110,6 +111,7 @@ assistant.send
 assistant.signin
 assistant.sources
 assistant.stop
+assistant.stop_audio
 assistant.stop_voice
 assistant.thinking
 assistant.title

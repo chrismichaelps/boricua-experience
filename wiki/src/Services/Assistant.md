@@ -29,3 +29,6 @@ Resolved: All activity facts come from database. Known-source IDs stay in signed
 
 ## Referenced by
 [[src/_MOC]] · [[handoffs/assistant]]
+
+## Bilingual tooling Grill Log
+Resolved: browse_catalog reads live town/category reference data, filters a short query and returns at most24 rows with a truncation flag. Tool locale is validated; all source cards select the matching database category language. No migration or new unrestricted table access is needed.

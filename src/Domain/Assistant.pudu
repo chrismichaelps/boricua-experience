@@ -13,7 +13,7 @@ export type Turn = { role: Str, content: Str } derives Json.Decode, Json.Encode
 export type Input = { message: Str, @default("[]") history: Array[Turn] } derives Json.Decode
 
 /** @Domain.Assistant.Tool — internal server tool request, never accepted directly from a browser */
-export type Tool = { name: Str, args: Json.Json, known: Array[Str] } derives Json.Decode
+export type Tool = { name: Str, args: Json.Json, known: Array[Str], locale: Str } derives Json.Decode
 
 /// Whether every client field stays within the conversation contract.
 export fn valid(input: &Input) -> Bool {
@@ -25,12 +25,15 @@ export fn valid(input: &Input) -> Bool {
 }
 
 /// A public activity projection without coordinates, attendee names or account relations.
-export fn source(card: &Event.Card) -> Json.Json {
+export fn source(card: &Event.Card) -> Json.Json { sourceLocalized(card, "es") }
+
+/// The public projection in the conversation language.
+export fn sourceLocalized(card: &Event.Card, locale: Str) -> Json.Json {
   Json.object(&[
       ("href", Json.Text(Routes.EVENT_PREFIX + card.slug)), ("slug", Json.Text(card.slug)),
       ("image", Json.Text(Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg"))),
       ("title", Json.Text(card.title)), ("summary", Json.Text(card.summary.take(600))),
-      ("town", Json.Text(card.municipality.name)), ("category", Json.Text(card.category.nameEs)),
+      ("town", Json.Text(card.municipality.name)), ("category", Json.Text(if locale == "en" { card.category.nameEn } else { card.category.nameEs })),
       ("starts_at", Json.Text(card.startsAt)), ("ends_at", Json.Text(card.endsAt)),
       ("price_cents", Json.Number(card.priceCents)), ("join_policy", Json.Text(card.joinPolicy)),
       ("spots_left", match Event.seatsLeft(card) { case Some(n) => Json.Number(n) case None => Json.Null })

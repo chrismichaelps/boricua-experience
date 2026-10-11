@@ -31,3 +31,6 @@ Resolved: The model receives only authorized projections; accepting a tool name 
 [[src/_MOC]] · [[handoffs/assistant]]
 
 Public source image uses coverUrl from the database, or existing category-slug-derived cover fallback. No model-selected image or hardcoded event record.
+
+## Bilingual tooling Grill Log
+Resolved: Localized source projection selects database category nameEn/nameEs. Internal Tool carries validated es/en locale; the compatibility source function defaults to Spanish.
