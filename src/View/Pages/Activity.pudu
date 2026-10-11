@@ -1,9 +1,9 @@
 /** @View.Pages.Activity.Mine — requests, saved events, and organized events */
 module View.Pages.Activity
 
-import Std.Html as Html
-import Std.Html.Build as H
 import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
 import Constants.Routes as Routes
 import Domain.Event as Event
 import Domain.Participation as Participation
@@ -46,10 +46,10 @@ export fn render(frame: &Frame.Frame, activity: &ParticipationService.Activity) 
             if activity.organizing.isEmpty() { Notice.empty("plus", Frame.t(frame, "activity.no_organizing"), Frame.t(frame, "activity.no_organizing_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action"))) } else {
               H.div().class("card-grid").holding(activity.organizing.map(|card: Event.Card| H.div().class("activity-item").holding([
                       EventCard.card(frame, &card),
-                      H.a().class("text-link").href(Routes.EVENT_PREFIX + card.slug + "/requests").says(Frame.tf(frame, "activity.pending_count", &[("count", show(match card.pendingCount {
-                                  case Some(count) => count
-                                  case None => 0
-                                }))]))
+                      if Event.hasEnded(&card, frame.nowMillis) || Event.isCancelled(&card) { H.p().class("status").says(Frame.t(frame, if Event.isCancelled(&card) { "event.cancelled" } else { "event.ended" })) } else { H.a().class("text-link").href(Routes.EVENT_PREFIX + card.slug + "/requests").says(Frame.tf(frame, "activity.pending_count", &[("count", show(match card.pendingCount {
+                                    case Some(count) => count
+                                    case None => 0
+                                  }))])) }
                     ])))
             }
           ])

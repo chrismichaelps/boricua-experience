@@ -63,3 +63,6 @@ Use the declared runtime/cache asset version rather than stale fixture versions.
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Fixture-only scenes prove catalog-driven rendering, empty carousel safety, bilingual escaping and consent/reset session tokens. Resolved.
+
+## Expired activity output Grill Log
+Resolved: fixture renders a published card exactly at its end; it has the ended message and no remaining-seat claim. Organizer activity output has no pending-request action once ended; the event detail link stays reachable. Database expiry verification uses development-only transaction rollback fixtures for past/boundary/future and pending closure.

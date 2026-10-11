@@ -64,3 +64,9 @@ Blue count circles declutter overview maps and retain keyboard focus rings witho
 
 ## Parrot/privacy continuation
 Use original cotorra puertorriqueña SVG assets and optional Motion privacy disclosure without changing native checkbox submission. Grill: local assets and progressive enhancement preserve behavior; resolved.
+
+## Assistant integration Grill Log
+- **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+## Activity grid Grill Log
+Resolved: activity cover and text occupy explicitly constrained grid tracks with min-width0. Cover width is100%, a fixed128px height on wide rows and image remains inside overflow-hidden media. Compact rows use one column through1039px, two thereafter; long titles/labels wrap and flags stack below price within narrow covers.

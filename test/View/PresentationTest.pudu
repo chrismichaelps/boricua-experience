@@ -4,17 +4,23 @@ module View.PresentationTest
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Std.Json as Json
 import Std.Test as Test
 import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Search as Search
+import Services.Participation as ParticipationService
+import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
+import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
 import View.Components.Search as Controls
 import View.Frame as Frame
 import View.Layout as Layout
+import View.Pages.Activity as ActivityPage
 import View.Pages.Auth as Auth
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
@@ -53,7 +59,17 @@ fn main() -> Int {
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
+  let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(_) => panic("fixture failed") }
+  let endedCard = Event.Card{..endedPage.items[0], status: "published", endsAt: "2026-10-09T20:00:00Z", capacity: Some(500), approvedCount: 0}
+
+  let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
+  let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
+  let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
   let checks = Test.suite("Presentation", &[
+      Test.equals("deadline card immediately says ended", &endedOutput.contains("Esta actividad ya terminó."), &true),
+      Test.equals("deadline card has no stale available seats", &endedOutput.contains("Quedan 500"), &false),
+      Test.equals("ended activity keeps event navigation", &endedActivity.contains("href=\"/e/" + endedCard.slug + "\""), &true),
+      Test.equals("ended activity hides pending request action", &endedActivity.contains("Solicitudes pendientes:"), &false),
       Test.equals("consent carries the session token", &consentForm.contains("name=\"_token\" value=\"session-token\""), &true),
       Test.equals("cookie reset and banner each carry a token", &cookiePage.split("name=\"_token\"").length(), &3),
       Test.equals("empty destinations keep functional search", &emptyHero.contains("action=\"/search\""), &true),

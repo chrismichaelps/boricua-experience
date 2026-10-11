@@ -54,3 +54,8 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Ended activity Grill Log
+Resolved: `Event.hasEnded(event, frame.nowMillis)` replaces seat availability with a translated ended flag immediately at the deadline, including before cron persists status. Canceled state takes priority; expired approval badges and availability claims are suppressed.
+
+Canceled cards also suppress remaining-seat claims. Resolved: capacity is a live participation affordance, not valid for a final activity.
