@@ -59,7 +59,9 @@ export fn resolve(app: &Assembly.App, request: &Route.Request, withMember: Bool)
     }
     case None => (None, false, sealed != None)
   }
-  let member = if withMember { Option.andThen(session, |current: Session.Session| loadMember(app, &current)) } else { None }
+  let profile = if withMember { Option.map(session, |current: Session.Session| loadMember(app, &current)) } else { None }
+  let missing = match profile { case Some(Err(Problem.SignedOut)) => true case _ => false }
+  let member = match profile { case Some(Ok(found)) => Some(found) case _ => None }
   let existingVisitor = cookies.get(Cookies.VISITOR)
   let visitorId = match existingVisitor {
     case Some(id) => id
@@ -69,9 +71,9 @@ export fn resolve(app: &Assembly.App, request: &Route.Request, withMember: Bool)
     request: *request,
     cookies: cookies,
     locale: locale,
-    session: session,
-    sessionChanged: changed,
-    sessionEnded: ended,
+    session: if missing { None } else { session },
+    sessionChanged: changed && !missing,
+    sessionEnded: ended || missing,
     member: member,
     consent: Option.andThen(cookies.get(Cookies.CONSENT), |value: Str| Consent.decode(value, App.COOKIE_POLICY_VERSION)),
     visitorId: visitorId,
@@ -81,11 +83,8 @@ export fn resolve(app: &Assembly.App, request: &Route.Request, withMember: Bool)
 }
 
 /// The signed-in account, when the database answers for it.
-fn loadMember(app: &Assembly.App, session: &Session.Session) -> Option[Profile.MyProfile] {
-  match Mediator.send(&app.mediator, &app.kinds.me, Messages.Signed{session: *session, input: ()}) {
-    case Ok(found) => Some(found)
-    case Err(_) => None
-  }
+fn loadMember(app: &Assembly.App, session: &Session.Session) -> Result[Profile.MyProfile, Problem.Problem] {
+  problemOf(Mediator.send(&app.mediator, &app.kinds.me, Messages.Signed{session: *session, input: ()}))
 }
 
 /// The frame every page renders with.

@@ -98,19 +98,22 @@ export fn withPreference(app: &Assembly.App, response: Http.Response, name: Str,
   withCookie(response, Cookie.render(name, value, &preference(app, Cookies.PREFERENCE_MAX_AGE)))
 }
 
+/// A script refusal with session expiry only when the identity is known to be signed out.
+export fn problemJson(found: &Problem.Problem, secure: Bool) -> Http.Response {
+  let key = match Option.fromArray(&Problem.fieldErrors(found)) {
+    case Some(first) => first.key
+    case None => Problem.messageKey(found)
+  }
+  let response = json(Problem.status(found), &Json.object(&[("error", Json.Text(Problem.code(found))), ("message", Json.Text(key))]))
+  if *found == Problem.SignedOut { withCookie(response, Cookie.expire(Cookies.SESSION, secure)) } else { response }
+}
+
 /// The response for a problem: sign-in for a signed-out visitor, onboarding for an account that owes
 /// it, JSON for scripts, and a page otherwise.
 export fn problem(app: &Assembly.App, visitor: &Context.Visitor, found: &Problem.Problem) -> Http.Response {
-  let code = Problem.code(found)
-  if Context.wantsJson(visitor) {
-    let key = match Option.fromArray(&Problem.fieldErrors(found)) {
-      case Some(first) => first.key
-      case None => Problem.messageKey(found)
-    }
-    return json(Problem.status(found), &Json.object(&[("error", Json.Text(code)), ("message", Json.Text(key))]))
-  }
+  if Context.wantsJson(visitor) { return problemJson(found, app.runtime.secureCookies) }
   match found {
-    case Problem.SignedOut => redirect(Routes.SIGN_IN + "?return=" + visitor.request.path)
+    case Problem.SignedOut => withoutSession(app, redirect(Routes.SIGN_IN + "?return=" + visitor.request.path))
     case Problem.Refused(reason) => {
       if reason == "onboarding_required" { return redirect(Routes.ONBOARDING + "?return=" + visitor.request.path) }
       if reason == "account_paused" { return withFlash(app, redirect(Routes.ACCOUNT), "problem.paused") }

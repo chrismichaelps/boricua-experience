@@ -4,6 +4,7 @@ module View.PresentationTest
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Std.Http as Http
 import Std.Json as Json
 import Std.List as List
 import Std.Test as Test
@@ -11,6 +12,7 @@ import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Problem as Problem
 import Domain.Search as Search
 import Services.Participation as ParticipationService
 import Support.Fixtures as Fixtures
@@ -27,6 +29,7 @@ import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
 import View.Pages.Search as SearchPage
 import View.Seo as Seo
+import Web.Respond as Respond
 
 /// A visitor without a session.
 fn visitor(locale: Locale.Locale, path: Str) -> Frame.Frame {
@@ -71,7 +74,14 @@ fn main() -> Int {
   let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
   let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
+  let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
+  let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
+  let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
   let checks = Test.suite("Presentation", &[
+      Test.equals("signed-out JSON status", &signedOutReply.status.code, &401),
+      Test.equals("signed-out JSON expires secure session", &expiredCookies.filter(|cookie: Str| cookie.startsWith("bx_session=") && cookie.contains("Max-Age=0") && cookie.contains("Secure")).length(), &1),
+      Test.equals("dependency JSON status", &unavailableReply.status.code, &503),
+      Test.equals("dependency failure preserves session", &Http.headerValues(&unavailableReply.headers, "set-cookie"), &[]),
       Test.equals("open search photo comes from ordered catalog", &openSearch.contains("class=\"search-hero-photo\" src=\"/assets/img/luquillo-photo.webp\""), &true),
       Test.equals("search preserves municipality filter", &openSearch.contains("pueblo=ponce"), &true),
       Test.equals("empty scene catalog has no broken search photo", &emptySearch.contains("search-hero-photo"), &false),

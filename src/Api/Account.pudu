@@ -11,10 +11,21 @@ import Domain.Profile as Profile
 import PuduLangHttpClient.Content as Content
 import PuduLangHttpClient.Request as Request
 import PuduLangHttpClient.Request {Shaping}
+import Utils.Wire as Wire
 
 /// The signed-in account.
 export fn me(gateway: &Gateway.Gateway, token: Str) -> Result[Profile.MyProfile, Problem.Problem] {
-  Gateway.query(gateway, Supabase.MY_PROFILE, &[], Some(token), Gateway.Read)
+  let document = Gateway.call(gateway, Supabase.MY_PROFILE, &[], Some(token), Gateway.Read) ?
+  profileOf(&document)
+}
+
+/// A missing private profile invalidates its session; malformed replies remain dependency failures.
+export fn profileOf(document: &Json.Json) -> Result[Profile.MyProfile, Problem.Problem] {
+  if *document == Json.Null { return Err(Problem.SignedOut) }
+  match Wire.decode(document) {
+    case Ok(found) => Ok(found)
+    case Err(reason) => Err(Problem.Unavailable(Supabase.MY_PROFILE + ": " + Json.explainDecode(&reason)))
+  }
 }
 
 /// An organizer's public profile.
