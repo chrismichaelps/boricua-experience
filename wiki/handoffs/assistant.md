@@ -15,7 +15,9 @@ Implementer → Reviewer: bounded tools/realSSE, Markdown and nativecomposer imp
 
 Reviewer → Release engineer: independent review complete, including reset delegation and sanitized telemetry. Full gate and mobile/desktop live conversation passed. Production quota migration applied; production seed count0. Protected deployment built.
 
-Exact next action: verify staging guards, merge release0.2.0 and promote the verified deployment.
+Release complete: 0.2.0 merged into main and synchronized to dev; verified deployment dpl_6Yq5Swfn6uRyYq9cqe66C6e5qErX promoted to boricuaexperience.com. Production HTTP200 serves revision38; anonymous chat is rejected401. All73 public/private application functions have matching definitions in dev/prod; quota grants and RLS match.
+
+Exact next action for device QA: verify microphone dictation and spoken replies on a physical iPhone and Android device.
 
 ## Referenced by
 [[handoffs/_MOC]]
