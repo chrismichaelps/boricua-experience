@@ -100,3 +100,6 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 Promotes reviewed issues24/26/28/30/31/35/36: explicit bounded map location lifecycle, Culebra-first database order in both environments, real licensed discovery/auth/About photographs, full-width search, footer and cookie copy, deleted-account session expiry and restored tracked Supabase source/local CLI configuration.193 assertions and all browser harnesses pass; disposable dev export/pause/reactivate/delete verified. No schema migration or hosted configuration change. Asset graph42. Physical GPS/browser hardware coverage remains pending.
 
 - 2026-10-11 · [[src/Public/SearchStyles]] · one restrained focus ring across shared search/filter/form fields; policy effective dates without displayed version numbers; internal agreements unchanged; asset graph43 · issue #39.
+
+## v0.2.3 · 2026-10-11
+Promotes reviewed issue39: shared single focus indications, stronger neutral field borders and policy effective-date labels without visible versions. Includes all reviewed v0.2.2 discovery/location/account/source fixes.193 assertions and all browser harnesses pass; phone/desktop focus verified. No database/schema changes. Asset graph43.
