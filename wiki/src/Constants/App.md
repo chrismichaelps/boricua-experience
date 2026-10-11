@@ -78,3 +78,6 @@ Current cache graph: version33 aligns every browser import and shell resource fo
 Final assistant release uses asset revision38 to invalidate earlier development UI caches.
 
 Revision39 refreshes the complete browser module graph, including the new location helper and bilingual assistant voice lifecycle.
+
+## Cache graph40 Grill Log
+Resolved: all first-party browser imports, shell resources and worker revision advance together to40 for the reviewed map and discovery changes. No personal HTML or database records enter precache.

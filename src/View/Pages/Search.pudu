@@ -8,9 +8,11 @@ import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Event as Event
+import Domain.Locale as Locale
 import Domain.Search as Search
 import Utils.Query as Query
 import View.Components.EventCard as EventCard
+import View.Components.Hero as Hero
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Components.Search as SearchControls
@@ -86,13 +88,19 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
     case Some(cursor) => H.a().class("button button-ghost load-more").href(path + queryOf(filters, landing, cursor)).data("feature", "load-more").says(Frame.t(frame, "search.load_more"))
     case None => H.nothing()
   }
+  let photographic = *landing == Open && !catalog.scenes.isEmpty()
+  let scene = if photographic { catalog.scenes[0] } else { Catalog.Scene{image: "", captionEs: "", captionEn: "", town: ""} }
   Layout.page(frame, &meta, Layout.Explore, H.div().class("search-page").holding([
-        H.div().class("search-top").holding([
-            SearchControls.pill(frame, catalog, filters),
-            SearchControls.chips(frame, catalog, activeCategory)
-          ]),
+        if photographic {
+          H.section().class("search-hero").holding([
+              H.img().class("search-hero-photo").src(scene.image).at("srcset", Hero.photoSet(scene.image)).at("sizes", "(min-width: 1280px) 1200px, 100vw").alt("").at("fetchpriority", "high"),
+              H.div().class("search-hero-content").holding([H.h1().says(title), H.p().says(description), SearchControls.pill(frame, catalog, filters)]),
+              H.a().class("search-hero-place").href(Routes.TOWN_PREFIX + scene.town).says(if frame.locale == Locale.Es { scene.captionEs } else { scene.captionEn })
+            ])
+        } else { H.div().class("search-top").holding([SearchControls.pill(frame, catalog, filters)]) },
+        SearchControls.chips(frame, catalog, activeCategory),
         H.div().class("results-head").holding([
-            H.h1().class("page-title").says(title),
+            if photographic { H.h2().class("page-title").says(Frame.t(frame, "search.activities")) } else { H.h1().class("page-title").says(title) },
             H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, &Open, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
           ]),
         SearchControls.filterBar(frame, catalog, filters),

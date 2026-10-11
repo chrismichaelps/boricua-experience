@@ -71,3 +71,6 @@ Current cache graph: version33 aligns every browser import and shell resource fo
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
 
 Revision39 advances every first-party module URL with the shell, preventing an older cache from providing configuration without GEO or a stale assistant lifecycle.
+
+## Cache graph40 Grill Log
+Resolved: all first-party browser imports, shell resources and worker revision advance together to40 for the reviewed map and discovery changes. No personal HTML or database records enter precache.

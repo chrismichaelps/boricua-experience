@@ -212,3 +212,8 @@ Release preparation: featurePR#2 merged into dev; release0.1.1 carries tested so
 Architect → Implementer: own Live, Explorer, BrowserMain, Map, Layout and bilingual status messages. Independent review required.
 
 Implementer → Independent Reviewer → Implementer: subscription and stop/restart ordering findings resolved; reviewer reports no actionable findings. Browser nearby lookup failed cleanly with unchecked control and retry guidance. Phone map at390px has no horizontal overflow and no assistant. Physical GPS remains unverified; Chrome automation was unavailable because its request-header policy could not load.
+
+## 2026-10-11 discovery continuation · #26
+Architect → Implementer: own Search view/styles, Footer/home styles, localized copyright and output tests, Culebra photo/credits. Database order changes in both environments; no schema change. Independent review required.
+
+Photo review strengthened the copy-region scrim to64% over worst-case white clouds and corrected footer mirror wording. Browser1440px/390px: loaded responsive Culebra image, one h1, no overflow. Catalog order verified equal in dev/prod, no schema mutation.

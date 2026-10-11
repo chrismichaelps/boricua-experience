@@ -16,3 +16,5 @@ Boricua Experience includes the following work by others, each under its own lic
 
 The Google sign-in mark follows Google's branding guidelines and is used only on the Google sign-in
 button.
+
+The Culebra home/search photograph, **Flamenco Beach (right) in Culebra Island, Puerto Rico**, is by [Breezy Baldwin](https://www.flickr.com/people/breezy421/), from [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Flamenco_Beach_(right)_in_Culebra_Island,_Puerto_Rico.jpg), licensed under [Creative Commons Attribution2.0 Generic (CC BY2.0)](https://creativecommons.org/licenses/by/2.0/). We cropped the coastline, resized it and converted it toWebP (2200px/1300px). Attribution does not imply endorsement. Derivative checksums are in `public/assets/img/PHOTO-CREDITS.md`.
