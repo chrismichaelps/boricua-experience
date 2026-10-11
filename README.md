@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/assets/brand/logo.svg" alt="Boricua Experience" width="96" height="96" />
+</p>
+
 # Boricua Experience
 
 Find something to do in Puerto Rico, ask to join, or host your own. Live at
