@@ -67,3 +67,23 @@
   .search-pill .pill-what, .search-pill .pill-where { border-right: 0; }
   .search-pill .pill-what::after, .search-pill .pill-where::after { content: ''; position: absolute; right: 0; top: 16px; bottom: 16px; width: 1px; background: #e4e8eb; pointer-events: none; }
 }
+
+.search-hero { position: relative; isolation: isolate; min-height: 640px; height: calc(100svh - 16px); max-height: 940px; margin: 24px 0 28px; padding: 64px 32px 76px; border-radius: 32px; background: #164e68; color: #fff; display: grid; align-items: center; }
+.search-hero-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; z-index: -2; }
+.search-hero::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(4,28,40,.64), rgba(4,28,40,.64) 50%, rgba(4,28,40,.46)); z-index: -1; pointer-events: none; }
+.search-hero-content { width: min(100%, 940px); margin: auto; text-align: center; }
+.search-hero h1 { font-size: clamp(28px, 4vw, 44px); line-height: 1.15; letter-spacing: -.8px; text-wrap: balance; }
+.search-hero-content > p { margin: 14px auto 50px; max-width: 620px; line-height: 1.55; }
+.search-hero .search-pill { color: var(--color-ink); text-align: left; }
+.search-hero-place { position: absolute; bottom: 24px; right: 28px; color: #fff; font-size: 14px; font-weight: 700; text-shadow: 0 1px 4px #16394b; min-height: 44px; display: flex; align-items: center; }
+.search-hero-place:hover { text-decoration: underline; }
+@media (max-width: 699px) {
+  .search-hero { margin-top: 0; height: calc(100svh - 80px); padding: 80px 16px 68px; border-radius: 24px; }
+  .search-hero-content > p { margin-bottom: 48px; font-size: 14px; }
+  .search-hero-place { right: 20px; bottom: 14px; }
+}
+
+/* The photo spans the viewport; result controls retain a readable measure. */
+.app-search .shell { max-width: none; padding: 8px 8px 48px; }
+.app-search .search-hero { margin: 0; }
+.app-search .search-page > :not(.search-hero) { width: calc(100% - 32px); max-width: 1200px; margin-inline: auto; }

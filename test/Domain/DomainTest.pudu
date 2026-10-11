@@ -6,6 +6,7 @@ import Std.Json as Json
 import Std.Option as Option
 import Std.Result as Result
 import Std.Test as Test
+import Api.Account as AccountApi
 import Domain.Admin as Admin
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
@@ -33,6 +34,9 @@ fn main() -> Int {
   let inbox: Result[Array[Notification.Notification], Json.DecodeError] = Wire.decode(&Fixtures.json("notifications.json"))
   let organized: Result[Array[Event.Card], Json.DecodeError] = Wire.decode(&Fixtures.json("my-events.json"))
   let checks = Test.suite("Domain", &[
+      Test.equals("deleted private profile signs out", &AccountApi.profileOf(&Json.Null), &Err(Problem.SignedOut)),
+      Test.equals("valid private profile remains decoded", &match AccountApi.profileOf(&Fixtures.json("my-profile.json")) { case Ok(_) => true case _ => false }, &true),
+      Test.equals("malformed profile is not signed out", &match AccountApi.profileOf(&Json.Text("invalid")) { case Err(Problem.Unavailable(_)) => true case _ => false }, &true),
       Test.succeeded("a search page decodes", &page),
       Test.equals("a search page holds its cards and cursor", &Result.map(page, |p| (p.items.length(), Option.isSome(&p.next))), &Ok((3, true))),
       Test.succeeded("a member's detail decodes", &member),

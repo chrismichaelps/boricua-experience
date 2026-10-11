@@ -24,13 +24,13 @@ export type Section = Explore | MapView | Create | Activity | Me | Elsewhere
 export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: H.Node) -> Html.Html {
   H.html().lang(Locale.tag(&frame.locale)).holding([
       H.head().holding(headTags(frame).concat(Seo.head(frame, meta))),
-      H.body().class(bodyClass(&section) + (if frame.path == Routes.HOME && section == Explore { " app-home" } else { "" })).holding([
+      H.body().class(bodyClass(&section) + (if frame.path == Routes.HOME && section == Explore { " app-home" } else if frame.path == Routes.SEARCH && section == Explore { " app-search" } else { "" })).holding([
           H.a().class("skip").href("#content").says(Frame.t(frame, "nav.skip")),
           appBar(frame, &section),
           H.main().id("content").class("shell").at("tabindex", "-1").holding([content]),
           Footer.render(frame),
           tabBar(frame, &section),
-          Assistant.render(frame),
+          if section == MapView { H.span() } else { Assistant.render(frame) },
           Notice.cookieBanner(frame),
           Notice.flash(frame),
           H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])

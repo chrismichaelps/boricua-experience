@@ -50,3 +50,6 @@ MEDIUM.
 Grill resolved: model the real camera zoom and changing bounds after easing. Confirm an empty first precise view steps out by two levels, stops at the configured regional floor, stops when data appears, and respects a visitor pan. No hardware coordinates or database writes.
 
 Refreshed-card regression asserts the semantic time child, its instant/style attributes and readable server text.
+
+## Map lifecycle regression Grill Log
+Resolved: bounded acquisition and writes, immediate stop plus late-update cleanup, stop/restart barrier, separate control subscriptions, no automatic sharing restoration and map-only assistant omission.

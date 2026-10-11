@@ -93,3 +93,9 @@ The bell's count sits on its shoulder as a 16 px pill with a white ring; it is h
 
 ## Bilingual action Grill Log
 Resolved: both header and menu language POST forms include Form.token(frame), matching existing authenticated CSRF guards. Guests keep an empty token; no guard is relaxed.
+
+## Explicit location lifecycle Grill Log
+Resolved: nearby lookup stays private; initial acquisition uses the bounded accurate/balanced fallback. Fresh readings alone enable the sharing badge. No storage restores sharing; hiding or leaving stops it. Epochs reject stale callbacks and serialized writes prevent a late update undoing stop. Map controls expose purpose/status in both languages; the map omits the assistant.
+
+## Full-width search Grill Log · #36
+Resolved: explicit app-search body class on the open search route gives its shell8px viewport insets like home. Hero fills shell; remaining search rails retain1200px reading measure. Category/town pages keep their standard shells. Responsive hero image advertises100vw. Cache graph advances atomically to42; no filter/navigation changes.

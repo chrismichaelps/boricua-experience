@@ -1,0 +1,175 @@
+/** @Api.Supabase.Identity.Critical — sign-up, sign-in, tokens, recovery, and deletion */
+module Api.Supabase.Identity
+
+import Std.Json as Json
+import Std.Url as Url
+import Api.Supabase.Gateway as Gateway
+import Constants.App as App
+import Constants.Codes as Codes
+import Constants.Supabase as Supabase
+import Domain.Credentials as Credentials
+import Domain.Problem as Problem
+import Domain.Session as Session
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
+import PuduLangHttpClient.Response as Response
+import Utils.Wire as Wire
+
+/** @Api.Supabase.Identity.SignedUp — whether a new account is ready or waits for its email link */
+export type SignedUp = Ready(Session.Tokens) | AwaitingEmail
+
+/// The identity provider's failure codes, mapped to the codes the app shows.
+const CODES: Map[Str, Str] = mapOf([
+    ("invalid_credentials", Codes.INVALID_CREDENTIALS),
+    ("invalid_grant", Codes.INVALID_CREDENTIALS),
+    ("email_not_confirmed", Codes.EMAIL_NOT_CONFIRMED),
+    ("user_already_exists", Codes.EMAIL_TAKEN),
+    ("email_exists", Codes.EMAIL_TAKEN),
+    ("weak_password", Codes.WEAK_PASSWORD),
+    ("over_email_send_rate_limit", Codes.RATE_LIMITED),
+    ("over_request_rate_limit", Codes.RATE_LIMITED),
+    ("flow_state_expired", Codes.FLOW_EXPIRED),
+    ("flow_state_not_found", Codes.FLOW_EXPIRED),
+    ("refresh_token_not_found", Codes.SESSION_EXPIRED),
+    ("refresh_token_already_used", Codes.SESSION_EXPIRED),
+    ("session_not_found", Codes.SESSION_EXPIRED)
+  ])
+
+/// The PKCE method every flow uses.
+const CHALLENGE_METHOD: Str = "s256"
+
+/// The problem with the provider's code replaced by the app's.
+fn translated(problem: Problem.Problem) -> Problem.Problem {
+  match problem {
+    case Problem.Refused(reason) => match CODES.get(reason) {
+      case Some(code) => if code == Codes.RATE_LIMITED { Problem.Throttled } else { Problem.Refused(code) }
+      case None => Problem.Refused(reason)
+    }
+    case Problem.SignedOut => Problem.Refused(Codes.SESSION_EXPIRED)
+    case other => other
+  }
+}
+
+/// A request to an identity endpoint with the project key.
+fn identityRequest(request: Request.Request, key: Str) -> Request.Request {
+  request.setHeader(Supabase.API_KEY_HEADER, key).accepting("application/json")
+}
+
+/// Sends an identity request and decodes its answer.
+fn exchange[T: Json.Decode](gateway: &Gateway.Gateway, request: Request.Request) -> Result[T, Problem.Problem] {
+  let response = match Gateway.sent(&gateway.http, identityRequest(request, gateway.anonKey)) {
+    case Ok(found) => found
+    case Err(problem) => { return Err(translated(problem)) }
+  }
+  match Response.json(&response) {
+    case Ok(document) => match Wire.decode(&document) {
+      case Ok(value) => Ok(value)
+      case Err(problem) => Err(Problem.Unavailable("identity: " + Json.explainDecode(&problem)))
+    }
+    case Err(_) => Err(Problem.Unavailable("identity: unreadable answer"))
+  }
+}
+
+/// Sends an identity request whose answer is not needed.
+fn command(gateway: &Gateway.Gateway, request: Request.Request) -> Result[(), Problem.Problem] {
+  match Gateway.sent(&gateway.http, identityRequest(request, gateway.anonKey)) {
+    case Ok(_) => Ok(())
+    case Err(problem) => Err(translated(problem))
+  }
+}
+
+/// An identity endpoint with a `redirect_to` back to the site.
+fn withRedirect(path: Str, redirectTo: Str) -> Str {
+  Supabase.AUTH_PATH + path + "?redirect_to=" + Url.encodeComponent(redirectTo)
+}
+
+/// Creates an email account carrying its name, language, and the three confirmations. When the
+/// project requires email confirmation the link returns to `redirectTo` with a PKCE code.
+export fn signUp(gateway: &Gateway.Gateway, form: &Credentials.SignUp, locale: Str, redirectTo: Str, challenge: Str) -> Result[SignedUp, Problem.Problem] {
+  let body = Json.object(&[
+      ("email", Json.Text(form.email.trim().toLower())),
+      ("password", Json.Text(form.password)),
+      ("code_challenge", Json.Text(challenge)),
+      ("code_challenge_method", Json.Text(CHALLENGE_METHOD)),
+      ("data", Json.object(&[
+            ("display_name", Json.Text(form.displayName.trim())),
+            ("adult_confirmed", Json.Boolean(true)),
+            ("terms_version", Json.Text(App.TERMS_VERSION)),
+            ("privacy_version", Json.Text(App.PRIVACY_VERSION)),
+            ("locale", Json.Text(locale))
+          ]))
+    ])
+  let response = match Gateway.sent(&gateway.http, identityRequest(Request.post(withRedirect(Supabase.AUTH_SIGN_UP, redirectTo), Content.json(&body)), gateway.anonKey)) {
+    case Ok(found) => found
+    case Err(problem) => { return Err(translated(problem)) }
+  }
+  let document = match Response.json(&response) {
+    case Ok(found) => found
+    case Err(_) => Json.Null
+  }
+  let tokens: Result[Session.Tokens, Json.DecodeError] = Wire.decode(&document)
+  match tokens {
+    case Ok(ready) => Ok(Ready(ready))
+    case Err(_) => Ok(AwaitingEmail)
+  }
+}
+
+/// Signs in with an email and password.
+export fn passwordGrant(gateway: &Gateway.Gateway, email: Str, password: Str) -> Result[Session.Tokens, Problem.Problem] {
+  let body = Json.object(&[("email", Json.Text(email.trim().toLower())), ("password", Json.Text(password))])
+  exchange(gateway, Request.post(Supabase.AUTH_PATH + Supabase.AUTH_TOKEN + "?grant_type=password", Content.json(&body)))
+}
+
+/// New tokens for a refresh token.
+export fn refresh(gateway: &Gateway.Gateway, refreshToken: Str) -> Result[Session.Tokens, Problem.Problem] {
+  let body = Json.object(&[("refresh_token", Json.Text(refreshToken))])
+  exchange(gateway, Request.post(Supabase.AUTH_PATH + Supabase.AUTH_TOKEN + "?grant_type=refresh_token", Content.json(&body)))
+}
+
+/// Tokens for the code a provider or an email link returned, proven with the flow's verifier.
+export fn exchangeCode(gateway: &Gateway.Gateway, code: Str, verifier: Str) -> Result[Session.Tokens, Problem.Problem] {
+  let body = Json.object(&[("auth_code", Json.Text(code)), ("code_verifier", Json.Text(verifier))])
+  exchange(gateway, Request.post(Supabase.AUTH_PATH + Supabase.AUTH_TOKEN + "?grant_type=pkce", Content.json(&body)))
+}
+
+/// Sends a password recovery link that returns to `redirectTo` with a PKCE code.
+export fn recover(gateway: &Gateway.Gateway, email: Str, redirectTo: Str, challenge: Str) -> Result[(), Problem.Problem] {
+  let body = Json.object(&[
+      ("email", Json.Text(email.trim().toLower())),
+      ("code_challenge", Json.Text(challenge)),
+      ("code_challenge_method", Json.Text(CHALLENGE_METHOD))
+    ])
+  command(gateway, Request.post(withRedirect(Supabase.AUTH_RECOVER, redirectTo), Content.json(&body)))
+}
+
+/// Sets a new password for the signed-in member.
+export fn changePassword(gateway: &Gateway.Gateway, token: Str, password: Str) -> Result[(), Problem.Problem] {
+  let body = Json.object(&[("password", Json.Text(password))])
+  command(gateway, Request.put(Supabase.AUTH_PATH + Supabase.AUTH_USER, Content.json(&body)).withBearer(token))
+}
+
+/// Ends the member's session at the provider.
+export fn signOut(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  command(gateway, Request.post(Supabase.AUTH_PATH + Supabase.AUTH_LOGOUT + "?scope=local", Content.empty()).withBearer(token))
+}
+
+/// The address that starts a sign-in with an external provider and returns to `redirectTo`.
+export fn authorizeUrl(gateway: &Gateway.Gateway, provider: Str, redirectTo: Str, challenge: Str) -> Str {
+  gateway.base + "/" + Supabase.AUTH_PATH + Supabase.AUTH_AUTHORIZE + "?provider=" + Url.encodeComponent(provider)
+    + "&redirect_to=" + Url.encodeComponent(redirectTo)
+    + "&code_challenge=" + Url.encodeComponent(challenge)
+    + "&code_challenge_method=" + CHALLENGE_METHOD
+}
+
+/// Deletes an identity with the service key; the account's profile and personal rows follow.
+export fn deleteUser(gateway: &Gateway.Gateway, userId: Str) -> Result[(), Problem.Problem] {
+  let request = Request.delete(Supabase.AUTH_PATH + Supabase.AUTH_ADMIN_USERS + Url.encodeComponent(userId))
+    .setHeader(Supabase.API_KEY_HEADER, gateway.serviceKey)
+    .withBearer(gateway.serviceKey)
+    .accepting("application/json")
+  match Gateway.sent(&gateway.http, request) {
+    case Ok(_) => Ok(())
+    case Err(problem) => Err(translated(problem))
+  }
+}

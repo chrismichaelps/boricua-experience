@@ -4,6 +4,7 @@ module View.PresentationTest
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Std.Http as Http
 import Std.Json as Json
 import Std.List as List
 import Std.Test as Test
@@ -11,6 +12,7 @@ import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Problem as Problem
 import Domain.Search as Search
 import Services.Participation as ParticipationService
 import Support.Fixtures as Fixtures
@@ -27,6 +29,7 @@ import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
 import View.Pages.Search as SearchPage
 import View.Seo as Seo
+import Web.Respond as Respond
 
 /// A visitor without a session.
 fn visitor(locale: Locale.Locale, path: Str) -> Frame.Frame {
@@ -60,6 +63,8 @@ fn main() -> Int {
   let town = Catalog.Municipality{name: "Ponce", slug: "ponce", region: "sur", lat: 18.011, lng: -66.614}
   let narrowed = Search.Filters{..Search.everything(), municipality: "ponce", category: "musica", query: "salsa", freeOnly: true, window: Search.Weekend}
   let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}))
+  let openSearch = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
+  let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
@@ -69,7 +74,20 @@ fn main() -> Int {
   let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
   let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
+  let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
+  let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
+  let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
   let checks = Test.suite("Presentation", &[
+      Test.equals("signed-out JSON status", &signedOutReply.status.code, &401),
+      Test.equals("signed-out JSON expires secure session", &expiredCookies.filter(|cookie: Str| cookie.startsWith("bx_session=") && cookie.contains("Max-Age=0") && cookie.contains("Secure")).length(), &1),
+      Test.equals("dependency JSON status", &unavailableReply.status.code, &503),
+      Test.equals("dependency failure preserves session", &Http.headerValues(&unavailableReply.headers, "set-cookie"), &[]),
+      Test.equals("open search photo comes from ordered catalog", &openSearch.contains("class=\"search-hero-photo\" src=\"/assets/img/luquillo-photo.webp\""), &true),
+      Test.equals("search preserves municipality filter", &openSearch.contains("pueblo=ponce"), &true),
+      Test.equals("empty scene catalog has no broken search photo", &emptySearch.contains("search-hero-photo"), &false),
+      Test.equals("category and town landings retain their own heading", &listing.contains("search-hero-photo"), &false),
+      Test.equals("footer removes the adult-only note", &openSearch.contains("For adults 18 and over"), &false),
+      Test.equals("footer uses the frame year", &openSearch.contains("© 1969 Boricua Experience."), &true),
       Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
       Test.equals("deadline card immediately says ended", &endedOutput.contains("Esta actividad ya terminó."), &true),
       Test.equals("deadline card has no stale available seats", &endedOutput.contains("Quedan 500"), &false),
@@ -99,6 +117,8 @@ fn main() -> Int {
       Test.equals("hero uses a real Luquillo photograph", &hero.contains("luquillo-photo.webp"), &true),
       Test.equals("footer has cookie preferences", &home.contains("Cookie preferences"), &true),
       Test.equals("obsolete AI notice is removed", &home.contains("AI-generated images"), &false),
+      Test.equals("map omits the assistant", &map.contains("data-feature=\"assistant\""), &false),
+      Test.equals("map explains private location", &map.contains("Near me centers the map privately"), &true),
       Test.equals("map sheet has a named keyboard button", &map.contains("Expand or collapse the activity list"), &true),
       Test.equals("map sheet exposes its controlled list", &map.contains("aria-controls=\"map-list\""), &true),
       Test.equals("carousel uses the supplied destination count", &hero.split("data-slide=").length(), &3),

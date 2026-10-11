@@ -45,3 +45,9 @@ MEDIUM: asset provenance and presentation boundary.
   **A:** `cotorra-photo.webp`, from USDA Forest Service photo 20230408-FS-PJK-6020 by Preston Keres, a public-domain work of the United States government. It shows a wild Puerto Rican parrot taking off with its blue flight feathers open. The Commons SHA-1 was matched before conversion. The El Yunque photograph remains on the auth page. Resolved.
 - **Q:** How does text stay readable over a bright sky?
   **A:** The hero copy carries a soft radial scrim and a text shadow. Every slide benefits, and no photograph is altered. Resolved.
+
+## Discovery photo and footer Grill Log
+Resolved: open search uses the first database-ordered featured scene, a local responsive real photograph and unchanged named filters. Category/town landing behavior stays intact. Empty scene catalogs render usable search without a broken image. Footer has current-year copyright, quiet grouped links and phone touch targets; eligibility policy is unchanged. Photograph source, CC BY2.0 attribution, resizing and crop are recorded in public credits and THIRD_PARTY_NOTICES.
+
+## Photographic page refinement Grill Log · #31
+Resolved: search matches home viewport height, minimum640px and rounded corners on desktop/phone. Auth and About use the attributed real El Morro flags photograph with responsive local WebP derivatives, retained CC BY-SA4.0 license and no altered scenery. About has one header/title; policy documents retain their reading layout. Cookie explanations lead with human labels while naming actual cookies. Asset graph advances atomically to41. Forms and database-driven destination ordering remain unchanged.

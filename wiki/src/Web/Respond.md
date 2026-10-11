@@ -58,3 +58,8 @@ DEEP.
 ## Age gate
 
 See [[src/Validation/Account]] for the age gate contract this module takes part in.
+
+## Deleted session Grill Log
+Resolved: confirmed JSONnull from my_profile means SignedOut; malformed non-null JSON and network failures remain Unavailable. Context clears a known deleted member session, while preserving sessions on transient failures. SignedOut responses expire the cookie. No database schema or authorization guard changes.
+
+JSON problem responses use the same SignedOut cookie expiry as HTML redirects. `problemJson(found, secure)` is a pure response boundary; tests inspect401/expired secure sessioncookie and ensure503 leaves the session intact. Resolved.

@@ -38,7 +38,18 @@ Real camera photographs used in the destination carousel, destination tiles and 
 ## Flamenco Beach, Culebra
 - Asset: culebra-photo.webp
 - Author: [Breezy Baldwin](https://www.flickr.com/people/breezy421/)
-- Source: [Flamenco Beach, Culebra](https://commons.wikimedia.org/wiki/File:Flamenco_Beach,_Culebra_Island,_Puerto_Rico.jpg)
+- Source: [Flamenco Beach, Culebra](https://commons.wikimedia.org/wiki/File:Flamenco_Beach_(right)_in_Culebra_Island,_Puerto_Rico.jpg)
 - License: [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/)
-- Original SHA-256: 6ac91f2cb59e12ccdccb1194eba7e7d7d4cc21b9ec1d3c20de2050a1c29b699a
-- WebP SHA-256: ac87ca97be9d59d389603d36e91e6718728f83f5f680c502331b370e44c70a78
+- Original SHA-256: 4c22d905757b9ae404f6ad18bb88a25538b941481dd480df249a3dba672247c2
+- WebP SHA-256: 05c0ed243cc9715157310a4550c5f7aa3f561d719d57e4bd15c68ebc70ae255d
+
+- Culebra changes: crop original to x0/y800/4500×2200 to emphasize the coast, resize to2200px and1300px width, convert toWebP. No synthetic imagery or color alteration.
+- 1300px Culebra derivative SHA-256: e0636a5ec280a89e5d43a862365d72baf3045e0cf5bc5dcd58240131d62b3014
+
+
+## El Morro flags photograph
+El Morro flags, Old San Juan — Mario Roberto Durán Ortiz (Mariordo), 21 June 2019. Source: https://commons.wikimedia.org/wiki/File:Flags_Castillo_San_Felipe_del_Morro_SJU_06_2019_6051.jpg. License: CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/). Auth and About derivatives retain this license. Resized to2200/1300px and converted to WebP; responsive layouts crop the view. No scenery or colors altered.
+
+/private/tmp/boricua-morro-original.jpg: 909a75ff25f86f108011a33cd41bf588b974a7a4749a6ed83ba866ef417becfd
+public/assets/img/el-morro-flags-photo-1300.webp: c10d7aa57854ddceba81ed08417b07a1444588c727bb904bc549a49a372692b1
+public/assets/img/el-morro-flags-photo.webp: eb1f418302dbd819e31e9ab15c45ed6d601c7350f06d7feef735e71ab64b8c2b

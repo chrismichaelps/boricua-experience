@@ -207,3 +207,36 @@ Release evidence: featurePR#2 and releasePR#3 merged; tagv0.1.1 at50bd09a. Dev/m
 Exact next action: test join-capacity concurrency boundaries in the isolated development project; physical-phone GPS/haptics remain unverified.
 
 Release preparation: featurePR#2 merged into dev; release0.1.1 carries tested source and metadata into main. Physical deviceGPS/haptics and capacity-boundary concurrency remain separate validation work.
+
+## 2026-10-11 map continuation · #24
+Architect → Implementer: own Live, Explorer, BrowserMain, Map, Layout and bilingual status messages. Independent review required.
+
+Implementer → Independent Reviewer → Implementer: subscription and stop/restart ordering findings resolved; reviewer reports no actionable findings. Browser nearby lookup failed cleanly with unchecked control and retry guidance. Phone map at390px has no horizontal overflow and no assistant. Physical GPS remains unverified; Chrome automation was unavailable because its request-header policy could not load.
+
+## 2026-10-11 discovery continuation · #26
+Architect → Implementer: own Search view/styles, Footer/home styles, localized copyright and output tests, Culebra photo/credits. Database order changes in both environments; no schema change. Independent review required.
+
+Photo review strengthened the copy-region scrim to64% over worst-case white clouds and corrected footer mirror wording. Browser1440px/390px: loaded responsive Culebra image, one h1, no overflow. Catalog order verified equal in dev/prod, no schema mutation.
+
+## 2026-10-11 account QA continuation · #28
+Architect → Implementer: own Api.Account nullable profile boundary, Web.Context session cleanup, Web.Respond cookie expiry and Domain tests. Disposable dev account deleted successfully; stale cookie503 is the regression. Preserve transient-failure sessions; independent review required.
+
+Implementer → Independent Reviewer → Implementer: null-profile and JSON cookie-expiry boundaries reviewed; mirror parity corrected. All7 suites/193 assertions pass. Disposable development account exercised password login, export, CSRF rejection, pause/reactivation, wrong-password deletion rejection and successful deletion. Both auth/profile rows are gone; stale cookie now redirects to sign-in and expires. No production account was modified.
+
+Exact next action: promote reviewed issues24/26/28 through release0.2.2 and verify public routes. Physical-device GPS remains unverified.
+
+## Source visibility · #30
+Architect → Implementer: own root ignore rules and restore existing Api.Supabase gateway/identity files to Git. Existing complete mirrors resolve their transport/auth contracts. Preserve private root SQL files; no credentials in source. Independent reviewer verifies scope and module parity.
+
+## Photographic pages · #31
+Architect → Implementer: own Auth/Legal page composition, search/experience styles, bilingual cookie explanations, photo provenance and mechanical asset graph41. Independent review required. Local generated Supabase configuration remains untracked; only root SQL is ignored.
+
+Implementer → Independent Reviewer → Implementer: stale sharing-restoration policy copy and singular cookie labels corrected. Reviewer reports no outstanding findings; all193 assertions/browser harnesses passed. English390px About/auth and1440px search/auth fit without horizontal overflow; photographs load, About has one h1, free-only filter submits and persists. Supabase source restoration is merged to dev.
+
+## Local CLI configuration · #35
+Architect → Implementer: own existing supabase/config.toml, local ignore file and complete mirror. Restore safe configuration to Git; no hosted settings applied. Independent review required.
+
+## Full-width search · #36
+Architect → Implementer: own Layout search body class, Search image sizes, SearchStyles width/rail rules and mechanical cache graph42. Supabase local files committed/reviewed separately. Independent review required.
+
+Implementer → Independent Reviewer → Implementer: review clear;193assertions/allbrowserharnesses pass. Search bounds measured1440px→1424px(left8),390px→374px(left8), no horizontal overflow, oneh1. Category/town shells unchanged.

@@ -17,7 +17,7 @@ Shared footer with the cotorra brand, four groups of real application links and 
 
 ## Algorithm
 
-Render translated discovery, destination, community and legal groups. Every link uses a real route. End with cookie preferences, adult/copyright note and real-photography credits.
+Render translated discovery, destination, community and legal groups. Every link uses a real route. End with cookie preferences, current-year copyright and real-photography credits.
 
 ## Negative Logic
 
@@ -54,3 +54,6 @@ Original compact parrot replaces the former mascot. Brand asset URLs use shared 
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Remove hardcoded featured-town slugs; link to the database-driven homepage directory and map. Resolved.
+
+## Discovery photo and footer Grill Log
+Resolved: open search uses the first database-ordered featured scene, a local responsive real photograph and unchanged named filters. Category/town landing behavior stays intact. Empty scene catalogs render usable search without a broken image. Footer has current-year copyright, quiet grouped links and phone touch targets; eligibility policy is unchanged. Photograph source, CC BY2.0 attribution, resizing and crop are recorded in public credits and THIRD_PARTY_NOTICES.

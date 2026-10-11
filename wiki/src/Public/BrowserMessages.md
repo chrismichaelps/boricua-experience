@@ -29,3 +29,6 @@ Resolved: location failures need distinct actionable inline copy rather than a g
 
 ## Referenced by
 [[src/_MOC]] · [[src/Public/EventMaps]]
+
+## Map recovery Grill Log
+Resolved: bilingual private/live status and actionable device-location failure guidance. No fabricated position.

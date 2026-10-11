@@ -81,3 +81,20 @@ Release0.1.1 deployment:50bd09a, https://boricuaexperience.com, staged and live 
 - Publishing location retries a transient CoreLocation failure once with balanced accuracy, bounds waiting and preserves manual draft pins; map loading failure leaves location/manual controls usable. Issue #6.
 - Assistant reads current Supabase category/town catalog with capped results and localized labels; spoken replies and dictation isolate stale callbacks. Signed-in desktop/mobile language forms carry existing CSRF token. Issue #20.
 - Revision39 refreshes the complete browser asset graph. No schema migration required; all73 application function definitions/grants match dev/prod; production seed rows0.
+
+- 2026-10-11 · #24: private map lookup uses bounded location fallback; sharing starts explicitly and stops on hide/exit. Correct independent control subscriptions, bound write/revocation ordering, expose bilingual purpose/status and omit map assistant. Full gate: 180 Pudu assertions plus browser harnesses.
+
+- 2026-10-11 · #26: Culebra leads featured destinations in both databases; open search gains a responsive real-photo hero from the ordered catalog. Credit CC BY2.0 source/derivatives, simplify current-year footer and refresh graph40. Full gate186 assertions; desktop/phone output verified.
+
+- 2026-10-11 · [[src/Web/Context]] · deleted-account sessions now expire on confirmed missing profiles, including JSON errors; transient dependency failures retain sessions. Disposable development account pause/reactivate/export/delete and stale-session flow verified;193 assertions pass · issue #28.
+
+- 2026-10-11 · [[src/Api/Supabase/Gateway]] · root-anchored SQL ignore rule restores gateway/identity application modules to Git; no runtime logic changes · issue #30.
+
+- 2026-10-11 · [[src/View/Pages/Legal]] · home-sized search photograph, licensed El Morro auth/About imagery and human-readable cookie purpose labels; asset graph41 · issue #31.
+
+- 2026-10-11 · [[src/Infrastructure/SupabaseConfig]] · track reviewed local CLI TOML and ignore file; no credentials, SQL or hosted-setting changes · issue #35.
+
+- 2026-10-11 · [[src/Public/SearchStyles]] · open search hero fills the viewport with home-equivalent8px insets; results retain centered reading width; asset graph42 · issue #36.
+
+## v0.2.2 · 2026-10-11
+Promotes reviewed issues24/26/28/30/31/35/36: explicit bounded map location lifecycle, Culebra-first database order in both environments, real licensed discovery/auth/About photographs, full-width search, footer and cookie copy, deleted-account session expiry and restored tracked Supabase source/local CLI configuration.193 assertions and all browser harnesses pass; disposable dev export/pause/reactivate/delete verified. No schema migration or hosted configuration change. Asset graph42. Physical GPS/browser hardware coverage remains pending.

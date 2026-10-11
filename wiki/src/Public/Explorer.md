@@ -17,7 +17,7 @@ public/assets/js/features/explorer.js, wired by [[src/View/Pages/Map]] and main.
 
 ## Algorithm
 
-Start watches only from an explicit location action or a previously enabled sharing session. Stop watches on off/page hide. Map reads the current search query when refreshing nearby.
+Start watches only from an explicit location action. Each control owns a distinct callback subscription. Stop watches on off/page hide. Map reads the current search query when refreshing nearby.
 
 ## Widening after locating
 
@@ -90,3 +90,6 @@ Only the sheet itself ending a height/max-height transition updates map padding.
 ## Refreshed card date node
 
 Grill resolved: `create` accepts text, not DOM children. Append the localized semantic `<time>` to a separate date paragraph before appending that paragraph to the card. This preserves datetime/data-moment attributes and prevents stringifying an HTMLTimeElement after viewport queries. Test the child node contract and verify live refreshed cards.
+
+## Explicit location lifecycle Grill Log
+Resolved: nearby lookup stays private; initial acquisition uses the bounded accurate/balanced fallback. Fresh readings alone enable the sharing badge. No storage restores sharing; hiding or leaving stops it. Epochs reject stale callbacks and serialized writes prevent a late update undoing stop. Map controls expose purpose/status in both languages; the map omits the assistant.

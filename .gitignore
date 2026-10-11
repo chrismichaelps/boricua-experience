@@ -18,8 +18,8 @@ CSS.md
 .DS_Store
 Thumbs.db
 
-# supabase
-supabase
+# Private root Supabase SQL assets (application source remains tracked)
+/supabase/**/*.sql
 
 # Pudu packages and build output
 deps/

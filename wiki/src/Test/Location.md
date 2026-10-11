@@ -45,3 +45,6 @@ MEDIUM: observes clearWatch at the browser boundary.
 
 ## Publishing recovery Grill Log
 Resolved: Publishing regression tests exercise first-fix success, CoreLocation failure recovery, denial without retry, bounded timeout, unsupported API, invalid fix and stale callbacks after cancel.
+
+## Map lifecycle regression Grill Log
+Resolved: bounded acquisition and writes, immediate stop plus late-update cleanup, stop/restart barrier, separate control subscriptions, no automatic sharing restoration and map-only assistant omission.
