@@ -54,3 +54,6 @@ MEDIUM: typed values with their decoding, so no caller reads raw JSON.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Curated publication Grill Log · #42
+Resolved: PublicProfile adds trusted isAdmin, default false for older payloads; no email or user metadata grants authority.

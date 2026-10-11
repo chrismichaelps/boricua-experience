@@ -1,9 +1,9 @@
-import { GEO, LIVE, MAP } from '../constants/config.js?v=43';
-import { getJson } from '../net/http.js?v=43';
-import { message } from '../constants/messages.js?v=43';
-import { createMap } from './mapLoader.js?v=43';
-import { accuracyCircle, personMarker } from './markers.js?v=43';
-import { requestLocation } from '../utils/locate.js?v=43';
+import { GEO, LIVE, MAP } from '../constants/config.js?v=44';
+import { getJson } from '../net/http.js?v=44';
+import { message } from '../constants/messages.js?v=44';
+import { createMap } from './mapLoader.js?v=44';
+import { accuracyCircle, personMarker } from './markers.js?v=44';
+import { requestLocation } from '../utils/locate.js?v=44';
 
 function whenVisible(element, action) {
   const observer = new IntersectionObserver((entries) => {

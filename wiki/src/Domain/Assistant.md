@@ -34,3 +34,6 @@ Public source image uses coverUrl from the database, or existing category-slug-d
 
 ## Bilingual tooling Grill Log
 Resolved: Localized source projection selects database category nameEn/nameEs. Internal Tool carries validated es/en locale; the compatibility source function defaults to Spanish.
+
+## Curated source Grill Log · #42
+Resolved: source projection includes member/curated provenance and external_booking; curated sources carry null join_policy/spots_left so models cannot mistake local counts for official availability.

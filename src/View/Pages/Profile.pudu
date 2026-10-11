@@ -14,6 +14,7 @@ import Utils.Text as Text
 import Utils.Time as Time
 import View.Components.Avatar as Avatar
 import View.Components.EventCard as EventCard
+import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Frame as Frame
 import View.Layout as Layout
@@ -38,6 +39,7 @@ export fn render(frame: &Frame.Frame, person: &Profile.PublicProfile) -> Html.Ht
             Avatar.face(person.displayName, person.avatarUrl, "xl"),
             H.div().holding([
                 H.h1().class("page-title").says(person.displayName),
+                if person.isAdmin { H.span().class("admin-badge").holding([Icons.sized("crown", 16), H.span().says(Frame.t(frame, "profile.admin"))]) } else { H.nothing() },
                 H.p().class("muted").says([Option.unwrapOr(person.municipality, ""), since].filter(|part: Str| !part.isEmpty()).join(" · ")),
                 if person.bio.isEmpty() { H.nothing() } else { H.p().class("profile-bio").says(person.bio) }
               ])

@@ -37,3 +37,6 @@ Browser lifecycle harness exercises active Stop with empty required input, queue
 
 ## Bilingual tooling Grill Log
 Resolved: Localized source tests assert English/Spanish database category labels. Extended stream tests cover catalog reads, empty results, calendar labels, multiple tool fragments, forged tools and cancellation.
+
+## Curated publication regression Grill Log · #42
+Resolved: Native and curated organizer_details use fixture HTTP responses through the actual gateway. Curated publisher role is explicit, organizer is null, hosting statistics are omitted and local join/seat fields are null. Native organizer statistics and refusal of unsearched slugs remain covered.

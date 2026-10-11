@@ -13,6 +13,7 @@ import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Problem as Problem
+import Domain.Profile as Profile
 import Domain.Search as Search
 import Services.Participation as ParticipationService
 import Support.Fixtures as Fixtures
@@ -25,8 +26,10 @@ import View.Frame as Frame
 import View.Layout as Layout
 import View.Pages.Activity as ActivityPage
 import View.Pages.Auth as Auth
+import View.Pages.Event as EventPage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
+import View.Pages.Profile as ProfilePage
 import View.Pages.Search as SearchPage
 import View.Seo as Seo
 import Web.Respond as Respond
@@ -77,7 +80,45 @@ fn main() -> Int {
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
+  let original = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(d) => d case Err(_) => panic("detail fixture") }
+  let curated = Event.Detail{..original, source: "curated", sourceUrl: Some("https://example.org/official"), card: Event.Card{..original.card, source: "curated"}}
+  let curatedActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [curated.card]}))
+  let nativeActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [original.card]}))
+  let nativeEndedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..original, card: Event.Card{..original.card, status: "ended"}, viewer: Event.Viewer{..original.viewer, signedIn: true, isOrganizer: true}}, &None))
+  let curatedGuest = Html.render(&EventPage.render(&en, &curated, &None))
+  let curatedEs = Html.render(&EventPage.render(&es, &curated, &None))
+  let curatedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true, isOrganizer: true}}, &None))
+  let curatedMember = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true}}, &None))
+  let curatedEnded = Html.render(&EventPage.render(&en, &Event.Detail{..curated, card: Event.Card{..curated.card, status: "ended"}}, &None))
+  let curatedCancelled = Html.render(&EventPage.render(&en, &Event.Detail{..curated, card: Event.Card{..curated.card, status: "cancelled"}}, &None))
+  let badSource = Event.Detail{..curated, sourceUrl: Some("javascript:alert(1)")}
+  let unavailable = Html.render(&EventPage.render(&en, &badSource, &None))
+  let sourceCard = Html.render(&EventCard.card(&en, &curated.card).html())
+  let profile: Profile.PublicProfile = match Wire.decode(&Fixtures.json("public-profile.json")) { case Ok(p) => p case Err(_) => panic("profile fixture") }
+  let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
+  let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.equals("curated activity has no request management", &curatedActivity.contains("/requests\""), &false),
+      Test.equals("native activity retains request management", &nativeActivity.contains("/requests\""), &true),
+      Test.equals("native ended owner retains request management", &nativeEndedOwner.contains("/requests\""), &true),
+      Test.equals("curated guest uses official booking", &curatedGuest.contains("https://example.org/official"), &true),
+      Test.equals("curated source is translated", &curatedEs.contains("Ver detalles y boletos oficiales"), &true),
+      Test.equals("curated owner cannot manage attendee requests", &curatedOwner.contains("/requests\""), &false),
+      Test.equals("curated member cannot join locally", &curatedMember.contains("/join\""), &false),
+      Test.equals("curated guest has no local attendee list", &curatedGuest.contains("going-title"), &false),
+      Test.equals("curated expired event has no booking CTA", &curatedEnded.contains("View official details and tickets"), &false),
+      Test.equals("curated cancelled event has no booking CTA", &curatedCancelled.contains("View official details and tickets"), &false),
+      Test.equals("unsafe official URL is rejected", &Event.officialUrl(&badSource), &None),
+      Test.equals("missing source cannot become native join", &Event.officialUrl(&Event.Detail{..curated, sourceUrl: None}), &None),
+      Test.equals("HTTP source is rejected", &Event.officialUrl(&Event.Detail{..curated, sourceUrl: Some("http://example.org")}), &None),
+      Test.equals("unsafe source explains unavailable link", &unavailable.contains("The official link is currently unavailable."), &true),
+      Test.equals("curated cards identify their source", &sourceCard.contains("Official source"), &true),
+      Test.equals("curated SEO avoids native capacity", &Json.encode(&Seo.event(en.siteUrl, &Event.Detail{..curated, card: Event.Card{..curated.card, capacity: Some(500)}})).contains("maximumAttendeeCapacity"), &false),
+      Test.equals("curated SEO avoids availability claims", &Json.encode(&Seo.event(en.siteUrl, &curated)).contains("InStock"), &false),
+      Test.equals("admin profile badge is English", &adminEn.contains("Administrator"), &true),
+      Test.equals("admin profile badge is Spanish", &adminEs.contains("Administrador"), &true),
+      Test.equals("member profile never has admin badge", &Html.render(&ProfilePage.render(&en, &profile)).contains("admin-badge"), &false),
+
       Test.equals("signed-out JSON status", &signedOutReply.status.code, &401),
       Test.equals("signed-out JSON expires secure session", &expiredCookies.filter(|cookie: Str| cookie.startsWith("bx_session=") && cookie.contains("Max-Age=0") && cookie.contains("Secure")).length(), &1),
       Test.equals("dependency JSON status", &unavailableReply.status.code, &503),

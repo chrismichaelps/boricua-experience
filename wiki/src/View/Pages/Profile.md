@@ -54,3 +54,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Curated publication Grill Log · #42
+Resolved: Show a small labeled crown only when the trusted public profile isAdmin is true.

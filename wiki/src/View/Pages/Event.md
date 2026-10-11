@@ -58,3 +58,6 @@ MEDIUM.
 ## Expiry
 
 Only a public, published event that has not ended is indexable; ended and cancelled pages render for people with the link and carry `noindex`. See [[decisions/ADR-0009-event-expiry]].
+
+## Curated publication Grill Log · #42
+Resolved: Curated detail uses official-source booking, hides local attendance/live participation, names the publisher as curator and never claims native seats or approval. Ended/cancelled states precede source links; missing/unsafe links show a translated unavailable message.

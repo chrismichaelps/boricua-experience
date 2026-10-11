@@ -32,3 +32,6 @@ Resolved: All activity facts come from database. Known-source IDs stay in signed
 
 ## Bilingual tooling Grill Log
 Resolved: browse_catalog reads live town/category reference data, filters a short query and returns at most24 rows with a truncation flag. Tool locale is validated; all source cards select the matching database category language. No migration or new unrestricted table access is needed.
+
+## Curated boundary Grill Log · #42
+Resolved: Curated organizer_details returns a publisher with role curator and no organizer or hosted/member statistics. Native public organizer details retain their existing projection. The prompt distinguishes publication from production and treats external availability as unknown.

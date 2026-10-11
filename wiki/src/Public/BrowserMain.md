@@ -90,3 +90,6 @@ Resolved: explicit app-search body class on the open search route gives its shel
 
 ## Shared field focus and policy labels Grill Log · #39
 Resolved: search segments own one neutral2px inset focus indication; nested inputs/triggers do not add rings. Standard/picker fields use stronger neutral borders and a single focus stroke, with visible keyboard focus retained. Policy pages display effective dates without version numbers; internal agreement/version checks remain unchanged. Asset graph43 advances together.
+
+## Curated publication Grill Log · #42
+Resolved: Mechanical asset graph44 only; behavior unchanged.

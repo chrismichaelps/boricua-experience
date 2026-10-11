@@ -3,6 +3,14 @@ module I18n.Es
 
 /// Spanish interface messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("profile.admin", "Administrador"),
+    ("event.published_by", "Publicado por"),
+    ("event.official_source", "Fuente oficial"),
+    ("event.source_action", "Ver detalles y boletos oficiales"),
+    ("event.external_body", "Esta actividad se publica desde una fuente externa. Confirma allí la entrada, la disponibilidad y los cargos. Boricua no vende boletos ni reserva espacios."),
+    ("event.source_unavailable", "El enlace oficial no está disponible actualmente."),
+    ("problem.external_booking", "La participación se gestiona en la fuente oficial."),
+
     ("assistant.welcome", "¿Qué te apetece hacer?"),
     ("assistant.thinking", "Pensando…"),
     ("assistant.reading", "Revisando los detalles…"),

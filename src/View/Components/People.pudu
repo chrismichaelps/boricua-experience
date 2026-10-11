@@ -17,7 +17,7 @@ import View.Frame as Frame
 export fn organizer(frame: &Frame.Frame, host: &Option[Event.Organizer], curated: Bool) -> H.Node {
   match host {
     case None => H.section().class("panel organizer").holding([
-        H.h2().class("section-title").says(Frame.t(frame, "event.hosted_by")),
+        H.h2().class("section-title").says(Frame.t(frame, if curated { "event.published_by" } else { "event.hosted_by" })),
         H.p().class("muted").says(Frame.t(frame, if curated { "event.curated_source" } else { "event.deleted_organizer" }))
       ])
     case Some(found) => {
@@ -31,7 +31,7 @@ export fn organizer(frame: &Frame.Frame, host: &Option[Event.Organizer], curated
         case None => name
       }
       H.section().class("panel organizer").at("aria-labelledby", "organizer-title").holding([
-          H.h2().class("section-title").id("organizer-title").says(Frame.t(frame, "event.hosted_by")),
+          H.h2().class("section-title").id("organizer-title").says(Frame.t(frame, if curated { "event.published_by" } else { "event.hosted_by" })),
           H.div().class("organizer-head").holding([
               Avatar.face(found.displayName, found.avatarUrl, "lg"),
               H.div().holding([
@@ -39,10 +39,10 @@ export fn organizer(frame: &Frame.Frame, host: &Option[Event.Organizer], curated
                   H.p().class("muted").says([Option.unwrapOr(found.municipality, ""), since].filter(|part: Str| !part.isEmpty()).join(" · "))
                 ])
             ]),
-          H.ul().class("stats").holding([
-              H.li().holding([H.strong().says(show(found.hostedCount)), H.span().says(Translate.count(&frame.locale, "profile.events_hosted", found.hostedCount))]),
-              H.li().holding([H.strong().says(show(found.guestsHosted)), H.span().says(Translate.count(&frame.locale, "profile.guests_hosted", found.guestsHosted))])
-            ]),
+          if curated { H.nothing() } else { H.ul().class("stats").holding([
+                H.li().holding([H.strong().says(show(found.hostedCount)), H.span().says(Translate.count(&frame.locale, "profile.events_hosted", found.hostedCount))]),
+                H.li().holding([H.strong().says(show(found.guestsHosted)), H.span().says(Translate.count(&frame.locale, "profile.guests_hosted", found.guestsHosted))])
+              ]) },
           if found.bio.isEmpty() { H.nothing() } else { H.p().class("organizer-bio").says(found.bio) }
         ])
     }

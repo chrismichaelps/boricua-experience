@@ -26,6 +26,9 @@ deps/
 .vercel/
 dist/
 
+# Private administrative publication review files
+/private-data/
+
 # Local tooling
 .claude/
 .runtime/

@@ -10,6 +10,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("account_paused", "problem.paused"),
     ("forbidden", "problem.forbidden"),
     ("not_found", "problem.not_found"),
+    ("external_booking", "problem.external_booking"),
     ("event_full", "problem.event_full"),
     ("event_cancelled", "problem.event_cancelled"),
     ("event_ended", "problem.event_ended"),

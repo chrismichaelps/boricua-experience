@@ -83,3 +83,6 @@ Resolved: search matches home viewport height, minimum640px and rounded corners 
 
 ## Shared field focus and policy labels Grill Log · #39
 Resolved: search segments own one neutral2px inset focus indication; nested inputs/triggers do not add rings. Standard/picker fields use stronger neutral borders and a single focus stroke, with visible keyboard focus retained. Policy pages display effective dates without version numbers; internal agreement/version checks remain unchanged. Asset graph43 advances together.
+
+## Curated publication Grill Log · #42
+Resolved: Admin badge uses a compact crown, visible role text and existing ink/cloud palette; no permission is inferred from the badge.
