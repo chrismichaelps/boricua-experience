@@ -13,6 +13,9 @@ tags: [architecture, delivery]
 - Deployment: `scripts/build-vercel.sh` compiles [[src/Function]] onto the release's musl Lambda
   runtime, writes the Build Output directory (static assets, routes, the function), and
   `vercel deploy --prebuilt` publishes it. Secrets are project environment variables, never files.
+- `BORICUA_SITE_URL` is baked into the function at build time and must be the canonical public
+  https origin: the same-origin guard compares every post with it. The build refuses any other
+  value, so a shell that loaded the development `.env` cannot ship `http://localhost`.
 
 ## Referenced by
 
