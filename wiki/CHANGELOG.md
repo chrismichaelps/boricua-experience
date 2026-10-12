@@ -124,3 +124,6 @@ Descriptive bilingual cookie-policy anchors resolve the only failed automated SE
 
 ## Unknown publication facts · #51
 Nullable price/end preserve unknown facts; explicit0 remains free. Required finite start plus separately generated/indexed discovery_until uses known end or24elapsed hours. Discovery, counts, participation and expiry share the cutoff; pending approval races close before the batch job. ES/EN cards/forms/map/assistant and exports preserve unknown state, omit invented end/offer and label unknown-end expiration archived. Apply reviewed migration to both environments before importing remaining BSNF CSV entries.
+
+## v0.2.7
+Release nullable publication facts, consistent finite discovery expiry, null-safe bilingual surfaces and locked request decisions. Both schema migrations applied and parity verified; private CSV remains ignored.
