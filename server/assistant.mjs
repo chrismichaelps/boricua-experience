@@ -104,8 +104,8 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
       await emit('sources', { items: [...sources.values()] });
       const format = new Intl.DateTimeFormat(context.locale === 'en' ? 'en-US' : 'es-PR', { timeZone: 'America/Puerto_Rico', dateStyle: 'full', timeStyle: 'short' });
       const dated = activity => {
-        const start = new Date(activity.starts_at), end = new Date(activity.ends_at);
-        return Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) ? activity : { ...activity, schedule_pr: format.format(start) + ' – ' + format.format(end) + ' AST' };
+        const start = new Date(activity.starts_at), end = activity.ends_at ? new Date(activity.ends_at) : null;
+        return Number.isNaN(start.getTime()) ? activity : { ...activity, schedule_pr: format.format(start) + (end && !Number.isNaN(end.getTime()) ? ' – ' + format.format(end) : context.locale === 'en' ? ' · End time not provided' : ' · Hora de fin no informada') + ' AST' };
       };
       const data = { ...result.result };
       if (Array.isArray(data.activities)) data.activities = data.activities.map(dated);
