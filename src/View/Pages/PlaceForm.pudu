@@ -1,0 +1,157 @@
+/** @View.Pages.PlaceForm.Publishing — choosing what to publish, and the form of a place adapted to its category */
+module View.Pages.PlaceForm
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Option as Option
+import Constants.App as App
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Place as Place
+import Domain.Problem as Problem
+import I18n.Dates as Dates
+import Utils.Query as Query
+import View.Components.Facts as Facts
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Components.Search as SearchControls
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/** @View.Pages.PlaceForm.Mode — publishing a new place or editing one */
+export type Mode = Creating | Editing(Str)
+
+/// Weekdays in the order a week is read in Puerto Rico, Monday first; Sunday is 0.
+const WEEK: Array[Int] = [1, 2, 3, 4, 5, 6, 0]
+
+/// The first step of publishing: every category, each offering the kinds of listing it takes.
+export fn chooser(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> Html.Html {
+  let meta = Seo.meta(Frame.t(frame, "publish.choose_title"), Frame.t(frame, "publish.description"), Routes.CREATE, false)
+  Layout.page(frame, &meta, Layout.Create, H.div().class("narrow").holding([
+        H.h1().class("page-title").says(Frame.t(frame, "publish.choose_title")),
+        H.p().class("lead").says(Frame.t(frame, "publish.choose_lead")),
+        H.ul().class("kind-grid").holding(catalog.categories.map(|category: Catalog.Category| H.li().class("kind-card").holding([
+                H.p().class("kind-name").holding([Icons.sized(category.icon, 22), H.strong().says(SearchControls.categoryName(frame, &category))]),
+                H.div().class("kind-actions").holding(orderedKinds(&category).map(|kind: Str| H.a().class(if kind == category.defaultKind { "button button-small" } else { "button button-ghost button-small" }).href(startOf(&category, kind)).says(Frame.t(frame, "publish.kind_" + kind))))
+              ])))
+      ]))
+}
+
+/// The kinds a category takes, its default first.
+fn orderedKinds(category: &Catalog.Category) -> Array[Str] {
+  [category.defaultKind].concat(category.kinds.filter(|kind: Str| kind != category.defaultKind))
+}
+
+/// Where publishing a kind of listing in a category starts.
+fn startOf(category: &Catalog.Category, kind: Str) -> Str {
+  (if kind == Catalog.PLACE { Routes.CREATE_PLACE } else { Routes.CREATE }) + Query.render(&[("category", category.slug)])
+}
+
+/// The place form, with the facts of the draft's category and every refused field shown.
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, mode: &Mode, draft: &Place.Draft, problem: &Option[Problem.Problem]) -> Html.Html {
+  let errors = match problem {
+    case Some(found) => Problem.fieldErrors(&found)
+    case None => []
+  }
+  let category = Catalog.category(catalog, draft.category)
+  let (title, action, submit) = match mode {
+    case Creating => (Frame.t(frame, "place.publish_title"), Routes.CREATE_PLACE, Frame.t(frame, "place.publish_submit"))
+    case Editing(slug) => (Frame.t(frame, "place.edit_title"), Routes.PLACE_PREFIX + slug + "/edit", Frame.t(frame, "publish.save"))
+  }
+  let placeCategories = catalog.categories.filter(|found: Catalog.Category| Catalog.takes(&found, Catalog.PLACE))
+  let categories = [("", Frame.t(frame, "publish.choose"))].concat(placeCategories.map(|found: Catalog.Category| (found.slug, SearchControls.categoryName(frame, &found))))
+  let towns = [("", Frame.t(frame, "publish.choose"))].concat(catalog.municipalities.map(|town: Catalog.Municipality| (town.slug, town.name)))
+  let field = |name: Str, label: Str, value: Str| Form.Field{..Form.field(name, Frame.t(frame, label), value), required: true}
+  let fields = match category {
+    case Some(found) => Catalog.fieldsFor(&found, Catalog.PLACE)
+    case None => []
+  }
+  let meta = Seo.meta(title, Frame.t(frame, "publish.description"), action, false)
+  Layout.page(frame, &meta, Layout.Create, H.div().class("narrow").holding([
+        H.h1().class("page-title").says(title),
+        H.p().class("lead").says(Frame.t(frame, "place.publish_lead")),
+        Form.problemBanner(frame, problem),
+        H.form().class("stack-form").action(action).method("post").at("novalidate", "novalidate").data("feature", "publish").data("mode", match mode {
+            case Creating => "create"
+            case Editing(_) => "edit"
+          }).holding([
+            Form.token(frame),
+            H.section().class("form-section").holding([
+                H.h2().class("section-title").says(Frame.t(frame, "publish.basics")),
+                H.div().data("feature", "profile-switch").holding([Form.select(frame, &Form.Field{..field("category", "publish.field_category", draft.category), hint: Frame.t(frame, "place.hint_category")}, &categories, &errors)]),
+                Form.input(frame, &field("name", "place.field_name", draft.name), &errors, |c: H.Node| c.at("maxlength", "120")),
+                Form.input(frame, &Form.Field{..field("summary", "publish.field_summary", draft.summary), hint: Frame.t(frame, "place.hint_summary")}, &errors, |c: H.Node| c.at("maxlength", "200")),
+                Form.area(frame, &Form.Field{..Form.field("description", Frame.t(frame, "publish.field_description"), draft.description), hint: Frame.t(frame, "place.hint_description")}, 6, &errors)
+              ]),
+            if fields.isEmpty() { H.nothing() } else {
+              H.section().class("form-section").data("profile", draft.category).holding([
+                  H.h2().class("section-title").says(match category {
+                      case Some(found) => Frame.tf(frame, "place.facts_title", &[("category", SearchControls.categoryName(frame, &found))])
+                      case None => ""
+                    }),
+                  H.p().class("field-hint").says(Frame.t(frame, "place.facts_hint"))
+                ].concat(Facts.controls(frame, &fields, &draft.facts, &errors)))
+            },
+            H.section().class("form-section").holding([
+                H.h2().class("section-title").says(Frame.t(frame, "publish.where")),
+                Form.select(frame, &field("municipality", "publish.field_town", draft.municipality), &towns, &errors),
+                Form.input(frame, &Form.Field{..Form.field("addressLine", Frame.t(frame, "publish.field_address"), draft.addressLine), hint: Frame.t(frame, "place.hint_address")}, &errors, |c: H.Node| c.at("maxlength", "200")),
+                pin(frame, draft, &errors)
+              ]),
+            H.section().class("form-section").holding([
+                H.h2().class("section-title").says(Frame.t(frame, "place.hours")),
+                H.p().class("field-hint").says(Frame.t(frame, "place.hint_hours")),
+                hoursTable(frame, draft, &errors)
+              ]),
+            H.section().class("form-section").holding([
+                H.h2().class("section-title").says(Frame.t(frame, "place.contact")),
+                Form.input(frame, &Form.Field{..Form.field("phone", Frame.t(frame, "place.field_phone"), draft.phone), kind: "tel"}, &errors, |c: H.Node| c.at("maxlength", "21")),
+                Form.input(frame, &Form.Field{..Form.field("website", Frame.t(frame, "place.field_website"), draft.website), kind: "url", hint: Frame.t(frame, "place.hint_website")}, &errors, |c: H.Node| c.placeholder("https://").at("maxlength", "500"))
+              ]),
+            H.p().class("muted small").says(Frame.t(frame, "place.owner_note")),
+            H.button().submit().class("button button-block").says(submit)
+          ])
+      ]))
+}
+
+/// The map pin with its coordinate fields and the use-my-location button.
+fn pin(frame: &Frame.Frame, draft: &Place.Draft, errors: &Array[Problem.FieldError]) -> H.Node {
+  H.div().class(if Problem.errorFor(errors, "location") == None { "field" } else { "field field-invalid" }).holding([
+      H.p().class("label").says(Frame.t(frame, "publish.field_pin")),
+      H.div().class("pin-picker").data("feature", "pin-picker").data("lat", if draft.lat.isEmpty() { show(App.MAP_CENTER_LAT) } else { draft.lat }).data("lng", if draft.lng.isEmpty() { show(App.MAP_CENTER_LNG) } else { draft.lng }).role("application").label(Frame.t(frame, "publish.field_pin")),
+      H.div().class("row-2").holding([
+          H.labelFor().class("compact").holding([H.span().says(Frame.t(frame, "publish.latitude")), H.input().kind("text").name("lat").value(draft.lat).at("inputmode", "decimal").data("pin", "lat")]),
+          H.labelFor().class("compact").holding([H.span().says(Frame.t(frame, "publish.longitude")), H.input().kind("text").name("lng").value(draft.lng).at("inputmode", "decimal").data("pin", "lng")])
+        ]),
+      H.button().kind("button").class("button button-ghost button-small").data("feature", "pin-here").holding([Icons.sized("crosshair", 16), H.span().says(Frame.t(frame, "publish.use_my_location"))]),
+      match Problem.errorFor(errors, "location") {
+        case Some(key) => H.p().class("field-error").role("alert").says(Frame.t(frame, key))
+        case None => H.p().class("field-hint").says(Frame.t(frame, "place.hint_pin"))
+      }
+    ])
+}
+
+/// One row per weekday with up to two opening ranges; empty rows mean closed.
+fn hoursTable(frame: &Frame.Frame, draft: &Place.Draft, errors: &Array[Problem.FieldError]) -> H.Node {
+  let refused = Problem.errorFor(errors, "hours")
+  let time = |day: Int, slot: Int, closing: Bool, label: Str| {
+    let name = Place.hoursName(day, slot, closing)
+    H.input().kind("time").name(name).id("f-" + name).value(Option.unwrapOr(draft.hours.get(name), "")).label(label).at("step", "300")
+  }
+  H.div().class(if refused == None { "hours-editor" } else { "hours-editor field-invalid" }).holding(WEEK.map(|day: Int| {
+        let name = Dates.weekday(&frame.locale, day)
+        H.fieldset().class("hours-day").holding([
+            H.legend().says(name),
+            H.div().class("hours-slots").holding([0, 1].map(|slot: Int| H.span().class("hours-slot").holding([
+                    time(day, slot, false, Frame.tf(frame, "place.opens_on", &[("day", name)])),
+                    H.span().class("muted").says("–"),
+                    time(day, slot, true, Frame.tf(frame, "place.closes_on", &[("day", name)]))
+                  ])))
+          ])
+      }).concat([match refused {
+          case Some(key) => H.p().class("field-error").role("alert").says(Frame.t(frame, key))
+          case None => H.nothing()
+        }]))
+}

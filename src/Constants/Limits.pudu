@@ -10,6 +10,8 @@ export const DESCRIPTION_MAX: Int = 5000
 export const INSTRUCTIONS_MAX: Int = 2000
 export const VENUE_MIN: Int = 2
 export const VENUE_MAX: Int = 120
+/// Shortest place name.
+export const PLACE_NAME_MIN: Int = 2
 export const ADDRESS_MAX: Int = 200
 export const CAPACITY_MAX: Int = 100000
 export const PRICE_MAX_CENTS: Int = 10000000
@@ -32,6 +34,12 @@ export const PAGE_SIZE: Int = 24
 export const RECOMMENDED_COUNT: Int = 12
 /// Events in a home rail.
 export const RAIL_COUNT: Int = 10
+/// Upcoming events read to choose hidden gems from.
+export const GEMS_POOL: Int = 60
+/// Most joins, saves, and likes an event may have and still count as a hidden gem.
+export const GEM_ENGAGEMENT_MAX: Int = 3
+/// Nearby towns listed on a town page.
+export const NEIGHBOR_COUNT: Int = 6
 /// Pins on the map.
 export const MAP_PINS: Int = 60
 /// Search suggestions.

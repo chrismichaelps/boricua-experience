@@ -2,19 +2,22 @@
 module Services.Admin
 
 import Api.Admin as AdminApi
+import Api.Reviews as ReviewsApi
 import Domain.Admin as Admin
 import Domain.Problem as Problem
+import Domain.Review as Review
 import Domain.Session as Session
 import Services.Runtime as Runtime
 
 /** @Services.Admin.Dashboard — counts and open reports together */
-export type Dashboard = { overview: Admin.Overview, reports: Array[Admin.Report] }
+export type Dashboard = { overview: Admin.Overview, reports: Array[Admin.Report], reviews: Array[Review.ReportedReview] }
 
 /// The dashboard; the database refuses anyone who is not an administrator.
 export fn dashboard(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Dashboard, Problem.Problem] {
   let overview = AdminApi.overview(&runtime.gateway, session.accessToken) ?
   let reports = AdminApi.reports(&runtime.gateway, session.accessToken) ?
-  Ok(Dashboard{overview: overview, reports: reports})
+  let reviews = ReviewsApi.queue(&runtime.gateway, session.accessToken) ?
+  Ok(Dashboard{overview: overview, reports: reports, reviews: reviews})
 }
 
 /// Dismisses a report, or acts on it, which cancels the event.

@@ -1,0 +1,155 @@
+/** @View.Pages.Place.Results — one permanent place: facts of its category, hours, contact, and map */
+module View.Pages.Place
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Review as Review
+import I18n.Dates as Dates
+import I18n.Format as Format
+import I18n.Translate as Translate
+import Utils.Text as Text
+import View.Components.Facts as Facts
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Components.PlaceCard as PlaceCard
+import View.Components.Reviews as Reviews
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// Weekdays in the order a week is read in Puerto Rico, Monday first; Sunday is 0.
+const WEEK: Array[Int] = [1, 2, 3, 4, 5, 6, 0]
+
+/// The place page.
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
+  let card = detail.card
+  let path = Routes.PLACE_PREFIX + card.slug
+  let category = Catalog.category(catalog, card.category.slug)
+  let fields = match category {
+    case Some(found) => Catalog.fieldsFor(&found, Catalog.PLACE)
+    case None => []
+  }
+  let indexable = card.status == "published"
+  let meta = Seo.Meta {
+    ..Seo.meta(card.name, Text.truncate(card.summary, 160), path, indexable),
+    image: PlaceCard.coverOf(&card),
+    structured: if indexable { [Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (Format.categoryName(&frame.locale, &card.category), Routes.CATEGORY_PREFIX + card.category.slug), (card.name, path)])] } else { [] }
+  }
+  Layout.page(frame, &meta, Layout.Explore, H.article().class("event place").holding([
+        H.div().class("event-cover").holding([H.img().src(PlaceCard.coverOf(&card)).alt("").at("fetchpriority", "high").at("width", "1280").at("height", "720")]),
+        H.div().class("event-layout").holding([
+            H.div().class("event-main").holding([
+                heading(frame, detail),
+                if card.status == "hidden" { H.div().class("banner").role("status").says(Frame.t(frame, "place.hidden_notice")) } else { H.nothing() },
+                H.section().class("panel prose").holding([
+                    H.p().class("lead").says(card.summary),
+                    H.div().holding(detail.description.split("\n\n").filter(|part: Str| !part.trim().isEmpty()).map(|part: Str| H.p().says(part.trim())))
+                  ]),
+                facts(frame, &card, &fields, detail),
+                hours(frame, &card),
+                location(frame, detail),
+                Reviews.section(frame, card.slug, board, draft, problem)
+              ]),
+            H.aside().class("event-side").holding([contact(frame, detail), owner(frame, detail)])
+          ])
+      ]))
+}
+
+/// Name, category, town, verification, rating, and whether it is open now.
+fn heading(frame: &Frame.Frame, detail: &Place.Detail) -> H.Node {
+  let card = detail.card
+  H.header().class("event-head").holding([
+      H.a().class("chip chip-small").href(Routes.CATEGORY_PREFIX + card.category.slug).holding([Icons.sized(card.category.icon, 16), H.span().says(Format.categoryName(&frame.locale, &card.category))]),
+      H.h1().class("event-title").says(card.name),
+      H.ul().class("event-lines").holding([
+          H.li().holding([Icons.sized("pin", 18), H.span().holding([H.a().class("text-link").href(Routes.TOWN_PREFIX + card.municipality.slug).says(card.municipality.name)])]),
+          if card.verified { H.li().holding([Icons.sized("check", 18), H.span().says(Frame.t(frame, "place.verified"))]) } else { H.nothing() },
+          H.li().holding([Icons.sized("star", 18), H.span().says(match Place.ratingText(&card) {
+                  case Some(average) => average + " · " + Translate.count(&frame.locale, "place.reviews", card.ratingCount)
+                  case None => Frame.t(frame, "place.no_reviews")
+                })]),
+          match PlaceCard.openNow(frame, &card) {
+            case Some(true) => H.li().class("is-open").holding([Icons.sized("clock", 18), H.span().says(Frame.t(frame, "place.open_now"))])
+            case Some(false) => H.li().holding([Icons.sized("clock", 18), H.span().says(Frame.t(frame, "place.closed_now"))])
+            case None => H.nothing()
+          }
+        ])
+    ])
+}
+
+/// The category's facts about this place.
+fn facts(frame: &Frame.Frame, card: &Place.Listing, fields: &Array[Catalog.Field], detail: &Place.Detail) -> H.Node {
+  let list = Facts.list(frame, fields, &detail.details)
+  if list == H.nothing() { return H.nothing() }
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.tf(frame, "place.facts_title", &[("category", Format.categoryName(&frame.locale, &card.category))])),
+      list
+    ])
+}
+
+/// The weekly opening hours, Monday first, with today marked.
+fn hours(frame: &Frame.Frame, card: &Place.Listing) -> H.Node {
+  if !Place.hasHours(&card.hours) { return H.nothing() }
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "place.hours")),
+      H.dl().class("hours").holding(WEEK.map(|day: Int| {
+            let ranges = Place.rangesOf(&card.hours, day)
+            H.div().class("hours-row").holding([
+                H.dt().says(Dates.weekday(&frame.locale, day)),
+                H.dd().says(if ranges.isEmpty() { Frame.t(frame, "place.closed") } else { ranges.map(|range: (Str, Str)| range[0] + "–" + range[1]).join(", ") })
+              ])
+          }))
+    ])
+}
+
+/// The exact public location with directions.
+fn location(frame: &Frame.Frame, detail: &Place.Detail) -> H.Node {
+  let card = detail.card
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "event.where")),
+      H.div().class("mini-map").data("feature", "mini-map").data("lat", show(card.lat)).data("lng", show(card.lng)).data("exact", "1").role("img").label(Frame.tf(frame, "event.map_label", &[("place", card.name + ", " + card.municipality.name)])),
+      H.p().class("muted").says(if detail.addressLine.isEmpty() { card.municipality.name } else { detail.addressLine + ", " + card.municipality.name }),
+      H.a().class("button button-ghost button-small").href("https://www.google.com/maps/dir/?api=1&destination=" + show(card.lat) + "," + show(card.lng)).rel("noopener").at("target", "_blank").holding([Icons.sized("navigation", 16), H.span().says(Frame.t(frame, "event.directions"))])
+    ])
+}
+
+/// Phone and website, when the place gives them.
+fn contact(frame: &Frame.Frame, detail: &Place.Detail) -> H.Node {
+  if detail.phone == None && detail.website == None { return H.nothing() }
+  H.section().class("panel place-contact").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "place.contact")),
+      match detail.phone {
+        case Some(phone) => H.a().class("button button-block").href("tel:" + phone.replace(" ", "")).holding([Icons.sized("message", 18), H.span().says(phone)])
+        case None => H.nothing()
+      },
+      match detail.website {
+        case Some(site) => H.a().class("button button-ghost button-block").href(site).rel("noopener nofollow").at("target", "_blank").holding([Icons.sized("globe", 18), H.span().says(Frame.t(frame, "place.website"))])
+        case None => H.nothing()
+      }
+    ])
+}
+
+/// The owner's controls: edit, and publish or hide.
+fn owner(frame: &Frame.Frame, detail: &Place.Detail) -> H.Node {
+  if !detail.viewer.isOwner { return H.nothing() }
+  let base = Routes.PLACE_PREFIX + detail.card.slug
+  let hidden = detail.card.status == "hidden"
+  H.section().class("panel").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "place.manage")),
+      H.a().class("button button-ghost button-block").href(base + "/edit").holding([Icons.sized("edit", 18), H.span().says(Frame.t(frame, "place.edit"))]),
+      H.form().action(base + "/status").method("post").holding([
+          Form.token(frame),
+          H.input().kind("hidden").name("visible").value(if hidden { "1" } else { "0" }),
+          H.button().submit().class("button button-ghost button-block").holding([Icons.sized(if hidden { "eye" } else { "pause" }, 18), H.span().says(Frame.t(frame, if hidden { "place.publish_again" } else { "place.hide" }))])
+        ])
+    ])
+}
+
+/// The owner's name, for the attribution under a place card in a member's own list.
+export fn ownerName(detail: &Place.Detail) -> Str { Option.unwrapOr(Option.map(detail.owner, |found: Place.Owner| found.displayName), "") }

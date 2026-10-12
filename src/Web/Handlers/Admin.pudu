@@ -19,7 +19,8 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   let held = *app
   [
     Route.get(Routes.ADMIN, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| dashboard(&held, &visitor, &session))),
-    Route.post(Routes.ADMIN_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| resolve(&held, &visitor, &session)))
+    Route.post(Routes.ADMIN_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| resolve(&held, &visitor, &session))),
+    Route.post(Routes.ADMIN_REVIEW, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| resolveReview(&held, &visitor, &session)))
   ]
 }
 
@@ -36,6 +37,15 @@ fn resolve(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sess
   let id = Option.unwrapOr(Serve.param(visitor, "id").toInt(), 0)
   let act = Form.text(&Serve.fields(visitor), "decision") == "act"
   match Serve.ask(app, &app.kinds.resolve, Serve.signed(session, Messages.Resolution{reportId: id, act: act})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ADMIN), "flash.report_resolved")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Keeps a reported review or removes it.
+fn resolveReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let decision = Messages.ReviewDecision{reviewId: Serve.param(visitor, "id"), keep: Form.text(&Serve.fields(visitor), "decision") == "keep"}
+  match Serve.ask(app, &app.kinds.resolveReview, Serve.signed(session, decision)) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ADMIN), "flash.report_resolved")
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }

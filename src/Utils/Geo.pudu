@@ -1,7 +1,12 @@
 /** @Utils.Geo.Island — coordinates on and around Puerto Rico */
 module Utils.Geo
 
+import Std.Math.Float as Float
+import Std.Option as Option
 import Constants.App as App
+
+/// Metres in one degree of latitude.
+const METERS_PER_DEGREE: Float64 = 111320.0
 
 /// Whether a point lies within the bounding box of Puerto Rico and its islands.
 export fn inPuertoRico(lat: Float64, lng: Float64) -> Bool {
@@ -17,4 +22,20 @@ export fn distanceLabel(meters: Int) -> Str {
   if meters >= 10000 { return show((meters + 500) / 1000) + " km" }
   let tenths = (meters + 50) / 100
   show(tenths / 10) + "." + show(tenths % 10) + " km"
+}
+
+/// Whole metres between two points, by an equirectangular approximation that stays within a
+/// fraction of a percent at the scale of the island.
+export fn metersBetween(fromLat: Float64, fromLng: Float64, toLat: Float64, toLng: Float64) -> Int {
+  let north = (toLat - fromLat) * METERS_PER_DEGREE
+  let east = (toLng - fromLng) * METERS_PER_DEGREE * Float.cos(Float.radians((fromLat + toLat) / 2.0))
+  wholeOf(Float.hypot(north, east))
+}
+
+/// The nearest whole number to a nonnegative amount below ten million; zero for anything else.
+fn wholeOf(amount: Float64) -> Int {
+  if !(amount >= 0.0 && amount < 10000000.0) { return 0 }
+  let written = show(Float.round(amount))
+  let point = written.indexOf(".")
+  Option.unwrapOr((if point < 0 { written } else { written.take(point) }).toInt(), 0)
 }

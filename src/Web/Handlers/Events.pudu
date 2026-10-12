@@ -7,6 +7,7 @@ import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Http as HttpConstants
 import Constants.Routes as Routes
+import Domain.Catalog as Catalog
 import Domain.Draft as Draft
 import Domain.Event as Event
 import Domain.Problem as Problem
@@ -16,6 +17,7 @@ import View.Calendar as Calendar
 import View.Pages.Event as EventPage
 import View.Pages.EventForm as EventForm
 import Web.Context as Context
+import Web.Handlers.Places as Places
 import Web.Respond as Respond
 import Web.Serve as Serve
 
@@ -47,7 +49,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   [
     Route.get(Routes.EVENT, Serve.page(app, |visitor: Context.Visitor| eventPage(&held, &visitor, None))),
     Route.get(Routes.EVENT_CALENDAR, Serve.api(app, |visitor: Context.Visitor| calendar(&held, &visitor))),
-    Route.get(Routes.CREATE, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| publishForm(&held, &visitor, &EventForm.Creating, &Draft.blank(), None))),
+    Route.get(Routes.CREATE, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| startPublishing(&held, &visitor))),
     Route.post(Routes.CREATE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| publish(&held, &visitor, &session))),
     Route.get(Routes.EVENT_EDIT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| editForm(&held, &visitor, &session))),
     Route.post(Routes.EVENT_EDIT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| update(&held, &visitor, &session))),
@@ -78,6 +80,22 @@ fn calendar(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
         ("cache-control", HttpConstants.CACHE_PRIVATE)
       ] }
     case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// Publishing starts by choosing a category; a chosen category that takes activities opens the
+/// activity form with it selected, and one that takes only places opens the place form.
+fn startPublishing(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let category = Serve.query(visitor, "category")
+  if category.isEmpty() { return Places.chooser(app, visitor) }
+  match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => match Catalog.category(&catalog, category) {
+      case Some(found) => if Catalog.takes(&found, Catalog.ACTIVITY) {
+        publishForm(app, visitor, &EventForm.Creating, &Draft.Draft{..Draft.blank(), category: category}, None)
+      } else { Respond.redirect(Routes.CREATE_PLACE + "?category=" + category) }
+      case None => Places.chooser(app, visitor)
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
 

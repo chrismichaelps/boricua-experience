@@ -1,9 +1,9 @@
-import { ENDPOINTS, LIVE } from '../constants/config.js?v=46';
-import { message } from '../constants/messages.js?v=46';
-import { postJson } from '../net/http.js?v=46';
-import { distanceM, readingOf } from '../utils/geo.js?v=46';
-import { requestLocation } from '../utils/locate.js?v=46';
-import { toast } from './toast.js?v=46';
+import { ENDPOINTS, LIVE } from '../constants/config.js?v=52';
+import { message } from '../constants/messages.js?v=52';
+import { postJson } from '../net/http.js?v=52';
+import { distanceM, readingOf } from '../utils/geo.js?v=52';
+import { requestLocation } from '../utils/locate.js?v=52';
+import { toast } from './toast.js?v=52';
 
 const listeners = new Set(), statuses = new Set();
 const status = value => { for (const listener of statuses) listener(value); };
@@ -64,7 +64,9 @@ export function startWatching() {
     try {
       const id = navigator.geolocation.watchPosition(
         next => { if (ticket === epoch) onPosition(next); },
-        error => { if (ticket === epoch) onError(error); },
+        // After a fix, an unavailable or timed-out reading is transient: keep the last position and
+        // keep watching; only a denial, or a watch that never produced a reading, stops locating.
+        error => { if (ticket === epoch && (error?.code === 1 || !lastReading)) onError(error); },
         {...LIVE.watch, enableHighAccuracy:false});
       if (ticket === epoch) watchId = id; else navigator.geolocation.clearWatch(id);
     } catch { if (ticket === epoch) onError({code:2}); }

@@ -52,3 +52,5 @@ Geometry is converted deterministically into paths for the server renderer. Orig
 - `chip` → `cpu`
 - `moon` → `moon`
 - `star` → `star`
+
+`bed` (Lodging) is an original drawing in the same 24-unit stroke style; it is not taken from Lucide.

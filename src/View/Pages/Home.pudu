@@ -4,10 +4,14 @@ module View.Pages.Home
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Std.Html as HtmlText
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Search as Search
 import Services.Discovery as Discovery
+import Utils.Query as Query
 import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Icons as Icons
@@ -26,23 +30,45 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
         SearchControls.chips(frame, catalog, ""),
         EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, Routes.SEARCH),
         EventCard.rail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
-        nearTile(frame),
+        H.div().class("near-slot").data("feature", "near-rail").data("src", Routes.API_HOME_NEAR),
+        nearTile(frame, catalog),
         EventCard.rail(frame, "rail-soon", Frame.t(frame, "home.soon"), &home.soon, Routes.SEARCH),
         EventCard.rail(frame, "rail-free", Frame.t(frame, "home.free"), &home.free, Routes.SEARCH + "?free=1&when=week"),
+        EventCard.rail(frame, "rail-gems", Frame.t(frame, "home.gems"), &home.gems, ""),
         createTile(frame),
         directory(frame, catalog)
       ]))
 }
 
-/// The blue promotional tile inviting the visitor to see what is near.
-fn nearTile(frame: &Frame.Frame) -> H.Node {
+/// The blue promotional tile inviting the visitor to see what is near: by device location, or by
+/// choosing a town and a radius, which needs no location permission at all.
+fn nearTile(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
+  var towns = H.select().name("cerca").id("near-town").required()
+  towns = towns.holding([H.option().value("").says(Frame.t(frame, "home.near_pick_town"))])
+  for town in catalog.municipalities { towns = towns.holding([H.option().value(town.slug).says(town.name)]) }
   H.section().class("promo").holding([
       H.div().class("promo-copy").holding([
           H.h2().says(Frame.t(frame, "home.near_title")),
           H.p().says(Frame.t(frame, "home.near_body"))
         ]),
-      H.a().class("button button-light").href(Routes.MAP + "?near=1").holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "home.near_action"))])
+      H.div().class("promo-actions").holding([
+          H.a().class("button button-light").href(Routes.MAP + "?near=1").holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "home.near_action"))]),
+          H.form().class("near-form").action(Routes.SEARCH).method("get").holding([
+              H.labelFor().class("sr-only").at("for", "near-town").says(Frame.t(frame, "search.near")),
+              towns,
+              H.labelFor().class("sr-only").at("for", "near-radius").says(Frame.t(frame, "search.radius")),
+              SearchControls.radiusSelect(frame, Search.DEFAULT_RADIUS_KM, "near-radius"),
+              H.button().submit().class("button button-light button-small").says(Frame.t(frame, "home.near_go"))
+            ])
+        ])
     ])
+}
+
+/// The rail of events around the visitor's remembered town, as markup the home page script inserts.
+export fn nearRail(frame: &Frame.Frame, town: Str, filters: &Search.Filters, cards: &Array[Event.Card]) -> Str {
+  let more = Routes.SEARCH + Query.render(&[("cerca", filters.near), ("radio", show(Search.radiusKm(filters)))])
+  let title = Frame.tf(frame, "home.near_town", &[("town", town), ("km", show(Search.radiusKm(filters)))])
+  HtmlText.render(&EventCard.rail(frame, "rail-near", title, &cards.slice(0, if cards.length() < 10 { cards.length() } else { 10 }), more).html())
 }
 
 /// The tile inviting the visitor to publish their own activity.

@@ -1,5 +1,5 @@
-import { MAP } from '../constants/config.js?v=46';
-import { distanceM } from '../utils/geo.js?v=46';
+import { MAP } from '../constants/config.js?v=52';
+import { distanceM } from '../utils/geo.js?v=52';
 
 export function visiblePins(pins, project, width, height, covered = 0) {
   return pins.filter((pin) => {
@@ -18,9 +18,14 @@ export function viewportQuery(center, bounds) {
   return { ...point, radius: Math.min(MAP.maxRadiusM, Math.ceil(Math.max(...corners.map((corner) => distanceM(point, corner))))) };
 }
 
+// The camera rectangle the visitor can see, or null while the canvas has no measurable area. When a
+// sheet covers the whole canvas the full canvas is used, so a query is never a single point.
 export function viewportBounds(map, width, height, covered = 0) {
+  if (!(width >= MAP.minViewportPx && height >= MAP.minViewportPx)) return null;
+  const visible = height - covered >= MAP.minViewportPx ? height - covered : height;
   const topLeft = map.unproject([0, 0]);
-  const bottomRight = map.unproject([width, Math.max(0, height - covered)]);
+  const bottomRight = map.unproject([width, visible]);
   const round = (value) => Math.round(value * 100000) / 100000;
-  return { west: round(Math.max(-180, topLeft.lng)), north: round(Math.min(85, topLeft.lat)), east: round(Math.min(180, bottomRight.lng)), south: round(Math.max(-85, bottomRight.lat)) };
+  const area = { west: round(Math.max(-180, topLeft.lng)), north: round(Math.min(85, topLeft.lat)), east: round(Math.min(180, bottomRight.lng)), south: round(Math.max(-85, bottomRight.lat)) };
+  return area.west < area.east && area.south < area.north ? area : null;
 }

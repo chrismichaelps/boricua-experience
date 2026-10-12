@@ -2,15 +2,64 @@
 module Domain.Catalog
 
 import Std.Json as Json
+import Std.Option as Option
+import Utils.Geo as Geo
 
-/** @Domain.Catalog.Category — a kind of activity */
+/** @Domain.Catalog.Choice — one option of a choice or flags fact, in both languages */
+export type Choice = { value: Str, @json("label_es") labelEs: Str, @json("label_en") labelEn: Str } derives Json.Decode
+
+/** @Domain.Catalog.Field — one fact a category asks for on a place or an activity (ADR-0010) */
+export type Field = {
+  kind: Str,
+  key: Str,
+  @json("type") shape: Str,
+  @json("label_es") labelEs: Str,
+  @json("label_en") labelEn: Str,
+  @default("\"\"") @json("hint_es") hintEs: Str,
+  @default("\"\"") @json("hint_en") hintEn: Str,
+  @default("[]") options: Array[Choice],
+  @default("null") min: Option[Float64],
+  @default("null") max: Option[Float64],
+  @default("null") @json("max_length") maxLength: Option[Int],
+  @default("false") required: Bool,
+  @default("null") highlight: Option[Int]
+} derives Json.Decode
+
+/** @Domain.Catalog.Category — a kind of listing, with the kinds it takes and their facts */
 export type Category = {
   slug: Str,
   @json("name_es") nameEs: Str,
   @json("name_en") nameEn: Str,
   icon: Str,
-  @default("0") upcoming: Int
+  @default("0") upcoming: Int,
+  @default("0") places: Int,
+  @default("[\"activity\"]") kinds: Array[Str],
+  @default("\"activity\"") @json("default_kind") defaultKind: Str,
+  @default("[]") fields: Array[Field]
 } derives Json.Decode
+
+/// Listing kinds.
+export const PLACE: Str = "place"
+export const ACTIVITY: Str = "activity"
+
+/// Whether a category takes listings of a kind.
+export fn takes(held: &Category, kind: Str) -> Bool { held.kinds.contains(kind) }
+
+/// The facts a category asks for on a kind of listing, in their order.
+export fn fieldsFor(held: &Category, kind: Str) -> Array[Field] { held.fields.filter(|field: Field| field.kind == kind) }
+
+/// The highlighted facts of a kind, in highlight order.
+export fn highlights(held: &Category, kind: Str) -> Array[Field] {
+  fieldsFor(held, kind).filter(|field: Field| field.highlight != None).sortBy(|a: Field, b: Field| Option.unwrapOr(a.highlight, 9) < Option.unwrapOr(b.highlight, 9))
+}
+
+/// The option of a choice with a value.
+export fn choiceOf(field: &Field, value: Str) -> Option[Choice] {
+  for found in field.options {
+    if found.value == value { return Some(found) }
+  }
+  None
+}
 
 /** @Domain.Catalog.Municipality — one of the 78 municipalities */
 export type Municipality = { slug: Str, name: Str, region: Str, lat: Float64, lng: Float64 } derives Json.Decode
@@ -44,4 +93,17 @@ export fn municipality(catalog: &Catalog, slug: Str) -> Option[Municipality] {
     if found.slug == slug { return Some(found) }
   }
   None
+}
+
+/** @Domain.Catalog.Neighbor — a municipality and its distance from another */
+export type Neighbor = { town: Municipality, meters: Int }
+
+/// The municipalities nearest to a town by centroid, nearest first, without the town itself.
+export fn neighbors(catalog: &Catalog, town: &Municipality, count: Int) -> Array[Neighbor] {
+  var found: Array[Neighbor] = []
+  for other in catalog.municipalities {
+    if other.slug != town.slug { found = found.push(Neighbor{town: other, meters: Geo.metersBetween(town.lat, town.lng, other.lat, other.lng)}) }
+  }
+  let ordered = found.sortBy(|a: Neighbor, b: Neighbor| a.meters < b.meters)
+  ordered.slice(0, if ordered.length() < count { ordered.length() } else { count })
 }

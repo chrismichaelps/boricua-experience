@@ -7,6 +7,7 @@ import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Admin as Admin
+import Domain.Review as Review
 import Services.Admin as AdminService
 import View.Components.Form as Form
 import View.Components.Notice as Notice
@@ -34,8 +35,27 @@ export fn render(frame: &Frame.Frame, dashboard: &AdminService.Dashboard) -> Htm
             tile(Frame.t(frame, "admin.views_week"), o.views7d),
             tile(Frame.t(frame, "admin.live_now"), o.liveNow),
             tile(Frame.t(frame, "admin.reports_open"), o.reportsOpen),
-            tile(Frame.t(frame, "admin.data_requests"), o.dataRequestsOpen)
+            tile(Frame.t(frame, "admin.data_requests"), o.dataRequestsOpen),
+            tile(Frame.t(frame, "admin.places"), o.places),
+            tile(Frame.t(frame, "admin.reviews_week"), o.reviews7d),
+            tile(Frame.t(frame, "admin.review_reports_open"), o.reviewReportsOpen)
           ]),
+        H.h2().class("section-title").says(Frame.t(frame, "admin.review_queue")),
+        if dashboard.reviews.isEmpty() { Notice.empty("check", Frame.t(frame, "admin.no_review_reports"), "", H.nothing()) } else {
+          H.ul().class("requests").holding(dashboard.reviews.map(|review: Review.ReportedReview| H.li().class("request").holding([
+                  H.div().holding([
+                      H.a().class("text-link").href(Routes.PLACE_PREFIX + review.place.slug + "#reviews").says(review.place.name),
+                      H.p().class("muted small").says(show(review.rating) + " ★ · " + Option.unwrapOr(review.authorName, "—") + (if review.status == "held" { " · " + Frame.t(frame, "admin.review_held") } else { "" }))
+                    ]),
+                  H.blockquote().says(review.body),
+                  H.ul().class("muted small").holding(review.reports.map(|complaint: Review.ReviewComplaint| H.li().says(Frame.t(frame, "review.reason_" + complaint.reason) + (if complaint.detail.isEmpty() { "" } else { ": " + complaint.detail })))),
+                  H.form().class("request-actions").action(Routes.ADMIN_REVIEW.replace(":id", review.id)).method("post").holding([
+                      Form.token(frame),
+                      H.button().submit().name("decision").value("keep").class("button button-ghost button-small").says(Frame.t(frame, "admin.keep_review")),
+                      H.button().submit().name("decision").value("remove").class("button button-danger button-small").says(Frame.t(frame, "admin.remove_review"))
+                    ])
+                ])))
+        },
         H.h2().class("section-title").says(Frame.t(frame, "admin.reports")),
         if dashboard.reports.isEmpty() { Notice.empty("check", Frame.t(frame, "admin.no_reports"), "", H.nothing()) } else {
           H.ul().class("requests").holding(dashboard.reports.map(|report: Admin.Report| H.li().class("request").holding([

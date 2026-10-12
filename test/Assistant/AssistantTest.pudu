@@ -36,7 +36,7 @@ fn main() -> Int {
   let projection = Json.encode(&Conversation.source(&page.items[0]))
   let body = "test body"
   let signature = Bytes.encodeHex(&Crypto.hmacSha256(&key, &Bytes.fromText("boricua-assistant:prepare:" + body)))
-  let category = Reference.Category{slug: page.items[0].category.slug, nameEs: page.items[0].category.nameEs, nameEn: page.items[0].category.nameEn, icon: "music", upcoming: 1}
+  let category = Reference.Category{slug: page.items[0].category.slug, nameEs: page.items[0].category.nameEs, nameEn: page.items[0].category.nameEn, icon: "music", upcoming: 1, places: 0, kinds: ["activity"], defaultKind: "activity", fields: []}
   let towns = [Reference.Municipality{slug: "fixture-town", name: "Fixture Town", region: "fixture", lat: 18.4, lng: -66.1}].concat(List.replicate(30, Reference.Municipality{slug: "other", name: "Other", region: "other", lat: 18.4, lng: -66.1}))
   let _cached = Sync.set(&runtime.catalog, Some((Time.now().millis, Reference.Catalog{categories: [category], municipalities: towns, scenes: []})))
   let catalogArgs = Json.object(&[("scope", Json.Text("categories")), ("query", Json.Text(""))])

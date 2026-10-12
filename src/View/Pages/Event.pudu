@@ -42,6 +42,7 @@ export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Pr
                 reactions(frame, detail),
                 about(frame, detail),
                 facts(frame, detail),
+                otherDates(frame, detail),
                 place(frame, detail),
                 People.organizer(frame, &detail.organizer, detail.source == "curated"),
                 if detail.source == "curated" { H.nothing() } else { People.attendees(frame, &detail.attendees, Routes.SIGN_IN + "?return=" + path) },
@@ -143,6 +144,17 @@ fn facts(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
           H.dt().says(Frame.t(frame, "event.joining")), H.dd().says(Frame.t(frame, if detail.source == "curated" { "event.external_body" } else if Event.needsApproval(&card) { "event.policy_approval_long" } else { "event.policy_open_long" })),
           H.dt().says(Frame.t(frame, "event.visibility")), H.dd().says(Frame.t(frame, "visibility." + card.visibility))
         ])
+    ])
+}
+
+/// The other upcoming dates of a recurring activity, each linking to its own page.
+fn otherDates(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  if detail.otherDates.isEmpty() { return H.nothing() }
+  H.section().class("panel").at("aria-labelledby", "other-dates").holding([
+      H.h2().class("section-title").id("other-dates").says(Frame.t(frame, "event.other_dates")),
+      H.ul().class("date-list").holding(detail.otherDates.map(|date: Event.Occurrence| H.li().holding([
+            H.a().class("date-link").href(Routes.EVENT_PREFIX + date.slug).holding([Icons.sized("calendar", 16), H.span().holding([Moment.schedule(frame, date.startsAt, date.endsAt)])])
+          ])))
     ])
 }
 

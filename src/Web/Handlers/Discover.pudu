@@ -5,15 +5,19 @@ import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Json as Json
 import Std.Option as Option
+import Std.Result as Result
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.App as App
+import Constants.Cookies as Cookies
+import Constants.Http as HttpConstants
 import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Problem as Problem
 import Domain.Search as Search
+import Utils.Cookie as Cookie
 import Utils.Geo as Geo
 import View.Pages.Home as HomePage
 import View.Pages.Map as MapPage
@@ -32,19 +36,23 @@ export fn filtersOf(visitor: &Context.Visitor) -> Search.Filters {
     case _ => false
   }
   let query = read("q").trim()
+  let near = if located { "" } else { read("cerca").trim() }
+  let radius = Search.radiusFrom(read("radio"))
   let asked = Search.sortFrom(read("sort"))
+  let unsorted = read("sort").isEmpty()
   Search.Filters {
     query: query,
     category: read("category"),
     municipality: read("pueblo"),
+    near: near,
     window: Search.windowFrom(read("when")),
     freeOnly: read("free") == "1",
     maxPriceCents: None,
     viewport: None,
     lat: if located { lat } else { None },
     lng: if located { lng } else { None },
-    radiusM: if located { Some(Limits.NEARBY_RADIUS_M * 2) } else { None },
-    sort: if read("sort").isEmpty() && !query.isEmpty() { Search.Relevant } else { asked },
+    radiusM: if located { Some(Option.unwrapOr(radius, Limits.NEARBY_RADIUS_M * 2)) } else if near.isEmpty() { None } else { radius },
+    sort: if unsorted && !query.isEmpty() { Search.Relevant } else if unsorted && (located || !near.isEmpty()) { Search.Near } else { asked },
     after: read("after")
   }
 }
@@ -60,7 +68,8 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.MAP, Serve.page(app, |visitor: Context.Visitor| map(&held, &visitor))),
     Route.get(Routes.API_SUGGEST, Serve.api(app, |visitor: Context.Visitor| suggest(&held, &visitor))),
     Route.get(Routes.API_MAP, Serve.api(app, |visitor: Context.Visitor| viewport(&held, &visitor))),
-    Route.get(Routes.API_NEARBY, Serve.api(app, |visitor: Context.Visitor| nearby(&held, &visitor)))
+    Route.get(Routes.API_NEARBY, Serve.api(app, |visitor: Context.Visitor| nearby(&held, &visitor))),
+    Route.get(Routes.API_HOME_NEAR, Serve.api(app, |visitor: Context.Visitor| nearRail(&held, &visitor)))
   ]
 }
 
@@ -78,17 +87,68 @@ fn home(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 
 /// A listing for the filters, inside a landing when one fixes a category or town.
 fn listing(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPage.Landing, filters: Search.Filters) -> Http.Response {
+  listingWith(app, visitor, landing, filters, ("", ""))
+}
+
+/// A listing with the places of a category or town, named as (category, town); both empty for none.
+fn listingWith(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPage.Landing, filters: Search.Filters, placesOf: (Str, Str)) -> Http.Response {
   let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
-  match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, filters)) {
+  let anchored = Search.anchored(&filters, &catalog)
+  match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, anchored)) {
     case Ok(page) => {
-      if Context.wantsJson(visitor) { return Respond.json(200, &pageJson(app, visitor, &filters, &landing, &page)) }
-      Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &filters, &landing, &page))
+      if Context.wantsJson(visitor) { return Respond.json(200, &pageJson(app, visitor, &anchored, &landing, &page)) }
+      // Places are a landing's extra: a failure to read them leaves the activities listed.
+      let places = if (placesOf[0].isEmpty() && placesOf[1].isEmpty()) || !filters.after.isEmpty() { [] } else {
+        Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, placesOf), [])
+      }
+      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places)))
     }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
+}
+
+/// The response remembering the town a visitor chose to search around, or forgetting it when they
+/// chose anywhere; a listing that names no nearby choice leaves the cookie alone.
+fn remembered(app: &Assembly.App, visitor: &Context.Visitor, filters: &Search.Filters, response: Http.Response) -> Http.Response {
+  if !filters.near.isEmpty() {
+    let value = Search.nearValue(filters.near, Option.unwrapOr(filters.radiusM, Search.DEFAULT_RADIUS_KM * 1000))
+    if visitor.cookies.get(Cookies.NEAR) == Some(value) { return response }
+    return Respond.withPreference(app, response, Cookies.NEAR, value)
+  }
+  if Route.queryParam(&visitor.request, "cerca") == Some("") && visitor.cookies.get(Cookies.NEAR) != None {
+    return Respond.withCookie(response, Cookie.expire(Cookies.NEAR, app.runtime.secureCookies))
+  }
+  response
+}
+
+/// The home rail around the visitor's remembered town, as rendered markup for the home page script.
+/// The home page itself stays the same for every guest so that the edge may keep it.
+fn nearRail(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let (town, meters) = match Option.andThen(visitor.cookies.get(Cookies.NEAR), |value: Str| Search.rememberedNear(value)) {
+    case Some(found) => found
+    case None => { return private(Respond.json(200, &Json.object(&[("html", Json.Text(""))]))) }
+  }
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let filters = Search.anchored(&Search.Filters{..Search.everything(), near: town, radiusM: Some(meters), sort: Search.Near}, &catalog)
+  let place = match Catalog.municipality(&catalog, town) {
+    case Some(found) => found.name
+    case None => { return private(Respond.json(200, &Json.object(&[("html", Json.Text(""))]))) }
+  }
+  match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, filters)) {
+    case Ok(page) => private(Respond.json(200, &Json.object(&[("html", Json.Text(HomePage.nearRail(&Context.frame(app, visitor), place, &filters, &page.items)))])))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A script answer that depends on the visitor's cookies and is never kept by a shared cache.
+fn private(response: Http.Response) -> Http.Response {
+  Http.Response{..response, headers: response.headers.concat([("cache-control", HttpConstants.CACHE_PRIVATE), ("vary", "cookie")])}
 }
 
 /// A further page of results for the "load more" script: rendered cards and the next link.
@@ -111,12 +171,12 @@ fn landingPage(app: &Assembly.App, visitor: &Context.Visitor, byCategory: Bool) 
   let filters = filtersOf(visitor)
   if byCategory {
     match Catalog.category(&catalog, slug) {
-      case Some(category) => listing(app, visitor, SearchPage.ForCategory(category), Search.Filters{..filters, category: slug})
+      case Some(category) => listingWith(app, visitor, SearchPage.ForCategory(category), Search.Filters{..filters, category: slug}, (if Catalog.takes(&category, Catalog.PLACE) { slug } else { "" }, ""))
       case None => Respond.problem(app, visitor, &Problem.Missing)
     }
   } else {
     match Catalog.municipality(&catalog, slug) {
-      case Some(town) => listing(app, visitor, SearchPage.ForTown(town), Search.Filters{..filters, municipality: slug})
+      case Some(town) => listingWith(app, visitor, SearchPage.ForTown(town), Search.Filters{..filters, municipality: slug}, ("", slug))
       case None => Respond.problem(app, visitor, &Problem.Missing)
     }
   }
@@ -124,7 +184,11 @@ fn landingPage(app: &Assembly.App, visitor: &Context.Visitor, byCategory: Bool) 
 
 /// The map, with pins for the filters' position or the next events.
 fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
-  let filters = Search.Filters{..filtersOf(visitor), viewport: Some(Search.Viewport{south: App.BOUNDS_SOUTH, west: App.BOUNDS_WEST, north: App.BOUNDS_NORTH, east: App.BOUNDS_EAST})}
+  let located = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => Search.anchored(&filtersOf(visitor), &catalog)
+    case Err(_) => Search.Filters{..filtersOf(visitor), near: ""}
+  }
+  let filters = Search.Filters{..located, viewport: Some(Search.Viewport{south: App.BOUNDS_SOUTH, west: App.BOUNDS_WEST, north: App.BOUNDS_NORTH, east: App.BOUNDS_EAST})}
   match Serve.ask(app, &app.kinds.pins, filters) {
     case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards.items, cards.limited, Serve.query(visitor, "near") == "1"))
     case Err(problem) => Respond.problem(app, visitor, &problem)

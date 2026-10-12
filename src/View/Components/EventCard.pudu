@@ -9,6 +9,7 @@ import Constants.Routes as Routes
 import Domain.Event as Event
 import I18n.Dates as Dates
 import I18n.Format as Format
+import I18n.Translate as Translate
 import View.Components.Icons as Icons
 import View.Components.Moment as Moment
 import View.Frame as Frame
@@ -36,6 +37,7 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
             ]),
           H.div().class("card-body").holding([
               H.p().class("card-when").holding([Moment.when(frame, event.startsAt, event.endsAt, &now)]),
+              if event.moreDates > 0 { H.p().class("card-series").holding([Icons.sized("calendar", 14), H.span().says(Translate.count(&locale, "event.more_dates", event.moreDates))]) } else { H.nothing() },
               H.h3().class("card-title").says(event.title),
               H.p().class("card-place").holding([Icons.sized("pin", 14), H.span().says(event.venueName + " · " + event.municipality.name)]),
               H.div().class("card-meta").holding([

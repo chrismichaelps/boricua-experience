@@ -1,0 +1,261 @@
+/** @Web.Handlers.Places.Routes — place pages, the publishing chooser, publishing, editing, and hiding */
+module Web.Handlers.Places
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Map as Maps
+import Std.Result as Result
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Review as Review
+import Domain.Session as Session
+import Utils.Form as Form
+import View.Pages.Place as PlacePage
+import View.Pages.PlaceForm as PlaceForm
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The draft a posted place form describes: facts are the `d.` fields, hours the `h.` fields.
+export fn draftOf(fields: &Map[Str, Str]) -> Place.Draft {
+  Place.Draft {
+    category: Form.text(fields, "category"),
+    municipality: Form.text(fields, "municipality"),
+    name: Form.text(fields, "name"),
+    summary: Form.text(fields, "summary"),
+    description: Form.paragraph(fields, "description"),
+    addressLine: Form.text(fields, "addressLine"),
+    lat: Form.text(fields, "lat"),
+    lng: Form.text(fields, "lng"),
+    phone: Form.text(fields, "phone"),
+    website: Form.text(fields, "website"),
+    facts: Maps.mapValues(&Maps.filterKeys(fields, |name: Str| name.startsWith("d.")), |value: Str| value.replace("\r\n", "\n").trim()),
+    hours: Maps.mapValues(&Maps.filterKeys(fields, |name: Str| name.startsWith("h.")), |value: Str| value.trim())
+  }
+}
+
+/// The place routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.PLACE, Serve.page(app, |visitor: Context.Visitor| placePage(&held, &visitor))),
+    Route.get(Routes.CREATE_PLACE, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| newForm(&held, &visitor))),
+    Route.post(Routes.CREATE_PLACE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| publish(&held, &visitor, &session))),
+    Route.get(Routes.PLACE_EDIT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| editForm(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_EDIT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| update(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_STATUS, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| setStatus(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_REVIEW, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveReview(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_REVIEW_DELETE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| deleteReview(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_REVIEW_RESPOND, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| respondReview(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_REVIEW_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| reportReview(&held, &visitor, &session)))
+  ]
+}
+
+/// The place page.
+fn placePage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  page(app, visitor, &Review.blank(), None)
+}
+
+/// The place page with its reviews, and the review form as the visitor last wrote it.
+fn page(app: &Assembly.App, visitor: &Context.Visitor, draft: &Review.ReviewDraft, problem: Option[Problem.Problem]) -> Http.Response {
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(found) => { return Respond.problem(app, visitor, &found) }
+  }
+  match Serve.ask(app, &app.kinds.place, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
+    case Ok(detail) => {
+      // Reviews are part of the page, but a place stays readable if they cannot be read.
+      let board = Result.unwrapOr(Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: detail.card.id, after: Serve.query(visitor, "resenas")})), EMPTY_BOARD)
+      let status = match problem {
+        case Some(found) => Problem.status(&found)
+        case None => 200
+      }
+      Respond.page(status, &PlacePage.render(&Context.frame(app, visitor), &catalog, &detail, &board, draft, &problem))
+    }
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// The reviews of a place that could not be read.
+const EMPTY_BOARD: Review.ReviewBoard = Review.ReviewBoard{count: 0, average: None, breakdown: Json.Null, items: [], next: None, mine: None, canReview: false, isOwner: false}
+
+/// The place a review action names, as the member may see it.
+fn placeOf(app: &Assembly.App, visitor: &Context.Visitor) -> Result[Place.Detail, Problem.Problem] {
+  Serve.ask(app, &app.kinds.place, Serve.visit(visitor, Serve.param(visitor, "slug")))
+}
+
+/// The page section a review action returns to.
+fn reviewsOf(slug: Str) -> Str { Routes.PLACE_PREFIX + slug + "#reviews" }
+
+/// Writes the member's review, or shows the form again with what was refused.
+fn saveReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let draft = Review.ReviewDraft{rating: Form.text(&fields, "rating"), body: Form.paragraph(&fields, "body"), visited: Form.text(&fields, "visited")}
+  let place = match placeOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.saveReview, Serve.signed(session, Messages.ReviewSaving{placeId: place.card.id, draft: draft})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(reviewsOf(place.card.slug)), "flash.review_saved")
+    case Err(problem) => match problem {
+      case Problem.Invalid(_) => page(app, &Context.resolve(app, &visitor.request, true), &draft, Some(problem))
+      case Problem.Refused(_) => page(app, &Context.resolve(app, &visitor.request, true), &draft, Some(problem))
+      case Problem.Forbidden => page(app, &Context.resolve(app, &visitor.request, true), &draft, Some(problem))
+      case Problem.Throttled => page(app, &Context.resolve(app, &visitor.request, true), &draft, Some(problem))
+      case _ => Respond.problem(app, visitor, &problem)
+    }
+  }
+}
+
+/// Deletes the member's own review of the place.
+fn deleteReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let place = match placeOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let mine = match Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: place.card.id, after: ""})) {
+    case Ok(board) => board.mine
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match mine {
+    case Some(review) => match Serve.ask(app, &app.kinds.deleteReview, Serve.signed(session, review.id)) {
+      case Ok(_) => Respond.withFlash(app, Respond.redirect(reviewsOf(place.card.slug)), "flash.review_deleted")
+      case Err(problem) => Respond.problem(app, visitor, &problem)
+    }
+    case None => Respond.redirect(reviewsOf(place.card.slug))
+  }
+}
+
+/// The owner's answer to one review.
+fn respondReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  let answer = Messages.ReviewAnswer{reviewId: Serve.param(visitor, "id"), response: Form.paragraph(&Serve.fields(visitor), "response")}
+  match Serve.ask(app, &app.kinds.respondReview, Serve.signed(session, answer)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(reviewsOf(slug)), "flash.answer_saved")
+    case Err(Problem.Invalid(_)) => Respond.withFlash(app, Respond.redirect(reviewsOf(slug)), "review.response_length")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A member's report about one review.
+fn reportReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  let fields = Serve.fields(visitor)
+  let reporting = Messages.ReviewReporting{reviewId: Serve.param(visitor, "id"), reason: Form.text(&fields, "reason"), detail: Form.paragraph(&fields, "detail")}
+  match Serve.ask(app, &app.kinds.reportReview, Serve.signed(session, reporting)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(reviewsOf(slug)), "flash.review_reported")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The chooser of what to publish, shared with the activity routes.
+export fn chooser(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => Respond.page(200, &PlaceForm.chooser(&Context.frame(app, visitor), &catalog))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A new place form for the category the query names; the chooser when it takes no places.
+fn newForm(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let category = Serve.query(visitor, "category")
+  match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => match Catalog.category(&catalog, category) {
+      case Some(found) => if Catalog.takes(&found, Catalog.PLACE) { form(app, visitor, &PlaceForm.Creating, &carried(visitor, category), None) } else { Respond.redirect(Routes.CREATE) }
+      case None => Respond.redirect(Routes.CREATE)
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A blank draft for a category with the shared fields a category switch carried in the query.
+fn carried(visitor: &Context.Visitor, category: Str) -> Place.Draft {
+  let read = |name: Str| Serve.query(visitor, name).trim()
+  Place.Draft {
+    ..Place.blank(category),
+    name: read("name"),
+    summary: read("summary"),
+    description: read("description"),
+    municipality: read("municipality"),
+    addressLine: read("addressLine"),
+    lat: read("lat"),
+    lng: read("lng"),
+    phone: read("phone"),
+    website: read("website")
+  }
+}
+
+/// The place form, filled and annotated.
+fn form(app: &Assembly.App, visitor: &Context.Visitor, mode: &PlaceForm.Mode, draft: &Place.Draft, problem: Option[Problem.Problem]) -> Http.Response {
+  match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(catalog) => {
+      let status = match problem {
+        case Some(found) => Problem.status(&found)
+        case None => 200
+      }
+      Respond.page(status, &PlaceForm.render(&Context.frame(app, visitor), &catalog, mode, draft, &problem))
+    }
+    case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// A form re-rendered with its problem; the visitor is resolved again with the member for the shell.
+fn refused(app: &Assembly.App, visitor: &Context.Visitor, mode: &PlaceForm.Mode, draft: &Place.Draft, problem: &Problem.Problem) -> Http.Response {
+  match problem {
+    case Problem.Invalid(_) => form(app, &Context.resolve(app, &visitor.request, true), mode, draft, Some(*problem))
+    case Problem.Refused(_) => form(app, &Context.resolve(app, &visitor.request, true), mode, draft, Some(*problem))
+    case Problem.Throttled => form(app, &Context.resolve(app, &visitor.request, true), mode, draft, Some(*problem))
+    case _ => Respond.problem(app, visitor, problem)
+  }
+}
+
+/// Publishes the posted place and opens its page.
+fn publish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let draft = draftOf(&Serve.fields(visitor))
+  match Serve.ask(app, &app.kinds.publishPlace, Serve.signed(session, draft)) {
+    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + published.slug), "flash.place_published")
+    case Err(problem) => refused(app, visitor, &PlaceForm.Creating, &draft, &problem)
+  }
+}
+
+/// The edit form of a place the member owns.
+fn editForm(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  match Serve.ask(app, &app.kinds.editablePlace, Serve.signed(session, slug)) {
+    case Ok((_, draft)) => form(app, visitor, &PlaceForm.Editing(slug), &draft, None)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Saves the posted changes to a place the member owns.
+fn update(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  let draft = draftOf(&Serve.fields(visitor))
+  let place = match Serve.ask(app, &app.kinds.editablePlace, Serve.signed(session, slug)) {
+    case Ok((found, _)) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.updatePlace, Serve.signed(session, Messages.PlaceEdit{placeId: place.card.id, draft: draft})) {
+    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + saved.slug), "flash.updated")
+    case Err(problem) => refused(app, visitor, &PlaceForm.Editing(slug), &draft, &problem)
+  }
+}
+
+/// Publishes or hides a place the member owns and returns to its page.
+fn setStatus(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  let visible = Form.text(&Serve.fields(visitor), "visible") == "1"
+  let place = match Serve.ask(app, &app.kinds.editablePlace, Serve.signed(session, slug)) {
+    case Ok((found, _)) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.placeStatus, Serve.signed(session, Messages.PlaceStatus{placeId: place.card.id, visible: visible})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + slug), if visible { "flash.place_shown" } else { "flash.place_hidden" })
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

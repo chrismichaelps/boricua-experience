@@ -1,0 +1,84 @@
+/** @Api.Places.Client — permanent places: search, pages, publishing, and status */
+module Api.Places
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Place as Place
+import Domain.Problem as Problem
+
+/** @Api.Places.SearchArgs — the arguments `search_places` reads */
+export type SearchArgs = {
+  query: Str,
+  category: Str,
+  municipality: Str,
+  lat: Option[Float64],
+  lng: Option[Float64],
+  radiusM: Option[Int],
+  sort: Str,
+  limit: Int,
+  after: Str
+}
+
+/// One page of published places matching the arguments.
+export fn search(gateway: &Gateway.Gateway, args: &SearchArgs) -> Result[Place.Results, Problem.Problem] {
+  Gateway.query(gateway, Supabase.SEARCH_PLACES, &[
+      ("p_query", Gateway.textOrNull(args.query)),
+      ("p_category", Gateway.textOrNull(args.category)),
+      ("p_municipality", Gateway.textOrNull(args.municipality)),
+      ("p_lat", Gateway.fraction(args.lat)),
+      ("p_lng", Gateway.fraction(args.lng)),
+      ("p_radius_m", Gateway.whole(args.radiusM)),
+      ("p_sort", Gateway.text(args.sort)),
+      ("p_limit", Json.Number(args.limit)),
+      ("p_after", Gateway.textOrNull(args.after))
+    ], None, Gateway.Read)
+}
+
+/// A place as the viewer may see it.
+export fn detail(gateway: &Gateway.Gateway, slug: Str, token: Option[Str]) -> Result[Place.Detail, Problem.Problem] {
+  let document = Gateway.call(gateway, Supabase.PLACE_DETAIL, &[("p_slug", Gateway.text(slug))], token, Gateway.Read) ?
+  match Place.decodeDetail(&document) {
+    case Ok(found) => Ok(found)
+    case Err(problem) => Err(Problem.Unavailable(Supabase.PLACE_DETAIL + ": " + Json.explainDecode(&problem)))
+  }
+}
+
+/// The places the member owns, newest first.
+export fn mine(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Place.Listing], Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_PLACES, &[], Some(token), Gateway.Read)
+}
+
+/// The arguments shared by publishing and editing.
+fn readyArguments(ready: &Place.Ready) -> Array[(Str, Json.Json)] {
+  [
+    ("p_category", Gateway.text(ready.category)),
+    ("p_municipality", Gateway.text(ready.municipality)),
+    ("p_name", Gateway.text(ready.name)),
+    ("p_summary", Gateway.text(ready.summary)),
+    ("p_description", Gateway.text(ready.description)),
+    ("p_address_line", Gateway.text(ready.addressLine)),
+    ("p_lat", Gateway.fraction(Some(ready.lat))),
+    ("p_lng", Gateway.fraction(Some(ready.lng))),
+    ("p_phone", Gateway.textOrNull(ready.phone)),
+    ("p_website", Gateway.textOrNull(ready.website)),
+    ("p_hours", ready.hours),
+    ("p_details", ready.details)
+  ]
+}
+
+/// Publishes a place owned by the member.
+export fn create(gateway: &Gateway.Gateway, ready: &Place.Ready, token: Str) -> Result[Place.Published, Problem.Problem] {
+  Gateway.query(gateway, Supabase.CREATE_PLACE, &readyArguments(ready), Some(token), Gateway.Write)
+}
+
+/// Changes a place the member owns.
+export fn update(gateway: &Gateway.Gateway, placeId: Str, ready: &Place.Ready, token: Str) -> Result[Place.Published, Problem.Problem] {
+  Gateway.query(gateway, Supabase.UPDATE_PLACE, &[("p_place_id", Gateway.text(placeId))].concat(readyArguments(ready)), Some(token), Gateway.Write)
+}
+
+/// Publishes or hides a place the member owns.
+export fn setStatus(gateway: &Gateway.Gateway, placeId: Str, status: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.SET_PLACE_STATUS, &[("p_place_id", Gateway.text(placeId)), ("p_status", Gateway.text(status))], Some(token), Gateway.Write) ?
+  Ok(())
+}

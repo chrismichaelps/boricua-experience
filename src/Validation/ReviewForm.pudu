@@ -1,0 +1,42 @@
+/** @Validation.ReviewForm.Opinion — a review checked before it is sent */
+module Validation.ReviewForm
+
+import Std.Option as Option
+import Domain.Problem as Problem
+import Domain.Review as Review
+import Utils.Time as Time
+import Validation.Check as Check
+
+/// Shortest and longest review, matching the database.
+const BODY_MIN: Int = 20
+const BODY_MAX: Int = 2000
+/// Shortest and longest owner answer.
+const RESPONSE_MIN: Int = 2
+const RESPONSE_MAX: Int = 1000
+
+/// The review converted for the database, or `Invalid` naming every refused field. The visit is
+/// a month no later than the current one in Puerto Rico.
+export fn check(draft: &Review.ReviewDraft, today: &Time.Local) -> Result[Review.ReviewReady, Problem.Problem] {
+  var errors: Array[Problem.FieldError] = []
+  let rating = Option.unwrapOr(draft.rating.trim().toInt(), 0)
+  if rating < 1 || rating > 5 { errors = errors.push(Problem.FieldError{field: "rating", key: "review.rating_required"}) }
+  if !Check.lengthWithin(draft.body, BODY_MIN, BODY_MAX) { errors = errors.push(Problem.FieldError{field: "body", key: "review.body_length"}) }
+  let visited = visitOf(draft.visited.trim(), today)
+  if !draft.visited.trim().isEmpty() && visited == None { errors = errors.push(Problem.FieldError{field: "visited", key: "review.visit_invalid"}) }
+  if !errors.isEmpty() { return Err(Problem.Invalid(errors)) }
+  Ok(Review.ReviewReady{rating: rating, body: draft.body.trim(), visitedOn: visited})
+}
+
+/// The first day of a written `YYYY-MM` month from 2000 to the current month, or none.
+fn visitOf(written: Str, today: &Time.Local) -> Option[Str] {
+  if written.length() != 7 || written.indexOf("-") != 4 { return None }
+  let year = written.take(4).toInt() ?
+  let month = written.drop(5).toInt() ?
+  if year < 2000 || month < 1 || month > 12 || year * 12 + month > today.year * 12 + today.month { return None }
+  Some(written + "-01")
+}
+
+/// Whether an owner's answer is empty, which clears it, or of an accepted length.
+export fn responseOk(written: Str) -> Bool {
+  written.trim().isEmpty() || Check.lengthWithin(written, RESPONSE_MIN, RESPONSE_MAX)
+}

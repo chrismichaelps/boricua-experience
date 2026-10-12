@@ -1,0 +1,75 @@
+/** @Domain.Review.Opinions — reviews of places, their summary, and what a reviewer writes */
+module Domain.Review
+
+import Std.Json as Json
+import Std.Option as Option
+
+/** @Domain.Review.ReviewAuthor — who wrote a review */
+export type ReviewAuthor = { id: Option[Str], @json("display_name") displayName: Str, @json("avatar_url") avatarUrl: Option[Str] } derives Json.Decode
+
+/** @Domain.Review.Review — one review as a reader sees it */
+export type Review = {
+  id: Str,
+  rating: Int,
+  body: Str,
+  @json("visited_on") visitedOn: Option[Str],
+  status: Str,
+  @json("created_at") createdAt: Str,
+  @json("updated_at") updatedAt: Str,
+  author: ReviewAuthor,
+  response: Option[Str],
+  @json("response_at") responseAt: Option[Str],
+  @json("is_author") isAuthor: Bool,
+  reported: Bool
+} derives Json.Decode
+
+/** @Domain.Review.ReviewBoard — a place's reviews: summary, a page, and the viewer's own */
+export type ReviewBoard = {
+  count: Int,
+  average: Option[Float64],
+  breakdown: Json.Json,
+  items: Array[Review],
+  next: Option[Str],
+  mine: Option[Review],
+  @json("can_review") canReview: Bool,
+  @json("is_owner") isOwner: Bool
+} derives Json.Decode
+
+/** @Domain.Review.ReviewDraft — the review form's values, as entered */
+export type ReviewDraft = { rating: Str, body: Str, visited: Str }
+
+/** @Domain.Review.ReviewReady — a review validated for the database; the visit is `YYYY-MM-01` */
+export type ReviewReady = { rating: Int, body: Str, visitedOn: Option[Str] }
+
+/** @Domain.Review.ReportedReview — a review waiting for moderation */
+export type ReportedReview = {
+  id: Str,
+  rating: Int,
+  body: Str,
+  status: Str,
+  @json("author_name") authorName: Option[Str],
+  place: ReviewedPlace,
+  @default("[]") reports: Array[ReviewComplaint]
+} derives Json.Decode
+
+/** @Domain.Review.ReviewedPlace — the place a reported review is about */
+export type ReviewedPlace = { slug: Str, name: Str } derives Json.Decode
+
+/** @Domain.Review.ReviewComplaint — one open report about a review */
+export type ReviewComplaint = { reason: Str, detail: Str } derives Json.Decode
+
+/// Report reasons a member may give, in the order the form lists them.
+export const REASONS: Array[Str] = ["spam", "fake", "offensive", "conflict", "other"]
+
+/// How many published reviews gave a number of stars.
+export fn countOf(board: &ReviewBoard, stars: Int) -> Int {
+  Option.unwrapOr(Option.andThen(Json.field(&board.breakdown, show(stars)), |value: Json.Json| Json.asInt(&value)), 0)
+}
+
+/// The draft an existing review fills the form with.
+export fn draftOf(review: &Review) -> ReviewDraft {
+  ReviewDraft{rating: show(review.rating), body: review.body, visited: Option.unwrapOr(Option.map(review.visitedOn, |day: Str| day.take(7)), "")}
+}
+
+/// An empty review form.
+export fn blank() -> ReviewDraft { ReviewDraft{rating: "", body: "", visited: ""} }
