@@ -119,3 +119,17 @@ assert.equal(dateNode.attrs.datetime,'2026-10-18T22:00:00Z');
 assert.equal(dateNode.dataset.moment,'when');
 assert.equal(dateNode.textContent,'Dom 18 oct · 6:00 PM');
 console.log('PASS: refreshed map cards preserve the semantic date child and readable text');
+
+// Use the real date renderer with DOM-like string coercion, rather than its lifecycle stub.
+class TimeNode {
+ constructor(attrs={}, text=''){this.attrs={};this.dataset={};this.children=[];this.textContent=text;for(const[k,v]of Object.entries(attrs)){this.attrs[k]=String(v);if(k.startsWith('data-'))this.dataset[k.slice(5)]=String(v);}}
+ getAttribute(k){return this.attrs[k];}
+ append(...nodes){this.children.push(...nodes);}
+}
+const temporalScope={document:{documentElement:{lang:'es'},querySelectorAll:()=>[]},Intl,Date,Number,Object,Math,create:(_tag,attrs,text)=>new TimeNode(attrs,text)};
+const temporalSource=file=>readFileSync(new URL(file,import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
+vm.runInNewContext(temporalSource('../public/assets/js/constants/messages.js')+temporalSource('../public/assets/js/features/localTime.js')+temporalSource('../public/assets/js/features/explorer.js')+'\nthis.renderSheet=sheetItem;',temporalScope);
+const unknownSheet=temporalScope.renderSheet({slug:'test',starts:'2026-10-12T00:00:00Z',ends:null,when:'Lun · 8:00 PM',title:'Test',place:'PR',price:'Precio no informado'});
+const actualTime=unknownSheet.children[0].children[0].children[1].children[0].children[0];
+assert.equal(actualTime.dataset.ends,'');assert(!actualTime.textContent.includes('1970'));
+console.log('PASS: refreshed null-end sheet uses actual local-time renderer safely');

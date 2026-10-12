@@ -85,3 +85,6 @@ Resolved: Curated cards/detail and activity output label the official source, om
 
 ## Resolved feedback Grill Log · #45
 Add output regressions for confirmation, accessible password controls, noindex signup,404 h1 and absolute event-image URLs. Resolved.
+
+## Unknown event facts Grill Log · #51
+Resolved: nullable prices/end retain explicit unknown state; known free/paid and dates regressions stay covered. No1970 null-date coercion. Unknown schedule24-hour discovery cutoff is separate from actual end. Boundary, malformed input, bilingual output and provider projections need focused tests.

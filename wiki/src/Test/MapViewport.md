@@ -53,3 +53,6 @@ Refreshed-card regression asserts the semantic time child, its instant/style att
 
 ## Map lifecycle regression Grill Log
 Resolved: bounded acquisition and writes, immediate stop plus late-update cleanup, stop/restart barrier, separate control subscriptions, no automatic sharing restoration and map-only assistant omission.
+
+## Nullable schedule rendering Grill Log · #51
+Resolved: refreshed sheet data-ends normalizes null to empty; LocalTime treats malformed ends as unknown. Organizing activity final-state text uses archived when actual end unknown, retaining cancellation precedence. Test actual date renderer with null-end sheet data and bilingual archived output.

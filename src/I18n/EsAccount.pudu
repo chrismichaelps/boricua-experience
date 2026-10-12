@@ -204,7 +204,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("problem.not_found", "No encontramos lo que buscas."),
     ("problem.event_full", "Esta actividad ya está llena."),
     ("problem.event_cancelled", "Esta actividad fue cancelada."),
-    ("problem.event_ended", "Esta actividad ya terminó."),
+    ("problem.event_ended", "Esta actividad ya no acepta solicitudes."),
     ("problem.own_event", "Eres el organizador de esta actividad."),
     ("problem.already_requested", "Ya pediste unirte a esta actividad."),
     ("problem.request_rejected", "El organizador ya respondió tu solicitud."),

@@ -1,14 +1,14 @@
-import { clusterPins } from './mapClusters.js?v=45';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=45';
-import { message } from '../constants/messages.js?v=45';
-import { getJson } from '../net/http.js?v=45';
-import { $, $$, create } from '../utils/dom.js?v=45';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=45';
-import { toast } from './toast.js?v=45';
-import { createMap } from './mapLoader.js?v=45';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=45';
-import * as live from './live.js?v=45';
-import { localizeMoment } from './localTime.js?v=45';
+import { clusterPins } from './mapClusters.js?v=46';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=46';
+import { message } from '../constants/messages.js?v=46';
+import { getJson } from '../net/http.js?v=46';
+import { $, $$, create } from '../utils/dom.js?v=46';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=46';
+import { toast } from './toast.js?v=46';
+import { createMap } from './mapLoader.js?v=46';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=46';
+import * as live from './live.js?v=46';
+import { localizeMoment } from './localTime.js?v=46';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -16,7 +16,7 @@ function sheetItem(pin) {
   const media = create('div', { class: 'card-media' });
   media.append(create('img', { src: pin.cover, alt: '', loading: 'lazy' }), create('span', { class: 'pill pill-light card-price' }, pin.price));
   const body = create('div', { class: 'card-body' });
-  const when = create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends }, pin.when);
+  const when = create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends ?? '' }, pin.when);
   localizeMoment(when);
   const date = create('p', { class: 'card-when' });
   date.append(when);

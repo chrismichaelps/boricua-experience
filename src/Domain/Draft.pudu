@@ -1,6 +1,8 @@
 /** @Domain.Draft.EventForm — an event as an organizer writes it */
 module Domain.Draft
 
+import Std.Option as Option
+
 import Domain.Event as Event
 import Utils.Time as Time
 
@@ -37,17 +39,17 @@ export type Ready = {
   lat: Float64,
   lng: Float64,
   startsAt: Str,
-  endsAt: Str,
+  endsAt: Option[Str],
   visibility: Str,
   joinPolicy: Str,
   capacity: Option[Int],
-  priceCents: Int
+  priceCents: Option[Int]
 }
 
 /** @Domain.Draft.Published — the event a publish or edit produced */
 export type Published = { id: Str, slug: Str }
 
-/// An empty draft: public, approval required, free.
+/// An empty draft: public, approval required, price unknown.
 export fn blank() -> Draft {
   Draft {
     title: "",
@@ -96,14 +98,17 @@ export fn fromDetail(detail: &Event.Detail) -> Draft {
         case None => card.lng
       }),
     startsAt: localOf(card.startsAt),
-    endsAt: localOf(card.endsAt),
+    endsAt: Option.unwrapOr(Option.map(card.endsAt, |value: Str| localOf(value)), ""),
     visibility: card.visibility,
     joinPolicy: card.joinPolicy,
     capacity: match card.capacity {
       case Some(total) => show(total)
       case None => ""
     },
-    price: if card.priceCents == 0 { "" } else { show(card.priceCents / 100) + "." + (if card.priceCents % 100 < 10 { "0" } else { "" }) + show(card.priceCents % 100) }
+    price: match card.priceCents {
+      case Some(cents) => show(cents / 100) + "." + (if cents % 100 < 10 { "0" } else { "" }) + show(cents % 100)
+      case None => ""
+    }
   }
 }
 

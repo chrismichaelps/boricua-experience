@@ -54,3 +54,11 @@ let oversizedBridge=false;
 await assert.rejects(()=>runConversation(context,async()=>{oversizedBridge=true;},'fixture',signal,async()=>{},provider([[{choices:[{delta:{tool_calls:[{index:0,id:'huge',function:{name:'search_activities',arguments:'x'.repeat(1201)}}]},finish_reason:'tool_calls'}]}]])),ChatFailure);
 assert.equal(oversizedBridge,false);
 console.log('PASS: catalog grounding, fragmented tool arguments and oversized-tool rejection');
+
+for (const locale of ['es', 'en']) {
+  let projected;
+  await runConversation({...context, locale}, async () => ({result: {searched:true,activities:[{starts_at:'2026-10-12T00:00:00Z',ends_at:null,price_cents:null}]},sources:[]}), 'fixture',signal,async()=>{},provider([tool('search_activities'),answer],body=>{const message=body.messages.find(m=>m.role==='tool');if(message)projected=JSON.parse(message.content).activities[0];}));
+  assert.equal(projected.ends_at,null);assert.equal(projected.price_cents,null);
+  assert.match(projected.schedule_pr, locale==='en'?/End time not provided/:/Hora de fin no informada/);
+  assert(!projected.schedule_pr.includes('1970'));
+}

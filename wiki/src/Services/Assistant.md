@@ -35,3 +35,6 @@ Resolved: browse_catalog reads live town/category reference data, filters a shor
 
 ## Curated boundary Grill Log · #42
 Resolved: Curated organizer_details returns a publisher with role curator and no organizer or hosted/member statistics. Native public organizer details retain their existing projection. The prompt distinguishes publication from production and treats external availability as unknown.
+
+## Unknown facts Grill Log · #51
+Resolved: system instruction distinguishes null price/end from free/known dates.24-hour discovery policy must not be narrated as actual duration.

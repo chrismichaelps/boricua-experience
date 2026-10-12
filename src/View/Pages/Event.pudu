@@ -211,7 +211,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
   let body = if Event.isCancelled(&card) {
     H.p().class("banner banner-error").says(Frame.t(frame, "event.cancelled_notice"))
   } else if ended && detail.source == "curated" {
-    H.p().class("muted").says(Frame.t(frame, "event.ended"))
+    H.p().class("muted").says(Frame.t(frame, if card.endsAt == None { "event.archived" } else { "event.ended" }))
   } else if detail.source == "curated" {
     H.div().class("join-actions").holding([
         H.p().class("muted small").says(Frame.t(frame, "event.external_body")),
@@ -230,7 +230,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
           ])
       ])
   } else if ended {
-    H.p().class("muted").says(Frame.t(frame, "event.ended"))
+    H.p().class("muted").says(Frame.t(frame, if card.endsAt == None { "event.archived" } else { "event.ended" }))
   } else if !detail.viewer.signedIn {
     H.div().class("join-actions").holding([
         H.a().class("button button-block").href(Routes.SIGN_IN + "?return=" + base).says(Frame.t(frame, "event.sign_in_to_join")),

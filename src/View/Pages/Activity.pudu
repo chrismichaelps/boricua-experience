@@ -46,7 +46,7 @@ export fn render(frame: &Frame.Frame, activity: &ParticipationService.Activity) 
             if activity.organizing.isEmpty() { Notice.empty("plus", Frame.t(frame, "activity.no_organizing"), Frame.t(frame, "activity.no_organizing_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action"))) } else {
               H.div().class("card-grid").holding(activity.organizing.map(|card: Event.Card| H.div().class("activity-item").holding([
                       EventCard.card(frame, &card),
-                      if Event.hasEnded(&card, frame.nowMillis) || Event.isCancelled(&card) { H.p().class("status").says(Frame.t(frame, if Event.isCancelled(&card) { "event.cancelled" } else { "event.ended" })) } else if card.source == "curated" { H.p().class("status").says(Frame.t(frame, "event.official_source")) } else { H.a().class("text-link").href(Routes.EVENT_PREFIX + card.slug + "/requests").says(Frame.tf(frame, "activity.pending_count", &[("count", show(match card.pendingCount {
+                      if Event.hasEnded(&card, frame.nowMillis) || Event.isCancelled(&card) { H.p().class("status").says(Frame.t(frame, if Event.isCancelled(&card) { "event.cancelled" } else if card.endsAt == None { "event.archived" } else { "event.ended" })) } else if card.source == "curated" { H.p().class("status").says(Frame.t(frame, "event.official_source")) } else { H.a().class("text-link").href(Routes.EVENT_PREFIX + card.slug + "/requests").says(Frame.tf(frame, "activity.pending_count", &[("count", show(match card.pendingCount {
                                     case Some(count) => count
                                     case None => 0
                                   }))])) }

@@ -59,7 +59,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, mode: &Mode, dr
                 H.h2().class("section-title").says(Frame.t(frame, "publish.when")),
                 H.div().class("row-2").holding([
                     Form.input(frame, &Form.Field{..field("startsAt", "publish.field_starts", draft.startsAt), kind: "datetime-local"}, &errors, |c: H.Node| c),
-                    Form.input(frame, &Form.Field{..field("endsAt", "publish.field_ends", draft.endsAt), kind: "datetime-local"}, &errors, |c: H.Node| c)
+                    Form.input(frame, &Form.Field{..field("endsAt", "publish.field_ends", draft.endsAt), kind: "datetime-local", required: false}, &errors, |c: H.Node| c)
                   ]),
                 H.p().class("field-hint").says(Frame.t(frame, "publish.hint_time"))
               ]),

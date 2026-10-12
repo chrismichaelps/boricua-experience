@@ -1,6 +1,8 @@
 /** @I18n.Dates.Calendar — dates and times written for a reader */
 module I18n.Dates
 
+import Std.Option as Option
+
 import Std.Time as StdTime
 import Domain.Locale as Locale
 import I18n.Translate as Translate
@@ -76,21 +78,22 @@ export fn relativeDay(locale: &Locale.Locale, starts: &StdTime.Instant, today: &
 }
 
 /// The line a card shows: `Hoy · 7:30 PM`, or `Ahora` while it is happening.
-export fn when(locale: &Locale.Locale, startsAt: Str, endsAt: Str, today: &StdTime.Instant) -> Str {
-  match (Time.parseTimestamp(startsAt), Time.parseTimestamp(endsAt)) {
+export fn when(locale: &Locale.Locale, startsAt: Str, endsAt: Option[Str], today: &StdTime.Instant) -> Str {
+  match (Time.parseTimestamp(startsAt), Time.parseTimestamp(Option.unwrapOr(endsAt, ""))) {
     case (Some(starts), Some(ends)) => {
       if starts.millis <= today.millis && ends.millis > today.millis {
         return Translate.text(locale, "date.happening_now") + " · " + Translate.text(locale, "date.until") + " " + Time.clock12(&Time.local(&ends))
       }
       relativeDay(locale, &starts, today) + " · " + Time.clock12(&Time.local(&starts))
     }
+    case (Some(starts), None) => relativeDay(locale, &starts, today) + " · " + Time.clock12(&Time.local(&starts))
     case _ => ""
   }
 }
 
 /// The full schedule an event page shows: date, start, and end.
-export fn schedule(locale: &Locale.Locale, startsAt: Str, endsAt: Str) -> Str {
-  match (Time.parseTimestamp(startsAt), Time.parseTimestamp(endsAt)) {
+export fn schedule(locale: &Locale.Locale, startsAt: Str, endsAt: Option[Str]) -> Str {
+  match (Time.parseTimestamp(startsAt), Time.parseTimestamp(Option.unwrapOr(endsAt, ""))) {
     case (Some(starts), Some(ends)) => {
       let from = Time.local(&starts)
       let to = Time.local(&ends)
@@ -98,6 +101,7 @@ export fn schedule(locale: &Locale.Locale, startsAt: Str, endsAt: Str) -> Str {
       let first = capitalized(long(locale, &from)) + " · " + Time.clock12(&from)
       if sameDay { first + " – " + Time.clock12(&to) } else { first + " – " + capitalized(long(locale, &to)) + " · " + Time.clock12(&to) }
     }
+    case (Some(starts), None) => capitalized(long(locale, &Time.local(&starts))) + " · " + Time.clock12(&Time.local(&starts)) + " · " + Translate.text(locale, "event.end_unknown")
     case _ => ""
   }
 }

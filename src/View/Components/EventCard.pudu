@@ -32,7 +32,7 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
           H.div().class("card-media").holding([
               H.img().src(coverOf(event)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),
               H.span().class("pill pill-light card-price").says(Format.price(&locale, event.priceCents)),
-              if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if ended { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.ended")) } else if event.source != "curated" && Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
+              if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if ended { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, if event.endsAt == None { "event.archived" } else { "event.ended" })) } else if event.source != "curated" && Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
             ]),
           H.div().class("card-body").holding([
               H.p().class("card-when").holding([Moment.when(frame, event.startsAt, event.endsAt, &now)]),

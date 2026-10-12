@@ -121,3 +121,6 @@ Localized cookie-policy anchors explicitly describe their destination, addressin
 
 ## v0.2.6
 Descriptive bilingual cookie-policy anchors resolve the only failed automated SEO check in the92/100 baseline. Includes the reviewed0.2.5 signup and action-feedback changes.
+
+## Unknown publication facts · #51
+Nullable price/end preserve unknown facts; explicit0 remains free. Required finite start plus separately generated/indexed discovery_until uses known end or24elapsed hours. Discovery, counts, participation and expiry share the cutoff; pending approval races close before the batch job. ES/EN cards/forms/map/assistant and exports preserve unknown state, omit invented end/offer and label unknown-end expiration archived. Apply reviewed migration to both environments before importing remaining BSNF CSV entries.
