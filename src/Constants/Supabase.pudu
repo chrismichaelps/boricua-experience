@@ -30,6 +30,9 @@ export const CREATE_PLACE: Str = "create_place"
 export const UPDATE_PLACE: Str = "update_place"
 export const SET_PLACE_STATUS: Str = "set_place_status"
 export const MY_PLACES: Str = "my_places"
+/// Structured menus visible to a viewer and conditionally saved by their owner.
+export const PLACE_MENU: Str = "place_menu"
+export const SAVE_PLACE_MENU: Str = "save_place_menu"
 /// Reviews of places.
 export const PLACE_REVIEWS: Str = "place_reviews"
 export const SAVE_REVIEW: Str = "save_review"
