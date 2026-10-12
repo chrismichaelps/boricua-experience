@@ -265,3 +265,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/MessageKeys]] — Deterministic dynamic-menu translation key coverage.
 
 - [[src/Public/CreditsStyles]] — Readable photography attributions.
+
+- [[src/Constants/Menus]] — Owner menu protocol bounds.
+- [[src/Domain/MenuDraft]] — Raw owner input and refill.
+- [[src/Validation/MenuForm]] — Bounded nested menu validation.
+- [[src/Test/MenuForm]] — Raw menu validation boundary regressions.
