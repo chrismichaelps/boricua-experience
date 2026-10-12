@@ -107,7 +107,7 @@ fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   }
   if detail.viewer.isOrganizer || card.status == "cancelled" {
     return H.div().class("reactions").holding([
-        H.span().class("reaction reaction-static").holding([Icons.sized("heart", 18), H.span().says(show(card.likeCount))]),
+        H.span().class("reaction reaction-static").label(Frame.tf(frame, "event.likes_total", &[("count", show(card.likeCount))])).holding([Icons.sized("heart", 18), H.span().at("aria-hidden", "true").says(show(card.likeCount))]),
         calendar
       ])
   }

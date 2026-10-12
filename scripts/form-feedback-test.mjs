@@ -53,7 +53,10 @@ await submit(canceled.event, event => event.preventDefault());
 assert.equal(canceled.button.getAttribute('aria-busy'), null);
 const ajax = fixture();
 // The save toggle prevents navigation and marks itself busy only in its own listener, after capture.
-await submit(ajax.event, event => { event.preventDefault(); ajax.form.setAttribute('aria-busy', 'true'); });
+// What the toggle sees when its own listener runs: the form must not already look busy, or it refuses to send.
+let busyWhenToggleRan = null;
+await submit(ajax.event, event => { busyWhenToggleRan = ajax.form.getAttribute('aria-busy'); event.preventDefault(); ajax.form.setAttribute('aria-busy', 'true'); });
+assert.equal(busyWhenToggleRan, null, 'a script-owned form is not marked busy before its own listener runs');
 assert.equal(ajax.form.dataset.submitting, undefined);
 assert.equal(ajax.button.getAttribute('aria-busy'), 'true');
 ajax.form.setAttribute('aria-busy', 'false'); observers.at(-1).callback();
