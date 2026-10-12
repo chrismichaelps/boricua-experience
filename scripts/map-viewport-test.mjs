@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-const scope = { MAP: {searchBounds:[[-67.5,17.5],[-65.1,18.7]],maxRadiusM:200000}, distanceM:(a,b)=>Math.hypot(a.lat-b.lat,a.lng-b.lng)*111320 };
+const scope = { MAP: {minViewportPx:8,searchBounds:[[-67.5,17.5],[-65.1,18.7]],maxRadiusM:200000}, distanceM:(a,b)=>Math.hypot(a.lat-b.lat,a.lng-b.lng)*111320 };
 const source=readFileSync(new URL('../public/assets/js/features/mapViewport.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
 vm.runInNewContext(source+'\nthis.api={visiblePins,viewportQuery,viewportBounds};',scope);
 const pins=[{slug:'a',lng:10,lat:20},{slug:'b',lng:110,lat:20},{slug:'c',lng:10,lat:90},{slug:'d',lng:100,lat:70}];
@@ -17,4 +17,7 @@ console.log('PASS: viewport movement, sheet occlusion, edge pins, empty view, so
 
 const projected={unproject:([x,y])=>({lng:-67+x/100,lat:19-y/100})};
 const camera=scope.api.viewportBounds(projected,100,100,30);
+assert.equal(scope.api.viewportBounds(projected,0,0),null,'an unsized canvas sends no query');
+assert.equal(scope.api.viewportBounds(projected,100,100,100).south,18,'a fully covered canvas queries the whole canvas');
+assert.equal(scope.api.viewportBounds({unproject:()=>({lng:-67.8,lat:19.36})},100,100),null,'a collapsed camera sends no query');
 assert.equal(camera.west,-67);assert.equal(camera.east,-66);assert.equal(camera.north,19);assert.equal(camera.south,18.3,'hidden sheet pixels excluded from server query');

@@ -1,14 +1,14 @@
-import { clusterPins } from './mapClusters.js?v=48';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=48';
-import { message } from '../constants/messages.js?v=48';
-import { getJson } from '../net/http.js?v=48';
-import { $, $$, create } from '../utils/dom.js?v=48';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=48';
-import { toast } from './toast.js?v=48';
-import { createMap } from './mapLoader.js?v=48';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=48';
-import * as live from './live.js?v=48';
-import { localizeMoment } from './localTime.js?v=48';
+import { clusterPins } from './mapClusters.js?v=49';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=49';
+import { message } from '../constants/messages.js?v=49';
+import { getJson } from '../net/http.js?v=49';
+import { $, $$, create } from '../utils/dom.js?v=49';
+import { visiblePins, viewportBounds } from './mapViewport.js?v=49';
+import { toast } from './toast.js?v=49';
+import { createMap } from './mapLoader.js?v=49';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=49';
+import * as live from './live.js?v=49';
+import { localizeMoment } from './localTime.js?v=49';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -132,6 +132,8 @@ export async function explorer(page) {
     const rect = canvas.getBoundingClientRect();
     const covered = matchMedia('(min-width: 960px)').matches ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
     const area = viewportBounds(map, rect.width, rect.height, covered);
+    // Before layout the canvas has no area; the next resize or move reads the camera again.
+    if (!area) { if (ticket === queryTicket) list.setAttribute('aria-busy', 'false'); return; }
     for (const [name, value] of Object.entries(area)) query.set(name, value);
     query.delete('lat'); query.delete('lng'); query.delete('radius');
     query.delete('after');
