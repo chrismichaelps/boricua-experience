@@ -14,8 +14,11 @@ import Domain.Search as Search
 import Services.Runtime as Runtime
 import Utils.Time as Time
 
-/** @Services.Discovery.Home — the rails the home page shows */
-export type Home = { recommended: Array[Event.Card], soon: Array[Event.Card], weekend: Array[Event.Card], free: Array[Event.Card] }
+/** @Services.Discovery.Home — the rails the home page shows; no event appears in more than one */
+export type Home = { recommended: Array[Event.Card], soon: Array[Event.Card], weekend: Array[Event.Card], free: Array[Event.Card], gems: Array[Event.Card] }
+
+/** @Services.Discovery.Raw — the rails as the database answered them, before deduplication */
+export type Raw = { recommended: Array[Event.Card], soon: Array[Event.Card], weekend: Array[Event.Card], free: Array[Event.Card], month: Array[Event.Card] }
 
 /// Milliseconds in a day.
 const DAY_MILLIS: Int = 86400000
@@ -76,7 +79,9 @@ export fn search(runtime: &Runtime.Runtime, filters: &Search.Filters, token: Opt
   EventsApi.search(&runtime.gateway, &argumentsFor(filters, Limits.PAGE_SIZE, &Time.now()), token)
 }
 
-/// The home rails, read together: recommendations, the next events, this weekend, and free ones.
+/// The home rails, read together: recommendations, the next events, this weekend, free ones, and
+/// lesser-known ones with complete details. Each rail reads more than it shows so that removing
+/// events shown higher on the page still leaves it full.
 export fn home(runtime: &Runtime.Runtime, lat: Option[Float64], lng: Option[Float64], token: Option[Str]) -> Result[Home, Problem.Problem] {
   let now = Time.now()
   let held = *runtime
@@ -84,22 +89,65 @@ export fn home(runtime: &Runtime.Runtime, lat: Option[Float64], lng: Option[Floa
   let soon = Sync.cell(Ok([]))
   let weekend = Sync.cell(Ok([]))
   let free = Sync.cell(Ok([]))
-  let rail = |filters: Search.Filters| EventsApi.search(&held.gateway, &argumentsFor(&filters, Limits.RAIL_COUNT, &now), token)
+  let month = Sync.cell(Ok([]))
+  let rail = |filters: Search.Filters, count: Int| EventsApi.search(&held.gateway, &argumentsFor(&filters, count, &now), token)
   let everything = Search.everything()
+  let reach = Limits.RAIL_COUNT * 2
   let ran = Concurrent.parallel(&[
         || { let _set = Sync.set(&recommended, EventsApi.recommended(&held.gateway, lat, lng, Limits.RECOMMENDED_COUNT, token)) },
-        || { let _set = Sync.set(&soon, Result.map(rail(everything), |page: Event.Page| page.items)) },
-        || { let _set = Sync.set(&weekend, Result.map(rail(Search.Filters{..everything, window: Search.Weekend}), |page: Event.Page| page.items)) },
-        || { let _set = Sync.set(&free, Result.map(rail(Search.Filters{..everything, freeOnly: true, window: Search.Week}), |page: Event.Page| page.items)) }
+        || { let _set = Sync.set(&soon, Result.map(rail(everything, reach), |page: Event.Page| page.items)) },
+        || { let _set = Sync.set(&weekend, Result.map(rail(Search.Filters{..everything, window: Search.Weekend}, reach), |page: Event.Page| page.items)) },
+        || { let _set = Sync.set(&free, Result.map(rail(Search.Filters{..everything, freeOnly: true, window: Search.Week}, reach), |page: Event.Page| page.items)) },
+        || { let _set = Sync.set(&month, Result.map(rail(Search.Filters{..everything, window: Search.Month}, Limits.GEMS_POOL), |page: Event.Page| page.items)) }
     ])
   if Result.isErr(&ran) { return Err(Problem.Unavailable("the home rails could not run")) }
-  Ok(Home {
-      recommended: read(&recommended) ?,
-      soon: read(&soon) ?,
-      weekend: read(&weekend) ?,
-      free: read(&free) ?
-    })
+  Ok(arrange(&Raw {
+        recommended: read(&recommended) ?,
+        soon: read(&soon) ?,
+        weekend: read(&weekend) ?,
+        free: read(&free) ?,
+        month: read(&month) ?
+      }))
 }
+
+/// The rails in page order with every event kept only in the first rail that shows it: recommended,
+/// this weekend, coming up, free this week, then hidden gems.
+export fn arrange(raw: &Raw) -> Home {
+  let recommended = unseen(&raw.recommended, &[], Limits.RECOMMENDED_COUNT)
+  let weekend = unseen(&raw.weekend, &idsOf(&recommended), Limits.RAIL_COUNT)
+  let soon = unseen(&raw.soon, &idsOf(&recommended.concat(weekend)), Limits.RAIL_COUNT)
+  let free = unseen(&raw.free, &idsOf(&recommended.concat(weekend).concat(soon)), Limits.RAIL_COUNT)
+  let shown = idsOf(&recommended.concat(weekend).concat(soon).concat(free))
+  Home{recommended: recommended, soon: soon, weekend: weekend, free: free, gems: gems(&raw.month, &shown)}
+}
+
+/// The ids of cards.
+fn idsOf(cards: &Array[Event.Card]) -> Array[Str] { cards.map(|card: Event.Card| card.id) }
+
+/// At most `count` cards whose ids are not already shown, in their order, without repeats.
+export fn unseen(cards: &Array[Event.Card], shown: &Array[Str], count: Int) -> Array[Event.Card] {
+  var kept: Array[Event.Card] = []
+  var taken = *shown
+  for card in *cards {
+    if kept.length() < count && !taken.contains(card.id) {
+      kept = kept.push(card)
+      taken = taken.push(card.id)
+    }
+  }
+  kept
+}
+
+/// Lesser-known upcoming events whose details can be trusted: a known price, a named organizer or
+/// an official source, and few people engaged so far; the least engaged first.
+export fn gems(cards: &Array[Event.Card], shown: &Array[Str]) -> Array[Event.Card] {
+  let trusted = cards.filter(|card: Event.Card| card.status == "published" && card.priceCents != None
+      && (card.source == "curated" || card.organizerName != None) && engagement(&card) <= Limits.GEM_ENGAGEMENT_MAX)
+  let ordered = trusted.sortBy(|a: Event.Card, b: Event.Card| engagement(&a) < engagement(&b))
+  unseen(&ordered, shown, Limits.RAIL_COUNT)
+}
+
+/// How many people have joined, saved, or liked an event.
+fn engagement(card: &Event.Card) -> Int { card.approvedCount + card.savedCount + card.likeCount }
 
 /// The value a worker stored.
 fn read(cell: &Sync.Cell[Result[Array[Event.Card], Problem.Problem]]) -> Result[Array[Event.Card], Problem.Problem] {

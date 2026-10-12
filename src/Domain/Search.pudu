@@ -2,6 +2,8 @@
 module Domain.Search
 
 import Std.Json as Json
+import Std.Option as Option
+import Domain.Catalog as Catalog
 import Domain.Event as Event
 
 /** @Domain.Search.Pins — bounded camera results with explicit truncation */
@@ -21,6 +23,7 @@ export type Filters = {
   query: Str,
   category: Str,
   municipality: Str,
+  near: Str,
   window: When,
   freeOnly: Bool,
   maxPriceCents: Option[Int],
@@ -38,6 +41,7 @@ export fn everything() -> Filters {
     query: "",
     category: "",
     municipality: "",
+    near: "",
     window: Anytime,
     freeOnly: false,
     maxPriceCents: None,
@@ -96,5 +100,47 @@ export const WINDOWS: Array[When] = [Anytime, Today, Tomorrow, Weekend, Week, Mo
 /// Whether any filter narrows the listing.
 export fn isNarrowed(filters: &Filters) -> Bool {
   !filters.query.isEmpty() || !filters.category.isEmpty() || !filters.municipality.isEmpty()
-    || filters.window != Anytime || filters.freeOnly || filters.lat != None
+    || !filters.near.isEmpty() || filters.window != Anytime || filters.freeOnly || filters.lat != None
 }
+
+/// Radii a visitor may choose around a town or a position, in kilometres.
+export const RADII_KM: Array[Int] = [5, 10, 25, 50]
+/// The radius used around a town chosen without one, in kilometres.
+export const DEFAULT_RADIUS_KM: Int = 25
+
+/// The radius in metres that a written number of kilometres selects, when it is one of the offered radii.
+export fn radiusFrom(written: Str) -> Option[Int] {
+  let km = written.trim().toInt() ?
+  if RADII_KM.contains(km) { Some(km * 1000) } else { None }
+}
+
+/// The chosen radius in whole kilometres, or the default.
+export fn radiusKm(filters: &Filters) -> Int {
+  match filters.radiusM {
+    case Some(meters) => meters / 1000
+    case None => DEFAULT_RADIUS_KM
+  }
+}
+
+/// The filters centred on the named town when no device position was given. A town the catalogue
+/// does not know is dropped, and the listing falls back to every place.
+export fn anchored(filters: &Filters, catalog: &Catalog.Catalog) -> Filters {
+  if filters.near.isEmpty() || filters.lat != None { return *filters }
+  match Catalog.municipality(catalog, filters.near) {
+    case Some(town) => Filters{..*filters, lat: Some(town.lat), lng: Some(town.lng), radiusM: Some(Option.unwrapOr(filters.radiusM, DEFAULT_RADIUS_KM * 1000))}
+    case None => Filters{..*filters, near: "", radiusM: None}
+  }
+}
+
+/// The remembered nearby choice written as `town:km`, or nothing when it does not parse.
+export fn rememberedNear(value: Str) -> Option[(Str, Int)] {
+  let mark = value.indexOf(":")
+  if mark <= 0 { return None }
+  let town = value.take(mark)
+  let meters = radiusFrom(value.drop(mark + 1)) ?
+  if town.length() > 40 || town.chars().filter(|c: Char| !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-')).length() > 0 { return None }
+  Some((town, meters))
+}
+
+/// The cookie value that remembers a town and radius.
+export fn nearValue(town: Str, meters: Int) -> Str { town + ":" + show(meters / 1000) }

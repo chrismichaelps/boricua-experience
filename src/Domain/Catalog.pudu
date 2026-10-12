@@ -2,6 +2,7 @@
 module Domain.Catalog
 
 import Std.Json as Json
+import Utils.Geo as Geo
 
 /** @Domain.Catalog.Category — a kind of activity */
 export type Category = {
@@ -44,4 +45,17 @@ export fn municipality(catalog: &Catalog, slug: Str) -> Option[Municipality] {
     if found.slug == slug { return Some(found) }
   }
   None
+}
+
+/** @Domain.Catalog.Neighbor — a municipality and its distance from another */
+export type Neighbor = { town: Municipality, meters: Int }
+
+/// The municipalities nearest to a town by centroid, nearest first, without the town itself.
+export fn neighbors(catalog: &Catalog, town: &Municipality, count: Int) -> Array[Neighbor] {
+  var found: Array[Neighbor] = []
+  for other in catalog.municipalities {
+    if other.slug != town.slug { found = found.push(Neighbor{town: other, meters: Geo.metersBetween(town.lat, town.lng, other.lat, other.lng)}) }
+  }
+  let ordered = found.sortBy(|a: Neighbor, b: Neighbor| a.meters < b.meters)
+  ordered.slice(0, if ordered.length() < count { ordered.length() } else { count })
 }
