@@ -211,6 +211,14 @@ ul { padding: 0; list-style: none; }
 .promo { display: grid; gap: 18px; padding: 28px 24px; border-radius: var(--radius-image); background: var(--color-ocean); color: var(--color-white); }
 .promo h2 { font-size: 24px; line-height: 32px; font-weight: 800; }
 .promo p { opacity: .92; }
+.promo-actions { display: grid; gap: 12px; justify-items: start; }
+.near-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.near-form select { min-height: 44px; max-width: 100%; padding: 8px 12px; border: 0; border-radius: var(--radius-pill); background: var(--color-white); color: var(--color-ink, #1b2833); font: inherit; font-weight: 600; }
+.neighbors { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 16px; }
+.neighbors-title { flex-basis: 100%; font-size: 15px; font-weight: 800; }
+.neighbors .chip small { color: var(--color-graphite); font-weight: 600; }
+.near-slot:empty { display: none; }
+
 .create-tile { display: grid; gap: 16px; padding: 28px 24px; border-radius: var(--radius-image); background: var(--color-cloud); }
 .directory { margin: 0 -16px; padding: 32px 16px; background: var(--color-mist); display: grid; gap: 16px; }
 

@@ -51,7 +51,7 @@ export function searchPickers(form) {
     header.append(title, close);
     dialog.append(header);
     let search;
-    if (select.name === 'pueblo') {
+    if (select.name === 'pueblo' || select.name === 'cerca') {
       search = node('input', 'picker-search');
       search.type = 'search';
       search.placeholder = form.dataset.pickerSearch;

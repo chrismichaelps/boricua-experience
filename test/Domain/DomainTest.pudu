@@ -18,6 +18,7 @@ import Domain.Participation as Participation
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Search as Search
+import Services.Discovery as Discovery
 import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
 
@@ -34,7 +35,35 @@ fn main() -> Int {
   let queue: Result[Array[Participation.IncomingRequest], Json.DecodeError] = Wire.decode(&Fixtures.json("event-requests.json"))
   let inbox: Result[Array[Notification.Notification], Json.DecodeError] = Wire.decode(&Fixtures.json("notifications.json"))
   let organized: Result[Array[Event.Card], Json.DecodeError] = Wire.decode(&Fixtures.json("my-events.json"))
+  let island = Catalog.Catalog{categories: [], municipalities: Result.unwrapOr(towns, []), scenes: []}
+  let carolina = Option.unwrapOr(Catalog.municipality(&island, "carolina"), Catalog.Municipality{slug: "", name: "", region: "", lat: 0.0, lng: 0.0})
+  let anchored = Search.anchored(&Search.Filters{..Search.everything(), near: "carolina"}, &island)
+  let unknownTown = Search.anchored(&Search.Filters{..Search.everything(), near: "atlantis", radiusM: Some(5000)}, &island)
+  let gpsFirst = Search.anchored(&Search.Filters{..Search.everything(), near: "carolina", lat: Some(18.2), lng: Some(-66.5)}, &island)
+  let neighbors = Catalog.neighbors(&island, &carolina, 3).map(|found: Catalog.Neighbor| found.town.slug)
+  let sample = match guest { case Ok(found) => found.card case Err(_) => panic("guest fixture") }
+  let cardWith = |id: Str, engaged: Int| Event.Card{..sample, id: id, approvedCount: engaged, savedCount: 0, likeCount: 0, priceCents: Some(0), source: "curated", status: "published"}
+  let a = cardWith("a", 0)
+  let b = cardWith("b", 0)
+  let c = cardWith("c", 0)
+  let d = cardWith("d", 0)
+  let busy = cardWith("busy", 9)
+  let unpriced = Event.Card{..cardWith("unpriced", 0), priceCents: None}
+  let arranged = Discovery.arrange(&Discovery.Raw{recommended: [a, b], weekend: [b, c], soon: [a, c, d], free: [d, a], month: [a, busy, unpriced, cardWith("quiet", 2), cardWith("silent", 0)]})
+  let ids = |cards: Array[Event.Card]| cards.map(|card: Event.Card| card.id)
   let checks = Test.suite("Domain", &[
+      Test.equals("offered radii are accepted in kilometres", &Search.radiusFrom("10"), &Some(10000)),
+      Test.equals("other radii are refused", &(Search.radiusFrom("7"), Search.radiusFrom("abc"), Search.radiusFrom("")), &(None, None, None)),
+      Test.equals("a town anchors the search at its centroid with the default radius", &(anchored.lat, anchored.lng, anchored.radiusM), &(Some(carolina.lat), Some(carolina.lng), Some(25000))),
+      Test.equals("an unknown town is dropped with its radius", &(unknownTown.near, unknownTown.lat, unknownTown.radiusM), &("", None, None)),
+      Test.equals("a device position wins over a town", &gpsFirst.lat, &Some(18.2)),
+      Test.equals("a remembered choice reads town and metres", &Search.rememberedNear("carolina:10"), &Some(("carolina", 10000))),
+      Test.equals("a tampered remembered choice is ignored", &(Search.rememberedNear("caro<lina:10"), Search.rememberedNear("carolina:7"), Search.rememberedNear(":10"), Search.rememberedNear("carolina")), &(None, None, None, None)),
+      Test.equals("a remembered choice round-trips", &Search.rememberedNear(Search.nearValue("san-juan", 50000)), &Some(("san-juan", 50000))),
+      Test.equals("Carolina's nearest towns", &neighbors, &["canovanas", "trujillo-alto", "loiza"]),
+      Test.that("neighbor distances are plausible", Catalog.neighbors(&island, &carolina, 1).map(|n: Catalog.Neighbor| n.meters >= 4000 && n.meters <= 8000) == [true]),
+      Test.equals("rails keep each event in the first rail that shows it", &(ids(arranged.recommended), ids(arranged.weekend), ids(arranged.soon), ids(arranged.free)), &(["a", "b"], ["c"], ["d"], [])),
+      Test.equals("hidden gems are unseen, priced, quiet, least engaged first", &ids(arranged.gems), &["silent", "quiet"]),
       Test.equals("deleted private profile signs out", &AccountApi.profileOf(&Json.Null), &Err(Problem.SignedOut)),
       Test.equals("valid private profile remains decoded", &match AccountApi.profileOf(&Fixtures.json("my-profile.json")) { case Ok(_) => true case _ => false }, &true),
       Test.equals("malformed profile is not signed out", &match AccountApi.profileOf(&Json.Text("invalid")) { case Err(Problem.Unavailable(_)) => true case _ => false }, &true),

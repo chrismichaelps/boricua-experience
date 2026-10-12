@@ -13,6 +13,8 @@ export const CONSENT: Str = "bx_consent"
 export const VISITOR: Str = "bx_visitor"
 /// Set when a date of birth shows a minor; sign-up stays closed to that browser while it lasts.
 export const AGE_GATE: Str = "bx_age"
+/// The town and radius a visitor last chose to search around, written `town:km`.
+export const NEAR: Str = "bx_near"
 /// A one-time message shown on the next page.
 export const FLASH: Str = "bx_flash"
 

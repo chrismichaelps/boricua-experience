@@ -37,6 +37,29 @@ fn townSelect(frame: &Frame.Frame, catalog: &Catalog.Catalog, chosen: Str, id: S
   select
 }
 
+/// A select of the offered search radii.
+export fn radiusSelect(frame: &Frame.Frame, chosenKm: Int, id: Str) -> H.Node {
+  var select = H.select().name("radio").id(id)
+  for km in Search.RADII_KM {
+    var item = H.option().value(show(km)).says(Frame.tf(frame, "search.radius_km", &[("km", show(km))]))
+    if km == chosenKm { item = item.flag("selected") }
+    select = select.holding([item])
+  }
+  select
+}
+
+/// A select of municipalities to search around, with "anywhere" first.
+fn nearSelect(frame: &Frame.Frame, catalog: &Catalog.Catalog, chosen: Str, id: Str) -> H.Node {
+  var select = H.select().name("cerca").id(id)
+  select = select.holding([H.option().value("").says(Frame.t(frame, "search.near_anywhere"))])
+  for town in catalog.municipalities {
+    var item = H.option().value(town.slug).says(town.name)
+    if town.slug == chosen { item = item.flag("selected") }
+    select = select.holding([item])
+  }
+  select
+}
+
 /// A select of date windows.
 fn windowSelect(frame: &Frame.Frame, chosen: &Search.When, id: Str) -> H.Node {
   var select = H.select().name("when").id(id)
@@ -105,6 +128,8 @@ export fn filterBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Se
       H.div().class("filter").holding([H.labelFor().at("for", "filter-when").class("sr-only").says(Frame.t(frame, "search.when")), windowSelect(frame, &filters.window, "filter-when")]),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-category").class("sr-only").says(Frame.t(frame, "search.category")), categorySelect]),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-town").class("sr-only").says(Frame.t(frame, "search.where")), townSelect(frame, catalog, filters.municipality, "filter-town")]),
+      H.div().class("filter").holding([H.labelFor().at("for", "filter-near").class("sr-only").says(Frame.t(frame, "search.near")), nearSelect(frame, catalog, filters.near, "filter-near")]),
+      if filters.near.isEmpty() && filters.lat == None { H.nothing() } else { H.div().class("filter").holding([H.labelFor().at("for", "filter-radius").class("sr-only").says(Frame.t(frame, "search.radius")), radiusSelect(frame, Search.radiusKm(filters), "filter-radius")]) },
       H.labelFor().class("filter filter-toggle").at("for", "filter-free").holding([free, H.span().says(Frame.t(frame, "search.free_only"))]),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-sort").class("sr-only").says(Frame.t(frame, "search.sort")), sortSelect]),
       H.input().kind("hidden").name("lat").value(match filters.lat {
