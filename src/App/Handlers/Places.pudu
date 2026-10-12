@@ -6,6 +6,7 @@ import Domain.Place as Place
 import PuduLangMediator.Context as Context
 import PuduLangMediator as Messaging
 import PuduLangMediator.Registration as Registration
+import Services.Media as Media
 import Services.Menus as Menus
 import Services.Places as Places
 import Services.Reviews as Reviews
@@ -24,6 +25,10 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.myPlaces, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Places.mine(&held, &asked.session))),
     Registration.handler(&kinds.menuBoard, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Menus.board(&held, asked.input, asked.session))),
     Registration.handler(&kinds.saveMenu, |asked: Messages.Signed[Messages.MenuSaving], _context: Context.Context| Messaging.lift(Menus.save(&held, asked.input.placeId, &asked.input.editing.draft, asked.input.editing.revision, asked.input.editing.menuId, &asked.session))),
+    Registration.handler(&kinds.placeMedia, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Media.gallery(&held, asked.input, asked.session))),
+    Registration.handler(&kinds.startMedia, |asked: Messages.Signed[Messages.MediaStart], _context: Context.Context| Messaging.lift(Media.start(&held, asked.input.placeId, &asked.input.request, &asked.session))),
+    Registration.handler(&kinds.finishMedia, |asked: Messages.Signed[Messages.MediaFinish], _context: Context.Context| Messaging.lift(Media.finish(&held, asked.input.placeId, asked.input.mediaId, &asked.session))),
+    Registration.handler(&kinds.removeMedia, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Media.remove(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.reviews, |asked: Messages.Visit[Messages.ReviewRead], _context: Context.Context| Messaging.lift(Reviews.board(&held, asked.input.placeId, asked.input.after, asked.session))),
     Registration.handler(&kinds.saveReview, |asked: Messages.Signed[Messages.ReviewSaving], _context: Context.Context| Messaging.lift(Reviews.save(&held, asked.input.placeId, &asked.input.draft, &asked.session))),
     Registration.handler(&kinds.deleteReview, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Reviews.delete(&held, asked.input, &asked.session))),

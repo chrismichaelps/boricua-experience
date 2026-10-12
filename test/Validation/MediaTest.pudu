@@ -1,0 +1,46 @@
+/** @Test.Media.Suite — declared uploads and stored-file signatures */
+module Validation.MediaTest
+
+import Std.Bytes as Bytes
+import Std.Io as Io
+import Std.Result as Result
+import Std.Test as Test
+import Constants.Limits as Limits
+import Domain.Media as Media
+import Domain.Problem as Problem
+import Validation.Media as Rules
+
+/// A declared upload for a test-only photograph.
+fn photo() -> Media.UploadRequest { Media.UploadRequest{kind: "gallery", mediaType: "image/webp", bytes: 120000, label: ""} }
+
+/// The message key a refused declaration reports.
+fn refusal(declared: Media.UploadRequest) -> Str {
+  match Rules.request(&declared) {
+    case Err(Problem.Invalid(errors)) => errors[0].key
+    case _ => ""
+  }
+}
+
+/// Bytes from small integers.
+fn bytes(values: Array[UInt8]) -> Bytes { Bytes.fromArray(&values) }
+
+/// Runs the upload boundary regressions without a network call.
+fn main() -> Int {
+  let webp = bytes([82u8, 73u8, 70u8, 70u8, 0u8, 0u8, 0u8, 0u8, 87u8, 69u8, 66u8, 80u8, 86u8, 80u8, 56u8, 32u8])
+  let pdf = bytes([37u8, 80u8, 68u8, 70u8, 45u8, 49u8, 46u8, 55u8])
+  let html = "<html><script>".toBytes()
+  let checks = Test.suite("Media", &[
+      Test.that("a gallery photograph is accepted", Result.isOk(&Rules.request(&photo()))),
+      Test.that("a menu PDF is accepted", Result.isOk(&Rules.request(&Media.UploadRequest{..photo(), kind: "menu", mediaType: "application/pdf"}))),
+      Test.equals("a PDF cover is refused", &refusal(Media.UploadRequest{..photo(), kind: "cover", mediaType: "application/pdf"}), &"media.invalid"),
+      Test.equals("unknown kinds and types are refused", &(refusal(Media.UploadRequest{..photo(), kind: "avatar"}), refusal(Media.UploadRequest{..photo(), mediaType: "image/svg+xml"})), &("media.invalid", "media.invalid")),
+      Test.equals("empty and oversized files are refused", &(refusal(Media.UploadRequest{..photo(), bytes: 0}), refusal(Media.UploadRequest{..photo(), bytes: Limits.MEDIA_BYTES_MAX + 1})), &("media.too_large", "media.too_large")),
+      Test.that("the size limit itself is accepted", Result.isOk(&Rules.request(&Media.UploadRequest{..photo(), bytes: Limits.MEDIA_BYTES_MAX}))),
+      Test.equals("long labels are refused", &refusal(Media.UploadRequest{..photo(), kind: "menu", label: "x".repeat(81)}), &"media.invalid"),
+      Test.that("stored bytes must match the declared type", Rules.signatureMatches(&webp, "image/webp") && Rules.signatureMatches(&pdf, Media.PDF) && !Rules.signatureMatches(&pdf, "image/webp") && !Rules.signatureMatches(&webp, Media.PDF)),
+      Test.that("markup disguised as a photo or PDF is refused", !Rules.signatureMatches(&html, "image/jpeg") && !Rules.signatureMatches(&html, Media.PDF))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

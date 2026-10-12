@@ -13,6 +13,7 @@ import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Media as Media
 import Domain.Menu as Menu
 import Domain.MenuDraft as MenuDraft
 import Domain.Place as Place
@@ -41,6 +42,7 @@ import View.Pages.Event as EventPage
 import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
+import View.Pages.Media as MediaPage
 import View.Pages.Menu as MenuPage
 import View.Pages.MenuForm as MenuFormPage
 import View.Pages.Place as PlacePage
@@ -117,14 +119,22 @@ fn main() -> Int {
   let board: Review.ReviewBoard = match Wire.decode(&Fixtures.json("review-board.json")) { case Ok(found) => found case Err(why) => panic("board fixture: " + Json.explainDecode(&why)) }
   let ownerBoard = Review.ReviewBoard{..board, canReview: false, isOwner: true}
   let menus: Menu.MenuBoard = match Wire.decode(&Fixtures.json("menu-board.json")) { case Ok(found) => found case Err(why) => panic("menu fixture: " + Json.explainDecode(&why)) }
-  let menuReader = Html.render(&MenuPage.render(&en, &fonda, &menus))
-  let spanishMenu = Html.render(&MenuPage.render(&es, &fonda, &menus))
-  let privateMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, status: "draft"})}))
-  let emptyMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: []}))
-  let unsafeMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, name: "<script>unsafe</script>"})}))
+  let noMedia = Media.empty()
+  let photo = |id: Str, kind: Str, kindType: Str, label: Str| Media.MediaFile{id: id, kind: kind, mediaType: kindType, label: label, bytes: 1000, url: "https://test.supabase.co/storage/v1/object/public/place-media/p/" + id}
+  let pictured = Media.Gallery{isOwner: true, files: [photo("c1", "cover", "image/webp", ""), photo("g1", "gallery", "image/webp", ""), photo("m1", "menu", "application/pdf", "<b>Lunch</b>"), photo("m2", "menu", "image/jpeg", "")]}
+  let menuReader = Html.render(&MenuPage.render(&en, &fonda, &menus, &noMedia))
+  let spanishMenu = Html.render(&MenuPage.render(&es, &fonda, &menus, &noMedia))
+  let privateMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, status: "draft"})}, &noMedia))
+  let emptyMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: []}, &noMedia))
+  let unsafeMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, name: "<script>unsafe</script>"})}, &noMedia))
   let menuEntry = H.render(&MenuPage.link(&en, fonda.card.slug, &Some(menus)))
   let unsupportedMenu = H.render(&MenuPage.link(&en, fonda.card.slug, &Some(Menu.MenuBoard{..menus, supported: false, menus: []})))
-  let ownerMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true}))
+  let ownerMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true}, &noMedia))
+  let picturedMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &pictured))
+  let picturedPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &ownerBoard, &None, &pictured, &Review.blank(), &None))
+  let bareMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &noMedia))
+  let mediaManager = Html.render(&MediaPage.render(&en, &fonda, &pictured, true))
+  let photoOnlyManager = Html.render(&MediaPage.render(&es, &fonda, &Media.Gallery{isOwner: true, files: []}, false))
   let guestEdit = !menuReader.contains("/menu/edit")
   let editing = MenuDraft.MenuEditing{draft: MenuDraft.fromListing(&menus.menus[0]), menuId: Some("menu-test"), revision: 2}
   let typed = MenuDraft.MenuEditing{..editing, draft: MenuDraft.MenuEditorDraft{..editing.draft, sections: [MenuDraft.MenuSectionInput{..editing.draft.sections[0], items: [MenuDraft.MenuDishInput{..editing.draft.sections[0].items[0], name: "<b>Typed</b>", price: "doce"}]}]}}
@@ -132,12 +142,12 @@ fn main() -> Int {
   let refusedEditor = Html.render(&MenuFormPage.render(&en, &fonda, &typed, &Some(Problem.Invalid([Problem.FieldError{field: "s.0.i.0.price", key: "menu.price_invalid"}])), false))
   let conflictEditor = Html.render(&MenuFormPage.render(&es, &fonda, &editing, &Some(Problem.Refused("menu_changed")), true))
   let newEditor = Html.render(&MenuFormPage.render(&en, &fonda, &MenuDraft.MenuEditing{draft: MenuDraft.blank("en"), menuId: None, revision: 0}, &None, false))
-  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda, &ownerBoard, &None, &Review.blank(), &None))
-  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}, &Review.ReviewBoard{..board, canReview: false}, &None, &Review.blank(), &None))
+  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda, &ownerBoard, &None, &noMedia, &Review.blank(), &None))
+  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}, &Review.ReviewBoard{..board, canReview: false}, &None, &noMedia, &Review.blank(), &None))
   let member: Profile.MyProfile = match Wire.decode(&Fixtures.json("my-profile.json")) { case Ok(found) => found case Err(_) => panic("profile fixture") }
   let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
-  let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &Review.blank(), &None))
-  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
+  let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.blank(), &None))
+  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
@@ -166,6 +176,12 @@ fn main() -> Int {
       Test.that("owner drafts carry status and noindex", privateMenu.contains("Draft · only you") && privateMenu.contains("noindex")),
       Test.that("empty menu explains its absence and is not indexed", emptyMenu.contains("The menu is not available yet") && emptyMenu.contains("noindex")),
       Test.that("menu titles are escaped", !unsafeMenu.contains("<script>unsafe</script>") && unsafeMenu.contains("&lt;script&gt;")),
+      Test.that("uploaded photos rotate in the shared header, cover first", picturedPlace.contains("data-feature=\"hero-carousel\"") && picturedPlace.indexOf("place-media/p/c1") < picturedPlace.indexOf("place-media/p/g1") && picturedPlace.contains("Photo 2 of 2")),
+      Test.that("without uploads the header shows the default image alone, without controls", bareMenu.contains("photo-header") && !bareMenu.contains("hero-dot")),
+      Test.that("menu documents open from storage, escaped, with a PDF marker", picturedMenu.contains("place-media/p/m1") && picturedMenu.contains("noopener noreferrer") && picturedMenu.contains("&lt;b&gt;Lunch&lt;/b&gt;") && picturedMenu.contains(">PDF<") && picturedMenu.contains("Menu photo")),
+      Test.that("owner media page offers script uploads with removal per file and is not indexed", mediaManager.contains("data-feature=\"media-upload\"") && mediaManager.contains("/media/g1/remove") && mediaManager.contains("application/pdf") && mediaManager.contains("noindex")),
+      Test.that("categories without menus get no menu files and the default is called an illustration", !photoOnlyManager.contains("application/pdf") && photoOnlyManager.contains("No es una foto de tu lugar")),
+      Test.that("owners reach photos and menu files from the place and menu pages", picturedPlace.contains("/media\"") && ownerMenu.contains("/media\"") && !menuReader.contains("/media\"")),
       Test.that("menu link follows database capability", menuEntry.contains("/menu") && unsupportedMenu.isEmpty()),
       Test.that("owners see new and edit menu links; guests do not", ownerMenu.contains("/menu/edit?menu=menu-test") && ownerMenu.contains("Add a menu") && guestEdit),
       Test.that("menu editor keeps identity, revision and stable IDs hidden", menuEditor.contains("name=\"revision\" value=\"2\"") && menuEditor.contains("name=\"menuId\" value=\"menu-test\"") && menuEditor.contains("name=\"s.0.i.1.id\" value=\"free-test\"")),

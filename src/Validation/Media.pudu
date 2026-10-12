@@ -1,0 +1,27 @@
+/** @Validation.Media.Upload — declared uploads and stored-file signatures */
+module Validation.Media
+
+import Std.Bytes as Bytes
+import Constants.Limits as Limits
+import Domain.Media as Media
+import Domain.Problem as Problem
+import Validation.Avatar as Avatar
+
+/// The leading bytes of every PDF document: `%PDF-`.
+const PDF_SIGNATURE: Array[UInt8] = [37u8, 80u8, 68u8, 70u8, 45u8]
+
+/// A declared upload within the kinds, types, size and label the place accepts.
+export fn request(declared: &Media.UploadRequest) -> Result[Media.UploadRequest, Problem.Problem] {
+  let refused = |key: Str| Err(Problem.Invalid([Problem.FieldError{field: "file", key: key}]))
+  if !Media.KINDS.contains(declared.kind) || !Media.TYPES.contains(declared.mediaType) { return refused("media.invalid") }
+  if declared.mediaType == Media.PDF && declared.kind != Media.MENU { return refused("media.invalid") }
+  if declared.bytes < 1 || declared.bytes > Limits.MEDIA_BYTES_MAX { return refused("media.too_large") }
+  if declared.label.trim().length() > Limits.MEDIA_LABEL_MAX { return refused("media.invalid") }
+  Ok(Media.UploadRequest{..*declared, label: declared.label.trim()})
+}
+
+/// Whether the stored file's leading bytes are those of the media type its upload declared.
+export fn signatureMatches(head: &Bytes, mediaType: Str) -> Bool {
+  if mediaType == Media.PDF { return Bytes.startsWith(head, &Bytes.fromArray(&PDF_SIGNATURE)) }
+  Avatar.mediaType(head) == Some(mediaType)
+}

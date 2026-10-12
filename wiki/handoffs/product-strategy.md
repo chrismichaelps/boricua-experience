@@ -18,7 +18,7 @@ Architect → Implementer: own menu/media database migrations and mirrors, then 
 | Recover referenced session | Exact custom-title and final handoff read from local session; repo0.3.0 verified |
 | Category-specific places | Existing category_fields and adaptive forms present; retain and extend across entire catalogue |
 | Restaurant menus | Foundation, reader, validation merged to dev. Owner editor (create/edit sections and dishes, retained invalid input, revision conflicts) implemented and browser-verified on dev; image/PDF documents and deployment remain pending |
-| Place/review photos | Pending: authorized private storage, sanitized images, moderation-aware read access, carousel and deletion lifecycle |
+| Place/review photos | Place covers, photos and menu files done (ADR-0012): reserve → signed upload → server verification → confirm, daily sweep, shared photo header. Development migrated and browser-verified; production migration and review photos pending |
 | Activity category fields/place links | Pending implementation and validation |
 | Waitlists/attendance | Pending implementation and concurrency tests |
 | Organizer dashboard/analytics | Pending implementation |
@@ -41,7 +41,10 @@ All-category cover refinement: activities and permanent places in every supporte
 Implement additive schema/API first with rollback and ownership/race tests, then integrate owner and reader flows. Apply reviewed migrations to both projects and compare contracts/permissions. Do not mark the overall goal complete until every ledger item has current-state evidence.
 
 ## Exact next action
-Private sanitized image/PDF uploads and the shared home-style header carousel with default imagery. Preserve all remaining goal ledger items.
+Merge order: #77 (save/like fix), #75 (menu editor), media (stacked on #75), #79 (moving nearby + 3D); renumber asset versions on merge (each must exceed the last deployed). Apply place_media, place_media_pending and place_media_sweep to production, set CRON_SECRET in Vercel, deploy. Then activity covers for every category and review photos. Preserve all remaining goal ledger items.
+
+## Media evidence
+Development: three media migrations applied; rolled-back RPC checks (PDF cover refused, ninth photo refused, cover replacement and cover_url, non-owner refused, hidden place unreadable to others). Browser: 2400×1500 JPEG stored as 1600×1000 WebP without EXIF, cover_url updated; menu PDF listed with label and noopener; removal clears record, file and cover_url; a disguised HTML upload is refused and deleted; its re-sent file was removed by the sweep while the real PDF stayed. Sweep route: 404 without or with a wrong secret. Full suite 11 suites, 406 assertions, all harnesses including media-upload.
 
 ## Owner editor evidence
 `/lugar/:slug/menu/edit` (GET/POST) verifies the editable parent and owner board before selecting a menu. Structural commands (add/remove/move sections and dishes) re-render the retained draft without writes; only `do=save` calls the conditional save. Full suite 391 assertions in 10 suites, including 22 field-decoding and 7 editor rendering checks. Dev browser run: new menu → add section → add dish → invalid price plus allergens checked while undeclared refused with every value retained → corrected save rendered in the reader → stale revision refused with draft and submitted revision kept and a link to the current version; 320px width without overflow, structural buttons at least 44px. Test place "Prueba dev: menú del editor" (created by the signed-in development seed account) was hidden afterwards; its draft menu remains in dev only. Menu messages moved to I18n.EsMenu/EnMenu after the Spanish catalogue reached the parser list limit.
