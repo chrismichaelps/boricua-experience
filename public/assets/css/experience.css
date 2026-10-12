@@ -232,3 +232,5 @@ button[disabled] { cursor: wait; }
 .button[aria-busy="true"] > img { display: none; }
 @keyframes submission-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .button[aria-busy="true"]::before, .pill-submit[aria-busy="true"]::before, button.is-submitting::before { animation: none; } }
+.map-3d-mark { font-weight: 800; letter-spacing: -.2px; }
+@media (max-width: 480px) { .map-3d-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }

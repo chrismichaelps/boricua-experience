@@ -19,6 +19,9 @@ export const CACHE_PRIVATE: Str = "private, no-store"
 /// Pages a guest sees: the browser may keep them but revalidates; no shared cache stores them, since
 /// the language, the cookie banner, and the flash follow the visitor's cookies and a CDN keys by URL.
 export const CACHE_GUEST_PAGE: Str = "private, no-cache"
+/// Map pins for an explicitly named language and a grid-aligned area: identical for every visitor, so
+/// the CDN answers repeated areas for a minute and serves a stale copy while it refreshes.
+export const CACHE_SHARED_PINS: Str = "public, max-age=0, s-maxage=60, stale-while-revalidate=300"
 /// Reference documents (sitemap, manifest, robots): an hour at the CDN.
 export const CACHE_REFERENCE: Str = "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
 

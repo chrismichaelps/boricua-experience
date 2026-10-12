@@ -501,6 +501,8 @@ map.share_live
 map.sheet_toggle
 map.sign_in_live
 map.title
+map.view_3d
+map.view_3d_label
 menu.allergen.eggs
 menu.allergen.fish
 menu.allergen.milk

@@ -447,6 +447,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("manage.decided", "Already answered"),
     ("manage.empty_title", "You're all caught up"),
     ("manage.empty_body", "There are no pending requests."),
+    ("map.view_3d", "Buildings"),
+    ("map.view_3d_label", "Show buildings in 3D"),
     ("map.cluster", "Show :count activities; zoom in"),
     ("map.sheet_toggle", "Expand or collapse the activity list"),
     ("map.title", "Activity map"),

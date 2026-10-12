@@ -71,3 +71,6 @@ MEDIUM.
 
 ## Reviewed refinement
 Map results preserve the server limited flag and show a bilingual zoom-in notice. Reaction forms lock their shared group; horizontal handle drags suppress the ensuing click. Existing public coordinate visibility remains unchanged. Grill Log: reviewed edge contracts resolved.
+
+## Moving nearby and 3D Grill Log · #78
+Resolved: the viewport answer is shared only when its `hl` parameter equals the rendered language; otherwise the default private policy applies.
