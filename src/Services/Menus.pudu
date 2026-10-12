@@ -1,0 +1,14 @@
+/** @Services.Menus.Reads — menus visible to the current place viewer */
+module Services.Menus
+
+import Std.Option as Option
+import Api.Menus as MenusApi
+import Domain.Menu as Menu
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+
+/// The menu board authorized for the viewer, including the owner's drafts.
+export fn board(runtime: &Runtime.Runtime, placeId: Str, session: Option[Session.Session]) -> Result[Menu.MenuBoard, Problem.Problem] {
+  MenusApi.board(&runtime.gateway, placeId, Option.map(session, |found: Session.Session| found.accessToken))
+}

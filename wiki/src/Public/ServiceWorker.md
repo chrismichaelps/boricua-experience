@@ -89,3 +89,6 @@ Resolved: Mechanical shell graph44 only; personal HTML and database records rema
 
 ## Asset graph46 · #51
 Resolved: first-party import identities and worker cache advance together to46 for nullable schedule/price rendering. Public code changes are limited to LocalTime, BrowserMessages, AssistantStream and Explorer; other browser modules only change dependency identities. No private data enters precache.
+
+## Menu reader Grill Log · #69
+Resolved: Include menu.css in the versioned static graph; advance the complete graph together before the menu/media release. Personalized HTML and media remain outside precache.

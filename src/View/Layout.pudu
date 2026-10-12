@@ -68,6 +68,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/home.css" + version),
     H.link().rel("stylesheet").href("/assets/css/search.css" + version),
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })

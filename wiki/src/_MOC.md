@@ -257,3 +257,9 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Database/OptionalEventFacts]] — nullable publication facts and finite discovery policy.
 
 - [[src/Database/Menus]] — normalized category-authorized restaurant menus and owner revisions.
+
+- [[src/Services/Menus]] — Viewer-authorized menu reads.
+- [[src/Web/Handlers/Menus]] — Dedicated menu reader route.
+- [[src/View/Pages/Menu]] — Bilingual structured menu reader.
+- [[src/Public/MenuStyles]] — Responsive menu layout.
+- [[src/Test/MessageKeys]] — Deterministic dynamic-menu translation key coverage.

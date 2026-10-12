@@ -1,0 +1,88 @@
+/** @View.Pages.Menu.Reader — ordered menus and owner-declared dish facts */
+module View.Pages.Menu
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Constants.Routes as Routes
+import Domain.Menu as Menu
+import Domain.Place as Place
+import Utils.Money as Money
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// An entry to the dedicated menu, when the database permits menus for this place.
+export fn link(frame: &Frame.Frame, slug: Str, board: &Option[Menu.MenuBoard]) -> H.Node {
+  match board {
+    case Some(found) => if found.supported || (found.isOwner && !found.menus.isEmpty()) {
+      H.a().class("button button-ghost button-block").href(Routes.PLACE_PREFIX + slug + "/menu").says(Frame.t(frame, "menu.view"))
+    } else { H.nothing() }
+    case None => H.nothing()
+  }
+}
+
+/// A dedicated menu reader; private draft and archived views are not indexed.
+export fn render(frame: &Frame.Frame, detail: &Place.Detail, board: &Menu.MenuBoard) -> Html.Html {
+  let base = Routes.PLACE_PREFIX + detail.card.slug
+  let published = !board.menus.filter(|menu: Menu.MenuListing| menu.status == "published").isEmpty()
+  let indexable = detail.card.status == "published" && published && !board.isOwner
+  let title = detail.card.name + " · " + Frame.t(frame, "menu.title")
+  let meta = Seo.meta(title, detail.card.summary, base + "/menu", indexable)
+  Layout.page(frame, &meta, Layout.Explore, H.article().class("menu-page").holding([
+        H.a().class("text-link menu-back").href(base).says(detail.card.name),
+        H.header().class("menu-heading").holding([
+            match detail.card.coverUrl {
+              case Some(cover) => H.div().class("hero-frame menu-cover").holding([H.img().src(cover).alt("").at("width", "1280").at("height", "720").at("fetchpriority", "high")])
+              case None => H.nothing()
+            },
+            H.p().class("eyebrow").says(detail.card.municipality.name),
+            H.h1().says(detail.card.name),
+            H.p().class("menu-subtitle").says(Frame.t(frame, "menu.title"))
+          ]),
+        if board.menus.isEmpty() {
+          H.section().class("panel menu-empty").holding([H.h2().says(Frame.t(frame, "menu.empty_title")), H.p().class("muted").says(Frame.t(frame, "menu.empty_body"))])
+        } else {
+          H.div().class("menu-content").holding(board.menus.map(|menu: Menu.MenuListing| menuOf(frame, &menu)))
+        },
+        if board.menus.isEmpty() { H.nothing() } else { H.p().class("menu-disclaimer muted").says(Frame.t(frame, "menu.declarations")) }
+      ]))
+}
+
+/// One menu, with unique section anchors and owner-only publication labels.
+fn menuOf(frame: &Frame.Frame, menu: &Menu.MenuListing) -> H.Node {
+  H.section().class("menu-board").at("aria-labelledby", "menu-" + menu.id).holding([
+      H.header().class("menu-board-heading").holding([
+          H.h2().id("menu-" + menu.id).says(menu.name),
+          if menu.status == "published" { H.nothing() } else { H.span().class("chip chip-small").says(Frame.t(frame, "menu.status." + menu.status)) },
+          if menu.description.isEmpty() { H.nothing() } else { H.p().class("muted").says(menu.description) }
+        ]),
+      if menu.sections.isEmpty() { H.nothing() } else {
+        H.nav().class("menu-sections-nav").label(menu.name).holding(menu.sections.map(|section: Menu.MenuSection| H.a().href("#section-" + section.id).says(section.name)))
+      },
+      H.div().holding(menu.sections.map(|section: Menu.MenuSection| H.section().class("menu-section").at("aria-labelledby", "section-" + section.id).holding([
+              H.h3().id("section-" + section.id).says(section.name),
+              H.ul().class("menu-items").holding(section.items.map(|item: Menu.MenuItem| dish(frame, &item)))
+            ])))
+    ])
+}
+
+/// A dish price never defaults to free; unavailable remains visible and labeled.
+fn dish(frame: &Frame.Frame, item: &Menu.MenuItem) -> H.Node {
+  let price = match item.priceCents {
+    case Some(0) => Frame.t(frame, "menu.free")
+    case Some(amount) => Money.dollars(amount)
+    case None => Frame.t(frame, "menu.price_unknown")
+  }
+  let allergies = match item.allergens { case Some(tags) => tags case None => [] }
+  H.li().class("menu-item" + (if item.available == Some(false) { " is-unavailable" } else { "" })).holding([
+      H.div().class("menu-item-copy").holding([
+          H.h4().says(item.name),
+          if item.description.isEmpty() { H.nothing() } else { H.p().class("muted").says(item.description) },
+          if item.available == Some(false) { H.p().class("menu-unavailable").says(Frame.t(frame, "menu.unavailable")) } else { H.nothing() },
+          if item.dietary.isEmpty() { H.nothing() } else { H.ul().class("menu-tags").holding(item.dietary.map(|tag: Str| H.li().says(Frame.t(frame, "menu.diet." + tag)))) },
+          if allergies.isEmpty() { H.nothing() } else { H.p().class("menu-allergens muted").says(Frame.t(frame, "menu.allergens") + ": " + allergies.map(|tag: Str| Frame.t(frame, "menu.allergen." + tag)).join(", ")) }
+        ]),
+      H.div().class("menu-item-price").holding([H.p().says(price), if item.priceNote.isEmpty() { H.nothing() } else { H.p().class("muted").says(item.priceNote) }])
+    ])
+}
