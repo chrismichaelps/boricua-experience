@@ -42,7 +42,9 @@ for (const own of [1,-1]) {
  forms.push({dataset:{own:String(own)},button,input,closest:()=>group,querySelector:s=>s==='button'?button:input,addEventListener(_,handler){this.submit=handler;}});
 }
 let posts = 0, resolvePost, rejectPost;
-const toggles = { postForm:()=>{posts++;return new Promise((resolve,reject)=>{resolvePost=resolve;rejectPost=reject;});}, haptic:()=>{}, message:k=>k, toast:()=>{} };
+class RequestFailed extends Error { constructor(status,code){super(code);this.status=status;this.code=code;} }
+const toasts=[];
+const toggles = { RequestFailed, postForm:()=>{posts++;return new Promise((resolve,reject)=>{resolvePost=resolve;rejectPost=reject;});}, haptic:()=>{}, message:k=>k, toast:t=>toasts.push(t) };
 vm.runInNewContext(read('toggle')+'\nthis.bind=reactToggle;',toggles);
 forms.forEach(f=>toggles.bind(f));
 const first = forms[0].submit({preventDefault(){}});
@@ -52,4 +54,6 @@ resolvePost({reaction:1,likeCount:2});await first;
 assert.ok(forms.every(f=>!f.button.disabled));assert.equal(forms[0].input.value,'0');assert.equal(forms[1].input.value,'-1');
 const retry= forms[1].submit({preventDefault(){}});rejectPost(Error('network'));await retry;
 assert.equal(group.attrs['aria-busy'],'false');assert.ok(forms.every(f=>!f.button.disabled),'failure restores every button');
-console.log('PASS: cross-button reaction lock, synchronized state, network failure and retry');
+const closedTry=forms[0].submit({preventDefault(){}});rejectPost(new RequestFailed(409,'event_cancelled'));await closedTry;
+assert.equal(toasts.at(-1),'reactionClosed','a final refusal says reactions are closed');assert.ok(forms.every(f=>f.button.disabled),'and keeps both reactions off');
+console.log('PASS: cross-button reaction lock, synchronized state, network failure and retry, final refusal stays closed');

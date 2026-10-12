@@ -320,6 +320,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("event.share", "Compartir"),
     ("event.save", "Guardar"),
     ("event.unsave", "Quitar de guardados"),
+    ("event.likes_total", "Me gusta: :count"),
     ("event.like", "Me gusta"),
     ("event.not_interested", "No me interesa"),
     ("event.more_dates.one", ":count fecha más"),
