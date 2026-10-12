@@ -8,6 +8,12 @@ runtime="$root/.runtime"
 output="$root/.vercel/output"
 function_dir="$output/functions/app.func"
 site_url="${BORICUA_SITE_URL:?set BORICUA_SITE_URL to the canonical https origin}"
+# The same-origin guard compares every post with this origin, and canonical links are built from it,
+# so a development origin here refuses every form on the deployed site.
+if [[ ! "$site_url" =~ ^https://[a-z0-9.-]+\.[a-z]{2,}$ ]] || [[ "$site_url" == *localhost* ]]; then
+  echo "BORICUA_SITE_URL must be a public https origin without a path or trailing slash; got '$site_url'." >&2
+  exit 1
+fi
 
 [[ -f "$runtime/pudu-musl-lambda-x86_64" ]] || "$root/scripts/fetch-runtime.sh"
 (cd "$root" && "$compiler" install --locked)
