@@ -69,3 +69,6 @@ Resolved: missing price is null/None and never free; explicit zero is free. Miss
 
 ## Reaction audiences Grill Log · #76
 Resolved: guests see the like count as a sign-in link that returns to the activity; members can like or mark not interested; the organizer and everyone on a cancelled activity see only the count. Likes are social proof from other people and feed popularity, so self-likes are excluded. The database enforces the same rule ([[decisions/ADR-0005-reactions]]).
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.

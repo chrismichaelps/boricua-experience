@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-12 · [[src/Database/EventCovers]] · organizer-managed activity covers across categories; trusted server confirmation, shared reservation quota and pending-only cleanup; development verification passes, production cutover pending · issue #82.
+
 - 2026-10-12 · release 0.4.0 · owner menu editor, place photos and menu files, save/like fix, moving nearby and 3D map; asset version 56 · issues #69 #76 #78.
 
 - 2026-10-12 · [[src/Public/Explorer]] · nearby areas snap to a zoom grid and name their language so the edge cache shares them across moving visitors; hidden tabs defer refreshes; following zoom adapts to speed with hysteresis; optional 3D buildings from existing tiles · issue #78.

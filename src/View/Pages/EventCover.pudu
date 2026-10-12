@@ -1,0 +1,44 @@
+/** @View.Pages.EventCover.Organizer — an activity's cover photograph, managed by its organizer */
+module View.Pages.EventCover
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Constants.Routes as Routes
+import Domain.Event as Event
+import Domain.Media as Media
+import View.Components.EventCard as EventCard
+import View.Components.Form as Form
+import View.Components.Uploader as Uploader
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The cover page: the current cover, its removal when uploaded, and the picker. Never indexed.
+export fn render(frame: &Frame.Frame, detail: &Event.Detail, covers: &Array[Media.MediaFile]) -> Html.Html {
+  let base = Routes.EVENT_PREFIX + detail.card.slug
+  let illustration = detail.card.coverUrl == None || EventCard.coverOf(&detail.card).startsWith("/assets/covers/")
+  let title = Frame.t(frame, "media.event_cover_title")
+  let meta = Seo.meta(title + " · " + detail.card.title, detail.card.summary, base + "/cover", false)
+  Layout.page(frame, &meta, Layout.Activity, H.div().class("narrow media-manager").holding([
+        H.a().class("text-link menu-back").href(base).says(detail.card.title),
+        H.h1().class("page-title").says(title),
+        H.p().class("lead").says(Frame.t(frame, "media.event_cover_lead")),
+        H.section().class("form-section").holding([
+            H.p().class("field-hint").says(Frame.t(frame, if covers.isEmpty() && illustration { "media.event_cover_default" } else { "media.cover_hint" })),
+            H.div().class("media-grid").holding(if covers.isEmpty() {
+                [H.figure().class("media-tile" + (if illustration { " is-default" } else { "" })).holding([H.img().src(EventCard.coverOf(&detail.card)).alt("").at("loading", "lazy"), H.figcaption().says(Frame.t(frame, if illustration { "media.default_label" } else { "media.current_cover" }))])]
+              } else {
+                covers.map(|file: Media.MediaFile| H.figure().class("media-tile").holding([
+                      H.img().src(file.url).alt(Frame.t(frame, "media.photo")).at("loading", "lazy"),
+                      H.form().action(base + "/cover/" + file.id + "/remove").method("post").holding([
+                          Form.token(frame),
+                          H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "media.remove"))
+                        ])
+                    ]))
+              }),
+            Uploader.render(frame, base + "/cover", Media.COVER, Uploader.PHOTO_TYPES, Frame.t(frame, if covers.isEmpty() { "media.add_cover" } else { "media.replace_cover" }), false)
+          ]),
+        H.p().class("muted small").says(Frame.t(frame, "media.rights"))
+      ]))
+}

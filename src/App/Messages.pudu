@@ -57,6 +57,12 @@ export type MediaStart = { placeId: Str, request: Media.UploadRequest }
 /** @App.Messages.MediaFinish — an upload the browser reports as sent, to be verified */
 export type MediaFinish = { placeId: Str, mediaId: Str }
 
+/** @App.Messages.EventCoverStart — an organizer's declared cover for one activity */
+export type EventCoverStart = { eventId: Str, request: Media.UploadRequest }
+
+/** @App.Messages.EventCoverFinish — a sent activity cover to be verified */
+export type EventCoverFinish = { eventId: Str, mediaId: Str }
+
 /** @App.Messages.MenuSaving — an owner's complete menu, conditional on the revision it was read at */
 export type MenuSaving = { placeId: Str, editing: MenuDraft.MenuEditing }
 
@@ -127,6 +133,10 @@ export type Kinds = {
   startMedia: Request.Kind[Signed[MediaStart], Media.UploadTicket, Problem.Problem],
   finishMedia: Request.Kind[Signed[MediaFinish], (), Problem.Problem],
   removeMedia: Request.Kind[Signed[Str], (), Problem.Problem],
+  eventCover: Request.Kind[Signed[Str], Array[Media.MediaFile], Problem.Problem],
+  startEventCover: Request.Kind[Signed[EventCoverStart], Media.UploadTicket, Problem.Problem],
+  finishEventCover: Request.Kind[Signed[EventCoverFinish], (), Problem.Problem],
+  removeEventCover: Request.Kind[Signed[EventCoverFinish], (), Problem.Problem],
   reviews: Request.Kind[Visit[ReviewRead], Review.ReviewBoard, Problem.Problem],
   saveReview: Request.Kind[Signed[ReviewSaving], (), Problem.Problem],
   deleteReview: Request.Kind[Signed[Str], (), Problem.Problem],
@@ -208,6 +218,10 @@ export fn kinds() -> Kinds {
     startMedia: kind("media.start", COMMAND),
     finishMedia: kind("media.finish", COMMAND),
     removeMedia: kind("media.remove", COMMAND),
+    eventCover: kind("media.event_cover", READ),
+    startEventCover: kind("media.event_cover_start", COMMAND),
+    finishEventCover: kind("media.event_cover_finish", COMMAND),
+    removeEventCover: kind("media.event_cover_remove", COMMAND),
     reviews: kind("reviews.board", READ),
     saveReview: kind("reviews.save", COMMAND),
     deleteReview: kind("reviews.delete", COMMAND),

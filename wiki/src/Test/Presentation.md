@@ -91,3 +91,8 @@ Resolved: nullable prices/end retain explicit unknown state; known free/paid and
 
 ## Menu reader Grill Log · #69
 Resolved: Render dedicated menus and parent-page links from fictional fixtures; verify escaping, translated unknown/free/paid labels, unavailable state, owner-only status labels and noindex/empty behavior.
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
+
+Resolved: source-provided current covers must not be described as category illustrations.

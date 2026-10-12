@@ -80,3 +80,6 @@ Resolved: menuBoard is a READ Visit[Str] kind returning MenuBoard; existing mess
 
 ## Owner editor Grill Log · #69
 Resolved: Add Signed[MenuSaving] command with placeId, raw draft, menuId and expectedRevision; no HTTP reaches the mediator.
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
