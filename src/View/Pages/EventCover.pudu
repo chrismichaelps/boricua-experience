@@ -33,7 +33,7 @@ export fn render(frame: &Frame.Frame, detail: &Event.Detail, covers: &Array[Medi
                       H.img().src(file.url).alt(Frame.t(frame, "media.photo")).at("loading", "lazy"),
                       H.form().action(base + "/cover/" + file.id + "/remove").method("post").holding([
                           Form.token(frame),
-                          H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "media.remove"))
+                          H.button().submit().class("button button-ghost").says(Frame.t(frame, "media.remove"))
                         ])
                     ]))
               }),

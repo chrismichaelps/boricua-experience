@@ -62,7 +62,7 @@ fn tile(frame: &Frame.Frame, base: Str, file: &Media.MediaFile) -> H.Node {
       H.figcaption().says(name),
       H.form().action(base + "/media/" + file.id + "/remove").method("post").holding([
           Form.token(frame),
-          H.button().submit().class("button button-ghost button-small").label(Frame.t(frame, "media.remove") + " · " + name).says(Frame.t(frame, "media.remove"))
+          H.button().submit().class("button button-ghost").label(Frame.t(frame, "media.remove") + " · " + name).says(Frame.t(frame, "media.remove"))
         ])
     ])
 }

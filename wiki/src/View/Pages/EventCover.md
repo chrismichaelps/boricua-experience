@@ -18,3 +18,6 @@ Resolved: Organizer-only noindex cover manager, real current/default category pr
 [[src/_MOC]] · [[decisions/ADR-0012-place-media]]
 
 Resolved source-cover presentation: an existing external/curated photograph is labeled as the current cover, never as a category illustration. The category-default notice applies only to the actual default asset.
+
+## Touch target Grill Log
+Resolved: file removal uses the normal button size so phone touch targets exceed44px rather than inheriting the compact40px button.
