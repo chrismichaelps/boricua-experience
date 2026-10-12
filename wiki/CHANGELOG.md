@@ -109,3 +109,9 @@ Promotes reviewed issue39: shared single focus indications, stronger neutral fie
 
 ## v0.2.4 · 2026-10-11
 Promotes reviewed issue42 application changes: trusted administrator crown, official-source curated publications, safe external booking links and publisher-aware assistant replies without local availability claims. Both database migrations applied and verified before promotion.222 assertions, all browser harnesses, allsource checks and formatter pass. Cache graph44. Expanded private CSV review and production data cleanup/import remain separate pending work.
+
+## Signup and discovery feedback · #45
+Signup now requires matching passwords in server validation and progressively exposes localized visibility controls and local length guidance. Native/AJAX submission feedback preserves named values, respects cancellation and resets on return. Empty/404 states use restrained typography;404 has a main heading. Signup stays out of indexing, external event images keep their real origin, and misleading Spanish alternate tags are removed. Browser cache45 and focused lifecycle regressions accompany the change.
+
+## v0.2.5
+Released matching-password signup, progressive password controls, submission feedback, restrained empty/404 presentation and corrected SEO image metadata.231 assertions, browser lifecycle checks and independent review passed.

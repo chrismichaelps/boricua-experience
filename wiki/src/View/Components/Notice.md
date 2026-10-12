@@ -28,3 +28,6 @@ Keyboard, disabled necessary checkbox, reduced motion, narrow/short screens, off
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Every consent POST includes Form.token(frame), including authenticated necessary/all/custom submissions. Native redirect only dismisses after persistence. Resolved.
+
+## Resolved feedback Grill Log · #45
+Empty states use restrained typography and action with no decorative icon. Existing icon argument stays source-compatible but is unused. Resolved.

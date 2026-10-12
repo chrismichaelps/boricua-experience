@@ -99,3 +99,6 @@ Resolved: nearby lookup stays private; initial acquisition uses the bounded accu
 
 ## Full-width search Grill Log · #36
 Resolved: explicit app-search body class on the open search route gives its shell8px viewport insets like home. Hero fills shell; remaining search rails retain1200px reading measure. Category/town pages keep their standard shells. Responsive hero image advertises100vw. Cache graph advances atomically to42; no filter/navigation changes.
+
+## Resolved feedback Grill Log · #45
+Existing script initializes optional password/submit feedback; document semantics and source metadata remain server-rendered. Resolved.

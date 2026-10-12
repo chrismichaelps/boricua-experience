@@ -18,3 +18,6 @@ Invalid dates, query bounds, malformed profile payloads and a deleted identity r
 Resolved: a valid profile remains typed, confirmed null signs out, and malformed non-null payload remains a dependency error. Live disposable development deletion additionally verifies cookie expiry/redirect.
 ## Referenced by
 [[src/_MOC]] · [[handoffs/homepage-refresh]]
+
+## Signup confirmation regression · #45
+Server validation rejects unequal confirmation; length failures retain focused errors when both fields match. No provider or account is touched by pure tests. Resolved.

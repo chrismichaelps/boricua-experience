@@ -56,6 +56,7 @@ export fn signUp(form: &Credentials.SignUp) -> Result[Credentials.SignUp, Proble
         Check.rule("displayName", |f: Credentials.SignUp| f.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
         Check.rule("email", |f: Credentials.SignUp| f.email, isEmail, EMAIL),
         Check.rule("password", |f: Credentials.SignUp| f.password, passwordOk, PASSWORD),
+        Check.ruleWith("confirmation", |f: Credentials.SignUp| f.confirmation, |f: Credentials.SignUp, v: Str| v == f.password, CONFIRMATION),
         Check.rule("birthDate", |f: Credentials.SignUp| f.birthDate, birthDateOk, BIRTH_DATE),
         Check.rule("birthDate", |f: Credentials.SignUp| f.birthDate, adultOk, ADULT),
         Check.rule("terms", |f: Credentials.SignUp| f.terms, |v: Bool| v, TERMS),

@@ -36,7 +36,7 @@ Email: one `@`, a dotted domain, no spaces, at most 254 characters. Passwords 8�
 
 ## Negative Logic (Prohibited Paths)
 
-- ❌ No password strength meter: the provider enforces its own policy and answers `weak_password`.
+- Local length guidance does not replace provider policy or guarantee password entropy.
 
 ## Edge Cases
 
@@ -49,7 +49,7 @@ MEDIUM.
 ## Grill Log
 
 - **Q:** Full RFC email grammar?
-  **A:** No: the provider confirms by sending mail; this only catches typos.
+  **A:** No: basic syntax only catches typos; signup confirmation is disabled and does not establish inbox ownership.
 
 ## Referenced by
 
@@ -63,3 +63,6 @@ MEDIUM.
   **A:** Sign-up refuses before anything is sent: the unavailable page, the session ended, and `bx_age` closing sign-up to that browser for a day, so the back button cannot change the answer. Google creates the identity before onboarding, so an under-age onboarding, or any onboarding while `bx_age` is set, deletes that fresh account through `privacy.refuse_minor` before refusing. Resolved.
 - **Q:** How is an impossible date told apart from a minor?
   **A:** Two rules on `birthDate`: `birthDateOk` rejects text that is not a real past date after 1900, and `adultOk` passes unreadable dates so only one error shows. `underage` is true only for a real date under `App.MINIMUM_AGE`. Resolved.
+
+## Resolved feedback Grill Log · #45
+Signup rejects mismatched confirmation on the server before identity creation. Strength guidance is local presentation only; existing8–72 length policy remains authoritative. No email ownership is inferred from disabled confirmation. Resolved.

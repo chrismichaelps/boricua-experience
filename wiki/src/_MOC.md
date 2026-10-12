@@ -245,3 +245,6 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/Domain]] — domain and nullable account-profile regressions.
 
 [[src/Infrastructure/SupabaseConfig]]
+
+- [[src/Public/Passwords]] · [[src/Public/SubmitFeedback]] — local password guidance and native submission feedback.
+- [[src/Test/FormFeedback]] — native and asynchronous submission lifecycle regressions.

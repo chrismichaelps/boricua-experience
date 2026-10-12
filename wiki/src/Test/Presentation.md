@@ -82,3 +82,6 @@ Resolved: regenerate used-message key fixture after replacing legal.version with
 
 ## Curated publication regression Grill Log · #42
 Resolved: Curated cards/detail and activity output label the official source, omit local participation/request management and reject unsafe/missing booking URLs. Ended/canceled curated listings omit booking actions; native organizer management stays available. SEO omits curated capacity/availability claims. Administrator badges derive from decoded trusted profiles and translate in both languages.
+
+## Resolved feedback Grill Log · #45
+Add output regressions for confirmation, accessible password controls, noindex signup,404 h1 and absolute event-image URLs. Resolved.

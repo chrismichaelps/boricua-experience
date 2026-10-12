@@ -33,7 +33,12 @@ export fn input(frame: &Frame.Frame, spec: &Field, errors: &Array[Problem.FieldE
   if invalid { control = control.at("aria-invalid", "true").at("aria-describedby", spec.name + "-error") }
   H.div().class(if invalid { "field field-invalid" } else { "field" }).holding([
       H.labelFor().at("for", "f-" + spec.name).says(spec.label),
-      extra(control),
+      if spec.kind == "password" {
+        H.div().class("password-control").data("show", Frame.t(frame, "auth.show_password")).data("hide", Frame.t(frame, "auth.hide_password")).data("guidance", Frame.t(frame, "auth.password_guidance")).data("mismatch", Frame.t(frame, "form.password_mismatch")).holding([
+            extra(control),
+            H.button().at("type", "button").class("password-visibility").at("hidden", "hidden").at("aria-controls", "f-" + spec.name).at("aria-pressed", "false").label(Frame.t(frame, "auth.show_password"))
+          ])
+      } else { extra(control) },
       if spec.hint.isEmpty() { H.nothing() } else { H.p().class("field-hint").says(spec.hint) },
       errorOf(frame, errors, spec.name)
     ])

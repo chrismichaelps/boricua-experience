@@ -82,3 +82,6 @@ Resolved: search matches home viewport height, minimum640px and rounded corners 
 
 ## Shared field focus and policy labels Grill Log · #39
 Resolved: search segments own one neutral2px inset focus indication; nested inputs/triggers do not add rings. Standard/picker fields use stronger neutral borders and a single focus stroke, with visible keyboard focus retained. Policy pages display effective dates without version numbers; internal agreement/version checks remain unchanged. Asset graph43 advances together.
+
+## Resolved feedback Grill Log · #45
+Password visibility targets44px; guidance meter neutral/ocean palette. Busy submitters preserve labels, show inline spinner and reduced-motion static state; no layout shift. Resolved.
