@@ -98,7 +98,14 @@ fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let base = Routes.EVENT_PREFIX + card.slug
   let reaction = detail.viewer.reaction
   let calendar = H.a().class("reaction").href(base + "/calendar.ics").holding([Icons.sized("calendar", 18), H.span().says(Frame.t(frame, "event.add_calendar"))])
-  if !detail.viewer.signedIn || detail.viewer.isOrganizer {
+  // Guests are invited to sign in to like; organizers see the count but cannot like their own activity.
+  if !detail.viewer.signedIn {
+    return H.div().class("reactions").holding([
+        H.a().class("reaction").href(Routes.SIGN_IN + "?return=" + base).holding([Icons.sized("heart", 18), H.span().says(Frame.t(frame, "event.like")), H.span().class("count").says(show(card.likeCount))]),
+        calendar
+      ])
+  }
+  if detail.viewer.isOrganizer || card.status == "cancelled" {
     return H.div().class("reactions").holding([
         H.span().class("reaction reaction-static").holding([Icons.sized("heart", 18), H.span().says(show(card.likeCount))]),
         calendar

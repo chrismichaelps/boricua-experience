@@ -63,7 +63,7 @@ failed.documentHandlers.get('bx:picker-close')({ detail: { dialog: {}, complete:
 assert.equal(completed, 3, 'unsupported animation never traps an open dialog');
 const pressed=setup(); const button={disabled:false,style:{transform:''},closest:()=>null};
 pressed.documentHandlers.get('pointerdown')({button:0,isPrimary:true,pointerId:7,target:{closest:()=>button}});
-assert.equal(pressed.controls.at(-1).frames.transform,' scale(.97)');
+assert.equal(JSON.stringify(pressed.controls.at(-1).frames.transform),JSON.stringify([' scale(1)',' scale(.97)']),'press starts from an explicit full size so the first press never collapses the button');
 const held=pressed.controls.at(-1); held.resolve(); await new Promise(setImmediate);
 assert.equal(held.cancelled,0,'held feedback persists until release');
 pressed.documentHandlers.get('pointercancel')({pointerId:7});

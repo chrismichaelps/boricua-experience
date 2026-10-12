@@ -20,3 +20,6 @@ Public dislike counts — rejected: they discourage small community events and i
 ## Referenced by
 
 [[decisions/_MOC]] · [[domain/Reaction]]
+
+## Who may react · #76
+Decision: `set_reaction` refuses a like or not-interested from the activity's organizer (`own_event`) and on a cancelled activity (`event_cancelled`); clearing a reaction is always allowed. Migration `20261012210000_reaction_rules` removes existing self-reactions so counts and taste signals exclude them, through the counting trigger. Rejected: hiding the control only in the interface, because a direct POST still inflated popularity.
