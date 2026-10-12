@@ -25,3 +25,6 @@ tags: [adr, media, security]
 ## Consequences
 
 A file a refused upload re-sends through its still-valid address stays unlisted until the next daily sweep. Advisors keep reporting the intentional closed-table and definer-function boundary.
+
+## Trusted confirmation refinement · #82
+Confirmation moves to service-role-only RPCs after read-back verification, with the sealed session actor supplied only by the server. Shared actor advisory locks serialize the daily reservation quota across places and activities. Parent locks precede media row locks and rechecks. Additive preparation precedes deployment; legacy member confirmation grants are removed after the new callers are live. Public storage remains the accepted explicit-upload model; hiding a listing does not revoke a previously known public URL.

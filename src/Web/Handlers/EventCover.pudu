@@ -1,0 +1,92 @@
+/** @Web.Handlers.EventCover.Organizer — an activity's cover photograph */
+module Web.Handlers.EventCover
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Routes as Routes
+import Domain.Event as Event
+import Domain.Media as Media
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Wire as Wire
+import View.Pages.EventCover as CoverPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The organizer's cover routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.EVENT_COVER, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| page(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_COVER, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| start(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_COVER_FINISH, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| finish(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_COVER_REMOVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| remove(&held, &visitor, &session)))
+  ]
+}
+
+/// The activity the member organizes, by the slug in the address.
+fn organized(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Result[Event.Detail, Problem.Problem] {
+  let (detail, _) = Serve.ask(app, &app.kinds.editable, Serve.signed(session, Serve.param(visitor, "slug"))) ?
+  Ok(detail)
+}
+
+/// The cover page.
+fn page(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match organized(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.eventCover, Serve.signed(session, detail.card.id)) {
+    case Ok(covers) => Respond.page(200, &CoverPage.render(&Context.frame(app, visitor), &detail, &covers))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Reserves a declared cover and answers where the browser sends that one photograph.
+fn start(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match organized(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let declared: Media.UploadRequest = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Invalid([Problem.FieldError{field: "file", key: "media.invalid"}])) }
+  }
+  match Serve.ask(app, &app.kinds.startEventCover, Serve.signed(session, Messages.EventCoverStart{eventId: detail.card.id, request: declared})) {
+    case Ok(ticket) => Respond.json(200, &Json.object(&[
+          ("id", Json.Text(ticket.id)),
+          ("uploadUrl", Json.Text(ticket.uploadUrl)),
+          ("apiKey", Json.Text(ticket.apiKey)),
+          ("finishUrl", Json.Text(Routes.EVENT_PREFIX + detail.card.slug + "/cover/" + ticket.id + "/finish"))
+        ]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Verifies the sent cover before it replaces the current one.
+fn finish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match organized(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.finishEventCover, Serve.signed(session, Messages.EventCoverFinish{eventId: detail.card.id, mediaId: Serve.param(visitor, "id")})) {
+    case Ok(_) => Respond.withFlash(app, Respond.json(200, &Json.object(&[("ok", Json.Boolean(true))])), "flash.media_saved")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Removes the uploaded cover, restoring the category illustration.
+fn remove(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match organized(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.removeEventCover, Serve.signed(session, Messages.EventCoverFinish{eventId: detail.card.id, mediaId: Serve.param(visitor, "id")})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + detail.card.slug + "/cover"), "flash.media_removed")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

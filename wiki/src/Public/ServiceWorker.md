@@ -92,3 +92,6 @@ Resolved: first-party import identities and worker cache advance together to46 f
 
 ## Menu reader Grill Log · #69
 Resolved: Include menu.css in the versioned static graph; advance the complete graph together before the menu/media release. Personalized HTML and media remain outside precache.
+
+## Release0.5.0 Grill Log
+Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.

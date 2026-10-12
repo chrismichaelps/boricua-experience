@@ -102,3 +102,6 @@ Resolved: browser import graph/worker/shell advance atomically; UNKNOWN_END_WIND
 
 ## Menu reader Grill Log · #69
 Resolved: The menu stylesheet joins the current versioned shell; advance the complete asset graph together before the menu/media release.
+
+## Release0.5.0 Grill Log
+Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.

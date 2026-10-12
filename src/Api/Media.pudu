@@ -30,9 +30,14 @@ export fn reserve(gateway: &Gateway.Gateway, placeId: Str, declared: &Media.Uplo
     ], Some(token), Gateway.Write)
 }
 
-/// Marks a stored file ready as the owner; a cover answers the paths it replaced.
-export fn confirm(gateway: &Gateway.Gateway, mediaId: Str, address: Str, token: Str) -> Result[Media.Confirmation, Problem.Problem] {
-  Gateway.query(gateway, Supabase.CONFIRM_PLACE_MEDIA, &[("p_media_id", Gateway.text(mediaId)), ("p_public_url", Gateway.text(address))], Some(token), Gateway.Write)
+/// Confirms verified place media with the server credential and the authorized session actor.
+export fn confirm(gateway: &Gateway.Gateway, mediaId: Str, address: Str, actorId: Str) -> Result[Media.Confirmation, Problem.Problem] {
+  let body = Json.object(&[("p_media_id", Gateway.text(mediaId)), ("p_public_url", Gateway.text(address)), ("p_actor_id", Gateway.text(actorId))])
+  let response = Gateway.sent(&gateway.http, privileged(gateway, Request.post(Supabase.RPC_PATH + Supabase.CONFIRM_PLACE_MEDIA, Content.json(&body)))) ?
+  match Response.readAs(&response) {
+    case Ok(found) => Ok(found)
+    case Err(_) => Err(Problem.Unavailable("media_confirmation"))
+  }
 }
 
 /// The owner's own pending upload, as reserved.
@@ -43,6 +48,36 @@ export fn pending(gateway: &Gateway.Gateway, mediaId: Str, token: Str) -> Result
 /// Removes a file record as the owner and answers its storage path.
 export fn discard(gateway: &Gateway.Gateway, mediaId: Str, token: Str) -> Result[Media.Discarded, Problem.Problem] {
   Gateway.query(gateway, Supabase.DISCARD_PLACE_MEDIA, &[("p_media_id", Gateway.text(mediaId))], Some(token), Gateway.Write)
+}
+
+/// Reserves an activity cover as its organizer.
+export fn reserveEventCover(gateway: &Gateway.Gateway, eventId: Str, declared: &Media.UploadRequest, token: Str) -> Result[Media.Reservation, Problem.Problem] {
+  Gateway.query(gateway, Supabase.RESERVE_EVENT_COVER, &[("p_event_id", Gateway.text(eventId)), ("p_media_type", Gateway.text(declared.mediaType)), ("p_bytes", Json.Number(declared.bytes))], Some(token), Gateway.Write)
+}
+
+/// The organizer's own pending activity cover, as reserved.
+export fn pendingEvent(gateway: &Gateway.Gateway, mediaId: Str, token: Str) -> Result[Media.EventPending, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PENDING_EVENT_MEDIA, &[("p_media_id", Gateway.text(mediaId))], Some(token), Gateway.Read)
+}
+
+/// Confirms a verified activity cover with the server credential and authorized session actor.
+export fn confirmEventCover(gateway: &Gateway.Gateway, mediaId: Str, address: Str, actorId: Str) -> Result[Media.Confirmation, Problem.Problem] {
+  let body = Json.object(&[("p_media_id", Gateway.text(mediaId)), ("p_public_url", Gateway.text(address)), ("p_actor_id", Gateway.text(actorId))])
+  let response = Gateway.sent(&gateway.http, privileged(gateway, Request.post(Supabase.RPC_PATH + Supabase.CONFIRM_EVENT_COVER, Content.json(&body)))) ?
+  match Response.readAs(&response) {
+    case Ok(found) => Ok(found)
+    case Err(_) => Err(Problem.Unavailable("media_confirmation"))
+  }
+}
+
+/// Removes an activity cover record, restoring the category illustration, and answers its path.
+export fn discardEventCover(gateway: &Gateway.Gateway, mediaId: Str, eventId: Str, token: Str) -> Result[Media.Discarded, Problem.Problem] {
+  Gateway.query(gateway, Supabase.DISCARD_EVENT_COVER, &[("p_media_id", Gateway.text(mediaId)), ("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write)
+}
+
+/// The organizer's ready uploaded covers, newest first.
+export fn eventCovers(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[Array[Media.StoredCover], Problem.Problem] {
+  Gateway.query(gateway, Supabase.EVENT_COVER, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Read)
 }
 
 /// The public address of a stored file.
@@ -100,4 +135,14 @@ export fn remove(gateway: &Gateway.Gateway, paths: &Array[Str]) -> Result[(), Pr
     case Err(Problem.Missing) => Ok(())
     case Err(problem) => Err(problem)
   }
+}
+
+/// Discards only an unconfirmed reservation; ready files are never invalid-upload cleanup targets.
+export fn discardPending(gateway: &Gateway.Gateway, mediaId: Str, token: Str) -> Result[Media.Discarded, Problem.Problem] {
+  Gateway.query(gateway, Supabase.DISCARD_PENDING_PLACE_MEDIA, &[("p_media_id", Gateway.text(mediaId))], Some(token), Gateway.Write)
+}
+
+/// Discards only a pending cover of the addressed activity.
+export fn discardPendingEvent(gateway: &Gateway.Gateway, mediaId: Str, eventId: Str, token: Str) -> Result[Media.Discarded, Problem.Problem] {
+  Gateway.query(gateway, Supabase.DISCARD_PENDING_EVENT_MEDIA, &[("p_media_id", Gateway.text(mediaId)), ("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write)
 }

@@ -58,3 +58,6 @@ Resolved: GEO supplies high-accuracy12s and balanced10s requests, total25s deadl
 
 ## Moving nearby and 3D Grill Log · #78
 Resolved: grid, speed-zoom bands, 3D pitch and building zoom, and the 3D preference key are configuration values.
+
+## Release0.5.0 Grill Log
+Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.

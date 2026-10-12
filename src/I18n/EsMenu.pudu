@@ -106,5 +106,9 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("media.needs_script", "Para subir archivos necesitas JavaScript activado en tu navegador."),
     ("media.rights", "Las fotos se reducen y se les quitan los datos de ubicación antes de subirlas. Quitar un archivo lo borra."),
     ("media.slide", "Foto :number de :total"),
-    ("media.photos_of", "Fotos de :name")
+    ("media.photos_of", "Fotos de :name"),
+    ("media.current_cover", "Portada actual"),
+    ("media.event_cover_title", "Foto de portada"),
+    ("media.event_cover_lead", "Tu portada aparece en la tarjeta de la actividad, en el mapa y arriba en su página. Sube solo fotos que tomaste o que tienes permiso para usar."),
+    ("media.event_cover_default", "Esta actividad muestra la ilustración de su categoría hasta que añadas una foto. No es una foto de la actividad.")
   ])

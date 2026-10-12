@@ -4,7 +4,7 @@ tags: [handoff, product, places]
 ---
 # Product strategy continuation
 
-2026-10-12 · issue69 · feature/69-menu-editor-form.
+2026-10-12 · issue82 · feature/82-activity-covers.
 
 ## Re-anchor
 The recovered product-strategy session ends with0.3.0 releasePR68. Currentmain/dev3a87d40, assets52, category-aware places and reviews are present. Database catalogue has16original categories plus hospedaje. Existing place templates remain authoritative; no fake production places are permitted.
@@ -41,7 +41,10 @@ All-category cover refinement: activities and permanent places in every supporte
 Implement additive schema/API first with rollback and ownership/race tests, then integrate owner and reader flows. Apply reviewed migrations to both projects and compare contracts/permissions. Do not mark the overall goal complete until every ledger item has current-state evidence.
 
 ## Exact next action
-Merge order: #77 (save/like fix), #75 (menu editor), media (stacked on #75), #79 (moving nearby + 3D); renumber asset versions on merge (each must exceed the last deployed). Apply place_media, place_media_pending and place_media_sweep to production, set CRON_SECRET in Vercel, deploy. Then activity covers for every category and review photos. Preserve all remaining goal ledger items.
+Release 0.4.0 is merged to main (#81) and deployed to production (asset version 56): menu editor, place photos and menu files, save/like fix, moving nearby and 3D map. Production database has reaction_rules and the four place-media migrations with function hashes matching development; CRON_SECRET is set for the daily media sweep. Next: activity covers for every category (organizer-authorised, same reserve/verify/sweep pipeline), review photos, favorites and For You, waitlists, organizer tools, assistant grounded in places. Preserve all remaining goal ledger items.
+
+## Release 0.4.0 evidence
+Each PR was reviewed before merge and its findings fixed (#77 reaction feedback; #75 authorize-before-decode, duplicate error, labels; #80 curated cover, typeless PDF, literal cover check migration, sweep headers; #79 remembered-3D framing, speed-zoom hysteresis, 3D harness). Release branch: 11 suites, 409 assertions, 28 harness passes. Production smoke: pages 200, assets v56, sweep route 404 without the secret, guest like links to sign-in, 3D switch present, identical map area MISS then HIT at the edge cache, zero error-level logs in the first ten minutes.
 
 ## Media evidence
 Development: three media migrations applied; rolled-back RPC checks (PDF cover refused, ninth photo refused, cover replacement and cover_url, non-owner refused, hidden place unreadable to others). Browser: 2400×1500 JPEG stored as 1600×1000 WebP without EXIF, cover_url updated; menu PDF listed with label and noopener; removal clears record, file and cover_url; a disguised HTML upload is refused and deleted; its re-sent file was removed by the sweep while the real PDF stayed. Sweep route: 404 without or with a wrong secret. Full suite 11 suites, 406 assertions, all harnesses including media-upload.
@@ -70,3 +73,14 @@ The25BSNF games match the official calendar feed for UTC start and team order, w
 Private audit receipts, source snapshots and the reviewed CSV remain ignored, with restrictive filesystem permissions. They must not be copied into commits or pull requests. Photography credits spacing is merged into devPR73 with all six attributions and16external links retained; isolated Chrome verifies two columns at1280px and one at390px without overflow. Production application deployment remains pending.
 
 The follow-up price audit inspected activity-specific pricing popups rather than the generic site information. Three booking types had incorrectly inherited the generic15USDcost. Sixteenproduction occurrences were corrected atomically under owner/source/old-value/timestamp guards: three now20USD and thirteen40USD. Matching public-detail RPC prices were verified for all16. The ignored CSV, private backup, source recheck snapshots and audit receipt were updated; no dates, identities or native publications changed. Menu validation is mergeddevPR74; the next branch owns actual owner forms and routes.
+
+## Owner menu and features re-anchor
+The newer session title is “Boricua Experience owner menu and features”; its session54a1a1c4-d65e-47ac-aeb9-bec5c97317e0ends during activity-cover testing. Worktree branchfeature/82-activity-covers contains that unfinished work; v0.4.0 is the current release. Historical evidence above remains labeled by increment, rather than treated as current deployment proof.
+
+Current ordered backlog: activity covers for every category; review photos; favorites/For You; waitlists; organizer tools; assistant place grounding. Earlier category activity facts, ownership claims, essential emails and real production places remain tracked in the complete ledger.
+
+Activity-cover implementation is present with independent review corrections: trusted server confirmations for both place/activity pipelines, pending-only invalid cleanup, storage-read failures preserved, route/media identity binding, parent/media rechecks and actor-wide serialized quota. Development migrations event_covers, media_confirmation_boundary, pending_media_cleanup and confirmation_cutover are applied. Rollback tests reject null/PDF type, wrong event, missing object, removed stale IDs and member confirmation; replacement and dynamic category fallback pass. Overlapping event/place reservation requests at39admit exactlyone and refuse the otherPT429; temporary audit/media fixtures are removed. Full417assertions and28harnesses pass before the additional source-cover rendering assertion; whole-source checks170modules passed. Source-cover presentation now avoids claiming real supplied photos are illustrations. Further browser verification is pending: local app catalog reads time out even though direct authenticated categories requests succeed. The local development process is live; do not restart solely on observation timeouts.
+
+Production has not received these changes yet. Prepare additive RPCs before deploying privileged callers, then remove legacy member-confirm grants immediately after deployment; compare function hashes, ACLs and RLS in both projects. No public production testing data or files were added. Exact next action: resolve the local dependency timeout and verify upload/replace/remove in desktop and phone browser, then finish the reviewed activity-cover PR and production cutover. Preserve every remaining backlog item.
+
+Browser retry recovered without a server restart or timeout-policy change. Existing development seed account completed authenticated desktop upload (1600px WebP), phone replacement at390px, and removal. Exactlyone ready cover remained after replacement; the old object was deleted. Removal restored null cover_url with0media records and0stored files. Browser inspection found a40px removal control; normal-size buttons now replace the compact style in both activity/place media managers. Production remains unchanged until release preparation and cutover.

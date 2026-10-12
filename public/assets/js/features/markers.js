@@ -1,4 +1,4 @@
-import { create } from '../utils/dom.js?v=56';
+import { create } from '../utils/dom.js?v=57';
 
 export function priceMarker(maplibregl, pin, onSelect) {
   const element = create('button', { type: 'button', class: 'price-marker', 'data-count': '1', 'aria-label': `${pin.title}, ${pin.price}` }, pin.price);

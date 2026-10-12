@@ -57,3 +57,9 @@ Resolved: PLACE_MENU and SAVE_PLACE_MENU name the bounded owner-authorized menu 
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** FEATURED_DESTINATIONS names the bounded public read-only content RPC. Resolved.
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
+
+## Verification cleanup Grill Log
+Resolved: storage inspection transport errors propagate without discarding records or files. Invalid content cleanup atomically discards only a still-pending reservation; a file is removed only after successful discard, so overlapping confirmation cannot destroy ready media.

@@ -60,3 +60,6 @@ SHALLOW.
 
 ## Menu reader Grill Log · #69
 Resolved: Concatenate the dedicated menu reader routes beside the place routes; existing identity and CSRF wrappers stay intact.
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.

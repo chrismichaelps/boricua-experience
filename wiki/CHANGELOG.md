@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-12 · [[src/Database/EventCovers]] · organizer-managed activity covers across categories; trusted server confirmation, shared reservation quota and pending-only cleanup; development verification passes, production cutover pending · issue #82.
+
 - 2026-10-12 · release 0.4.0 · owner menu editor, place photos and menu files, save/like fix, moving nearby and 3D map; asset version 56 · issues #69 #76 #78.
 
 - 2026-10-12 · [[src/Public/Explorer]] · nearby areas snap to a zoom grid and name their language so the edge cache shares them across moving visitors; hidden tabs defer refreshes; following zoom adapts to speed with hysteresis; optional 3D buildings from existing tiles · issue #78.
@@ -156,3 +158,6 @@ Release nullable publication facts, consistent finite discovery expiry, null-saf
 
 ## v0.3.0
 Release production site-URL guard, tolerant map location, empty-camera map reads, recurring activities listed once, nearby discovery by town and radius, one rail per event with hidden gems, category-specific places with adaptive publishing, and reviews with owner answers and moderation. Migrations event_series, places and reviews applied to development and production; function definitions verified identical before replacement.
+
+## v0.5.0
+Organizer cover photographs for activities across all categories, trusted server-only media confirmation, shared actor reservation limits, race-safe pending cleanup and48px removal controls. Existing source covers remain labeled accurately. Additive migrations prepare both environments before new callers deploy; legacy member confirmation grants are removed after cutover. Development browser upload/replace/remove and storage cleanup are verified; production smoke/parity follow deployment.

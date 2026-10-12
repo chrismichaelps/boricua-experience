@@ -60,3 +60,6 @@ Resolved: PLACE_MENU names /lugar/:slug/menu; this GET reader has no mutation or
 
 ## Owner editor Grill Log · #69
 Resolved: Add PLACE_MENU_EDIT for owner GET/POST at /lugar/:slug/menu/edit.
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.

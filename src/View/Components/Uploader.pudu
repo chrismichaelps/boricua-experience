@@ -1,0 +1,30 @@
+/** @View.Components.Uploader.Picker — the shared photo and document picker for owner uploads */
+module View.Components.Uploader
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.Limits as Limits
+import View.Components.Form as Form
+import View.Frame as Frame
+
+/// Accepted photographs; the browser re-encodes them before sending, which drops location metadata.
+export const PHOTO_TYPES: Str = "image/jpeg,image/png,image/webp,image/heic,image/heif"
+
+/// A file picker that resizes photographs in the browser, sends the file straight to storage and asks
+/// the server at `action` to verify it. It needs scripts; without them it says so instead of failing.
+export fn render(frame: &Frame.Frame, action: Str, kind: Str, accept: Str, label: Str, labelled: Bool) -> H.Node {
+  let id = "media-" + kind
+  H.form().class("media-upload").action(action).method("post").data("feature", "media-upload").data("kind", kind)
+    .data("choose", Frame.t(frame, "media.choose")).data("working", Frame.t(frame, "media.working")).data("failed", Frame.t(frame, "media.failed"))
+    .data("too-large", Frame.t(frame, "media.too_large")).data("invalid", Frame.t(frame, "media.invalid")).data("limit", Frame.t(frame, "media.limit")).holding([
+      Form.token(frame),
+      H.div().class("field").holding([
+          H.labelFor().at("for", id).says(label),
+          H.input().kind("file").id(id).name("file").at("accept", accept).required()
+        ]),
+      if labelled { Form.input(frame, &Form.field("label", Frame.t(frame, "media.label"), ""), &[], |c: H.Node| c.at("maxlength", show(Limits.MEDIA_LABEL_MAX))) } else { H.nothing() },
+      H.p().class("muted small media-script-note").says(Frame.t(frame, "media.needs_script")),
+      H.button().submit().class("button button-small").says(Frame.t(frame, "media.upload")),
+      H.p().class("media-status small").role("status").at("aria-live", "polite")
+    ])
+}

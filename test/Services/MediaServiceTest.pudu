@@ -1,0 +1,59 @@
+/** @Test.MediaService.Suite — finish failures preserve referenced storage */
+module Services.MediaServiceTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Http as Http
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Test as Test
+import Api.Supabase.Gateway as Gateway
+import Domain.Session as Session
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
+import PuduLangHttpClient.Response as Response
+import Services.Media as MediaService
+import Services.Runtime as Runtime
+
+/// Finishes an isolated reservation against a recorded transport with a selected failure.
+fn outcome(event: Bool, inspectionFails: Bool, discardFails: Bool) -> (Bool, Array[Str]) {
+  let calls: Sync.Cell[Array[Str]] = Sync.cell([])
+  let pending = Json.object(&[("id", Json.Text("media")), (if event { "event_id" } else { "place_id" }, Json.Text("parent")), ("kind", Json.Text("cover")), ("media_type", Json.Text("image/webp")), ("bytes", Json.Number(16)), ("path", Json.Text("fixture.webp"))])
+  let gateway = Gateway.over(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      let _noted = Sync.set(&calls, Result.unwrapOr(Sync.get(&calls), []).push((if request.method == Http.Delete { "DELETE " } else { "" }) + request.uri))
+      if request.uri.contains("/rpc/pending_place_media") || request.uri.contains("/rpc/pending_event_media") { return Ok(Response.answer(&request, 200).withJson(&pending)) }
+      if request.uri.contains("discard_pending") {
+        if discardFails { return Err(HttpClient.Rejected("discard unavailable")) }
+        return Ok(Response.answer(&request, 200).withJson(&Json.object(&[("path", Json.Text("fixture.webp"))])))
+      }
+      if request.method == Http.Delete { return Ok(Response.answer(&request, 200).withJson(&Json.object(&[]))) }
+      if inspectionFails { return Err(HttpClient.Rejected("inspection unavailable")) }
+      Ok(Response.answer(&request, 200).withText("<html>invalid photograph"))
+    }, "https://example.test", "fixture")
+  let runtime = Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://example.test")
+  let session = Session.Session{accessToken: "fixture", refreshToken: "fixture", userId: "actor", email: "fixture", provider: "email", expiresAt: 1, issuedAt: 1, signedInAt: 1, formKey: "fixture"}
+  let result = if event { MediaService.finishEventCover(&runtime, "parent", "media", &session) } else { MediaService.finish(&runtime, "parent", "media", &session) }
+  (Result.isErr(&result), Result.unwrapOr(Sync.get(&calls), []))
+}
+
+/// Observes cleanup requests for both kinds of upload.
+fn main() -> Int {
+  var assertions = []
+  for event in [false, true] {
+    let unavailable = outcome(event, true, false)
+    let conflict = outcome(event, false, true)
+    let invalid = outcome(event, false, false)
+    assertions = assertions.concat([
+        Test.that("inspection failure is propagated without cleanup", unavailable[0] && unavailable[1].filter(|uri: Str| uri.contains("discard") || uri.startsWith("DELETE")).isEmpty()),
+        Test.that("failed pending discard cannot delete storage", conflict[0] && conflict[1].filter(|uri: Str| uri.startsWith("DELETE")).isEmpty()),
+        Test.that("invalid file is removed only after pending discard", invalid[0] && invalid[1].length() == 4 && invalid[1][2].contains("discard_pending") && invalid[1][3].startsWith("DELETE"))
+      ])
+  }
+  let checks = Test.suite("MediaService", &assertions)
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}
