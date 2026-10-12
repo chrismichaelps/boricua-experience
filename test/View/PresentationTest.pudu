@@ -17,6 +17,7 @@ import Domain.Profile as Profile
 import Domain.Search as Search
 import I18n.Dates as Dates
 import I18n.Format as Format
+import Services.Discovery as Discovery
 import Services.Participation as ParticipationService
 import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
@@ -31,6 +32,7 @@ import View.Pages.Activity as ActivityPage
 import View.Pages.Auth as Auth
 import View.Pages.Errors as Errors
 import View.Pages.Event as EventPage
+import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
 import View.Pages.Profile as ProfilePage
@@ -92,6 +94,9 @@ fn main() -> Int {
   let singleCard = Html.render(&EventCard.card(&es, &detail.card).html())
   let seriesPage = Html.render(&EventPage.render(&en, &Event.Detail{..detail, otherDates: [Event.Occurrence{slug: "plaza-2026-11-21", startsAt: "2026-11-21T22:00:00+00:00", endsAt: None}]}, &None))
   let singlePage = Html.render(&EventPage.render(&en, &detail, &None))
+  let homePage = Html.render(&HomePage.render(&en, &catalog, &Discovery.Home{recommended: [], soon: [], weekend: [], free: [], gems: [detail.card]}))
+  let nearListing = Html.render(&SearchPage.render(&es, &catalog, &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000), lat: Some(18.011), lng: Some(-66.614), sort: Search.Near}, &SearchPage.Open, &Event.Page{items: [], next: Some("24")}))
+  let nearRailMarkup = HomePage.nearRail(&es, "Ponce", &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000)}, &[detail.card])
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -113,6 +118,12 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.that("home offers a town and radius without location permission", homePage.contains("action=\"/search\"") && homePage.contains("name=\"cerca\"") && homePage.contains("name=\"radio\"")),
+      Test.that("home keeps a slot for the remembered-town rail", homePage.contains("data-feature=\"near-rail\"") && homePage.contains("/api/home/near")),
+      Test.that("home shows hidden gems", homePage.contains("rail-gems") && homePage.contains("Hidden gems")),
+      Test.that("a near-town listing keeps town and radius, not coordinates, in its links", nearListing.contains("cerca=ponce") && nearListing.contains("radio=10") && !nearListing.contains("lat=18.011")),
+      Test.that("a near-town listing offers the radius choice", nearListing.contains("name=\"radio\"") && nearListing.contains("A 10 km o menos")),
+      Test.that("the remembered-town rail names the town and links its search", nearRailMarkup.contains("Cerca de Ponce · 10 km") && nearRailMarkup.contains("/search?cerca=ponce&amp;radio=10")),
       Test.that("a recurring card counts its later dates", seriesCard.contains("3 fechas más")),
       Test.that("a single card names no later dates", !singleCard.contains("card-series")),
       Test.that("a recurring page links its other dates", seriesPage.contains("Other dates") && seriesPage.contains("href=\"/e/plaza-2026-11-21\"")),
@@ -163,15 +174,15 @@ fn main() -> Int {
       Test.equals("unknown archived card never claims actual end", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("This activity has ended"), &false),
       Test.equals("stale English submission has neutral refusal", &Frame.t(&en, "problem.event_ended"), &"This activity is no longer accepting requests."),
       Test.equals("stale Spanish submission has neutral refusal", &Frame.t(&es, "problem.event_ended"), &"Esta actividad ya no acepta solicitudes."),
-      Test.equals("unknown English price is explicit", &Format.price(&Locale.En, None), &"Price not provided"),
-      Test.equals("unknown Spanish price is explicit", &Format.price(&Locale.Es, None), &"Precio no informado"),
+      Test.equals("unknown English price is explicit", &Format.price(&Locale.En, None), &"Check admission"),
+      Test.equals("unknown Spanish price is explicit", &Format.price(&Locale.Es, None), &"Consulta la entrada"),
       Test.equals("unknown English end is explicit", &Dates.schedule(&Locale.En, unknownCard.startsAt, None).contains("End time not provided"), &true),
       Test.equals("unknown Spanish end is explicit", &Dates.schedule(&Locale.Es, unknownCard.startsAt, None).contains("Hora de fin no informada"), &true),
       Test.equals("unknown SEO has no invented end", &Json.field(&unknownSeo, "endDate"), &None),
       Test.equals("unknown SEO has no invented offer", &Json.field(&unknownSeo, "offers"), &None),
       Test.equals("unknown calendar has no invented end", &unknownCalendar.contains("DTEND:"), &false),
       Test.equals("unknown calendar keeps start", &unknownCalendar.contains("DTSTART:"), &true),
-      Test.equals("unknown card retains price message", &Html.render(&EventCard.card(&en, &unknownCard).html()).contains("Price not provided"), &true),
+      Test.equals("unknown card retains price message", &Html.render(&EventCard.card(&en, &unknownCard).html()).contains("Check admission"), &true),
       Test.equals("deadline card immediately says ended", &endedOutput.contains("Esta actividad ya terminó."), &true),
       Test.equals("deadline card has no stale available seats", &endedOutput.contains("Quedan 500"), &false),
       Test.equals("ended activity keeps event navigation", &endedActivity.contains("href=\"/e/" + endedCard.slug + "\""), &true),

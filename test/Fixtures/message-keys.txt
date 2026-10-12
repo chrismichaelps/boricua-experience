@@ -352,10 +352,14 @@ home.description
 home.discover_town
 home.for_you
 home.free
+home.gems
 home.headline
 home.near_action
 home.near_body
+home.near_go
+home.near_pick_town
 home.near_title
+home.near_town
 home.pause_slides
 home.play_slides
 home.popular
@@ -622,6 +626,7 @@ search.activities
 search.all_categories
 search.anywhere
 search.apply
+search.around_town
 search.categories
 search.category
 search.category_description
@@ -634,7 +639,12 @@ search.find_town
 search.free_only
 search.label
 search.load_more
+search.near
+search.near_anywhere
+search.nearby_towns
 search.no_towns
+search.radius
+search.radius_km
 search.results_for
 search.show_map
 search.sort

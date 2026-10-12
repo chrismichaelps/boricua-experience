@@ -1,5 +1,5 @@
-import { message } from '../constants/messages.js?v=49';
-import { toast } from './toast.js?v=49';
+import { message } from '../constants/messages.js?v=50';
+import { toast } from './toast.js?v=50';
 
 export function share(button) {
   button.addEventListener('click', async () => {
