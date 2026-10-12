@@ -58,3 +58,9 @@ export const CATALOG_TTL_MILLIS: Int = 600000
 export const BODY_BYTES_MAX: Int = 1048576
 /// Largest accepted photo after the browser resizes it, in bytes.
 export const AVATAR_BYTES_MAX: Int = 614400
+/// Largest place photograph or menu document stored, in bytes; enforced again by the database and bucket.
+export const MEDIA_BYTES_MAX: Int = 3145728
+/// Longest label of a menu document.
+export const MEDIA_LABEL_MAX: Int = 80
+/// Leading bytes read back from storage to confirm a file is what its upload declared.
+export const MEDIA_SIGNATURE_BYTES: Int = 16

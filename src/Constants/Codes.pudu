@@ -9,6 +9,10 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("menu_empty", "menu.empty_publish"),
     ("menu_unsupported", "menu.unsupported"),
     ("menu_limit", "menu.limit"),
+    ("media_invalid", "media.invalid"),
+    ("media_too_large", "media.too_large"),
+    ("media_limit", "media.limit"),
+    ("media_unsupported", "media.unsupported"),
     ("not_authenticated", "problem.signed_out"),
     ("profile_missing", "problem.signed_out"),
     ("onboarding_required", "problem.onboarding"),
@@ -77,3 +81,9 @@ export const SESSION_EXPIRED: Str = "session_expired"
 export const FLOW_EXPIRED: Str = "flow_expired"
 /// A menu save whose revision no longer matches.
 export const MENU_CHANGED: Str = "menu_changed"
+/// A new menu for a category without menus.
+export const MENU_UNSUPPORTED: Str = "menu_unsupported"
+/// A new menu beyond the per-place limit.
+export const MENU_LIMIT: Str = "menu_limit"
+/// A file that is not what its upload declared.
+export const MEDIA_INVALID: Str = "media_invalid"

@@ -43,3 +43,6 @@ One handler per kind.
 
 ## Menu reader Grill Log · #69
 Resolved: Register menuBoard by delegating to Services.Menus with the viewer session; no handler business rules.
+
+## Owner editor Grill Log · #69
+Resolved: Register saveMenu by delegation to Services.Menus.save without business logic.

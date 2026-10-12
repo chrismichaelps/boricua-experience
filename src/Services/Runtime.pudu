@@ -15,6 +15,7 @@ export type Runtime = {
   sessionKey: Bytes,
   siteUrl: Str,
   secureCookies: Bool,
+  cronSecret: Str,
   catalog: Sync.Cell[Option[(Int, Catalog.Catalog)]]
 }
 
@@ -28,11 +29,12 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
       sessionKey: key,
       siteUrl: settings.siteUrl,
       secureCookies: Settings.isSecure(settings),
+      cronSecret: Secret.reveal(&settings.cronSecret),
       catalog: Sync.cell(None)
     })
 }
 
 /// A runtime over a given gateway, for tests.
 export fn over(gateway: Gateway.Gateway, sessionKey: Bytes, siteUrl: Str) -> Runtime {
-  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, catalog: Sync.cell(None)}
+  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", catalog: Sync.cell(None)}
 }

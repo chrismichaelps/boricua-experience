@@ -1,0 +1,139 @@
+/** @View.Pages.MenuForm.Owner — structured menu editing that works without scripts */
+module View.Pages.MenuForm
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Option as Option
+import Constants.Menus as Limits
+import Constants.Routes as Routes
+import Domain.MenuDraft as Draft
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Utils.Query as Query
+import View.Components.Form as Form
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The owner editor; after a conflict the submitted revision stays and the current version is one link away.
+export fn render(frame: &Frame.Frame, detail: &Place.Detail, editing: &Draft.MenuEditing, problem: &Option[Problem.Problem], conflict: Bool) -> Html.Html {
+  let errors = match problem {
+    case Some(found) => Problem.fieldErrors(&found)
+    case None => []
+  }
+  let base = Routes.PLACE_PREFIX + detail.card.slug
+  let action = base + "/menu/edit"
+  let title = Frame.t(frame, if editing.menuId == None { "menu.new_title" } else { "menu.edit_title" })
+  let draft = editing.draft
+  let count = draft.sections.length()
+  let meta = Seo.meta(title + " · " + detail.card.name, detail.card.summary, action, false)
+  Layout.page(frame, &meta, Layout.Create, H.div().class("narrow menu-editor").holding([
+        H.a().class("text-link menu-back").href(base + "/menu").says(detail.card.name),
+        H.h1().class("page-title").says(title),
+        H.p().class("lead").says(Frame.t(frame, "menu.edit_lead")),
+        Form.problemBanner(frame, problem),
+        match editing.menuId {
+          case Some(id) => if conflict { H.p().class("menu-edit-latest").holding([H.a().class("button button-ghost").href(action + Query.render(&[("menu", id)])).says(Frame.t(frame, "menu.latest"))]) } else { H.nothing() }
+          case None => H.nothing()
+        },
+        H.form().class("stack-form").action(action).method("post").at("novalidate", "novalidate").holding([
+            Form.token(frame),
+            // The first submit button answers Enter in a text field, so it must save rather than restructure.
+            H.button().submit().class("sr-only").at("name", Limits.EDIT_FIELD).at("value", Limits.EDIT_SAVE).at("tabindex", "-1").at("aria-hidden", "true").says(Frame.t(frame, "menu.save")),
+            hidden("menuId", Option.unwrapOr(editing.menuId, "")),
+            hidden("revision", show(editing.revision)),
+            hidden("sections", show(count)),
+            H.section().class("form-section").holding([
+                H.h2().class("section-title").says(Frame.t(frame, "menu.basics")),
+                Form.input(frame, &Form.Field{..Form.field("name", Frame.t(frame, "menu.field_name"), draft.name), required: true}, &errors, |c: H.Node| c.at("maxlength", show(Limits.NAME_MAX))),
+                Form.area(frame, &Form.field("description", Frame.t(frame, "menu.field_description"), draft.description), 3, &errors),
+                H.div().class("row-2").holding([
+                    Form.select(frame, &Form.field("locale", Frame.t(frame, "menu.field_locale"), draft.locale), &Limits.LOCALES.map(|code: Str| (code, Frame.t(frame, "menu.locale." + code))), &errors),
+                    Form.select(frame, &Form.Field{..Form.field("status", Frame.t(frame, "menu.field_status"), draft.status), hint: Frame.t(frame, "menu.hint_status")}, &Limits.STATUSES.map(|status: Str| (status, Frame.t(frame, "menu.status." + status))), &errors)
+                  ]),
+                fieldError(frame, &errors, "sections")
+              ]),
+            if count == 0 { H.p().class("muted").says(Frame.t(frame, "menu.no_sections")) } else { H.nothing() },
+            H.div().class("menu-edit-sections").holding((0..count).map(|s: Int| sectionOf(frame, &errors, &draft, s))),
+            command(Limits.EDIT_ADD_SECTION, Frame.t(frame, "menu.add_section"), ""),
+            H.p().class("muted small").says(Frame.t(frame, "menu.edit_note")),
+            H.button().submit().class("button button-block").at("name", Limits.EDIT_FIELD).at("value", Limits.EDIT_SAVE).says(Frame.t(frame, "menu.save"))
+          ])
+      ]))
+}
+
+/// One section with its dishes and its own move and remove commands.
+fn sectionOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], draft: &Draft.MenuEditorDraft, s: Int) -> H.Node {
+  let section = draft.sections[s]
+  let prefix = "s." + show(s)
+  let label = Frame.tf(frame, "menu.section_label", &[("n", show(s + 1))])
+  let items = section.items.length()
+  H.fieldset().class("form-section menu-edit-section").holding([
+      H.legend().class("section-title").says(label),
+      hidden(prefix + ".id", section.id),
+      hidden(prefix + ".items", show(items)),
+      Form.input(frame, &Form.Field{..Form.field(prefix + ".name", Frame.t(frame, "menu.field_section"), section.name), required: true}, errors, |c: H.Node| c.at("maxlength", show(Limits.NAME_MAX))),
+      tools(frame, label, show(s), s, draft.sections.length(), Limits.EDIT_SECTION_UP, Limits.EDIT_SECTION_DOWN, Limits.EDIT_REMOVE_SECTION),
+      H.div().class("menu-edit-dishes").holding((0..items).map(|i: Int| dishOf(frame, errors, &section, s, i))),
+      command(Limits.EDIT_ADD_DISH + ":" + show(s), Frame.t(frame, "menu.add_dish"), label)
+    ])
+}
+
+/// One dish; blank price, availability and allergen declaration stay unknown rather than free or absent.
+fn dishOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], section: &Draft.MenuSectionInput, s: Int, i: Int) -> H.Node {
+  let item = section.items[i]
+  let field = "s." + show(s) + ".i." + show(i)
+  let dish = Frame.tf(frame, "menu.dish_label", &[("n", show(i + 1))])
+  let label = if section.name.trim().isEmpty() { dish } else { dish + " · " + section.name }
+  H.fieldset().class("menu-edit-dish").holding([
+      H.legend().says(dish),
+      hidden(field + ".id", item.id),
+      Form.input(frame, &Form.Field{..Form.field(field + ".name", Frame.t(frame, "menu.field_dish"), item.name), required: true}, errors, |c: H.Node| c.at("maxlength", show(Limits.DISH_NAME_MAX))),
+      Form.area(frame, &Form.field(field + ".description", Frame.t(frame, "menu.field_description"), item.description), 2, errors),
+      H.div().class("row-2").holding([
+          Form.input(frame, &Form.Field{..Form.field(field + ".price", Frame.t(frame, "menu.field_price"), item.price), hint: Frame.t(frame, "menu.hint_price")}, errors, |c: H.Node| c.at("inputmode", "decimal").at("maxlength", "9")),
+          Form.input(frame, &Form.field(field + ".priceNote", Frame.t(frame, "menu.field_price_note"), item.priceNote), errors, |c: H.Node| c.at("maxlength", show(Limits.PRICE_NOTE_MAX)))
+        ]),
+      Form.select(frame, &Form.field(field + ".available", Frame.t(frame, "menu.field_available"), item.available), &[("", Frame.t(frame, "menu.not_declared")), ("yes", Frame.t(frame, "menu.available")), ("no", Frame.t(frame, "menu.unavailable"))], errors),
+      checks(frame, errors, field + ".dietary", Frame.t(frame, "menu.field_dietary"), &Limits.DIETARY, &item.dietary, field + ".diet.", "menu.diet."),
+      Form.select(frame, &Form.Field{..Form.field(field + ".allergensKnown", Frame.t(frame, "menu.field_allergen_declaration"), if item.allergensKnown { "yes" } else { "" }), hint: Frame.t(frame, "menu.hint_allergens")}, &[("", Frame.t(frame, "menu.not_declared")), ("yes", Frame.t(frame, "menu.allergens_declared"))], errors),
+      checks(frame, errors, field + ".allergens", Frame.t(frame, "menu.allergens"), &Limits.ALLERGENS, &item.allergens, field + ".allergen.", "menu.allergen."),
+      fieldError(frame, errors, field + ".id"),
+      tools(frame, label, show(s) + ":" + show(i), i, section.items.length(), Limits.EDIT_DISH_UP, Limits.EDIT_DISH_DOWN, Limits.EDIT_REMOVE_DISH)
+    ])
+}
+
+/// A group of declaration checkboxes with its refusal.
+fn checks(frame: &Frame.Frame, errors: &Array[Problem.FieldError], field: Str, legend: Str, tags: &Array[Str], chosen: &Array[Str], prefix: Str, labels: Str) -> H.Node {
+  let refused = Problem.errorFor(errors, field)
+  H.fieldset().class(if refused == None { "menu-edit-checks" } else { "menu-edit-checks field-invalid" }).holding([H.legend().says(legend)]
+      .concat(tags.map(|tag: Str| Form.checkbox(frame, prefix + tag, H.span().says(Frame.t(frame, labels + tag)), chosen.contains(tag), errors)))
+      .concat([fieldError(frame, errors, field)]))
+}
+
+/// Move and remove commands; they change only the draft shown again, never the saved menu.
+fn tools(frame: &Frame.Frame, label: Str, target: Str, position: Int, total: Int, up: Str, down: Str, remove: Str) -> H.Node {
+  H.div().class("menu-edit-tools").holding([
+      if position > 0 { command(up + ":" + target, Frame.t(frame, "menu.move_up"), label) } else { H.nothing() },
+      if position < total - 1 { command(down + ":" + target, Frame.t(frame, "menu.move_down"), label) } else { H.nothing() },
+      command(remove + ":" + target, Frame.t(frame, "menu.remove"), label)
+    ])
+}
+
+/// A structural submit button, named for assistive technology with the part it changes.
+fn command(value: Str, text: Str, target: Str) -> H.Node {
+  let button = H.button().submit().class("button button-ghost button-small menu-edit-command").at("name", Limits.EDIT_FIELD).at("value", value).at("formnovalidate", "formnovalidate")
+  (if target.isEmpty() { button } else { button.label(text + " · " + target) }).says(text)
+}
+
+/// A hidden field.
+fn hidden(name: Str, value: Str) -> H.Node { H.input().kind("hidden").name(name).value(value) }
+
+/// The refusal of a field without its own control.
+fn fieldError(frame: &Frame.Frame, errors: &Array[Problem.FieldError], field: Str) -> H.Node {
+  match Problem.errorFor(errors, field) {
+    case Some(key) => H.p().class("field-error").role("alert").says(Frame.t(frame, key))
+    case None => H.nothing()
+  }
+}

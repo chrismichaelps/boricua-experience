@@ -54,9 +54,11 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/I18n/Dates]] — Weekday and month names, short and long dates, relative days (today, tomorrow, weekday), card time lines, and full schedules, in Puerto Rico time.
 - [[src/I18n/En]] — The English catalogue.
 - [[src/I18n/EnAccount]] — English sign-in, account, form, problem, notice, and inbox text.
+- [[src/I18n/EnMenu]] — English menu reader and owner editor text.
 - [[src/I18n/EnLegal]] — English counterpart of [[src/I18n/EsLegal]].
 - [[src/I18n/Es]] — The Spanish catalogue: every user-facing string by key.
 - [[src/I18n/EsAccount]] — Spanish sign-in, account, form, problem, notice, and inbox text.
+- [[src/I18n/EsMenu]] — Spanish menu reader and owner editor text.
 - [[src/I18n/EsLegal]] — Spanish terms, privacy policy, cookie policy, and about page, section by section.
 - [[src/I18n/Format]] — Price (free or dollars), going counts, seats left, distance, and category names.
 - [[src/I18n/Translate]] — Looks up a key across the interface, account, and policy catalogues in the reader's language with Spanish as fallback, fills `:name` placeholders, and picks singular or plural forms.
@@ -271,3 +273,17 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Domain/MenuDraft]] — Raw owner input and refill.
 - [[src/Validation/MenuForm]] — Bounded nested menu validation.
 - [[src/Test/MenuForm]] — Raw menu validation boundary regressions.
+
+- [[src/Web/MenuFields]] — Bounded indexed menu fields and draft-only structural edits.
+- [[src/View/Pages/MenuForm]] — Script-free owner menu editor.
+- [[src/Test/MenuFields]] — Indexed field decoding and structural edit regressions.
+
+- [[src/Domain/Media]] — Kinds, stored records, galleries with public addresses, reservations, signed-upload answers and sweep results for place media.
+- [[src/Validation/Media]] — Checks a declared upload (kind, type, size, label) and compares the stored file's leading bytes with its declared type.
+- [[src/Api/Media]] — Owner RPCs (reserve, pending, confirm, discard, board) and server-only storage calls (signed upload, ranged read-back, delete, sweep) with the service key.
+- [[src/Services/Media]] — Lists a place's files with addresses.
+- [[src/Web/Handlers/Media]] — Owner page, JSON upload start and finish, removal form, and the cron-only sweep route.
+- [[src/View/Pages/Media]] — Owner page for the main photo, more photos and (for menu categories) menu files, with per-file removal and limits.
+- [[src/View/Components/PhotoHeader]] — A listing's photographs in the home carousel container, reusing the carousel script.
+- [[src/Public/MediaUpload]] — Re-encodes photographs to at most 1600 px WebP (dropping metadata), declares the upload, PUTs the file to the signed address with no overwrite, and asks the server to verify.
+- [[src/Test/Media]] — Declared-upload boundaries and stored-signature checks, including disguised markup.

@@ -58,7 +58,7 @@ DEEP.
 
 ## Catalogue split
 
-Lookup reads the interface, account ([[src/I18n/EsAccount]], [[src/I18n/EnAccount]]), and policy catalogues in that order, Spanish as fallback.
+Lookup reads the interface, account ([[src/I18n/EsAccount]], [[src/I18n/EnAccount]]), policy, and menu ([[src/I18n/EsMenu]], [[src/I18n/EnMenu]]) catalogues in that order, Spanish as fallback.
 
 ## Assistant integration Grill Log
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.

@@ -4,10 +4,15 @@ module View.Pages.Menu
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Constants.Menus as Limits
 import Constants.Routes as Routes
+import Domain.Media as Media
 import Domain.Menu as Menu
 import Domain.Place as Place
 import Utils.Money as Money
+import Utils.Query as Query
+import View.Components.PhotoHeader as PhotoHeader
+import View.Components.PlaceCard as PlaceCard
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -23,7 +28,7 @@ export fn link(frame: &Frame.Frame, slug: Str, board: &Option[Menu.MenuBoard]) -
 }
 
 /// A dedicated menu reader; private draft and archived views are not indexed.
-export fn render(frame: &Frame.Frame, detail: &Place.Detail, board: &Menu.MenuBoard) -> Html.Html {
+export fn render(frame: &Frame.Frame, detail: &Place.Detail, board: &Menu.MenuBoard, gallery: &Media.Gallery) -> Html.Html {
   let base = Routes.PLACE_PREFIX + detail.card.slug
   let published = !board.menus.filter(|menu: Menu.MenuListing| menu.status == "published").isEmpty()
   let indexable = detail.card.status == "published" && published && !board.isOwner
@@ -32,29 +37,56 @@ export fn render(frame: &Frame.Frame, detail: &Place.Detail, board: &Menu.MenuBo
   Layout.page(frame, &meta, Layout.Explore, H.article().class("menu-page").holding([
         H.a().class("text-link menu-back").href(base).says(detail.card.name),
         H.header().class("menu-heading").holding([
-            match detail.card.coverUrl {
-              case Some(cover) => H.div().class("hero-frame menu-cover").holding([H.img().src(cover).alt("").at("width", "1280").at("height", "720").at("fetchpriority", "high")])
-              case None => H.nothing()
-            },
+            PhotoHeader.render(frame, &PhotoHeader.photosOf(gallery, &detail.card.coverUrl), PlaceCard.coverOf(&detail.card), detail.card.name, base, "menu-cover"),
             H.p().class("eyebrow").says(detail.card.municipality.name),
             H.h1().says(detail.card.name),
-            H.p().class("menu-subtitle").says(Frame.t(frame, "menu.title"))
+            H.p().class("menu-subtitle").says(Frame.t(frame, "menu.title")),
+            if board.isOwner {
+              H.p().class("menu-owner-actions").holding([
+                  if board.supported && board.menus.length() < Limits.MENUS_MAX { H.a().class("button button-small").href(base + "/menu/edit").says(Frame.t(frame, "menu.new")) } else { H.nothing() },
+                  H.a().class("button button-ghost button-small").href(base + "/media").says(Frame.t(frame, "media.manage"))
+                ])
+            } else { H.nothing() }
           ]),
+        documents(frame, gallery),
         if board.menus.isEmpty() {
           H.section().class("panel menu-empty").holding([H.h2().says(Frame.t(frame, "menu.empty_title")), H.p().class("muted").says(Frame.t(frame, "menu.empty_body"))])
         } else {
-          H.div().class("menu-content").holding(board.menus.map(|menu: Menu.MenuListing| menuOf(frame, &menu)))
+          H.div().class("menu-content").holding(board.menus.map(|menu: Menu.MenuListing| menuOf(frame, &menu, if board.isOwner { Some(base + "/menu/edit" + Query.render(&[("menu", menu.id)])) } else { None })))
         },
         if board.menus.isEmpty() { H.nothing() } else { H.p().class("menu-disclaimer muted").says(Frame.t(frame, "menu.declarations")) }
       ]))
 }
 
-/// One menu, with unique section anchors and owner-only publication labels.
-fn menuOf(frame: &Frame.Frame, menu: &Menu.MenuListing) -> H.Node {
+/// The owner's menu photographs and PDF documents; a document opens from the storage origin, never
+/// this site, and is labelled as the owner's own upload.
+fn documents(frame: &Frame.Frame, gallery: &Media.Gallery) -> H.Node {
+  let files = Media.ofKind(gallery, Media.MENU)
+  if files.isEmpty() { return H.nothing() }
+  H.section().class("panel menu-documents").at("aria-labelledby", "menu-documents").holding([
+      H.h2().id("menu-documents").says(Frame.t(frame, "media.menu_files")),
+      H.ul().class("menu-document-list").holding(files.map(|file: Media.MediaFile| {
+            let name = if file.label.isEmpty() { Frame.t(frame, if Media.isDocument(&file) { "media.menu_pdf" } else { "media.menu_photo" }) } else { file.label }
+            H.li().holding([
+                H.a().class("menu-document").href(file.url).at("target", "_blank").at("rel", "noopener noreferrer").holding([
+                    if Media.isDocument(&file) { H.span().class("menu-document-icon").at("aria-hidden", "true").says("PDF") } else { H.img().src(file.url).alt("").at("loading", "lazy").at("width", "96").at("height", "96") },
+                    H.span().says(name)
+                  ])
+              ])
+          }))
+    ])
+}
+
+/// One menu, with unique section anchors, owner-only publication labels and the owner's edit link.
+fn menuOf(frame: &Frame.Frame, menu: &Menu.MenuListing, edit: Option[Str]) -> H.Node {
   H.section().class("menu-board").at("aria-labelledby", "menu-" + menu.id).holding([
       H.header().class("menu-board-heading").holding([
           H.h2().id("menu-" + menu.id).says(menu.name),
           if menu.status == "published" { H.nothing() } else { H.span().class("chip chip-small").says(Frame.t(frame, "menu.status." + menu.status)) },
+          match edit {
+            case Some(address) => H.a().class("button button-ghost button-small").href(address).label(Frame.t(frame, "menu.edit_title") + " · " + menu.name).says(Frame.t(frame, "menu.edit_title"))
+            case None => H.nothing()
+          },
           if menu.description.isEmpty() { H.nothing() } else { H.p().class("muted").says(menu.description) }
         ]),
       if menu.sections.isEmpty() { H.nothing() } else {

@@ -37,6 +37,14 @@ export const PLACE_PREFIX: Str = "/lugar/"
 export const PLACE: Str = "/lugar/:slug"
 /// Dedicated structured menu reader for a place.
 export const PLACE_MENU: Str = "/lugar/:slug/menu"
+/// Owner-only editor of a new or existing menu; `?menu=` selects an existing one.
+export const PLACE_MENU_EDIT: Str = "/lugar/:slug/menu/edit"
+/// Owner-only photographs and menu documents: the page, then upload start, verification and removal.
+export const PLACE_MEDIA: Str = "/lugar/:slug/media"
+export const PLACE_MEDIA_FINISH: Str = "/lugar/:slug/media/:id/finish"
+export const PLACE_MEDIA_REMOVE: Str = "/lugar/:slug/media/:id/remove"
+/// The scheduled media cleanup, answered only to the platform scheduler's secret.
+export const MEDIA_SWEEP: Str = "/internal/media-sweep"
 export const PLACE_EDIT: Str = "/lugar/:slug/edit"
 export const PLACE_STATUS: Str = "/lugar/:slug/status"
 export const PLACE_REVIEW: Str = "/lugar/:slug/review"

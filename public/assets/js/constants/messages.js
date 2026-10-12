@@ -28,6 +28,7 @@ const MESSAGES = {
     mapRefreshFailed: 'No pudimos actualizar esta zona. Mueve el mapa para volver a intentar.',
     offline: 'Sin conexión',
     tryAgain: 'Algo no salió bien. Intenta de nuevo.',
+    reactionClosed: 'Esta actividad ya no admite reacciones.',
   },
   en: {
     locationLocating: 'Finding your location…',
@@ -58,6 +59,7 @@ const MESSAGES = {
     mapRefreshFailed: 'We could not update this area. Move the map to try again.',
     offline: 'Offline',
     tryAgain: 'Something went wrong. Please try again.',
+    reactionClosed: 'This activity no longer takes reactions.',
   },
 };
 

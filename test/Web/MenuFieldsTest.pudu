@@ -1,0 +1,82 @@
+/** @Test.MenuFields.Suite — indexed owner menu fields and draft-only structural edits */
+module Web.MenuFieldsTest
+
+import Std.Io as Io
+import Std.Test as Test
+import Constants.Menus as Limits
+import Domain.MenuDraft as Draft
+import Domain.Problem as Problem
+import Web.MenuFields as Fields
+
+/// Posted fields for one section with two dishes; the second declares no listed allergen.
+fn posted() -> Array[(Str, Str)] {
+  [("name", "Test menu"), ("description", "Line one\r\nLine two"), ("locale", "es"), ("status", "draft"), ("revision", "4"),
+    ("menuId", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), ("sections", "1"), ("do", "save"),
+    ("s.0.id", ""), ("s.0.name", "Test section"), ("s.0.items", "2"),
+    ("s.0.i.0.id", ""), ("s.0.i.0.name", "Test dish"), ("s.0.i.0.price", "not a price"), ("s.0.i.0.diet.vegan", "on"), ("s.0.i.0.diet.invented", "on"),
+    ("s.0.i.1.id", ""), ("s.0.i.1.name", "Second dish"), ("s.0.i.1.price", "0"), ("s.0.i.1.available", "no"), ("s.0.i.1.allergensKnown", "yes")]
+}
+
+/// The decoded posted fields, with one field replaced or removed.
+fn decoded(changes: Array[(Str, Str)], removed: Array[Str]) -> Result[Fields.Posted, Problem.Problem] {
+  var pairs: Array[(Str, Str)] = []
+  for pair in posted() { if !removed.contains(pair[0]) && changes.filter(|change: (Str, Str)| change[0] == pair[0]).isEmpty() { pairs = pairs.push(pair) } }
+  Fields.decode(&mapOf(pairs.concat(changes)))
+}
+
+/// The refused field paths of a decoding or structural edit.
+fn refusal[T](result: Result[T, Problem.Problem]) -> Array[Str] {
+  match result {
+    case Err(Problem.Invalid(found)) => found.map(|error: Problem.FieldError| error.field + "=" + error.key)
+    case _ => []
+  }
+}
+
+/// A decoded draft that must be accepted.
+fn ready(result: Result[Fields.Posted, Problem.Problem]) -> Fields.Posted {
+  match result { case Ok(found) => found case Err(_) => panic("posted menu sample refused") }
+}
+
+/// A structural result that must be accepted.
+fn edited(result: Result[Draft.MenuEditorDraft, Problem.Problem]) -> Draft.MenuEditorDraft {
+  match result { case Ok(found) => found case Err(_) => panic("structural edit refused") }
+}
+
+/// Runs the decoding and structural regressions without a network call.
+fn main() -> Int {
+  let sample = ready(decoded([], []))
+  let draft = sample.editing.draft
+  let first = draft.sections[0].items[0]
+  let second = draft.sections[0].items[1]
+  let named = |name: Str| Draft.MenuSectionInput{..Draft.emptySection(), name: name}
+  let three = Draft.MenuEditorDraft{..draft, sections: [named("A"), named("B"), named("C")]}
+  let full = Draft.MenuEditorDraft{..draft, sections: (0..Limits.SECTIONS_MAX).map(|_index: Int| named("S"))}
+  let crowded = Draft.MenuEditorDraft{..draft, sections: [Draft.MenuSectionInput{..draft.sections[0], items: (0..Limits.ITEMS_MAX).map(|_index: Int| first)}]}
+  let checks = Test.suite("MenuFields", &[
+      Test.equals("identity and revision stay separate from dish values", &(sample.editing.menuId, sample.editing.revision, sample.action), &(Some("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"), 4, "save")),
+      Test.equals("invalid raw input is retained for the form", &(first.price, draft.description), &("not a price", "Line one\nLine two")),
+      Test.equals("only permitted declaration tags are read", &first.dietary, &["vegan"]),
+      Test.equals("undeclared and declared-none allergens differ", &((first.allergensKnown, first.allergens.length()), (second.allergensKnown, second.allergens.length())), &((false, 0), (true, 0))),
+      Test.equals("explicit free and unavailable values survive", &(second.price, second.available, first.available), &("0", "no", "")),
+      Test.equals("a new menu has no identity", &ready(decoded([("menuId", "")], [])).editing.menuId, &None),
+      Test.equals("a missing section count is refused", &refusal(decoded([], ["sections"])), &["sections=menu.invalid"]),
+      Test.equals("too many sections are refused before reading them", &refusal(decoded([("sections", "13")], [])), &["sections=menu.limit"]),
+      Test.equals("a truncated section is refused rather than dropped", &refusal(decoded([("sections", "2")], [])), &["s.1.name=menu.invalid"]),
+      Test.equals("a truncated dish is refused rather than dropped", &refusal(decoded([("s.0.items", "3")], [])), &["s.0.i.2.name=menu.invalid"]),
+      Test.equals("a dish count beyond the menu limit is refused", &refusal(decoded([("s.0.items", "101")], [])), &["s.0.items=menu.limit"]),
+      Test.equals("a negative count is refused", &refusal(decoded([("s.0.items", "-1")], [])), &["s.0.items=menu.invalid"]),
+      Test.equals("a missing revision is refused", &refusal(decoded([], ["revision"])), &["revision=menu.invalid"]),
+      Test.equals("adding a section appends an unnamed one", &edited(Fields.apply(&draft, "add-section")).sections.map(|section: Draft.MenuSectionInput| section.name), &["Test section", ""]),
+      Test.equals("a thirteenth section is refused", &refusal(Fields.apply(&full, "add-section")), &["sections=menu.limit"]),
+      Test.equals("sections move up and down", &(edited(Fields.apply(&three, "section-up:1")).sections.map(|section: Draft.MenuSectionInput| section.name), edited(Fields.apply(&three, "section-down:1")).sections.map(|section: Draft.MenuSectionInput| section.name)), &(["B", "A", "C"], ["A", "C", "B"])),
+      Test.equals("edge moves leave the order unchanged", &edited(Fields.apply(&three, "section-up:0")).sections.map(|section: Draft.MenuSectionInput| section.name), &["A", "B", "C"]),
+      Test.equals("removing a section keeps the others", &edited(Fields.apply(&three, "remove-section:1")).sections.map(|section: Draft.MenuSectionInput| section.name), &["A", "C"]),
+      Test.equals("adding a dish has unknown facts", &(edited(Fields.apply(&draft, "add-dish:0")).sections[0].items.length(), edited(Fields.apply(&draft, "add-dish:0")).sections[0].items[2].price, edited(Fields.apply(&draft, "add-dish:0")).sections[0].items[2].allergensKnown), &(3, "", false)),
+      Test.equals("a hundred-first dish is refused", &refusal(Fields.apply(&crowded, "add-dish:0")), &["sections=menu.limit"]),
+      Test.equals("dishes move and are removed in place", &(edited(Fields.apply(&draft, "dish-down:0:0")).sections[0].items.map(|dish: Draft.MenuDishInput| dish.name), edited(Fields.apply(&draft, "remove-dish:0:0")).sections[0].items.map(|dish: Draft.MenuDishInput| dish.name)), &(["Second dish", "Test dish"], ["Second dish"])),
+      Test.that("out-of-range and unknown commands are refused", ["remove-section:5", "add-dish:-1", "dish-up:0:9", "remove-dish:0", "publish", "", "add-section:0"].filter(|command: Str| refusal(Fields.apply(&draft, command)).isEmpty()).isEmpty())
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

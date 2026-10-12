@@ -1,0 +1,58 @@
+/** @Domain.Media.Files — owner-uploaded place photographs and menu documents */
+module Domain.Media
+
+import Std.Json as Json
+
+/// Kinds of place media: the card and header photograph, further photographs, and menu documents.
+export const COVER: Str = "cover"
+export const GALLERY: Str = "gallery"
+export const MENU: Str = "menu"
+export const KINDS: Array[Str] = [COVER, GALLERY, MENU]
+/// Media types stored; PDF only for menu documents.
+export const PDF: Str = "application/pdf"
+export const TYPES: Array[Str] = ["image/webp", "image/jpeg", "image/png", PDF]
+
+/** @Domain.Media.StoredMedia — a ready file as the database lists it */
+export type StoredMedia = { id: Str, kind: Str, @json("media_type") mediaType: Str, path: Str, label: Str, bytes: Int } derives Json.Decode
+
+/** @Domain.Media.StoredBoard — the ready files of a place the viewer may see */
+export type StoredBoard = { @json("is_owner") isOwner: Bool, items: Array[StoredMedia] } derives Json.Decode
+
+/** @Domain.Media.MediaFile — a file with its public address */
+export type MediaFile = { id: Str, kind: Str, mediaType: Str, label: Str, bytes: Int, url: Str }
+
+/** @Domain.Media.Gallery — every file of a place, for its owner or a visitor */
+export type Gallery = { isOwner: Bool, files: Array[MediaFile] }
+
+/** @Domain.Media.Reservation — a reserved upload: its identifier and storage path */
+export type Reservation = { id: Str, path: Str } derives Json.Decode
+
+/** @Domain.Media.Pending — a reserved upload as the database recorded it */
+export type Pending = { id: Str, @json("place_id") placeId: Str, kind: Str, @json("media_type") mediaType: Str, bytes: Int, path: Str } derives Json.Decode
+
+/** @Domain.Media.Confirmation — storage paths a new cover replaced */
+export type Confirmation = { replaced: Array[Str] } derives Json.Decode
+
+/** @Domain.Media.Sweep — stored files no record points to any more */
+export type Sweep = { paths: Array[Str] } derives Json.Decode
+
+/** @Domain.Media.Discarded — the storage path of a removed file */
+export type Discarded = { path: Str } derives Json.Decode
+
+/** @Domain.Media.SignedUpload — the storage API's answer to a signed upload request */
+export type SignedUpload = { url: Str } derives Json.Decode
+
+/** @Domain.Media.UploadRequest — what the browser declares before sending a file */
+export type UploadRequest = { kind: Str, mediaType: Str, bytes: Int, label: Str } derives Json.Decode
+
+/** @Domain.Media.UploadTicket — where the browser sends the file, once, before confirming it */
+export type UploadTicket = { id: Str, uploadUrl: Str, apiKey: Str }
+
+/// The files of one kind, in stored order.
+export fn ofKind(gallery: &Gallery, kind: Str) -> Array[MediaFile] { gallery.files.filter(|file: MediaFile| file.kind == kind) }
+
+/// Whether a file is a document rather than a photograph.
+export fn isDocument(file: &MediaFile) -> Bool { file.mediaType == PDF }
+
+/// An empty gallery for a place whose media could not be read.
+export fn empty() -> Gallery { Gallery{isOwner: false, files: []} }

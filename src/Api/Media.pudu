@@ -1,0 +1,103 @@
+/** @Api.Media.Client — place media records, signed uploads and server-only storage calls */
+module Api.Media
+
+import Std.Bytes as Bytes
+import Std.Json as Json
+import Std.Option as Option
+import Api.Supabase.Gateway as Gateway
+import Constants.Limits as Limits
+import Constants.Supabase as Supabase
+import Domain.Media as Media
+import Domain.Problem as Problem
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
+import PuduLangHttpClient.Response as Response
+
+/// Ready files of a place the viewer may see.
+export fn board(gateway: &Gateway.Gateway, placeId: Str, token: Option[Str]) -> Result[Media.StoredBoard, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLACE_MEDIA, &[("p_place_id", Gateway.text(placeId))], token, Gateway.Read)
+}
+
+/// Reserves an upload as the owner; the database checks ownership, capability, limits and quota.
+export fn reserve(gateway: &Gateway.Gateway, placeId: Str, declared: &Media.UploadRequest, token: Str) -> Result[Media.Reservation, Problem.Problem] {
+  Gateway.query(gateway, Supabase.RESERVE_PLACE_MEDIA, &[
+      ("p_place_id", Gateway.text(placeId)),
+      ("p_kind", Gateway.text(declared.kind)),
+      ("p_media_type", Gateway.text(declared.mediaType)),
+      ("p_bytes", Json.Number(declared.bytes)),
+      ("p_label", Gateway.text(declared.label))
+    ], Some(token), Gateway.Write)
+}
+
+/// Marks a stored file ready as the owner; a cover answers the paths it replaced.
+export fn confirm(gateway: &Gateway.Gateway, mediaId: Str, address: Str, token: Str) -> Result[Media.Confirmation, Problem.Problem] {
+  Gateway.query(gateway, Supabase.CONFIRM_PLACE_MEDIA, &[("p_media_id", Gateway.text(mediaId)), ("p_public_url", Gateway.text(address))], Some(token), Gateway.Write)
+}
+
+/// The owner's own pending upload, as reserved.
+export fn pending(gateway: &Gateway.Gateway, mediaId: Str, token: Str) -> Result[Media.Pending, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PENDING_PLACE_MEDIA, &[("p_media_id", Gateway.text(mediaId))], Some(token), Gateway.Read)
+}
+
+/// Removes a file record as the owner and answers its storage path.
+export fn discard(gateway: &Gateway.Gateway, mediaId: Str, token: Str) -> Result[Media.Discarded, Problem.Problem] {
+  Gateway.query(gateway, Supabase.DISCARD_PLACE_MEDIA, &[("p_media_id", Gateway.text(mediaId))], Some(token), Gateway.Write)
+}
+
+/// The public address of a stored file.
+export fn publicUrl(gateway: &Gateway.Gateway, path: Str) -> Str {
+  gateway.base + "/" + Supabase.STORAGE_PUBLIC + Supabase.MEDIA_BUCKET + "/" + path
+}
+
+/// A request carrying the service key, which never leaves the server.
+fn privileged(gateway: &Gateway.Gateway, request: Request.Request) -> Request.Request {
+  request.setHeader(Supabase.API_KEY_HEADER, gateway.serviceKey).withBearer(gateway.serviceKey)
+}
+
+/// A one-path upload address the browser may send a single file to; nothing else is granted.
+export fn signUpload(gateway: &Gateway.Gateway, path: Str) -> Result[Str, Problem.Problem] {
+  let response = Gateway.sent(&gateway.http, privileged(gateway, Request.post(Supabase.STORAGE_UPLOAD_SIGN + Supabase.MEDIA_BUCKET + "/" + path, Content.json(&Json.object(&[]))))) ?
+  match Response.readAs(&response) {
+    case Ok(signed) => {
+      let answer: Media.SignedUpload = signed
+      Ok(gateway.base + "/" + Supabase.STORAGE_ROOT + answer.url)
+    }
+    case Err(_) => Err(Problem.Unavailable("storage_sign"))
+  }
+}
+
+/// The leading bytes and total size of a stored file, read back with the service key.
+export fn inspect(gateway: &Gateway.Gateway, path: Str) -> Result[(Bytes, Int), Problem.Problem] {
+  let request = privileged(gateway, Request.get(Supabase.STORAGE_OBJECT + Supabase.MEDIA_BUCKET + "/" + path)).setHeader("range", "bytes=0-" + show(Limits.MEDIA_SIGNATURE_BYTES - 1))
+  let response = Gateway.sent(&gateway.http, request) ?
+  let body = Response.bytes(&response)
+  // A ranged answer names the total after the slash; a server that ignores ranges sends it all.
+  let total = match Response.header(&response, "content-range") {
+    case Some(range) => if range.contains("/") { Option.unwrapOr(range.drop(range.indexOf("/") + 1).trim().toInt(), body.length()) } else { body.length() }
+    case None => body.length()
+  }
+  let head = if body.length() > Limits.MEDIA_SIGNATURE_BYTES { Bytes.slice(&body, 0, Limits.MEDIA_SIGNATURE_BYTES) } else { body }
+  Ok((head, total))
+}
+
+/// Drops stale reservations and lists stored files without a record, as the service role.
+export fn sweep(gateway: &Gateway.Gateway) -> Result[Media.Sweep, Problem.Problem] {
+  let response = Gateway.sent(&gateway.http, privileged(gateway, Request.post(Supabase.RPC_PATH + Supabase.PLACE_MEDIA_SWEEP, Content.json(&Json.object(&[]))))) ?
+  match Response.readAs(&response) {
+    case Ok(found) => Ok(found)
+    case Err(_) => Err(Problem.Unavailable("media_sweep"))
+  }
+}
+
+/// Deletes stored files with the service key; files already gone are not a failure.
+export fn remove(gateway: &Gateway.Gateway, paths: &Array[Str]) -> Result[(), Problem.Problem] {
+  if paths.isEmpty() { return Ok(()) }
+  let body = Content.json(&Json.object(&[("prefixes", Json.list(&paths.map(|path: Str| Json.Text(path))))]))
+  let request = privileged(gateway, Request.Request{..Request.delete(Supabase.STORAGE_OBJECT + Supabase.MEDIA_BUCKET), content: Some(body)})
+  match Gateway.sent(&gateway.http, request) {
+    case Ok(_) => Ok(())
+    case Err(Problem.Missing) => Ok(())
+    case Err(problem) => Err(problem)
+  }
+}

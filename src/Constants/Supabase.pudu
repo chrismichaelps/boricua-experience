@@ -64,6 +64,12 @@ export const ADMIN_OVERVIEW: Str = "admin_overview"
 export const ADMIN_REPORTS: Str = "admin_reports"
 export const ADMIN_RESOLVE_REPORT: Str = "admin_resolve_report"
 export const SET_MY_AVATAR: Str = "set_my_avatar"
+export const PLACE_MEDIA: Str = "place_media"
+export const RESERVE_PLACE_MEDIA: Str = "reserve_place_media"
+export const CONFIRM_PLACE_MEDIA: Str = "confirm_place_media"
+export const DISCARD_PLACE_MEDIA: Str = "discard_place_media"
+export const PENDING_PLACE_MEDIA: Str = "pending_place_media"
+export const PLACE_MEDIA_SWEEP: Str = "place_media_sweep"
 
 /// Path prefixes under the project address.
 export const RPC_PATH: Str = "rest/v1/rpc/"
@@ -74,6 +80,12 @@ export const STORAGE_PUBLIC: Str = "storage/v1/object/public/"
 /// The bucket of member photos and the file each member's photo is stored as.
 export const AVATAR_BUCKET: Str = "avatars"
 export const AVATAR_FILE: Str = "avatar.webp"
+/// The bucket of place photographs and menu documents, written only by the server.
+export const MEDIA_BUCKET: Str = "place-media"
+/// Signed one-path upload addresses, minted with the service key; the storage API path they answer is
+/// relative to `STORAGE_ROOT`.
+export const STORAGE_UPLOAD_SIGN: Str = "storage/v1/object/upload/sign/"
+export const STORAGE_ROOT: Str = "storage/v1"
 
 /// Identity endpoints, relative to `AUTH_PATH`.
 export const AUTH_SIGN_UP: Str = "signup"

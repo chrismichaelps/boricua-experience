@@ -32,7 +32,7 @@ export const REQUESTED_WITH_VALUE: Str = "boricua"
 
 /// Where scripts, styles, images, map tiles, and connections may come from. Inline style attributes
 /// are allowed for avatar colours and the map library; inline scripts are not.
-export const CONTENT_SECURITY_POLICY: Str = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://tiles.openfreemap.org; worker-src 'self' blob:; child-src blob:; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+export const CONTENT_SECURITY_POLICY: Str = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://tiles.openfreemap.org https://*.supabase.co; worker-src 'self' blob:; child-src blob:; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
 /// Headers every response carries.
 export const SECURITY_HEADERS: Array[(Str, Str)] = [

@@ -24,38 +24,42 @@ export function submitFeedback(root = document, lifecycle = window) {
     for (const observer of observers) observer.disconnect();
     observers.clear();
   }
+  // Capture only guards against a second native submission of a form already navigating.
+  root.addEventListener('submit', event => {
+    if (event.target.dataset.submitting) event.preventDefault();
+  }, true);
+  // Bubbling runs after the form's own listeners, so whether a script took over is final here. A
+  // microtask from the capture phase is not: browsers drain microtasks between listeners on a real
+  // click, before a script feature calls preventDefault.
   root.addEventListener('submit', event => {
     const form = event.target;
-    if (form.dataset.submitting) { event.preventDefault(); return; }
-    // AJAX features own completion; wait until bubbling decides whether navigation is accepted.
-    queueMicrotask(() => {
-      if (event.defaultPrevented) {
-        const owner = form.closest('[aria-busy="true"]');
-        const control = event.submitter || form.querySelector('button[type="submit"]');
-        if (!owner || !control) return;
-        mark(control);
-        const observer = new MutationObserver(() => {
-          if (owner.getAttribute('aria-busy') === 'true') return;
-          const state = busy.get(control);
-          if (state) {
-            control.hidden = state.hidden;
-            control.removeAttribute('aria-busy');
-            control.removeAttribute('aria-disabled');
-            control.classList.remove('is-submitting');
-            busy.delete(control);
-          }
-          observer.disconnect();
-          observers.delete(observer);
-        });
-        observer.observe(owner, { attributes: true, attributeFilter: ['aria-busy'] });
-        observers.add(observer);
-        return;
-      }
-      form.dataset.submitting = 'true';
-      form.setAttribute('aria-busy', 'true');
-      mark(event.submitter || form.querySelector('button[type="submit"]'));
-    });
-  }, true);
+    const control = event.submitter || form.querySelector('button[type="submit"]');
+    if (event.defaultPrevented) {
+      // Script features own completion; mirror their busy owner and release when it clears.
+      const owner = form.closest('[aria-busy="true"]');
+      if (!owner || !control || form.dataset.submitting) return;
+      mark(control);
+      const observer = new MutationObserver(() => {
+        if (owner.getAttribute('aria-busy') === 'true') return;
+        const state = busy.get(control);
+        if (state) {
+          control.hidden = state.hidden;
+          control.removeAttribute('aria-busy');
+          control.removeAttribute('aria-disabled');
+          control.classList.remove('is-submitting');
+          busy.delete(control);
+        }
+        observer.disconnect();
+        observers.delete(observer);
+      });
+      observer.observe(owner, { attributes: true, attributeFilter: ['aria-busy'] });
+      observers.add(observer);
+      return;
+    }
+    form.dataset.submitting = 'true';
+    form.setAttribute('aria-busy', 'true');
+    mark(control);
+  });
   root.addEventListener('click', event => {
     const link = event.target.closest('a.button, a.pill-submit');
     if (!link || link.target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
