@@ -86,6 +86,7 @@ fn signUp(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
     displayName: Form.text(&fields, "displayName"),
     email: Form.text(&fields, "email"),
     password: Option.unwrapOr(fields.get("password"), ""),
+    confirmation: Option.unwrapOr(fields.get("confirmation"), ""),
     birthDate: Form.text(&fields, "birthDate"),
     terms: Form.flag(&fields, "terms"),
     privacy: Form.flag(&fields, "privacy")

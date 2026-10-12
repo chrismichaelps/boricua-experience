@@ -93,3 +93,6 @@ Resolved: search segments own one neutral2px inset focus indication; nested inpu
 
 ## Curated publication Grill Log · #42
 Resolved: Mechanical asset graph44 only; behavior unchanged.
+
+## Resolved feedback Grill Log · #45
+Wire password controls and native submission feedback before feature dispatch. Prevent duplicate native submissions without dropping named submitter values; reset on pageshow; defer feedback until all submit listeners accept submission. Resolved.

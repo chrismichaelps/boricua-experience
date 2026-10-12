@@ -58,3 +58,6 @@ SHALLOW.
 
 - **Q:** Why does the form carry `birthDate` and not `adult`?
   **A:** The age is computed from the date during validation; a boolean the browser sends could be forged or pre-ticked. Resolved.
+
+## Resolved feedback Grill Log · #45
+SignUp carries a required confirmation string; passwords and confirmation remain transient and never logged or stored as plaintext. Resolved.

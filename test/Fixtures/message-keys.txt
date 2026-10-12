@@ -137,12 +137,14 @@ auth.email
 auth.forgot
 auth.google_consent_note
 auth.have_account
+auth.hide_password
 auth.name
 auth.new_password
 auth.no_account
 auth.not_now
 auth.or
 auth.password
+auth.password_guidance
 auth.password_hint
 auth.recover_google_note
 auth.recover_lead
@@ -151,6 +153,7 @@ auth.reset_lead
 auth.reset_title
 auth.save_password
 auth.send_link
+auth.show_password
 auth.sign_in
 auth.sign_in_lead
 auth.sign_in_title

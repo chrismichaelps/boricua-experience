@@ -1,0 +1,26 @@
+---
+type: module
+fidelity: Active
+---
+# FormFeedback
+
+## Purpose
+Regression harness for accepted/canceled native submission, named submitter preservation, duplicate clicks, AJAX completion and BFCache restoration.
+
+## Interface
+scripts/form-feedback-test.mjs runs under Node as part of scripts/test.sh.
+
+## Algorithm
+Exercise delegated events with independent form/control fixtures and flush microtasks; observe busy ownership and named values before and after completion.
+
+## Negative Logic
+No real accounts, network requests, passwords, provider mocks claiming delivery, or persistent data changes.
+
+## Edge Cases
+Canceled submit, hidden automatic-filter submitter, named consent submitter, duplicate native submit, asynchronous completion and pageshow.
+
+## Grill Log
+Resolved: assertions protect user-visible state and successful form values rather than assuming disabled controls can submit. Actual password controls and narrow/wide layouts are checked separately in the browser.
+
+## Referenced by
+[[src/Public/SubmitFeedback]] · [[src/Public/Passwords]] · [[src/_MOC]]

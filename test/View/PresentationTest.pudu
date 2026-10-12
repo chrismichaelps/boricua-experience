@@ -26,6 +26,7 @@ import View.Frame as Frame
 import View.Layout as Layout
 import View.Pages.Activity as ActivityPage
 import View.Pages.Auth as Auth
+import View.Pages.Errors as Errors
 import View.Pages.Event as EventPage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
@@ -70,6 +71,8 @@ fn main() -> Int {
   let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let signup = Html.render(&Auth.signUp(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let missing = Html.render(&Errors.missing(&en))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
   let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(_) => panic("fixture failed") }
   let endedCard = Event.Card{..endedPage.items[0], status: "published", endsAt: "2026-10-09T20:00:00Z", capacity: Some(500), approvedCount: 0}
@@ -98,6 +101,14 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.equals("signup requires password confirmation", &signup.contains("name=\"confirmation\""), &true),
+      Test.equals("signup does not expose itself to indexing", &signup.contains("noindex,follow"), &true),
+      Test.equals("password controls are localized", &signup.contains("Show password"), &true),
+      Test.equals("password visibility is hidden until enhanced", &signup.contains("class=\"password-visibility\" hidden=\"hidden\""), &true),
+      Test.equals("404 has a main heading", &missing.contains("<h1>"), &true),
+      Test.equals("404 avoids decorative icon", &missing.contains("empty-icon"), &false),
+      Test.equals("absolute event images retain their origin", &Json.encode(&Seo.event(en.siteUrl, &Event.Detail{..curated, card: Event.Card{..curated.card, coverUrl: Some("https://example.org/photo.jpg")}})).contains("https://example.org/photo.jpg"), &true),
+      Test.equals("absolute event images are not prefixed by site origin", &Json.encode(&Seo.event(en.siteUrl, &Event.Detail{..curated, card: Event.Card{..curated.card, coverUrl: Some("https://example.org/photo.jpg")}})).contains(en.siteUrl + "https://"), &false),
       Test.equals("curated activity has no request management", &curatedActivity.contains("/requests\""), &false),
       Test.equals("native activity retains request management", &nativeActivity.contains("/requests\""), &true),
       Test.equals("native ended owner retains request management", &nativeEndedOwner.contains("/requests\""), &true),
