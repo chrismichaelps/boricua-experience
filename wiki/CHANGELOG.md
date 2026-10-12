@@ -158,3 +158,6 @@ Release nullable publication facts, consistent finite discovery expiry, null-saf
 
 ## v0.3.0
 Release production site-URL guard, tolerant map location, empty-camera map reads, recurring activities listed once, nearby discovery by town and radius, one rail per event with hidden gems, category-specific places with adaptive publishing, and reviews with owner answers and moderation. Migrations event_series, places and reviews applied to development and production; function definitions verified identical before replacement.
+
+## v0.5.0
+Organizer cover photographs for activities across all categories, trusted server-only media confirmation, shared actor reservation limits, race-safe pending cleanup and48px removal controls. Existing source covers remain labeled accurately. Additive migrations prepare both environments before new callers deploy; legacy member confirmation grants are removed after cutover. Development browser upload/replace/remove and storage cleanup are verified; production smoke/parity follow deployment.
