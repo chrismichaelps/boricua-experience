@@ -31,6 +31,7 @@ import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
+import View.Components.PhotoHeader as PhotoHeader
 import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as Controls
 import View.Frame as Frame
@@ -42,7 +43,6 @@ import View.Pages.Event as EventPage
 import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
-import View.Components.PhotoHeader as PhotoHeader
 import View.Pages.Media as MediaPage
 import View.Pages.Menu as MenuPage
 import View.Pages.MenuForm as MenuFormPage
