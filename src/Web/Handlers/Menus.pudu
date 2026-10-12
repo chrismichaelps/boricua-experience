@@ -82,11 +82,12 @@ fn editor(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
 
 /// Applies a structural command to the retained draft, or conditionally saves it; only saving writes.
 fn submit(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
-  let posted = match Fields.decode(&Serve.fields(visitor)) {
+  // Authorization comes first, so a request for another place never learns how its fields were judged.
+  let (detail, board) = match owned(app, visitor, session) {
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
-  let (detail, board) = match owned(app, visitor, session) {
+  let posted = match Fields.decode(&Serve.fields(visitor)) {
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }

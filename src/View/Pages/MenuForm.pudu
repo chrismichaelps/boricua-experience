@@ -84,9 +84,10 @@ fn sectionOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], draft: &Dr
 fn dishOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], section: &Draft.MenuSectionInput, s: Int, i: Int) -> H.Node {
   let item = section.items[i]
   let field = "s." + show(s) + ".i." + show(i)
-  let label = Frame.tf(frame, "menu.dish_label", &[("n", show(i + 1))]) + " · " + section.name
+  let dish = Frame.tf(frame, "menu.dish_label", &[("n", show(i + 1))])
+  let label = if section.name.trim().isEmpty() { dish } else { dish + " · " + section.name }
   H.fieldset().class("menu-edit-dish").holding([
-      H.legend().says(Frame.tf(frame, "menu.dish_label", &[("n", show(i + 1))])),
+      H.legend().says(dish),
       hidden(field + ".id", item.id),
       Form.input(frame, &Form.Field{..Form.field(field + ".name", Frame.t(frame, "menu.field_dish"), item.name), required: true}, errors, |c: H.Node| c.at("maxlength", show(Limits.DISH_NAME_MAX))),
       Form.area(frame, &Form.field(field + ".description", Frame.t(frame, "menu.field_description"), item.description), 2, errors),
@@ -95,7 +96,6 @@ fn dishOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], section: &Dra
           Form.input(frame, &Form.field(field + ".priceNote", Frame.t(frame, "menu.field_price_note"), item.priceNote), errors, |c: H.Node| c.at("maxlength", show(Limits.PRICE_NOTE_MAX)))
         ]),
       Form.select(frame, &Form.field(field + ".available", Frame.t(frame, "menu.field_available"), item.available), &[("", Frame.t(frame, "menu.not_declared")), ("yes", Frame.t(frame, "menu.available")), ("no", Frame.t(frame, "menu.unavailable"))], errors),
-      fieldError(frame, errors, field + ".available"),
       checks(frame, errors, field + ".dietary", Frame.t(frame, "menu.field_dietary"), &Limits.DIETARY, &item.dietary, field + ".diet.", "menu.diet."),
       Form.select(frame, &Form.Field{..Form.field(field + ".allergensKnown", Frame.t(frame, "menu.field_allergen_declaration"), if item.allergensKnown { "yes" } else { "" }), hint: Frame.t(frame, "menu.hint_allergens")}, &[("", Frame.t(frame, "menu.not_declared")), ("yes", Frame.t(frame, "menu.allergens_declared"))], errors),
       checks(frame, errors, field + ".allergens", Frame.t(frame, "menu.allergens"), &Limits.ALLERGENS, &item.allergens, field + ".allergen.", "menu.allergen."),
