@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 let deadline;
-const config={precise:{enableHighAccuracy:true,timeout:12000},balanced:{enableHighAccuracy:false,timeout:10000},deadlineMs:25000};
-const scope={GEO:config,DOMException,AbortController,navigator:{},setTimeout:fn=>(deadline=fn,1),clearTimeout:()=>{}};
+const config={precise:{enableHighAccuracy:true,timeout:12000},balanced:{enableHighAccuracy:false,timeout:10000},deadlineMs:25000,attempts:4,retryMs:1500};
+const delays=[];
+const scope={GEO:config,DOMException,AbortController,navigator:{},setTimeout:(fn,ms)=>{if(ms===config.deadlineMs){deadline=fn;return 1;}delays.push(ms);queueMicrotask(fn);return 2;},clearTimeout:()=>{}};
 vm.runInNewContext(readFileSync('public/assets/js/utils/locate.js','utf8').replace(/^import.*;$/gm,'').replace('export function','function')+'\nthis.locate=requestLocation;',scope);
 const fix={coords:{latitude:18.4,longitude:-66.1,accuracy:12}};
 let attempts=[];
@@ -11,15 +12,18 @@ assert.equal(await scope.locate(null,{getCurrentPosition(ok,error,options){attem
 assert.equal(attempts.length,1);
 attempts=[];
 assert.equal(await scope.locate(null,{getCurrentPosition(ok,error,options){attempts.push(options);if(attempts.length===1)error({code:2});else ok(fix);}}),fix);
-assert.equal(attempts.length,2);assert.equal(attempts[1].enableHighAccuracy,false,'CoreLocation failure gets one balanced fallback');
+assert.equal(attempts.length,2);assert.equal(attempts[1].enableHighAccuracy,false,'CoreLocation failure falls back to a balanced request');
+attempts=[];delays.length=0;
+assert.equal(await scope.locate(null,{getCurrentPosition(ok,error,options){attempts.push(options);if(attempts.length<4)error({code:2});else ok(fix);}}),fix);
+assert.equal(attempts.length,4,'repeated kCLErrorLocationUnknown is retried until a fix');assert.deepEqual(delays,[1500,3000,4500],'retries back off');
 let calls=0;
 await assert.rejects(scope.locate(null,{getCurrentPosition(ok,error){calls++;error({code:1});}}),e=>e.code===1);assert.equal(calls,1,'denial never retries');
-calls=0;await assert.rejects(scope.locate(null,{getCurrentPosition(ok,error){calls++;error({code:3});}}),e=>e.code===3);assert.equal(calls,2);
+calls=0;await assert.rejects(scope.locate(null,{getCurrentPosition(ok,error){calls++;error({code:3});}}),e=>e.code===3);assert.equal(calls,4,'attempts are bounded');
 await assert.rejects(scope.locate(null,null),e=>e.code===0);
 let late;const controller=new AbortController();const pending=scope.locate(controller.signal,{getCurrentPosition(ok){late=ok;}});controller.abort();late(fix);await assert.rejects(pending,e=>e.name==='AbortError');
 const timed=scope.locate(null,{getCurrentPosition(){}});deadline();await assert.rejects(timed,e=>e.code===3);
-let invalid=0;await assert.rejects(scope.locate(null,{getCurrentPosition(ok){invalid++;ok({coords:{latitude:NaN,longitude:-66,accuracy:12}});}}),e=>e.code===2);assert.equal(invalid,2);
-console.log('PASS: publishing fix, CoreLocation fallback, denial, timeout, cancellation, unsupported API and invalid readings');
+let invalid=0;await assert.rejects(scope.locate(null,{getCurrentPosition(ok){invalid++;ok({coords:{latitude:NaN,longitude:-66,accuracy:12}});}}),e=>e.code===2);assert.equal(invalid,4);
+console.log('PASS: publishing fix, CoreLocation fallback and bounded backoff, denial, timeout, cancellation, unsupported API and invalid readings');
 
 class Control {
   value='';handlers={};attrs={};disabled=false;

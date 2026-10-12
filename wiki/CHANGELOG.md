@@ -129,3 +129,4 @@ Nullable price/end preserve unknown facts; explicit0 remains free. Required fini
 Release nullable publication facts, consistent finite discovery expiry, null-safe bilingual surfaces and locked request decisions. Both schema migrations applied and parity verified; private CSV remains ignored.
 
 - 2026-10-12 · [[architecture/DELIVERY]] · the build refuses a site URL that is not a public https origin: a deployment built with the development origin refused every form post from the canonical site with 403 and named localhost in canonical links · risk HIGH · issue #55
+- 2026-10-12 · [[src/Public/Live]] · CoreLocation's transient "location unknown" (frequent on Chrome for macOS) is retried with backoff for the first fix, and transient watch errors after a fix keep locating; only denial stops. Asset/cache version 47 · risk MED · issue #57
