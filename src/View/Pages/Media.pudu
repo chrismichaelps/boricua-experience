@@ -4,18 +4,15 @@ module View.Pages.Media
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
-import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Media as Media
 import Domain.Place as Place
 import View.Components.Form as Form
 import View.Components.PlaceCard as PlaceCard
+import View.Components.Uploader as Uploader
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
-
-/// Accepted photographs; the browser re-encodes them before sending, which drops location metadata.
-const PHOTO_TYPES: Str = "image/jpeg,image/png,image/webp,image/heic,image/heif"
 
 /// The owner's media page; never indexed.
 export fn render(frame: &Frame.Frame, detail: &Place.Detail, gallery: &Media.Gallery, menus: Bool) -> Html.Html {
@@ -35,20 +32,20 @@ export fn render(frame: &Frame.Frame, detail: &Place.Detail, gallery: &Media.Gal
             H.div().class("media-grid").holding(if covers.isEmpty() {
                 [H.figure().class("media-tile is-default").holding([H.img().src(PlaceCard.coverOf(&detail.card)).alt("").at("loading", "lazy"), H.figcaption().says(Frame.t(frame, "media.default_label"))])]
               } else { covers.map(|file: Media.MediaFile| tile(frame, base, &file)) }),
-            uploader(frame, base, Media.COVER, PHOTO_TYPES, Frame.t(frame, if covers.isEmpty() { "media.add_cover" } else { "media.replace_cover" }), false)
+            Uploader.render(frame, base + "/media", Media.COVER, Uploader.PHOTO_TYPES, Frame.t(frame, if covers.isEmpty() { "media.add_cover" } else { "media.replace_cover" }), false)
           ]),
         H.section().class("form-section").holding([
             H.h2().class("section-title").says(Frame.t(frame, "media.gallery")),
             H.p().class("field-hint").says(Frame.t(frame, "media.gallery_hint")),
             if photos.isEmpty() { H.p().class("muted").says(Frame.t(frame, "media.none")) } else { H.div().class("media-grid").holding(photos.map(|file: Media.MediaFile| tile(frame, base, &file))) },
-            if photos.length() >= 8 { H.p().class("muted").says(Frame.t(frame, "media.limit")) } else { uploader(frame, base, Media.GALLERY, PHOTO_TYPES, Frame.t(frame, "media.add_photo"), false) }
+            if photos.length() >= 8 { H.p().class("muted").says(Frame.t(frame, "media.limit")) } else { Uploader.render(frame, base + "/media", Media.GALLERY, Uploader.PHOTO_TYPES, Frame.t(frame, "media.add_photo"), false) }
           ]),
         if !menus { H.nothing() } else {
           H.section().class("form-section").holding([
               H.h2().class("section-title").says(Frame.t(frame, "media.menu_files")),
               H.p().class("field-hint").says(Frame.t(frame, "media.menu_hint")),
               if documents.isEmpty() { H.p().class("muted").says(Frame.t(frame, "media.none")) } else { H.div().class("media-grid").holding(documents.map(|file: Media.MediaFile| tile(frame, base, &file))) },
-              if documents.length() >= 6 { H.p().class("muted").says(Frame.t(frame, "media.limit")) } else { uploader(frame, base, Media.MENU, PHOTO_TYPES + ",application/pdf", Frame.t(frame, "media.add_menu_file"), true) }
+              if documents.length() >= 6 { H.p().class("muted").says(Frame.t(frame, "media.limit")) } else { Uploader.render(frame, base + "/media", Media.MENU, Uploader.PHOTO_TYPES + ",application/pdf", Frame.t(frame, "media.add_menu_file"), true) }
             ])
         },
         H.p().class("muted small").says(Frame.t(frame, "media.rights"))
@@ -65,26 +62,7 @@ fn tile(frame: &Frame.Frame, base: Str, file: &Media.MediaFile) -> H.Node {
       H.figcaption().says(name),
       H.form().action(base + "/media/" + file.id + "/remove").method("post").holding([
           Form.token(frame),
-          H.button().submit().class("button button-ghost button-small").label(Frame.t(frame, "media.remove") + " · " + name).says(Frame.t(frame, "media.remove"))
+          H.button().submit().class("button button-ghost").label(Frame.t(frame, "media.remove") + " · " + name).says(Frame.t(frame, "media.remove"))
         ])
-    ])
-}
-
-/// A file picker that resizes photographs in the browser, sends the file straight to storage and asks
-/// the server to verify it. It needs scripts; without them it says so instead of failing silently.
-fn uploader(frame: &Frame.Frame, base: Str, kind: Str, accept: Str, action: Str, labelled: Bool) -> H.Node {
-  let id = "media-" + kind
-  H.form().class("media-upload").action(base + "/media").method("post").data("feature", "media-upload").data("kind", kind)
-    .data("choose", Frame.t(frame, "media.choose")).data("working", Frame.t(frame, "media.working")).data("failed", Frame.t(frame, "media.failed"))
-    .data("too-large", Frame.t(frame, "media.too_large")).data("invalid", Frame.t(frame, "media.invalid")).data("limit", Frame.t(frame, "media.limit")).holding([
-      Form.token(frame),
-      H.div().class("field").holding([
-          H.labelFor().at("for", id).says(action),
-          H.input().kind("file").id(id).name("file").at("accept", accept).required()
-        ]),
-      if labelled { Form.input(frame, &Form.field("label", Frame.t(frame, "media.label"), ""), &[], |c: H.Node| c.at("maxlength", show(Limits.MEDIA_LABEL_MAX))) } else { H.nothing() },
-      H.p().class("muted small media-script-note").says(Frame.t(frame, "media.needs_script")),
-      H.button().submit().class("button button-small").says(Frame.t(frame, "media.upload")),
-      H.p().class("media-status small").role("status").at("aria-live", "polite")
     ])
 }

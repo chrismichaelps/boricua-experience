@@ -40,6 +40,7 @@ import View.Pages.Activity as ActivityPage
 import View.Pages.Auth as Auth
 import View.Pages.Errors as Errors
 import View.Pages.Event as EventPage
+import View.Pages.EventCover as EventCoverPage
 import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
@@ -162,6 +163,9 @@ fn main() -> Int {
   let curatedEs = Html.render(&EventPage.render(&es, &curated, &None))
   let curatedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true, isOrganizer: true}}, &None))
   let curatedMember = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true}}, &None))
+  let defaultCoverPage = Html.render(&EventCoverPage.render(&en, &detail, &[]))
+  let sourceCoverPage = Html.render(&EventCoverPage.render(&en, &Event.Detail{..detail, card: Event.Card{..detail.card, coverUrl: Some("https://example.test/official.jpg")}}, &[]))
+  let uploadedCoverPage = Html.render(&EventCoverPage.render(&es, &detail, &[Media.MediaFile{id: "c9", kind: "cover", mediaType: "image/webp", label: "", bytes: 10, url: "https://test.supabase.co/storage/v1/object/public/place-media/events/e/c9.webp"}]))
   let organizerReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true, isOrganizer: true}}, &None))
   let memberReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
   let cancelledReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, card: Event.Card{..detail.card, status: "cancelled"}, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
@@ -187,6 +191,9 @@ fn main() -> Int {
       Test.that("owner media page offers script uploads with removal per file and is not indexed", mediaManager.contains("data-feature=\"media-upload\"") && mediaManager.contains("/media/g1/remove") && mediaManager.contains("application/pdf") && mediaManager.contains("noindex")),
       Test.that("categories without menus get no menu files and the default is called an illustration", !photoOnlyManager.contains("application/pdf") && photoOnlyManager.contains("No es una foto de tu lugar")),
       Test.that("owners reach photos and menu files from the place and menu pages", picturedPlace.contains("/media\"") && ownerMenu.contains("/media\"") && !menuReader.contains("/media\"")),
+      Test.that("source-provided covers are not mislabeled as illustrations", sourceCoverPage.contains("Current cover") && sourceCoverPage.contains("official.jpg") && !sourceCoverPage.contains("not a photo of the activity")),
+      Test.that("organizers reach the cover page; it labels the default as an illustration and is not indexed", organizerReactions.contains("/cover\"") && defaultCoverPage.contains("not a photo of the activity") && defaultCoverPage.contains("data-feature=\"media-upload\"") && defaultCoverPage.contains("noindex") && !defaultCoverPage.contains("application/pdf")),
+      Test.that("an uploaded activity cover can be removed or replaced", uploadedCoverPage.contains("/cover/c9/remove") && uploadedCoverPage.contains("Reemplazar la foto principal")),
       Test.that("guests are invited to sign in to like", singlePage.contains("/signin?return=/e/" + detail.card.slug) && !singlePage.contains("data-feature=\"react\"")),
       Test.that("members can like; organizers and cancelled activities show only the count", memberReactions.contains("data-feature=\"react\"") && !organizerReactions.contains("data-feature=\"react\"") && !cancelledReactions.contains("data-feature=\"react\"")),
       Test.that("menu link follows database capability", menuEntry.contains("/menu") && unsupportedMenu.isEmpty()),

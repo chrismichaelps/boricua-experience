@@ -10,6 +10,7 @@ import Web.Handlers.Account as Account
 import Web.Handlers.Admin as Admin
 import Web.Handlers.Assistant as Assistant
 import Web.Handlers.Discover as Discover
+import Web.Handlers.EventCover as EventCover
 import Web.Handlers.Events as Events
 import Web.Handlers.Identity as Identity
 import Web.Handlers.Location as Location
@@ -30,6 +31,7 @@ export fn routes(app: &Assembly.App) -> Route.Router {
     .concat(Places.routes(app))
     .concat(Menus.routes(app))
     .concat(Media.routes(app))
+    .concat(EventCover.routes(app))
     .concat(Participation.routes(app))
     .concat(Account.routes(app))
     .concat(Privacy.routes(app))

@@ -30,6 +30,12 @@ export type Reservation = { id: Str, path: Str } derives Json.Decode
 /** @Domain.Media.Pending — a reserved upload as the database recorded it */
 export type Pending = { id: Str, @json("place_id") placeId: Str, kind: Str, @json("media_type") mediaType: Str, bytes: Int, path: Str } derives Json.Decode
 
+/** @Domain.Media.EventPending — a reserved activity cover as the database recorded it */
+export type EventPending = { id: Str, @json("event_id") eventId: Str, @json("media_type") mediaType: Str, bytes: Int, path: Str } derives Json.Decode
+
+/** @Domain.Media.StoredCover — an activity's ready uploaded cover */
+export type StoredCover = { id: Str, @json("media_type") mediaType: Str, path: Str, bytes: Int } derives Json.Decode
+
 /** @Domain.Media.Confirmation — storage paths a new cover replaced */
 export type Confirmation = { replaced: Array[Str] } derives Json.Decode
 

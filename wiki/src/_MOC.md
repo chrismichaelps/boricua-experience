@@ -287,3 +287,11 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/View/Components/PhotoHeader]] — A listing's photographs in the home carousel container, reusing the carousel script.
 - [[src/Public/MediaUpload]] — Re-encodes photographs to at most 1600 px WebP (dropping metadata), declares the upload, PUTs the file to the signed address with no overwrite, and asks the server to verify.
 - [[src/Test/Media]] — Declared-upload boundaries and stored-signature checks, including disguised markup.
+
+- [[src/Database/EventCovers]] — Activity cover integration.
+- [[src/View/Components/Uploader]] — Activity cover integration.
+- [[src/View/Pages/EventCover]] — Activity cover integration.
+- [[src/Web/Handlers/EventCover]] — Activity cover integration.
+- [[src/Database/MediaConfirmation]] — Activity cover integration.
+
+- [[src/Test/MediaService]] — Verification and cleanup transport regressions.

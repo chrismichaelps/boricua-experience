@@ -30,21 +30,18 @@ export fn start(runtime: &Runtime.Runtime, placeId: Str, declared: &Media.Upload
   }
 }
 
-/// Reads the stored file back, compares it with the reservation, and only then marks it ready. A file
-/// that is missing, of another type or another size is deleted with its record. Never retried.
+/// Reads the stored file back before trusted confirmation. Transport errors preserve the reservation;
+/// invalid contents are removed only after an atomic pending-only discard. Never retried.
 export fn finish(runtime: &Runtime.Runtime, placeId: Str, mediaId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
   let reserved = MediaApi.pending(&runtime.gateway, mediaId, session.accessToken) ?
   if reserved.placeId != placeId { return Err(Problem.Missing) }
-  let genuine = match MediaApi.inspect(&runtime.gateway, reserved.path) {
-    case Ok((head, total)) => total == reserved.bytes && Rules.signatureMatches(&head, reserved.mediaType)
-    case Err(_) => false
-  }
-  if !genuine {
-    let _record = MediaApi.discard(&runtime.gateway, mediaId, session.accessToken)
+  let verified = genuine(runtime, reserved.path, reserved.bytes, reserved.mediaType) ?
+  if !verified {
+    let _record = MediaApi.discardPending(&runtime.gateway, mediaId, session.accessToken) ?
     let _file = MediaApi.remove(&runtime.gateway, &[reserved.path])
     return Err(Problem.Refused(Codes.MEDIA_INVALID))
   }
-  let confirmed = MediaApi.confirm(&runtime.gateway, mediaId, MediaApi.publicUrl(&runtime.gateway, reserved.path), session.accessToken) ?
+  let confirmed = MediaApi.confirm(&runtime.gateway, mediaId, MediaApi.publicUrl(&runtime.gateway, reserved.path), session.userId) ?
   // Replaced covers are already unlisted; a failed cleanup leaves an unreachable file, not a broken page.
   let _cleaned = MediaApi.remove(&runtime.gateway, &confirmed.replaced)
   Ok(())
@@ -55,6 +52,53 @@ export fn sweep(runtime: &Runtime.Runtime) -> Result[Int, Problem.Problem] {
   let found = MediaApi.sweep(&runtime.gateway) ?
   MediaApi.remove(&runtime.gateway, &found.paths) ?
   Ok(found.paths.length())
+}
+
+/// Whether a stored file has exactly the reserved size and the leading bytes of its declared type.
+fn genuine(runtime: &Runtime.Runtime, path: Str, bytes: Int, mediaType: Str) -> Result[Bool, Problem.Problem] {
+  let (head, total) = MediaApi.inspect(&runtime.gateway, path) ?
+  Ok(total == bytes && Rules.signatureMatches(&head, mediaType))
+}
+
+/// The organizer's uploaded cover of an activity, with its public address, if any.
+export fn eventCover(runtime: &Runtime.Runtime, eventId: Str, session: &Session.Session) -> Result[Array[Media.MediaFile], Problem.Problem] {
+  let stored = MediaApi.eventCovers(&runtime.gateway, eventId, session.accessToken) ?
+  Ok(stored.map(|cover: Media.StoredCover| Media.MediaFile{id: cover.id, kind: Media.COVER, mediaType: cover.mediaType, label: "", bytes: cover.bytes, url: MediaApi.publicUrl(&runtime.gateway, cover.path)}))
+}
+
+/// Reserves an activity cover as its organizer and answers where to send that one photograph.
+export fn startEventCover(runtime: &Runtime.Runtime, eventId: Str, declared: &Media.UploadRequest, session: &Session.Session) -> Result[Media.UploadTicket, Problem.Problem] {
+  let valid = Rules.request(&Media.UploadRequest{..*declared, kind: Media.COVER, label: ""}) ?
+  let reserved = MediaApi.reserveEventCover(&runtime.gateway, eventId, &valid, session.accessToken) ?
+  match MediaApi.signUpload(&runtime.gateway, reserved.path) {
+    case Ok(address) => Ok(Media.UploadTicket{id: reserved.id, uploadUrl: address, apiKey: runtime.gateway.anonKey})
+    case Err(problem) => {
+      let _released = MediaApi.discardEventCover(&runtime.gateway, reserved.id, eventId, session.accessToken)
+      Err(problem)
+    }
+  }
+}
+
+/// Verifies a sent activity cover before it replaces the current one; never retried.
+export fn finishEventCover(runtime: &Runtime.Runtime, eventId: Str, mediaId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let reserved = MediaApi.pendingEvent(&runtime.gateway, mediaId, session.accessToken) ?
+  if reserved.eventId != eventId { return Err(Problem.Missing) }
+  let verified = genuine(runtime, reserved.path, reserved.bytes, reserved.mediaType) ?
+  if !verified {
+    let _record = MediaApi.discardPendingEvent(&runtime.gateway, mediaId, eventId, session.accessToken) ?
+    let _file = MediaApi.remove(&runtime.gateway, &[reserved.path])
+    return Err(Problem.Refused(Codes.MEDIA_INVALID))
+  }
+  let confirmed = MediaApi.confirmEventCover(&runtime.gateway, mediaId, MediaApi.publicUrl(&runtime.gateway, reserved.path), session.userId) ?
+  let _cleaned = MediaApi.remove(&runtime.gateway, &confirmed.replaced)
+  Ok(())
+}
+
+/// Removes an activity cover: the record first, restoring the illustration, then the stored file.
+export fn removeEventCover(runtime: &Runtime.Runtime, eventId: Str, mediaId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let discarded = MediaApi.discardEventCover(&runtime.gateway, mediaId, eventId, session.accessToken) ?
+  let _file = MediaApi.remove(&runtime.gateway, &[discarded.path])
+  Ok(())
 }
 
 /// Removes a file as the owner: its record first, so nothing lists it, then the stored file.

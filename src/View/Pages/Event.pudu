@@ -243,6 +243,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
     H.div().class("join-actions").holding([
         H.a().class("button").href(base + "/requests").holding([Icons.sized("users", 18), H.span().says(Translate.count(&frame.locale, "event.manage_requests", Option.unwrapOr(card.pendingCount, 0)))]),
         H.a().class("button button-ghost").href(base + "/edit").holding([Icons.sized("edit", 18), H.span().says(Frame.t(frame, "event.edit"))]),
+        H.a().class("button button-ghost").href(base + "/cover").holding([Icons.sized("camera", 18), H.span().says(Frame.t(frame, "media.event_cover_title"))]),
         H.details().class("confirm").holding([
             H.summary().class("text-link danger").says(Frame.t(frame, "event.cancel")),
             H.form().action(base + "/cancel").method("post").holding([Form.token(frame), H.p().says(Frame.t(frame, "event.cancel_confirm")), H.button().submit().class("button button-danger").says(Frame.t(frame, "event.cancel_yes"))])

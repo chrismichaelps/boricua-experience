@@ -14,3 +14,6 @@ No storage path is shown without its public address; PDFs belong only to menu do
 See [[decisions/ADR-0012-place-media]].
 ## Referenced by
 [[src/_MOC]]
+
+## Activity covers Grill Log · #82
+Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
