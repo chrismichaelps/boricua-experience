@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-12 · [[src/Public/CreditsStyles]] · separate photography attributions into spaced responsive cards while preserving every source and license · issue #72.
+
 - 2026-10-12 · [[src/View/Pages/Menu]] · add viewer-authorized dedicated menu reader and database-capability place links; bilingual declared facts, private/empty noindex and narrow-screen name wrapping verified; uploads/editor/carousel continue separately · issue #69.
 
 - 2026-10-12 · [[src/Database/Menus]] · add category-authorized structured menus with nullable facts, owner revisions and serialized daily quotas; matching migrations verified in both environments; typed read/write contracts and regression fixtures · issue #69. Reader/editor and uploads continue separately.

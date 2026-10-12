@@ -263,3 +263,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/View/Pages/Menu]] — Bilingual structured menu reader.
 - [[src/Public/MenuStyles]] — Responsive menu layout.
 - [[src/Test/MessageKeys]] — Deterministic dynamic-menu translation key coverage.
+
+- [[src/Public/CreditsStyles]] — Readable photography attributions.
