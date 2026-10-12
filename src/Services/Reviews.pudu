@@ -1,0 +1,44 @@
+/** @Services.Reviews.Opinions — reading, writing, answering, reporting, and moderating reviews */
+module Services.Reviews
+
+import Std.Option as Option
+import Api.Reviews as ReviewsApi
+import Domain.Problem as Problem
+import Domain.Review as Review
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Utils.Time as Time
+import Validation.ReviewForm as ReviewForm
+
+/// A place's reviews as the viewer may see them, from a cursor.
+export fn board(runtime: &Runtime.Runtime, placeId: Str, after: Str, session: Option[Session.Session]) -> Result[Review.ReviewBoard, Problem.Problem] {
+  ReviewsApi.board(&runtime.gateway, placeId, after, Option.map(session, |found: Session.Session| found.accessToken))
+}
+
+/// Writes or rewrites the member's review; `Invalid` names every refused field.
+export fn save(runtime: &Runtime.Runtime, placeId: Str, draft: &Review.ReviewDraft, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let ready = ReviewForm.check(draft, &Time.local(&Time.now())) ?
+  ReviewsApi.save(&runtime.gateway, placeId, &ready, session.accessToken)
+}
+
+/// Deletes the member's own review.
+export fn delete(runtime: &Runtime.Runtime, reviewId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  ReviewsApi.delete(&runtime.gateway, reviewId, session.accessToken)
+}
+
+/// The owner's answer to a review.
+export fn respond(runtime: &Runtime.Runtime, reviewId: Str, response: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  if !ReviewForm.responseOk(response) { return Err(Problem.Invalid([Problem.FieldError{field: "response", key: "review.response_length"}])) }
+  ReviewsApi.respond(&runtime.gateway, reviewId, response.trim(), session.accessToken)
+}
+
+/// Reports someone else's review.
+export fn report(runtime: &Runtime.Runtime, reviewId: Str, reason: Str, detail: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  if !Review.REASONS.contains(reason) { return Err(Problem.Invalid([Problem.FieldError{field: "reason", key: "form.reason_required"}])) }
+  ReviewsApi.report(&runtime.gateway, reviewId, reason, detail.trim(), session.accessToken)
+}
+
+/// Keeps or removes a reported review; the database refuses anyone but an administrator.
+export fn resolve(runtime: &Runtime.Runtime, reviewId: Str, keep: Bool, session: &Session.Session) -> Result[(), Problem.Problem] {
+  ReviewsApi.resolve(&runtime.gateway, reviewId, keep, session.accessToken)
+}
