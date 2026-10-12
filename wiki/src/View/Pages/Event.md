@@ -48,6 +48,8 @@ MEDIUM.
 
 ## Grill Log
 
+Resolved formatter maintenance: normalize indentation in the recurring-date list without changing tokens, rendering or behavior. The whole-tree formatter gate otherwise rejects the existing baseline.
+
 - **Q:** Templates or values?
   **A:** Values: a page is an `Html` tree, so escaping cannot be forgotten and pages are testable with fixtures.
 

@@ -1,0 +1,24 @@
+/** @Api.Menus.Client — typed menu reads and conditional owner saves */
+module Api.Menus
+
+import Std.Json as Json
+import Std.Option as Option
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Menu as Menu
+import Domain.Problem as Problem
+
+/// Menus visible to a guest or the authenticated viewer.
+export fn board(gateway: &Gateway.Gateway, placeId: Str, token: Option[Str]) -> Result[Menu.MenuBoard, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLACE_MENU, &[("p_place_id", Gateway.text(placeId))], token, Gateway.Read)
+}
+
+/// Saves a complete menu if its revision still matches; new menus use revision zero.
+export fn save(gateway: &Gateway.Gateway, placeId: Str, document: &Menu.MenuDocument, expectedRevision: Int, menuId: Option[Str], token: Str) -> Result[Menu.MenuListing, Problem.Problem] {
+  Gateway.query(gateway, Supabase.SAVE_PLACE_MENU, &[
+      ("p_place_id", Gateway.text(placeId)),
+      ("p_document", document.encode()),
+      ("p_expected_revision", Json.Number(expectedRevision)),
+      ("p_menu_id", Option.unwrapOr(Option.map(menuId, |id: Str| Gateway.text(id)), Json.Null))
+    ], Some(token), Gateway.Write)
+}

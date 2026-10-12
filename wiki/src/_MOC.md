@@ -31,6 +31,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 ## Domain
 
+- [[src/Domain/Menu]] — Structured menu projections and editable documents with unknown price and availability preserved.
+
 - [[src/Domain/Admin]] — The administrator's overview counts and open reports.
 - [[src/Domain/Catalog]] — Category and municipality reference values and lookups by slug.
 - [[src/Domain/Consent]] — Which optional cookie uses a visitor allowed, and the versioned cookie value that remembers it.
@@ -73,6 +75,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Validation/Participation]] — Message and note lengths, report reasons, and reaction values.
 
 ## Api
+
+- [[src/Api/Menus]] — Typed menu read and revision-checked save adapter.
 
 - [[src/Api/Account]] — Account reads and writes, notifications, consent records, and the data-subject operations.
 - [[src/Api/Admin]] — Administrator overview, open reports, and resolution.
@@ -243,6 +247,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[Public/BrowserMessages]] — localized browser location and interaction feedback.
 
 - [[src/Test/Domain]] — domain and nullable account-profile regressions.
+- [[src/Test/Menus]] — Menu wire contract regressions for unknown facts and write shapes.
 
 [[src/Infrastructure/SupabaseConfig]]
 
@@ -250,3 +255,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/FormFeedback]] — native and asynchronous submission lifecycle regressions.
 
 - [[src/Database/OptionalEventFacts]] — nullable publication facts and finite discovery policy.
+
+- [[src/Database/Menus]] — normalized category-authorized restaurant menus and owner revisions.

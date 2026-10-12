@@ -46,6 +46,9 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 [[src/_MOC]]
 
+## Menu contract Grill Log
+Resolved: PLACE_MENU and SAVE_PLACE_MENU name the bounded owner-authorized menu functions applied identically to both environments. No table access or secrets are introduced.
+
 ## Native / spatial follow-up Grill Log
 
 - **Q:** What is the resolved mobile and scaling contract?

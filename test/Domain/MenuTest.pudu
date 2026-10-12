@@ -1,0 +1,36 @@
+/** @Test.Menu.Suite — menu wire contracts and unknown facts */
+module Domain.MenuTest
+
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Test as Test
+import Domain.Menu as Menu
+import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
+
+/// Runs menu projection and editable-document checks without a network call.
+fn main() -> Int {
+  let decoded: Result[Menu.MenuBoard, Json.DecodeError] = Wire.decode(&Fixtures.json("menu-board.json"))
+  let board = match decoded { case Ok(found) => found case Err(why) => panic(Json.explainDecode(&why)) }
+  let listing = board.menus[0]
+  let items = listing.sections[0].items
+  let draft = Menu.MenuDocument{name: "Draft", description: "", locale: "es", status: "draft", sections: [Menu.MenuSectionDraft{id: Some("section-test"), name: "Main", items: [Menu.MenuItemDraft{id: None, name: "Unknown", description: "", priceCents: None, priceNote: "", available: None, dietary: [], allergens: None}]}]}
+  let encoded = draft.encode()
+  let malformed: Result[Menu.MenuBoard, Json.DecodeError] = Wire.decode(&Json.object(&[("supported", Json.Boolean(true))]))
+  let unknown = draft.sections[0].items[0].encode()
+  let checks = Test.suite("Menus", &[
+      Test.equals("reader relation and revision decode", &(board.supported, board.isOwner, listing.revision), &(true, false, 2)),
+      Test.equals("unknown price differs from free and paid", &(items[0].priceCents, items[1].priceCents, items[2].priceCents), &(None, Some(0), Some(1250))),
+      Test.equals("unknown availability differs from available and unavailable", &(items[0].available, items[1].available, items[2].available), &(None, Some(true), Some(false))),
+      Test.equals("unknown allergens differ from an explicit empty declaration", &(items[0].allergens, items[1].allergens, items[2].allergens), &(None, Some([]), Some(["milk"]))),
+      Test.equals("editable documents omit server-owned fields", &(Json.field(&encoded, "id"), Json.field(&encoded, "revision"), Json.field(&encoded, "updated_at")), &(None, None, None)),
+      Test.equals("unknown editable facts encode as null", &(Json.field(&unknown, "price_cents"), Json.field(&unknown, "available"), Json.field(&unknown, "allergens")), &(Some(Json.Null), Some(Json.Null), Some(Json.Null))),
+      Test.that("incomplete projection is refused", Result.isErr(&malformed))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) {
+    let _reported = Io.writeErrorLine(failure)
+  }
+  Test.report(&ran)
+}
