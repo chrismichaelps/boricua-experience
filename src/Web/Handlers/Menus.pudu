@@ -1,0 +1,32 @@
+/** @Web.Handlers.Menus.Reader — a dedicated place menu page */
+module Web.Handlers.Menus
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import App.Assembly as Assembly
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import View.Pages.Menu as MenuPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The dedicated menu reader route.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [Route.get(Routes.PLACE_MENU, Serve.page(app, |visitor: Context.Visitor| reader(&held, &visitor)))]
+}
+
+/// Reads the parent and its menus through the mediator's normal visibility boundary.
+fn reader(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let detail = match Serve.ask(app, &app.kinds.place, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)) {
+    case Ok(board) => if board.supported || (board.isOwner && !board.menus.isEmpty()) {
+      Respond.page(200, &MenuPage.render(&Context.frame(app, visitor), &detail, &board))
+    } else { Respond.problem(app, visitor, &Problem.Missing) }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

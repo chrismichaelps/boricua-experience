@@ -35,6 +35,8 @@ export const CREATE: Str = "/create"
 export const CREATE_PLACE: Str = "/create/place"
 export const PLACE_PREFIX: Str = "/lugar/"
 export const PLACE: Str = "/lugar/:slug"
+/// Dedicated structured menu reader for a place.
+export const PLACE_MENU: Str = "/lugar/:slug/menu"
 export const PLACE_EDIT: Str = "/lugar/:slug/edit"
 export const PLACE_STATUS: Str = "/lugar/:slug/status"
 export const PLACE_REVIEW: Str = "/lugar/:slug/review"

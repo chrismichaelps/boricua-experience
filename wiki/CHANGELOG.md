@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-12 · [[src/View/Pages/Menu]] · add viewer-authorized dedicated menu reader and database-capability place links; bilingual declared facts, private/empty noindex and narrow-screen name wrapping verified; uploads/editor/carousel continue separately · issue #69.
+
 - 2026-10-12 · [[src/Database/Menus]] · add category-authorized structured menus with nullable facts, owner revisions and serialized daily quotas; matching migrations verified in both environments; typed read/write contracts and regression fixtures · issue #69. Reader/editor and uploads continue separately.
 
 - 2026-10-09 · [[architecture/_MOC]] · vault scaffolded: layers, grammar, domain, seams, ADR-0001 to ADR-0007 · risk LOW · issue #1

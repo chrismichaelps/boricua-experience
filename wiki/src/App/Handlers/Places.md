@@ -40,3 +40,6 @@ One handler per kind.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Menu reader Grill Log · #69
+Resolved: Register menuBoard by delegating to Services.Menus with the viewer session; no handler business rules.

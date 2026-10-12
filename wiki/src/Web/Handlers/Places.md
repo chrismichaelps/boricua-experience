@@ -40,3 +40,6 @@ export fn draftOf, routes, chooser
 ## Referenced by
 
 [[src/_MOC]]
+
+## Menu reader Grill Log · #69
+Resolved: Load the optional database menu board for the parent page. On dependency failure retain the place without fabricating an empty menu; render a reader link only when supported or owner menus remain.

@@ -57,3 +57,6 @@ SHALLOW.
 
 ## Assistant integration Grill Log
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+## Menu reader Grill Log · #69
+Resolved: Concatenate the dedicated menu reader routes beside the place routes; existing identity and CSRF wrappers stay intact.

@@ -7,6 +7,7 @@ import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Menu as Menu
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Review as Review
@@ -21,13 +22,14 @@ import View.Components.PlaceCard as PlaceCard
 import View.Components.Reviews as Reviews
 import View.Frame as Frame
 import View.Layout as Layout
+import View.Pages.Menu as MenuPage
 import View.Seo as Seo
 
 /// Weekdays in the order a week is read in Puerto Rico, Monday first; Sunday is 0.
 const WEEK: Array[Int] = [1, 2, 3, 4, 5, 6, 0]
 
 /// The place page.
-export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
   let card = detail.card
   let path = Routes.PLACE_PREFIX + card.slug
   let category = Catalog.category(catalog, card.category.slug)
@@ -46,6 +48,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
         H.div().class("event-layout").holding([
             H.div().class("event-main").holding([
                 heading(frame, detail),
+                MenuPage.link(frame, card.slug, menus),
                 if card.status == "hidden" { H.div().class("banner").role("status").says(Frame.t(frame, "place.hidden_notice")) } else { H.nothing() },
                 H.section().class("panel prose").holding([
                     H.p().class("lead").says(card.summary),

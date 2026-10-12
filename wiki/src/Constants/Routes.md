@@ -54,3 +54,6 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 ## Assistant integration Grill Log
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+## Menu reader Grill Log · #69
+Resolved: PLACE_MENU names /lugar/:slug/menu; this GET reader has no mutation or credentials.

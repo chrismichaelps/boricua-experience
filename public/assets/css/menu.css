@@ -1,0 +1,37 @@
+.menu-page { max-width: 980px; margin-inline: auto; padding-bottom: 40px; }
+.menu-content, .menu-board, .menu-board-heading, .menu-section { min-width: 0; }
+.menu-heading h1, .menu-board-heading h2, .menu-section h3 { overflow-wrap: anywhere; }
+.menu-back { display: inline-flex; min-height: 44px; align-items: center; margin-bottom: 12px; }
+.menu-heading { display: grid; gap: 8px; margin-bottom: 32px; }
+.menu-heading h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.15; letter-spacing: -.6px; }
+.menu-heading .eyebrow { color: var(--color-graphite); margin-top: 12px; }
+.menu-subtitle { font-size: 18px; color: var(--color-graphite); }
+.menu-cover.hero-frame { min-height: 0; aspect-ratio: 16 / 9; padding: 0; background: var(--color-cloud); margin-bottom: 12px; border-radius: 28px; }
+.menu-cover.hero-frame::before { display: none; }
+.menu-cover img { width: 100%; height: 100%; object-fit: cover; }
+.menu-content { display: grid; gap: 40px; }
+.menu-board-heading { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.menu-board-heading h2 { font-size: 24px; }
+.menu-board-heading > p { width: 100%; }
+.menu-sections-nav { display: flex; gap: 8px; overflow-x: auto; margin-block: 20px 8px; padding-bottom: 8px; scrollbar-width: thin; }
+.menu-sections-nav a { display: inline-flex; flex-shrink: 0; align-items: center; min-height: 44px; padding: 8px 16px; border-radius: 999px; background: var(--color-cloud); color: var(--color-ink); font-weight: 700; text-decoration: none; }
+.menu-sections-nav a:hover { background: var(--color-mist); }
+.menu-section { margin-top: 28px; }
+.menu-section h3 { font-size: 21px; scroll-margin-top: 96px; }
+.menu-items { list-style: none; padding: 0; margin-top: 8px; }
+.menu-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(76px, auto); align-items: start; gap: 20px; padding-block: 20px; border-bottom: 1px solid var(--color-divider); }
+.menu-item-copy { min-width: 0; display: grid; align-content: start; gap: 6px; }
+.menu-item-copy h4 { margin: 0; font-size: 17px; line-height: 1.4; overflow-wrap: anywhere; }
+.menu-item-copy p { line-height: 1.5; overflow-wrap: anywhere; white-space: pre-line; }
+.menu-item-price { text-align: right; max-width: 130px; font-weight: 700; }
+.menu-item-price .muted { margin-top: 6px; font-weight: 400; font-size: 13px; overflow-wrap: anywhere; }
+.menu-tags { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; }
+.menu-tags li { font-size: 12px; background: var(--color-cloud); border-radius: 6px; padding: 3px 7px; }
+.menu-allergens, .menu-unavailable { font-size: 13px; }
+.menu-unavailable { font-weight: 700; color: var(--color-graphite); }
+.menu-disclaimer { font-size: 14px; line-height: 1.6; margin-top: 32px; max-width: 760px; }
+.menu-empty h2 { font-size: 21px; margin-bottom: 8px; }
+@media (min-width: 720px) {
+  .menu-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 36px; }
+  .menu-cover.hero-frame { aspect-ratio: 2.4 / 1; border-radius: 32px; }
+}

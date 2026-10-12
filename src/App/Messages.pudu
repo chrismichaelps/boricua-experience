@@ -10,6 +10,7 @@ import Domain.Draft as Draft
 import Domain.Event as Event
 import Domain.Index as Index
 import Domain.Location as Location
+import Domain.Menu as Menu
 import Domain.Notification as Notification
 import Domain.Place as Listing
 import Domain.Problem as Problem
@@ -109,6 +110,7 @@ export type Kinds = {
   updatePlace: Request.Kind[Signed[PlaceEdit], Listing.Published, Problem.Problem],
   placeStatus: Request.Kind[Signed[PlaceStatus], (), Problem.Problem],
   myPlaces: Request.Kind[Signed[()], Array[Listing.Listing], Problem.Problem],
+  menuBoard: Request.Kind[Visit[Str], Menu.MenuBoard, Problem.Problem],
   reviews: Request.Kind[Visit[ReviewRead], Review.ReviewBoard, Problem.Problem],
   saveReview: Request.Kind[Signed[ReviewSaving], (), Problem.Problem],
   deleteReview: Request.Kind[Signed[Str], (), Problem.Problem],
@@ -184,6 +186,7 @@ export fn kinds() -> Kinds {
     updatePlace: kind("places.update", COMMAND),
     placeStatus: kind("places.status", COMMAND),
     myPlaces: kind("places.mine", READ),
+    menuBoard: kind("menus.board", READ),
     reviews: kind("reviews.board", READ),
     saveReview: kind("reviews.save", COMMAND),
     deleteReview: kind("reviews.delete", COMMAND),
