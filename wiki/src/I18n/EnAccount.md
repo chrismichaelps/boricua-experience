@@ -56,3 +56,6 @@ SHALLOW.
 
 ## Resolved feedback Grill Log · #45
 Translate password visibility and local length guidance; keep bilingual key parity. Resolved.
+
+## Descriptive policy link Grill Log · #48
+Replace the generic cookie-policy anchor with a descriptive localized label. Destination and consent semantics stay unchanged; no asset/cache change required for server-rendered text. Resolved.
