@@ -38,3 +38,12 @@ A free provider that ignores required tools is retried within the same three-cal
 
 ## Bilingual tooling Grill Log
 Resolved: The tool allowlist adds browse_catalog. Tool calls include the server-prepared locale, never a client-selected provider or table. Schedule labels retain America/Puerto_Rico formatting in both languages.
+
+## Unknown event facts Grill Log · #51
+Resolved: nullable prices/end retain explicit unknown state; known free/paid and dates regressions stay covered. No1970 null-date coercion. Unknown schedule24-hour discovery cutoff is separate from actual end. Boundary, malformed input, bilingual output and provider projections need focused tests.
+
+## Unknown temporal facts Grill Log · #51
+Resolved: end=null never coerces to1970; schedule shows start plus localized unknown-end text. Browser and provider never claim ongoing without known end. Provider instruction preserves unknown price/end and keeps source cutoff separate.
+
+## Asset graph46 · #51
+Resolved: first-party import identities and worker cache advance together to46 for nullable schedule/price rendering. Public code changes are limited to LocalTime, BrowserMessages, AssistantStream and Explorer; other browser modules only change dependency identities. No private data enters precache.

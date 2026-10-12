@@ -59,3 +59,6 @@ Translate password visibility and local length guidance; keep bilingual key pari
 
 ## Descriptive policy link Grill Log · #48
 Replace the generic cookie-policy anchor with a descriptive localized label. Destination and consent semantics stay unchanged; no asset/cache change required for server-rendered text. Resolved.
+
+## Expired-request output Grill Log · #51
+Resolved: event_ended refusal says requests are closed, without claiming completion of an unknown-end activity. Both locales use neutral wording.

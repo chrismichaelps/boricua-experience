@@ -117,11 +117,11 @@ fn draftArguments(ready: &Draft.Ready) -> Array[(Str, Json.Json)] {
     ("p_lat", Gateway.fraction(Some(ready.lat))),
     ("p_lng", Gateway.fraction(Some(ready.lng))),
     ("p_starts_at", Gateway.text(ready.startsAt)),
-    ("p_ends_at", Gateway.text(ready.endsAt)),
+    ("p_ends_at", match ready.endsAt { case Some(end) => Gateway.text(end) case None => Json.Null }),
     ("p_visibility", Gateway.text(ready.visibility)),
     ("p_join_policy", Gateway.text(ready.joinPolicy)),
     ("p_capacity", Gateway.whole(ready.capacity)),
-    ("p_price_cents", Json.Number(ready.priceCents))
+    ("p_price_cents", Gateway.whole(ready.priceCents))
   ]
 }
 

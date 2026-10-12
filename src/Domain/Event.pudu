@@ -1,8 +1,11 @@
 /** @Domain.Event.Projections — events as listings and as a page */
 module Domain.Event
 
+import Std.Option as Option
+
 import Std.Json as Json
 import Std.Url as Url
+import Constants.App as App
 import Utils.Time as Time
 
 /** @Domain.Event.CategoryRef — the category a card names */
@@ -27,8 +30,9 @@ export type Card = {
   municipality: TownRef,
   @json("venue_name") venueName: Str,
   @json("starts_at") startsAt: Str,
-  @json("ends_at") endsAt: Str,
-  @json("price_cents") priceCents: Int,
+  @json("ends_at") endsAt: Option[Str],
+  @default("null") @json("discovery_until") discoveryUntil: Option[Str],
+  @json("price_cents") priceCents: Option[Int],
   @json("join_policy") joinPolicy: Str,
   visibility: Str,
   status: Str,
@@ -148,7 +152,7 @@ export fn decodeDetail(json: &Json.Json) -> Result[Detail, Json.DecodeError] {
 }
 
 /// Whether an event is free.
-export fn isFree(card: &Card) -> Bool { card.priceCents == 0 }
+export fn isFree(card: &Card) -> Bool { card.priceCents == Some(0) }
 
 /// Whether joining waits for the organizer.
 export fn needsApproval(card: &Card) -> Bool { card.joinPolicy == "approval" }
@@ -156,9 +160,13 @@ export fn needsApproval(card: &Card) -> Bool { card.joinPolicy == "approval" }
 /// Whether an event is over at a moment: marked ended by the expiry job, or past its end time before the job ran.
 export fn hasEnded(card: &Card, nowMillis: Int) -> Bool {
   if card.status == "ended" { return true }
-  match Time.parseTimestamp(card.endsAt) {
+  let cutoff = Option.unwrapOr(card.endsAt, Option.unwrapOr(card.discoveryUntil, ""))
+  match Time.parseTimestamp(cutoff) {
     case Some(end) => end.millis <= nowMillis
-    case None => false
+    case None => match Time.parseTimestamp(card.startsAt) {
+      case Some(start) => start.millis + App.UNKNOWN_END_WINDOW_MILLIS <= nowMillis
+      case None => false
+    }
   }
 }
 

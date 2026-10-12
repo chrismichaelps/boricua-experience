@@ -108,27 +108,29 @@ export fn event(siteUrl: Str, detail: &Event.Detail) -> Json.Json {
             ("longitude", Json.Fractional(show(card.lng)))
           ]))
     ])
-  let offer = Json.object(&[
-      ("@type", Json.Text("Offer")),
-      ("price", Json.Text(show(card.priceCents / 100) + "." + (if card.priceCents % 100 < 10 { "0" } else { "" }) + show(card.priceCents % 100))),
-      ("priceCurrency", Json.Text("USD")),
-      ("availability", Json.Text(if detail.isFull { "https://schema.org/SoldOut" } else { "https://schema.org/InStock" })),
-      ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
-    ])
   var fields = [
     ("@context", Json.Text("https://schema.org")),
     ("@type", Json.Text("Event")),
     ("name", Json.Text(card.title)),
     ("description", Json.Text(card.summary)),
     ("startDate", Json.Text(card.startsAt)),
-    ("endDate", Json.Text(card.endsAt)),
     ("eventStatus", Json.Text(status)),
     ("eventAttendanceMode", Json.Text("https://schema.org/OfflineEventAttendanceMode")),
     ("location", place),
     ("image", Json.list(&[Json.Text(imageUrl(siteUrl, Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg")))])),
     ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
   ]
-  if detail.source != "curated" { fields = fields.push(("offers", offer)) }
+  if let Some(end) = card.endsAt { fields = fields.push(("endDate", Json.Text(end))) }
+  if let Some(cents) = card.priceCents {
+    let offer = Json.object(&[
+        ("@type", Json.Text("Offer")),
+        ("price", Json.Text(show(cents / 100) + "." + (if cents % 100 < 10 { "0" } else { "" }) + show(cents % 100))),
+        ("priceCurrency", Json.Text("USD")),
+        ("availability", Json.Text(if detail.isFull { "https://schema.org/SoldOut" } else { "https://schema.org/InStock" })),
+        ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
+      ])
+    if detail.source != "curated" { fields = fields.push(("offers", offer)) }
+  }
   if let Some(host) = detail.organizer {
     if detail.source != "curated" { fields = fields.push(("organizer", Json.object(&[("@type", Json.Text("Person")), ("name", Json.Text(host.displayName))]))) }
   }

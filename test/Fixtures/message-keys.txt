@@ -189,6 +189,7 @@ error.title
 event.about
 event.add_calendar
 event.approval_short
+event.archived
 event.attendance
 event.be_first
 event.cancel
@@ -203,6 +204,7 @@ event.details
 event.directions
 event.distance
 event.edit
+event.end_unknown
 event.ended
 event.external_body
 event.free
@@ -237,6 +239,7 @@ event.policy_approval_long
 event.policy_open
 event.policy_open_long
 event.price
+event.price_unknown
 event.published_by
 event.report
 event.report_detail

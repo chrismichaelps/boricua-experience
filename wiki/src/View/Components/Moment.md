@@ -21,8 +21,8 @@ Wraps the server's Puerto Rico date text in a `<time datetime>` element that car
 ### Signatures
 
 ```pudu
-export fn when(frame: &Frame.Frame, startsAt: Str, endsAt: Str, now: &StdTime.Instant) -> H.Node
-export fn schedule(frame: &Frame.Frame, startsAt: Str, endsAt: Str) -> H.Node
+export fn when(frame: &Frame.Frame, startsAt: Str, endsAt: Option[Str], now: &StdTime.Instant) -> H.Node
+export fn schedule(frame: &Frame.Frame, startsAt: Str, endsAt: Option[Str]) -> H.Node
 export fn day(frame: &Frame.Frame, at: Str) -> H.Node
 ```
 
@@ -52,3 +52,6 @@ Readers in Puerto Rico, readers whose date differs from Puerto Rico's, events cr
 ## Referenced by
 
 [[src/_MOC]] · [[src/Public/LocalTime]]
+
+## Unknown publication facts Grill Log · #51
+Resolved: missing price is null/None and never free; explicit zero is free. Missing end is null/None. Start stays required and finite. discovery_until is a separate generated cutoff: known end, otherwise exactly24 elapsed hours after start; it is never a displayed/exported end or proof that an event is ongoing. Existing known dates retain after-start/14-day validation. Unknown-end expiration is labeled archived; recurrence uses independent dated records. API arguments and assistant projections preserve null; exports omit unknown end/offer. Tests cover boundaries and bilingual output.

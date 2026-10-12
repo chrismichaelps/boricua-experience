@@ -248,3 +248,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/Passwords]] · [[src/Public/SubmitFeedback]] — local password guidance and native submission feedback.
 - [[src/Test/FormFeedback]] — native and asynchronous submission lifecycle regressions.
+
+- [[src/Database/OptionalEventFacts]] — nullable publication facts and finite discovery policy.

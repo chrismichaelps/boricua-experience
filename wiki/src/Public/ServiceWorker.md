@@ -86,3 +86,6 @@ Resolved: search segments own one neutral2px inset focus indication; nested inpu
 
 ## Curated publication Grill Log · #42
 Resolved: Mechanical shell graph44 only; personal HTML and database records remain outside precache.
+
+## Asset graph46 · #51
+Resolved: first-party import identities and worker cache advance together to46 for nullable schedule/price rendering. Public code changes are limited to LocalTime, BrowserMessages, AssistantStream and Explorer; other browser modules only change dependency identities. No private data enters precache.

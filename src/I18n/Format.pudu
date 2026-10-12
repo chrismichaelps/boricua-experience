@@ -8,8 +8,12 @@ import Utils.Geo as Geo
 import Utils.Money as Money
 
 /// `Gratis` / `Free`, or the price.
-export fn price(locale: &Locale.Locale, cents: Int) -> Str {
-  if cents == 0 { Translate.text(locale, "event.free") } else { Money.dollars(cents) }
+export fn price(locale: &Locale.Locale, cents: Option[Int]) -> Str {
+  match cents {
+    case Some(0) => Translate.text(locale, "event.free")
+    case Some(amount) => Money.dollars(amount)
+    case None => Translate.text(locale, "event.price_unknown")
+  }
 }
 
 /// `12 van` / `12 going`.

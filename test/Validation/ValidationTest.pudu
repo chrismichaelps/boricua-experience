@@ -48,9 +48,14 @@ fn main() -> Int {
   let signUp = Credentials.SignUp{displayName: "Ana", email: "ana@example.com", password: "boricua2026", confirmation: "boricua2026", birthDate: "1990-05-17", terms: true, privacy: true}
   let checks = Test.suite("Validation", &[
       Test.succeeded("a complete draft is ready", &ready),
+      Test.equals("unknown price and end stay unknown", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), endsAt: "", price: ""}), |r| (r.endsAt, r.priceCents)), &Ok((None, None))),
+      Test.equals("explicit zero is free", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), price: "0"}), |r| r.priceCents), &Ok(Some(0))),
+      Test.equals("negative price is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), price: "-1"})), &["price"]),
+      Test.equals("malformed end remains an error", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), endsAt: "later"})), &["endsAt"]),
+      Test.equals("missing start cannot publish", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), startsAt: "", endsAt: ""})), &["startsAt"]),
       Test.equals("a ready draft carries UTC timestamps", &Result.map(ready, |r| r.startsAt), &Ok("2026-12-05T23:00:00Z")),
-      Test.equals("a ready draft carries cents and capacity", &Result.map(ready, |r| (r.priceCents, r.capacity)), &Ok((1250, Some(40)))),
-      Test.equals("an empty draft names every required field", &refused(&EventForm.check(&Draft.blank())), &["title", "summary", "category", "municipality", "venueName", "location", "startsAt", "endsAt"]),
+      Test.equals("a ready draft carries cents and capacity", &Result.map(ready, |r| (r.priceCents, r.capacity)), &Ok((Some(1250), Some(40)))),
+      Test.equals("an empty draft names every required field", &refused(&EventForm.check(&Draft.blank())), &["title", "summary", "category", "municipality", "venueName", "location", "startsAt"]),
       Test.equals("a private event must require approval", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), visibility: "private", joinPolicy: "open"})), &["joinPolicy"]),
       Test.equals("an end before the start is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), endsAt: "2026-12-05T18:00"})), &["endsAt"]),
       Test.equals("an event longer than two weeks is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), endsAt: "2026-12-25T18:00"})), &["endsAt"]),

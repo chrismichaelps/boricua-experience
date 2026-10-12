@@ -21,3 +21,6 @@ Resolved: a valid profile remains typed, confirmed null signs out, and malformed
 
 ## Signup confirmation regression · #45
 Server validation rejects unequal confirmation; length failures retain focused errors when both fields match. No provider or account is touched by pure tests. Resolved.
+
+## Unknown event facts Grill Log · #51
+Resolved: nullable prices/end retain explicit unknown state; known free/paid and dates regressions stay covered. No1970 null-date coercion. Unknown schedule24-hour discovery cutoff is separate from actual end. Boundary, malformed input, bilingual output and provider projections need focused tests.
