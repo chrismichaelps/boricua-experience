@@ -230,10 +230,13 @@ event.manage_requests.other
 event.map_label
 event.message_hint
 event.message_label
+event.more_dates.one
+event.more_dates.other
 event.more_people.one
 event.more_people.other
 event.not_interested
 event.official_source
+event.other_dates
 event.policy_approval
 event.policy_approval_long
 event.policy_open

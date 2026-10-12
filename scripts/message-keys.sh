@@ -13,7 +13,7 @@ out="$root/test/Fixtures/message-keys.txt"
     report.spam report.scam report.unsafe report.minors report.offensive report.other \
     notification.request_received notification.request_approved notification.request_rejected \
     notification.event_reminder notification.event_changed notification.event_cancelled; do echo "$family"; done
-  for counted in event.going event.spots_left event.going_title event.more_people event.manage_requests \
+  for counted in event.going event.more_dates event.spots_left event.going_title event.more_people event.manage_requests \
     profile.events_hosted profile.guests_hosted profile.upcoming profile.likes; do echo "$counted.one"; echo "$counted.other"; done
   for section in service eligibility account publishing joining minors conduct safety content moderation disclaimers liability indemnity changes law contact; do echo "legal.terms.$section.title"; echo "legal.terms.$section.body"; done
   for section in scope collect use visibility location providers retention rights deletion security minors transfers changes; do echo "legal.privacy.$section.title"; echo "legal.privacy.$section.body"; done
@@ -22,5 +22,5 @@ out="$root/test/Fixtures/message-keys.txt"
   for section in mission how safety privacy; do echo "about.$section.title"; echo "about.$section.body"; done
   for doc in legal.terms legal.privacy legal.cookies about; do echo "$doc.title"; echo "$doc.description"; echo "$doc.intro"; done
   for doc in legal.terms legal.privacy legal.cookies; do echo "$doc.summary"; done
-} | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|event\.going|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
+} | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|event\.going|event\.more_dates|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
 echo "$(wc -l < "$out" | tr -d ' ') keys written to $out"
