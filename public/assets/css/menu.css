@@ -35,3 +35,17 @@
   .menu-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 36px; }
   .menu-cover.hero-frame { aspect-ratio: 2.4 / 1; border-radius: 32px; }
 }
+.menu-editor .menu-back { margin-bottom: 4px; }
+.menu-edit-sections { display: grid; gap: 24px; }
+.menu-edit-section { min-width: 0; border: 0; margin: 0; padding: 0 0 24px; }
+.menu-edit-section > legend { padding: 0; margin-bottom: 12px; }
+.menu-edit-dishes { display: grid; gap: 16px; }
+.menu-edit-dish { display: grid; gap: 14px; min-width: 0; margin: 0; padding: 16px; border: 1px solid var(--color-mist); border-radius: 16px; }
+.menu-edit-dish > legend { padding-inline: 6px; font-weight: 700; }
+.menu-edit-checks { display: flex; flex-wrap: wrap; gap: 4px 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.menu-edit-checks > legend { width: 100%; padding: 0; margin-bottom: 6px; font-weight: 700; font-size: 14px; }
+.menu-edit-checks .check label { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+.menu-edit-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.menu-edit-command { min-height: 44px; }
+.menu-edit-latest { margin-block: 12px; }
+.menu-editor input, .menu-editor textarea, .menu-editor select { min-width: 0; max-width: 100%; }

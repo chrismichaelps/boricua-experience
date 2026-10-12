@@ -77,3 +77,7 @@ export const SESSION_EXPIRED: Str = "session_expired"
 export const FLOW_EXPIRED: Str = "flow_expired"
 /// A menu save whose revision no longer matches.
 export const MENU_CHANGED: Str = "menu_changed"
+/// A new menu for a category without menus.
+export const MENU_UNSUPPORTED: Str = "menu_unsupported"
+/// A new menu beyond the per-place limit.
+export const MENU_LIMIT: Str = "menu_limit"

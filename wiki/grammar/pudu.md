@@ -75,6 +75,7 @@ page is corrected in the same change.
   range; test the length first, or take the first element with `Option.fromArray`.
 - `&-1` lexes as the wrapping-subtraction operator; borrow a negative literal as `&(-1)`.
 - A `Map` built inside a function is rebuilt on every call; a lookup table is a module `const`.
+- One list literal holds at most about 512 entries (`E1099` parser nesting limit); split a growing catalogue by area.
 
 ## Senior Definition Needed
 

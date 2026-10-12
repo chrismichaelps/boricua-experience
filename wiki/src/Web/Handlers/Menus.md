@@ -18,3 +18,6 @@ No direct API/service calls, write actions or bypass of hidden/paused parent vis
 Resolved: reader uses the same database visibility contract as its parent, the existing page wrapper seals refreshed sessions and applies private caching. Owner-only draft/archived content carries a visible status and noindex; public published menus may be indexed.
 ## Referenced by
 [[src/_MOC]] · [[src/Web/Router]] · [[src/View/Pages/Menu]]
+
+## Owner editor Grill Log · #69
+Resolved: Owner GET/POST verifies editable parent and authorized board before selecting any menu ID. Normal memberAction guards apply to both draft structure changes and saves. Structural changes never call save. Conflicts and unavailable writes retain submitted input and expected revision; latest-menu link allows explicit reload.

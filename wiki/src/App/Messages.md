@@ -77,3 +77,6 @@ See [[src/Validation/Account]] for the age gate contract this module takes part 
 
 ## Menu reader Grill Log · #69
 Resolved: menuBoard is a READ Visit[Str] kind returning MenuBoard; existing message contracts stay unchanged.
+
+## Owner editor Grill Log · #69
+Resolved: Add Signed[MenuSaving] command with placeId, raw draft, menuId and expectedRevision; no HTTP reaches the mediator.

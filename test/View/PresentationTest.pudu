@@ -14,6 +14,7 @@ import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Menu as Menu
+import Domain.MenuDraft as MenuDraft
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Profile as Profile
@@ -41,6 +42,7 @@ import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
 import View.Pages.Menu as MenuPage
+import View.Pages.MenuForm as MenuFormPage
 import View.Pages.Place as PlacePage
 import View.Pages.PlaceForm as PlaceFormPage
 import View.Pages.Profile as ProfilePage
@@ -122,6 +124,14 @@ fn main() -> Int {
   let unsafeMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, name: "<script>unsafe</script>"})}))
   let menuEntry = H.render(&MenuPage.link(&en, fonda.card.slug, &Some(menus)))
   let unsupportedMenu = H.render(&MenuPage.link(&en, fonda.card.slug, &Some(Menu.MenuBoard{..menus, supported: false, menus: []})))
+  let ownerMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true}))
+  let guestEdit = !menuReader.contains("/menu/edit")
+  let editing = MenuDraft.MenuEditing{draft: MenuDraft.fromListing(&menus.menus[0]), menuId: Some("menu-test"), revision: 2}
+  let typed = MenuDraft.MenuEditing{..editing, draft: MenuDraft.MenuEditorDraft{..editing.draft, sections: [MenuDraft.MenuSectionInput{..editing.draft.sections[0], items: [MenuDraft.MenuDishInput{..editing.draft.sections[0].items[0], name: "<b>Typed</b>", price: "doce"}]}]}}
+  let menuEditor = Html.render(&MenuFormPage.render(&en, &fonda, &editing, &None, false))
+  let refusedEditor = Html.render(&MenuFormPage.render(&en, &fonda, &typed, &Some(Problem.Invalid([Problem.FieldError{field: "s.0.i.0.price", key: "menu.price_invalid"}])), false))
+  let conflictEditor = Html.render(&MenuFormPage.render(&es, &fonda, &editing, &Some(Problem.Refused("menu_changed")), true))
+  let newEditor = Html.render(&MenuFormPage.render(&en, &fonda, &MenuDraft.MenuEditing{draft: MenuDraft.blank("en"), menuId: None, revision: 0}, &None, false))
   let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda, &ownerBoard, &None, &Review.blank(), &None))
   let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}, &Review.ReviewBoard{..board, canReview: false}, &None, &Review.blank(), &None))
   let member: Profile.MyProfile = match Wire.decode(&Fixtures.json("my-profile.json")) { case Ok(found) => found case Err(_) => panic("profile fixture") }
@@ -162,6 +172,13 @@ fn main() -> Int {
       Test.that("guests are invited to sign in to like", singlePage.contains("/signin?return=/e/" + detail.card.slug) && !singlePage.contains("data-feature=\"react\"")),
       Test.that("members can like; organizers and cancelled activities show only the count", memberReactions.contains("data-feature=\"react\"") && !organizerReactions.contains("data-feature=\"react\"") && !cancelledReactions.contains("data-feature=\"react\"")),
       Test.that("menu link follows database capability", menuEntry.contains("/menu") && unsupportedMenu.isEmpty()),
+      Test.that("owners see new and edit menu links; guests do not", ownerMenu.contains("/menu/edit?menu=menu-test") && ownerMenu.contains("Add a menu") && guestEdit),
+      Test.that("menu editor keeps identity, revision and stable IDs hidden", menuEditor.contains("name=\"revision\" value=\"2\"") && menuEditor.contains("name=\"menuId\" value=\"menu-test\"") && menuEditor.contains("name=\"s.0.i.1.id\" value=\"free-test\"")),
+      Test.that("menu editor keeps unknown facts distinct from free", menuEditor.contains("id=\"f-s.0.i.0.price\" value=\"\"") && menuEditor.contains("id=\"f-s.0.i.1.price\" value=\"0\"") && menuEditor.contains("Not declared")),
+      Test.that("menu editor saves on Enter and edits structure without scripts", menuEditor.indexOf("value=\"save\"") < menuEditor.indexOf("value=\"add-section\"") && menuEditor.contains("value=\"dish-down:0:0\"") && menuEditor.contains("value=\"remove-section:0\"") && !menuEditor.contains("<script>")),
+      Test.that("refused editor retains escaped input beside its error", refusedEditor.contains("value=\"doce\"") && refusedEditor.contains("&lt;b&gt;Typed&lt;/b&gt;") && refusedEditor.contains("up to two decimal places")),
+      Test.that("conflict keeps the submitted revision and offers the current version", conflictEditor.contains("name=\"revision\" value=\"2\"") && conflictEditor.contains("/menu/edit?menu=menu-test") && conflictEditor.contains("Conservamos tu borrador")),
+      Test.that("new menu editor has no identity and is not indexed", newEditor.contains("New menu") && newEditor.contains("name=\"menuId\" value=\"\"") && newEditor.contains("noindex")),
       Test.that("menu section links target stable IDs", menuReader.contains("href=\"#section-section-test\"") && menuReader.contains("id=\"section-section-test\"")),
 
       Test.that("reviews show the average, breakdown and each review", memberPlace.contains("Reviews") && memberPlace.contains("2 reviews") && memberPlace.contains("width:50%") && memberPlace.contains("Muy buen mofongo") && memberPlace.contains("Visited September 2026")),

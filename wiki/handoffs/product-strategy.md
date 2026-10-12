@@ -4,7 +4,7 @@ tags: [handoff, product, places]
 ---
 # Product strategy continuation
 
-2026-10-12 · issue69 · feature/69-menu-editor-save.
+2026-10-12 · issue69 · feature/69-menu-editor-form.
 
 ## Re-anchor
 The recovered product-strategy session ends with0.3.0 releasePR68. Currentmain/dev3a87d40, assets52, category-aware places and reviews are present. Database catalogue has16original categories plus hospedaje. Existing place templates remain authoritative; no fake production places are permitted.
@@ -17,7 +17,7 @@ Architect → Implementer: own menu/media database migrations and mirrors, then 
 |---|---|
 | Recover referenced session | Exact custom-title and final handoff read from local session; repo0.3.0 verified |
 | Category-specific places | Existing category_fields and adaptive forms present; retain and extend across entire catalogue |
-| Restaurant menus | Foundation applied/verified in both environments and mergeddevPR70. Dedicated bilingual reader integrated and browser-tested locally; owner editor, documents and deployment remain pending |
+| Restaurant menus | Foundation, reader, validation merged to dev. Owner editor (create/edit sections and dishes, retained invalid input, revision conflicts) implemented and browser-verified on dev; image/PDF documents and deployment remain pending |
 | Place/review photos | Pending: authorized private storage, sanitized images, moderation-aware read access, carousel and deletion lifecycle |
 | Activity category fields/place links | Pending implementation and validation |
 | Waitlists/attendance | Pending implementation and concurrency tests |
@@ -41,7 +41,10 @@ All-category cover refinement: activities and permanent places in every supporte
 Implement additive schema/API first with rollback and ownership/race tests, then integrate owner and reader flows. Apply reviewed migrations to both projects and compare contracts/permissions. Do not mark the overall goal complete until every ledger item has current-state evidence.
 
 ## Exact next action
-Build the owner menu editor with conditional saves and retained invalid drafts, then private sanitized image/PDF uploads and shared home-style header carousel with default imagery. Preserve all remaining goal ledger items.
+Private sanitized image/PDF uploads and the shared home-style header carousel with default imagery. Preserve all remaining goal ledger items.
+
+## Owner editor evidence
+`/lugar/:slug/menu/edit` (GET/POST) verifies the editable parent and owner board before selecting a menu. Structural commands (add/remove/move sections and dishes) re-render the retained draft without writes; only `do=save` calls the conditional save. Full suite 391 assertions in 10 suites, including 22 field-decoding and 7 editor rendering checks. Dev browser run: new menu → add section → add dish → invalid price plus allergens checked while undeclared refused with every value retained → corrected save rendered in the reader → stale revision refused with draft and submitted revision kept and a link to the current version; 320px width without overflow, structural buttons at least 44px. Test place "Prueba dev: menú del editor" (created by the signed-in development seed account) was hidden afterwards; its draft menu remains in dev only. Menu messages moved to I18n.EsMenu/EnMenu after the Spanish catalogue reached the parser list limit.
 
 ## Foundation evidence
 Both projects have matching menu function hashes, ACLs, category capabilities and RLS-enabled tables with no direct API-role grants. Development rollback tests cover unknown/free/paid prices, nullable availability, stable IDs, stale revisions, invalid JSON, empty publication refusal, hidden/paused/category visibility, limits and foreign/duplicate child references. Parallel saves at the last daily quota slot admit exactly one; parallel edits with the same revision admit one and refuse one conflict. Test places, menus and test audit rows were removed; the existing development place and review remain. Production retains92activities,0places and0menus, with no seed rows. The existing actor/time audit index supports quota lookup. Independent review found no remaining database blocker. No menus or uploads are user-visible yet.
@@ -62,3 +65,5 @@ Raw nested drafts preserve stable IDs, unknown prices and declared allergen unce
 The25BSNF games match the official calendar feed for UTC start and team order, with both calendar pages inspected. The22town/wellness recurrences match the published schedule. Of43reservation listings,42start times and published durations match the current organizer pages. One reservation page now offers no dates; its existing record was reversibly held as draft rather than reported canceled. The fragrance expo dates and end time are supported by its organizer. All91curated database records match the ignored reviewed CSV after that hold; the existing native publication remains untouched. This verifies schedule and CSV parity, not every source fee or venue-coordinate claim. Further source-field and photo-permission review remains pending. No third-party logo or event image has been published without an established reuse basis.
 
 Private audit receipts, source snapshots and the reviewed CSV remain ignored, with restrictive filesystem permissions. They must not be copied into commits or pull requests. Photography credits spacing is merged into devPR73 with all six attributions and16external links retained; isolated Chrome verifies two columns at1280px and one at390px without overflow. Production application deployment remains pending.
+
+The follow-up price audit inspected activity-specific pricing popups rather than the generic site information. Three booking types had incorrectly inherited the generic15USDcost. Sixteenproduction occurrences were corrected atomically under owner/source/old-value/timestamp guards: three now20USD and thirteen40USD. Matching public-detail RPC prices were verified for all16. The ignored CSV, private backup, source recheck snapshots and audit receipt were updated; no dates, identities or native publications changed. Menu validation is mergeddevPR74; the next branch owns actual owner forms and routes.

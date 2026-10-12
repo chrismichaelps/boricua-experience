@@ -54,9 +54,11 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/I18n/Dates]] — Weekday and month names, short and long dates, relative days (today, tomorrow, weekday), card time lines, and full schedules, in Puerto Rico time.
 - [[src/I18n/En]] — The English catalogue.
 - [[src/I18n/EnAccount]] — English sign-in, account, form, problem, notice, and inbox text.
+- [[src/I18n/EnMenu]] — English menu reader and owner editor text.
 - [[src/I18n/EnLegal]] — English counterpart of [[src/I18n/EsLegal]].
 - [[src/I18n/Es]] — The Spanish catalogue: every user-facing string by key.
 - [[src/I18n/EsAccount]] — Spanish sign-in, account, form, problem, notice, and inbox text.
+- [[src/I18n/EsMenu]] — Spanish menu reader and owner editor text.
 - [[src/I18n/EsLegal]] — Spanish terms, privacy policy, cookie policy, and about page, section by section.
 - [[src/I18n/Format]] — Price (free or dollars), going counts, seats left, distance, and category names.
 - [[src/I18n/Translate]] — Looks up a key across the interface, account, and policy catalogues in the reader's language with Spanish as fallback, fills `:name` placeholders, and picks singular or plural forms.
@@ -270,3 +272,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Domain/MenuDraft]] — Raw owner input and refill.
 - [[src/Validation/MenuForm]] — Bounded nested menu validation.
 - [[src/Test/MenuForm]] — Raw menu validation boundary regressions.
+
+- [[src/Web/MenuFields]] — Bounded indexed menu fields and draft-only structural edits.
+- [[src/View/Pages/MenuForm]] — Script-free owner menu editor.
+- [[src/Test/MenuFields]] — Indexed field decoding and structural edit regressions.

@@ -1,9 +1,9 @@
-import { ENDPOINTS, LIVE } from '../constants/config.js?v=53';
-import { message } from '../constants/messages.js?v=53';
-import { postJson } from '../net/http.js?v=53';
-import { distanceM, readingOf } from '../utils/geo.js?v=53';
-import { requestLocation } from '../utils/locate.js?v=53';
-import { toast } from './toast.js?v=53';
+import { ENDPOINTS, LIVE } from '../constants/config.js?v=54';
+import { message } from '../constants/messages.js?v=54';
+import { postJson } from '../net/http.js?v=54';
+import { distanceM, readingOf } from '../utils/geo.js?v=54';
+import { requestLocation } from '../utils/locate.js?v=54';
+import { toast } from './toast.js?v=54';
 
 const listeners = new Set(), statuses = new Set();
 const status = value => { for (const listener of statuses) listener(value); };

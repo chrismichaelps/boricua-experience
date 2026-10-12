@@ -14,3 +14,6 @@ Static constants match the reviewed database function:3menus,12sections,100dishe
 Resolved: one named contract prevents limits scattering across nested editor parsing, validation and views. New values require a matching database change before UI acceptance.
 ## Referenced by
 [[src/_MOC]] · [[src/Validation/MenuForm]] · [[src/Database/Menus]]
+
+## Owner editor Grill Log · #69
+Resolved: the editor's submit field `do` and its structural commands are named here so the view and the field decoder share one protocol without the view importing the web layer.
