@@ -211,6 +211,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/MapClusters]] — grouping regressions.
 
 - [[src/Public/MapViewport]] · [[src/Test/MapViewport]] — viewport discovery and regression boundaries.
+- [[src/Public/Map3d]] — optional 3D buildings and tilted camera on the map page.
 
 - [[src/Public/LocalTime]] — dates and times in the reader's own zone.
 - [[src/Public/Haptics]] · [[src/Public/SheetGestures]] · [[src/Database/MapEvents]] · [[src/Test/Interactions]] — native mobile input and spatial read boundaries.

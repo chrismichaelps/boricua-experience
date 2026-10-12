@@ -45,6 +45,7 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
         H.div().class("map-canvas").id("map").data("lat", show(App.MAP_CENTER_LAT)).data("lng", show(App.MAP_CENTER_LNG)).role("application").label(Frame.t(frame, "map.label")),
         H.script().kind("application/json").id("map-pins").raw(pinsJson(frame, cards)),
         H.div().class("map-controls").holding([
+            H.button().kind("button").class("map-button").data("feature", "map-3d").at("aria-pressed", "false").label(Frame.t(frame, "map.view_3d_label")).holding([H.span().class("map-3d-mark").at("aria-hidden", "true").says("3D"), H.span().class("map-3d-text").says(Frame.t(frame, "map.view_3d"))]),
             H.button().kind("button").class("map-button").data("feature", "locate").at("aria-describedby", "map-location-help").at("aria-pressed", "false").holding([Icons.sized("crosshair", 20), H.span().says(Frame.t(frame, "map.near_me"))]),
             if Frame.signedIn(frame) {
               H.button().kind("button").class("map-button").data("feature", "live").at("aria-describedby", "map-location-help").at("aria-pressed", "false").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "map.share_live"))])

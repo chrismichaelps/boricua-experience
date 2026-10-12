@@ -21,4 +21,5 @@ tags: [moc, adr]
 - [[decisions/ADR-0008-separate-environments]] — local stack with seed for development; hosted project with real data only for production.
 - [[decisions/ADR-0009-event-expiry]] — events end at their end time; a job marks them ended, the row is kept.
 - [[decisions/ADR-0010-category-profiles-and-places]] — places beside activities; per-category facts declared in the database and rendered from the catalogue.
+- [[decisions/ADR-0011-moving-nearby-and-3d-map]] — grid-aligned shared map areas for moving visitors; optional 3D buildings.
 - [[decisions/ADR-0012-place-media]] — owner photos and menu files: reserve, signed upload, verify, sweep.

@@ -1,14 +1,15 @@
-import { clusterPins } from './mapClusters.js?v=55';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=55';
-import { message } from '../constants/messages.js?v=55';
-import { getJson } from '../net/http.js?v=55';
-import { $, $$, create } from '../utils/dom.js?v=55';
-import { visiblePins, viewportBounds } from './mapViewport.js?v=55';
-import { toast } from './toast.js?v=55';
-import { createMap } from './mapLoader.js?v=55';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=55';
-import * as live from './live.js?v=55';
-import { localizeMoment } from './localTime.js?v=55';
+import { clusterPins } from './mapClusters.js?v=56';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=56';
+import { message } from '../constants/messages.js?v=56';
+import { getJson } from '../net/http.js?v=56';
+import { $, $$, create } from '../utils/dom.js?v=56';
+import { snapArea, speedBetween, speedZoom, visiblePins, viewportBounds } from './mapViewport.js?v=56';
+import { toast } from './toast.js?v=56';
+import { createMap } from './mapLoader.js?v=56';
+import { buildings3d } from './map3d.js?v=56';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=56';
+import * as live from './live.js?v=56';
+import { localizeMoment } from './localTime.js?v=56';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -38,6 +39,8 @@ export async function explorer(page) {
   const limitNotice = $('#map-limit', page);
   let pins = JSON.parse($('#map-pins', page)?.textContent || '[]');
   const { map, maplibregl } = await createMap(canvas);
+  const toggle3d = $('[data-feature="map-3d"]', page);
+  if (toggle3d) buildings3d(map, toggle3d);
   let markers = new Map();
   let selectedSlug = '';
   let restoringFocus = false;
@@ -134,7 +137,10 @@ export async function explorer(page) {
     const area = viewportBounds(map, rect.width, rect.height, covered);
     // Before layout the canvas has no area; the next resize or move reads the camera again.
     if (!area) { if (ticket === queryTicket) list.setAttribute('aria-busy', 'false'); return; }
-    for (const [name, value] of Object.entries(area)) query.set(name, value);
+    // Grid-aligned areas let moving visitors reuse cached answers instead of reading the database.
+    for (const [name, value] of Object.entries(snapArea(area, map.getZoom()))) query.set(name, value);
+    // The language is part of the address, so a shared cache never serves one language to another.
+    query.set('hl', (document.documentElement.lang || 'es').slice(0, 2));
     query.delete('lat'); query.delete('lng'); query.delete('radius');
     query.delete('after');
     query.delete('near');
@@ -169,9 +175,12 @@ export async function explorer(page) {
     }
   };
 
+  let staleWhileHidden = false;
   const schedule = () => {
     if (!ready) return;
     render();
+    // A hidden tab keeps its position but asks for nothing until it is seen again.
+    if (document.hidden) { staleWhileHidden = true; return; }
     clearTimeout(queryTimer);
     requestController?.abort();
     const ticket = ++queryTicket;
@@ -182,6 +191,8 @@ export async function explorer(page) {
   let precise = false;
   let warnedCoarse = false;
   let lastMe = null;
+  let speedAnchor = null;
+  let speedMs = NaN;
   const COARSE_M = 500;
   const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: matchMedia('(min-width: 960px)').matches ? 24 : sheet.getBoundingClientRect().height + 24 });
   const motionMs = (ms) => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms);
@@ -194,7 +205,7 @@ export async function explorer(page) {
       map.fitBounds(bounds, { padding: sheetPadding(), maxZoom: MAP.selfZoom, duration: motionMs(first ? 450 : 300) });
       return;
     }
-    const zoom = !precise ? MAP.selfZoom : Math.max(map.getZoom(), 12);
+    const zoom = !precise ? MAP.selfZoom : speedZoom(speedMs, Math.max(map.getZoom(), 12));
     if (!precise) widening = true;
     precise = true;
     map.easeTo({ center: [reading.lng, reading.lat], zoom, padding: sheetPadding(), duration: motionMs(first ? 450 : 300) });
@@ -205,6 +216,10 @@ export async function explorer(page) {
     me ??= meMarker(maplibregl, message('you')).setLngLat([reading.lng, reading.lat]).addTo(map);
     me.setLngLat([reading.lng, reading.lat]);
     lastMe = reading;
+    const timed = { ...reading, at: Date.now() };
+    const measured = speedBetween(speedAnchor, timed);
+    if (Number.isFinite(measured)) speedMs = measured;
+    if (!speedAnchor || timed.at - speedAnchor.at >= MAP.speedMinSeconds * 1000) speedAnchor = timed;
     const accuracy = Math.max(reading.accuracy || 0, 10);
     const coarse = accuracy > COARSE_M;
     me.getElement().classList.toggle('is-coarse', coarse);
@@ -263,6 +278,11 @@ export async function explorer(page) {
     if (event.target === sheet && ['height', 'max-height'].includes(event.propertyName)) resizeViewport();
   });
   map.on('moveend', schedule);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden || !staleWhileHidden) return;
+    staleWhileHidden = false;
+    schedule();
+  });
 
   const locate = $('[data-feature="locate"]', page);
   let following = false;
