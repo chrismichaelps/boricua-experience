@@ -53,3 +53,6 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]] · [[src/I18n/Translate]]
+
+## Resolved feedback Grill Log · #45
+Translate password visibility and local length guidance; keep bilingual key parity. Resolved.

@@ -55,3 +55,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Resolved feedback Grill Log · #45
+Password inputs retain native names/autocomplete and render hidden progressive visibility buttons with localized labels. A local meter enhances new passwords; errors remain server-rendered. Resolved.

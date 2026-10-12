@@ -73,7 +73,7 @@ export fn signIn(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Pr
 /// The sign-up page with the age, terms, and privacy confirmations.
 export fn signUp(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Problem]) -> Html.Html {
   let errors = errorsOf(problem)
-  let meta = Seo.meta(Frame.t(frame, "auth.sign_up_title"), Frame.t(frame, "auth.sign_up_lead"), Routes.SIGN_UP, true)
+  let meta = Seo.meta(Frame.t(frame, "auth.sign_up_title"), Frame.t(frame, "auth.sign_up_lead"), Routes.SIGN_UP, false)
   card(frame, &meta, Frame.t(frame, "auth.sign_up_title"), Frame.t(frame, "auth.sign_up_lead"), [
       Form.problemBanner(frame, problem),
       H.form().class("stack-form").action(Routes.SIGN_UP).method("post").holding([
@@ -81,6 +81,7 @@ export fn signUp(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Pr
           Form.input(frame, &Form.Field{..Form.field("displayName", Frame.t(frame, "auth.name"), typed.displayName), required: true}, &errors, |c: H.Node| c.at("autocomplete", "name").at("maxlength", "60")),
           Form.input(frame, &Form.Field{..Form.field("email", Frame.t(frame, "auth.email"), typed.email), kind: "email", required: true}, &errors, |c: H.Node| c.at("autocomplete", "email").at("inputmode", "email")),
           Form.input(frame, &Form.Field{..Form.field("password", Frame.t(frame, "auth.password"), ""), kind: "password", required: true, hint: Frame.t(frame, "auth.password_hint")}, &errors, |c: H.Node| c.at("autocomplete", "new-password").at("minlength", "8")),
+          Form.input(frame, &Form.Field{..Form.field("confirmation", Frame.t(frame, "auth.confirm_password"), ""), kind: "password", required: true}, &errors, |c: H.Node| c.at("autocomplete", "new-password")),
           Form.input(frame, &Form.Field{..Form.field("birthDate", Frame.t(frame, "auth.birth_date"), ""), kind: "date", required: true, hint: Frame.t(frame, "auth.birth_date_hint")}, &errors, |c: H.Node| c.at("autocomplete", "bday").at("min", "1900-01-01")),
           H.div().class("consents").holding([
               Form.checkbox(frame, "terms", H.span().holding([H.span().says(Frame.t(frame, "auth.accept_terms") + " "), H.a().class("text-link").href(Routes.TERMS).target("_blank").says(Frame.t(frame, "footer.terms"))]), false, &errors),

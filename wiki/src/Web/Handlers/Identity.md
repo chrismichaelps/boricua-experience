@@ -58,3 +58,6 @@ MEDIUM.
 ## Age gate
 
 See [[src/Validation/Account]] for the age gate contract this module takes part in.
+
+## Resolved feedback Grill Log · #45
+Read confirmation without trimming or persisting it and pass it through validated signup. Re-render errors without retaining either password. Resolved.

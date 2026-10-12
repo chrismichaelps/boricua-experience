@@ -33,7 +33,6 @@ export fn head(frame: &Frame.Frame, page: &Meta) -> Array[H.Node] {
     H.meta().name("description").at("content", page.description),
     H.meta().name("robots").at("content", if page.indexable { "index,follow,max-image-preview:large" } else { "noindex,follow" }),
     H.link().rel("canonical").href(canonical),
-    H.link().rel("alternate").at("hreflang", "es-PR").href(canonical),
     H.link().rel("alternate").at("hreflang", "x-default").href(canonical),
     property("og:type", "website"),
     property("og:site_name", App.SITE_NAME),
@@ -54,6 +53,9 @@ export fn head(frame: &Frame.Frame, page: &Meta) -> Array[H.Node] {
   }
   nodes
 }
+
+/// Resolve an absolute HTTPS image or a local asset against the site origin.
+fn imageUrl(siteUrl: Str, image: Str) -> Str { if image.startsWith("https://") { image } else { siteUrl + image } }
 
 /// An Open Graph property.
 fn property(name: Str, value: Str) -> H.Node { H.meta().at("property", name).at("content", value) }
@@ -123,7 +125,7 @@ export fn event(siteUrl: Str, detail: &Event.Detail) -> Json.Json {
     ("eventStatus", Json.Text(status)),
     ("eventAttendanceMode", Json.Text("https://schema.org/OfflineEventAttendanceMode")),
     ("location", place),
-    ("image", Json.list(&[Json.Text(siteUrl + Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg"))])),
+    ("image", Json.list(&[Json.Text(imageUrl(siteUrl, Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg")))])),
     ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
   ]
   if detail.source != "curated" { fields = fields.push(("offers", offer)) }

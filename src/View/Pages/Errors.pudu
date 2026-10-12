@@ -14,7 +14,7 @@ import View.Seo as Seo
 /// The page for an address with nothing behind it.
 export fn missing(frame: &Frame.Frame) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "error.missing_title"), Frame.t(frame, "error.missing_body"), frame.path, false)
-  Layout.page(frame, &meta, Layout.Elsewhere, Notice.empty("map", Frame.t(frame, "error.missing_title"), Frame.t(frame, "error.missing_body"), H.a().class("button").href(Routes.HOME).says(Frame.t(frame, "nav.explore"))))
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("empty missing-page").holding([H.p().class("missing-code").at("aria-hidden", "true").says("404"), H.h1().says(Frame.t(frame, "error.missing_title")), H.p().says(Frame.t(frame, "error.missing_body")), H.a().class("button").href(Routes.HOME).says(Frame.t(frame, "nav.explore"))]))
 }
 
 /// The page for a problem that has no page of its own.

@@ -61,3 +61,6 @@ Manifest icon and social image paths use shared asset version20 to refresh insta
 
 ## Curated publication Grill Log · #42
 Resolved: Curated event structured data omits offers/availability and person-organizer claims because Boricua cannot confirm external stock or represent the publisher as the producer.
+
+## Resolved feedback Grill Log · #45
+Resolve absolute external event images correctly. Do not advertise Spanish alternate content at an English cookie-selected URL; retain canonical/default. Public routes remain indexable and auth/private pages remain excluded. Resolved.
