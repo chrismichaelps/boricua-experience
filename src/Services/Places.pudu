@@ -1,0 +1,66 @@
+/** @Services.Places.Listings — place pages, listings, publishing, editing, and hiding */
+module Services.Places
+
+import Std.Option as Option
+import Api.Places as PlacesApi
+import Constants.Limits as Limits
+import Domain.Catalog as Catalog
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Catalog as CatalogService
+import Services.Runtime as Runtime
+import Validation.PlaceForm as PlaceForm
+
+/// A place as the viewer may see it.
+export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.Session]) -> Result[Place.Detail, Problem.Problem] {
+  PlacesApi.detail(&runtime.gateway, slug, tokenOf(&session))
+}
+
+/// Published places of a category or town, for a landing page; empty when the category takes no places.
+export fn listed(runtime: &Runtime.Runtime, category: Str, municipality: Str) -> Result[Array[Place.Listing], Problem.Problem] {
+  let page = PlacesApi.search(&runtime.gateway, &PlacesApi.SearchArgs{query: "", category: category, municipality: municipality, lat: None, lng: None, radiusM: None, sort: "rating", limit: Limits.RAIL_COUNT, after: ""}) ?
+  Ok(page.items)
+}
+
+/// Publishes a draft against its category's profile; answers the new place, or `Invalid`.
+export fn publish(runtime: &Runtime.Runtime, draft: &Place.Draft, session: &Session.Session) -> Result[Place.Published, Problem.Problem] {
+  let catalog = CatalogService.current(runtime) ?
+  let ready = PlaceForm.check(draft, &catalog) ?
+  PlacesApi.create(&runtime.gateway, &ready, session.accessToken)
+}
+
+/// The edit form of a place the member owns, with the place it edits.
+export fn editable(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session) -> Result[(Place.Detail, Place.Draft), Problem.Problem] {
+  let found = PlacesApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
+  if !found.viewer.isOwner { return Err(Problem.Forbidden) }
+  Ok((found, Place.fromDetail(&found)))
+}
+
+/// Saves changes to a place the member owns.
+export fn update(runtime: &Runtime.Runtime, placeId: Str, draft: &Place.Draft, session: &Session.Session) -> Result[Place.Published, Problem.Problem] {
+  let catalog = CatalogService.current(runtime) ?
+  let ready = PlaceForm.check(draft, &catalog) ?
+  PlacesApi.update(&runtime.gateway, placeId, &ready, session.accessToken)
+}
+
+/// Publishes or hides a place the member owns.
+export fn setStatus(runtime: &Runtime.Runtime, placeId: Str, visible: Bool, session: &Session.Session) -> Result[(), Problem.Problem] {
+  PlacesApi.setStatus(&runtime.gateway, placeId, if visible { "published" } else { "hidden" }, session.accessToken)
+}
+
+/// The places the member owns.
+export fn mine(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Array[Place.Listing], Problem.Problem] {
+  PlacesApi.mine(&runtime.gateway, session.accessToken)
+}
+
+/// The access token of a session, when there is one.
+fn tokenOf(session: &Option[Session.Session]) -> Option[Str] { Option.map(*session, |found: Session.Session| found.accessToken) }
+
+/// Whether a category takes places at all.
+export fn takesPlaces(catalog: &Catalog.Catalog, slug: Str) -> Bool {
+  match Catalog.category(catalog, slug) {
+    case Some(found) => Catalog.takes(&found, Catalog.PLACE)
+    case None => false
+  }
+}

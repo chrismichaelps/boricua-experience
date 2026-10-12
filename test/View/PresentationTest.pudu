@@ -7,11 +7,13 @@ import Std.Html as Html
 import Std.Http as Http
 import Std.Json as Json
 import Std.List as List
+import Std.Result as Result
 import Std.Test as Test
 import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Search as Search
@@ -25,6 +27,7 @@ import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
+import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as Controls
 import View.Frame as Frame
 import View.Layout as Layout
@@ -35,6 +38,8 @@ import View.Pages.Event as EventPage
 import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
+import View.Pages.Place as PlacePage
+import View.Pages.PlaceForm as PlaceFormPage
 import View.Pages.Profile as ProfilePage
 import View.Pages.Search as SearchPage
 import View.Seo as Seo
@@ -71,15 +76,15 @@ fn main() -> Int {
   let results = Html.render(&Layout.page(&visitor(Locale.En, "/search"), &meta, Layout.Explore, H.div().says("Results")))
   let town = Catalog.Municipality{name: "Ponce", slug: "ponce", region: "sur", lat: 18.011, lng: -66.614}
   let narrowed = Search.Filters{..Search.everything(), municipality: "ponce", category: "musica", query: "salsa", freeOnly: true, window: Search.Weekend}
-  let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}))
-  let openSearch = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
-  let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}))
+  let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}, &[]))
+  let openSearch = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
+  let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let signup = Html.render(&Auth.signUp(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let missing = Html.render(&Errors.missing(&en))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
-  let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(_) => panic("fixture failed") }
+  let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(why) => panic("fixture failed: " + Json.explainDecode(&why)) }
   let detail = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(found) => found case Err(_) => panic("fixture failed") }
   let unknownCard = Event.Card{..detail.card, priceCents: None, endsAt: None, discoveryUntil: Some("2026-10-13T02:00:00Z")}
   let unknownDetail = Event.Detail{..detail, card: unknownCard}
@@ -95,8 +100,18 @@ fn main() -> Int {
   let seriesPage = Html.render(&EventPage.render(&en, &Event.Detail{..detail, otherDates: [Event.Occurrence{slug: "plaza-2026-11-21", startsAt: "2026-11-21T22:00:00+00:00", endsAt: None}]}, &None))
   let singlePage = Html.render(&EventPage.render(&en, &detail, &None))
   let homePage = Html.render(&HomePage.render(&en, &catalog, &Discovery.Home{recommended: [], soon: [], weekend: [], free: [], gems: [detail.card]}))
-  let nearListing = Html.render(&SearchPage.render(&es, &catalog, &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000), lat: Some(18.011), lng: Some(-66.614), sort: Search.Near}, &SearchPage.Open, &Event.Page{items: [], next: Some("24")}))
+  let nearListing = Html.render(&SearchPage.render(&es, &catalog, &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000), lat: Some(18.011), lng: Some(-66.614), sort: Search.Near}, &SearchPage.Open, &Event.Page{items: [], next: Some("24")}, &[]))
   let nearRailMarkup = HomePage.nearRail(&es, "Ponce", &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000)}, &[detail.card])
+  let profiled = Catalog.Catalog{..catalog, categories: Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), []), municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}]}
+  let fonda = match Place.decodeDetail(&Fixtures.json("place-detail.json")) { case Ok(found) => found case Err(_) => panic("place fixture") }
+  let mondayNoon = Frame.Frame{..es, nowMillis: 1791824400000}
+  let chooserPage = Html.render(&PlaceFormPage.chooser(&en, &profiled))
+  let restaurantForm = Html.render(&PlaceFormPage.render(&es, &profiled, &PlaceFormPage.Creating, &Place.blank("comida"), &None))
+  let beachForm = Html.render(&PlaceFormPage.render(&en, &profiled, &PlaceFormPage.Creating, &Place.blank("playa"), &None))
+  let refusedForm = Html.render(&PlaceFormPage.render(&en, &profiled, &PlaceFormPage.Creating, &Place.blank("comida"), &Some(Problem.Invalid([Problem.FieldError{field: "d.cuisine", key: "form.fact_required"}, Problem.FieldError{field: "hours", key: "form.hours_invalid"}]))))
+  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda))
+  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}))
+  let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -118,6 +133,17 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.that("the chooser offers only the kinds each category takes", chooserPage.contains("/create/place?category=hospedaje") && !chooserPage.contains("/create?category=hospedaje") && chooserPage.contains("/create?category=civica") && !chooserPage.contains("/create/place?category=civica")),
+      Test.that("a restaurant form asks restaurant facts, not beach facts", restaurantForm.contains("Tipo de comida") && restaurantForm.contains("name=\"d.service.takeout\"") && !restaurantForm.contains("d.water")),
+      Test.that("a beach form asks beach facts", beachForm.contains("Water") && beachForm.contains("name=\"d.facilities.lifeguard\"") && !beachForm.contains("d.cuisine")),
+      Test.that("the place form has a week of opening ranges", restaurantForm.contains("name=\"h.1.0.from\"") && restaurantForm.contains("name=\"h.0.1.to\"")),
+      Test.that("only place categories are offered in the place form", !restaurantForm.contains("value=\"civica\"") && restaurantForm.contains("value=\"hospedaje\"")),
+      Test.that("refused facts and hours are marked", refusedForm.contains("This is required for this category.") && refusedForm.contains("Each range needs an opening")),
+      Test.that("a place page shows its category facts with labels", placePage.contains("Detalles de Comida y bebida") && placePage.contains("Criolla") && placePage.contains("Para llevar") && placePage.contains("Acceso para sillas de ruedas")),
+      Test.that("a place page shows hours, open now and contact", placePage.contains("Abierto ahora") && placePage.contains("18:00–02:00") && placePage.contains("tel:787-555-0100")),
+      Test.that("a place page links facts that are web addresses without trusting them", placePage.contains("href=\"https://reservas.example.org\"") && placePage.contains("rel=\"noopener nofollow\"")),
+      Test.that("only the owner sees management", placePage.contains("/lugar/la-fonda-4f1c7a/edit") && !guestPlace.contains("/lugar/la-fonda-4f1c7a/edit")),
+      Test.that("a place card shows its highlighted facts, rating and open state", placeCard.contains("Criolla") && placeCard.contains("$$ · Moderado") && placeCard.contains("4.7 · 3 reseñas") && placeCard.contains("Abierto ahora") && placeCard.contains("href=\"/lugar/la-fonda-4f1c7a\"")),
       Test.that("home offers a town and radius without location permission", homePage.contains("action=\"/search\"") && homePage.contains("name=\"cerca\"") && homePage.contains("name=\"radio\"")),
       Test.that("home keeps a slot for the remembered-town rail", homePage.contains("data-feature=\"near-rail\"") && homePage.contains("/api/home/near")),
       Test.that("home shows hidden gems", homePage.contains("rail-gems") && homePage.contains("Hidden gems")),

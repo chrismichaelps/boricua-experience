@@ -1,0 +1,245 @@
+/** @Domain.Place.Listings — permanent places as cards, pages, drafts, and opening hours */
+module Domain.Place
+
+import Std.Json as Json
+import Std.Math.Float as Float
+import Std.Option as Option
+import Domain.Event as Event
+import Utils.Time as Time
+
+/** @Domain.Place.Listing — the listing projection of a place, with its highlighted facts */
+export type Listing = {
+  id: Str,
+  slug: Str,
+  name: Str,
+  summary: Str,
+  category: Event.CategoryRef,
+  municipality: Event.TownRef,
+  @json("cover_url") coverUrl: Option[Str],
+  lat: Float64,
+  lng: Float64,
+  @default("null") @json("distance_m") distanceM: Option[Int],
+  @default("0") @json("rating_count") ratingCount: Int,
+  @default("null") @json("rating_avg") ratingAvg: Option[Float64],
+  @default("false") verified: Bool,
+  @default("\"published\"") status: Str,
+  @default("\{\}") hours: Json.Json,
+  @default("\{\}") highlights: Json.Json
+} derives Json.Decode
+
+/** @Domain.Place.Results — one page of place cards and the cursor of the next */
+export type Results = { items: Array[Listing], next: Option[Str] } derives Json.Decode
+
+/** @Domain.Place.Owner — who manages a place */
+export type Owner = { id: Str, @json("display_name") displayName: Str, @json("avatar_url") avatarUrl: Option[Str] } derives Json.Decode
+
+/** @Domain.Place.Relation — the viewer's relation to a place */
+export type Relation = { @json("signed_in") signedIn: Bool, @json("is_owner") isOwner: Bool } derives Json.Decode
+
+/** @Domain.Place.Detail — everything a place page shows */
+export type Detail = {
+  card: Listing,
+  description: Str,
+  addressLine: Str,
+  phone: Option[Str],
+  website: Option[Str],
+  details: Json.Json,
+  region: Str,
+  owner: Option[Owner],
+  viewer: Relation,
+  updatedAt: Str
+}
+
+/** @Domain.Place.PlaceWire — the detail fields beside the card fields of one answer */
+type PlaceWire = {
+  description: Str,
+  @json("address_line") addressLine: Str,
+  phone: Option[Str],
+  website: Option[Str],
+  @default("\{\}") details: Json.Json,
+  @json("municipality_region") region: Str,
+  owner: Option[Owner],
+  viewer: Relation,
+  @json("updated_at") updatedAt: Str
+} derives Json.Decode
+
+/// The detail a database answer describes: card and detail fields share one object.
+export fn decodeDetail(json: &Json.Json) -> Result[Detail, Json.DecodeError] {
+  let card = Listing.decode(json) ?
+  let wire = PlaceWire.decode(json) ?
+  Ok(Detail {
+      card: card,
+      description: wire.description,
+      addressLine: wire.addressLine,
+      phone: wire.phone,
+      website: wire.website,
+      details: wire.details,
+      region: wire.region,
+      owner: wire.owner,
+      viewer: wire.viewer,
+      updatedAt: wire.updatedAt
+    })
+}
+
+/** @Domain.Place.Draft — the place form's values, as entered; facts and hours by field name */
+export type Draft = {
+  category: Str,
+  municipality: Str,
+  name: Str,
+  summary: Str,
+  description: Str,
+  addressLine: Str,
+  lat: Str,
+  lng: Str,
+  phone: Str,
+  website: Str,
+  facts: Map[Str, Str],
+  hours: Map[Str, Str]
+}
+
+/** @Domain.Place.Ready — a draft validated and converted for the database */
+export type Ready = {
+  category: Str,
+  municipality: Str,
+  name: Str,
+  summary: Str,
+  description: Str,
+  addressLine: Str,
+  lat: Float64,
+  lng: Float64,
+  phone: Str,
+  website: Str,
+  hours: Json.Json,
+  details: Json.Json
+}
+
+/** @Domain.Place.Published — the place a publish or edit produced */
+export type Published = { id: Str, slug: Str } derives Json.Decode
+
+/// The form name of a fact, and of one option of a flags fact.
+export fn factName(key: Str) -> Str { "d." + key }
+export fn flagName(key: Str, option: Str) -> Str { "d." + key + "." + option }
+
+/// The form names of a weekday's first and second opening ranges.
+export fn hoursName(day: Int, slot: Int, closing: Bool) -> Str { "h." + show(day) + "." + show(slot) + (if closing { ".to" } else { ".from" }) }
+
+/// Whether a posted checkbox value is checked.
+export fn isOn(written: Str) -> Bool { written == "1" || written == "on" }
+
+/// An empty draft for a category.
+export fn blank(category: Str) -> Draft {
+  Draft {
+    category: category,
+    municipality: "",
+    name: "",
+    summary: "",
+    description: "",
+    addressLine: "",
+    lat: "",
+    lng: "",
+    phone: "",
+    website: "",
+    facts: mapOf([]),
+    hours: mapOf([])
+  }
+}
+
+/// The draft an existing place fills the edit form with.
+export fn fromDetail(detail: &Detail) -> Draft {
+  var facts: Map[Str, Str] = mapOf([])
+  for entry in Option.unwrapOr(Json.asObject(&detail.details), []) {
+    match entry[1] {
+      case Json.Text(value) => { facts = facts.insert(factName(entry[0]), value) }
+      case Json.Number(value) => { facts = facts.insert(factName(entry[0]), show(value)) }
+      case Json.Fractional(value) => { facts = facts.insert(factName(entry[0]), value) }
+      case Json.Boolean(value) => if value { facts = facts.insert(factName(entry[0]), "1") }
+      case Json.List(members) => for member in members {
+        match Json.asText(&member) {
+          case Some(option) => { facts = facts.insert(flagName(entry[0], option), "1") }
+          case None => ()
+        }
+      }
+      case _ => ()
+    }
+  }
+  var hours: Map[Str, Str] = mapOf([])
+  for day in [0, 1, 2, 3, 4, 5, 6] {
+    var slot = 0
+    for range in rangesOf(&detail.card.hours, day) {
+      hours = hours.insert(hoursName(day, slot, false), range[0]).insert(hoursName(day, slot, true), range[1])
+      slot = slot + 1
+    }
+  }
+  Draft {
+    category: detail.card.category.slug,
+    municipality: detail.card.municipality.slug,
+    name: detail.card.name,
+    summary: detail.card.summary,
+    description: detail.description,
+    addressLine: detail.addressLine,
+    lat: show(detail.card.lat),
+    lng: show(detail.card.lng),
+    phone: Option.unwrapOr(detail.phone, ""),
+    website: Option.unwrapOr(detail.website, ""),
+    facts: facts,
+    hours: hours
+  }
+}
+
+/// The opening ranges of a weekday (Sunday = 0) as `HH:MM` pairs.
+export fn rangesOf(hours: &Json.Json, day: Int) -> Array[(Str, Str)] {
+  let slots = Option.unwrapOr(Option.andThen(Json.field(hours, show(day)), |found: Json.Json| Json.asList(&found)), [])
+  var ranges: Array[(Str, Str)] = []
+  for slot in slots {
+    match (Json.at(&slot, 0), Json.at(&slot, 1)) {
+      case (Some(Json.Text(from)), Some(Json.Text(to))) => { ranges = ranges.push((from, to)) }
+      case _ => ()
+    }
+  }
+  ranges
+}
+
+/// Whether any opening hours are known.
+export fn hasHours(hours: &Json.Json) -> Bool {
+  for day in [0, 1, 2, 3, 4, 5, 6] {
+    if !rangesOf(hours, day).isEmpty() { return true }
+  }
+  false
+}
+
+/// Minutes after midnight of an `HH:MM` value, or none.
+export fn minutesOf(clock: Str) -> Option[Int] {
+  if clock.length() != 5 || clock.indexOf(":") != 2 { return None }
+  let hour = clock.take(2).toInt() ?
+  let minute = clock.drop(3).toInt() ?
+  if hour < 0 || hour > 24 || minute < 0 || minute > 59 || (hour == 24 && minute != 0) { None } else { Some(hour * 60 + minute) }
+}
+
+/// Whether the place is open at a Puerto Rico moment, or none when no hours are known. A range that
+/// closes before it opens runs past midnight into the next day.
+export fn openAt(hours: &Json.Json, at: &Time.Local) -> Option[Bool] {
+  if !hasHours(hours) { return None }
+  let now = at.hour * 60 + at.minute
+  let yesterday = (at.weekday + 6) % 7
+  for range in rangesOf(hours, at.weekday) {
+    match (minutesOf(range[0]), minutesOf(range[1])) {
+      case (Some(from), Some(to)) => if (to > from && now >= from && now < to) || (to <= from && now >= from) { return Some(true) }
+      case _ => ()
+    }
+  }
+  for range in rangesOf(hours, yesterday) {
+    match (minutesOf(range[0]), minutesOf(range[1])) {
+      case (Some(from), Some(to)) => if to <= from && now < to { return Some(true) }
+      case _ => ()
+    }
+  }
+  Some(false)
+}
+
+/// The average rating with one decimal, such as `4.5`, or none without reviews.
+export fn ratingText(card: &Listing) -> Option[Str] {
+  let average = card.ratingAvg ?
+  if card.ratingCount == 0 { return None }
+  let tenths = show(Float.round(average * 10.0) / 10.0)
+  Some(if tenths.contains(".") { tenths.take(tenths.indexOf(".") + 2) } else { tenths + ".0" })
+}

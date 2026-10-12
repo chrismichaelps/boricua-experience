@@ -1,0 +1,161 @@
+/** @Validation.PlaceForm.Publishing — a place draft checked against its category's profile */
+module Validation.PlaceForm
+
+import Std.Json as Json
+import Std.Option as Option
+import Constants.Limits as Limits
+import Domain.Catalog as Catalog
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Utils.Geo as Geo
+import Validation.Check as Check
+
+/// Longest text and long-text facts when the profile names no bound, matching the database.
+const TEXT_MAX: Int = 200
+const LONG_TEXT_MAX: Int = 2000
+/// Longest web address.
+const URL_MAX: Int = 500
+
+/// The draft converted for the database, or `Invalid` naming every refused field. Facts are read
+/// only for the fields the category's profile declares, so a posted name outside it is ignored.
+export fn check(draft: &Place.Draft, catalog: &Catalog.Catalog) -> Result[Place.Ready, Problem.Problem] {
+  var errors: Array[Problem.FieldError] = []
+  let refuse = |field: Str, key: Str| Problem.FieldError{field: field, key: key}
+  let category = Catalog.category(catalog, draft.category)
+  let takesPlaces = match category {
+    case Some(found) => Catalog.takes(&found, Catalog.PLACE)
+    case None => false
+  }
+  if !takesPlaces { errors = errors.push(refuse("category", "form.category_required")) }
+  if Catalog.municipality(catalog, draft.municipality) == None { errors = errors.push(refuse("municipality", "form.municipality_required")) }
+  if !Check.lengthWithin(draft.name, Limits.PLACE_NAME_MIN, Limits.VENUE_MAX) { errors = errors.push(refuse("name", "form.name_length")) }
+  if !Check.lengthWithin(draft.summary, Limits.SUMMARY_MIN, Limits.SUMMARY_MAX) { errors = errors.push(refuse("summary", "form.summary_length")) }
+  if draft.description.length() > Limits.DESCRIPTION_MAX { errors = errors.push(refuse("description", "form.description_length")) }
+  if draft.addressLine.trim().length() > Limits.ADDRESS_MAX { errors = errors.push(refuse("addressLine", "form.address_length")) }
+  let point = pointOf(draft)
+  if point == None { errors = errors.push(refuse("location", "form.location_required")) }
+  if !draft.phone.trim().isEmpty() && !phoneOk(draft.phone.trim()) { errors = errors.push(refuse("phone", "form.phone_invalid")) }
+  if !draft.website.trim().isEmpty() && !urlOk(draft.website.trim()) { errors = errors.push(refuse("website", "form.website_invalid")) }
+  let (hours, hoursOk) = hoursOf(&draft.hours)
+  if !hoursOk { errors = errors.push(refuse("hours", "form.hours_invalid")) }
+  var details: Array[(Str, Json.Json)] = []
+  match category {
+    case Some(found) => for field in Catalog.fieldsFor(&found, Catalog.PLACE) {
+      match factOf(&field, &draft.facts) {
+        case Fact(value) => { details = details.push((field.key, value)) }
+        case Absent => if field.required { errors = errors.push(refuse(Place.factName(field.key), "form.fact_required")) }
+        case Refused => { errors = errors.push(refuse(Place.factName(field.key), "form.fact_invalid")) }
+      }
+    }
+    case None => ()
+  }
+  if !errors.isEmpty() { return Err(Problem.Invalid(errors)) }
+  let (lat, lng) = Option.unwrapOr(point, (0.0, 0.0))
+  Ok(Place.Ready {
+      category: draft.category,
+      municipality: draft.municipality,
+      name: draft.name.trim(),
+      summary: draft.summary.trim(),
+      description: draft.description,
+      addressLine: draft.addressLine.trim(),
+      lat: lat,
+      lng: lng,
+      phone: draft.phone.trim(),
+      website: draft.website.trim(),
+      hours: hours,
+      details: Json.object(&details)
+    })
+}
+
+/** @Validation.PlaceForm.Reading — one fact as the form wrote it */
+type Reading = Fact(Json.Json) | Absent | Refused
+
+/// The fact a field reads from the posted values, converted to the type its profile declares.
+fn factOf(field: &Catalog.Field, facts: &Map[Str, Str]) -> Reading {
+  let written = Option.unwrapOr(facts.get(Place.factName(field.key)), "").trim()
+  match field.shape {
+    case "flags" => {
+      let chosen = field.options.filter(|option: Catalog.Choice| Option.unwrapOr(facts.get(Place.flagName(field.key, option.value)), "") == "1")
+      if chosen.isEmpty() { Absent } else { Fact(Json.list(&chosen.map(|option: Catalog.Choice| Json.Text(option.value)))) }
+    }
+    case "toggle" => if Place.isOn(written) { Fact(Json.Boolean(true)) } else { Absent }
+    case _ => {
+      if written.isEmpty() { return Absent }
+      match field.shape {
+        case "text" => if written.length() <= Option.unwrapOr(field.maxLength, TEXT_MAX) { Fact(Json.Text(written)) } else { Refused }
+        case "long_text" => if written.length() <= Option.unwrapOr(field.maxLength, LONG_TEXT_MAX) { Fact(Json.Text(written)) } else { Refused }
+        case "choice" => if Catalog.choiceOf(field, written) != None { Fact(Json.Text(written)) } else { Refused }
+        case "url" => if urlOk(written) { Fact(Json.Text(written)) } else { Refused }
+        case "phone" => if phoneOk(written) { Fact(Json.Text(written)) } else { Refused }
+        case "number" => numberOf(field, written)
+        case _ => Refused
+      }
+    }
+  }
+}
+
+/// A decimal number within the field's bounds, as JSON: whole when it has no fraction.
+fn numberOf(field: &Catalog.Field, written: Str) -> Reading {
+  let plain = written.replace(",", ".")
+  let digits = plain.chars().filter(|c: Char| (c >= '0' && c <= '9') || c == '.')
+  if digits.length() != plain.length() || plain.startsWith(".") || plain.endsWith(".") || plain.split(".").length() > 2 { return Refused }
+  let value = match plain.toFloat() {
+    case Some(found) => found
+    case None => { return Refused }
+  }
+  let low = Option.unwrapOr(field.min, 0.0)
+  if value < low { return Refused }
+  match field.max {
+    case Some(high) => if value > high { return Refused }
+    case None => ()
+  }
+  if plain.contains(".") { Fact(Json.Fractional(plain)) } else {
+    match plain.toInt() {
+      case Some(whole) => Fact(Json.Number(whole))
+      case None => Refused
+    }
+  }
+}
+
+/// The weekly hours the form wrote, keyed by weekday, and whether every range was complete and valid.
+fn hoursOf(written: &Map[Str, Str]) -> (Json.Json, Bool) {
+  var days: Array[(Str, Json.Json)] = []
+  var valid = true
+  for day in [0, 1, 2, 3, 4, 5, 6] {
+    var ranges: Array[Json.Json] = []
+    for slot in [0, 1] {
+      let from = Option.unwrapOr(written.get(Place.hoursName(day, slot, false)), "").trim()
+      let to = Option.unwrapOr(written.get(Place.hoursName(day, slot, true)), "").trim()
+      if from.isEmpty() && to.isEmpty() { continue }
+      match (Place.minutesOf(from), Place.minutesOf(to)) {
+        case (Some(opens), Some(closes)) => if opens != closes && opens < 1440 {
+          ranges = ranges.push(Json.list(&[Json.Text(from), Json.Text(to)]))
+        } else { valid = false }
+        case _ => { valid = false }
+      }
+    }
+    if !ranges.isEmpty() { days = days.push((show(day), Json.list(&ranges))) }
+  }
+  (Json.object(&days), valid)
+}
+
+/// The pin's coordinates when both parse and lie in Puerto Rico.
+fn pointOf(draft: &Place.Draft) -> Option[(Float64, Float64)] {
+  let lat = Geo.parseDegrees(draft.lat) ?
+  let lng = Geo.parseDegrees(draft.lng) ?
+  if Geo.inPuertoRico(lat, lng) { Some((lat, lng)) } else { None }
+}
+
+/// Whether a phone number has seven to twenty digits, spaces, dashes, or parentheses, with an optional `+`.
+export fn phoneOk(written: Str) -> Bool {
+  let rest = if written.startsWith("+") { written.drop(1) } else { written }
+  let allowed = rest.chars().filter(|c: Char| (c >= '0' && c <= '9') || c == ' ' || c == '-' || c == '(' || c == ')')
+  allowed.length() == rest.length() && rest.length() >= 7 && rest.length() <= 20
+}
+
+/// Whether an address is an https address with a host and no spaces or markup characters.
+export fn urlOk(written: Str) -> Bool {
+  if !written.startsWith("https://") || written.length() > URL_MAX { return false }
+  let rest = written.drop(8)
+  rest.contains(".") && !rest.startsWith(".") && rest.chars().filter(|c: Char| c == ' ' || c == '<' || c == '>' || c == '"' || c == '\n' || c == '\t').isEmpty()
+}

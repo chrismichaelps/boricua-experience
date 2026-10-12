@@ -1,0 +1,69 @@
+/** @View.Components.PlaceCard.Listing — a place as a card, and places as rails and grids */
+module View.Components.PlaceCard
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Option as Option
+import Std.Time as StdTime
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Place as Place
+import I18n.Format as Format
+import I18n.Translate as Translate
+import Utils.Time as Time
+import View.Components.Facts as Facts
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The cover a place shows, its own or its category's illustration.
+export fn coverOf(place: &Place.Listing) -> Str { Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg") }
+
+/// Whether the place is open now in Puerto Rico, or none when its hours are unknown.
+export fn openNow(frame: &Frame.Frame, place: &Place.Listing) -> Option[Bool] {
+  Place.openAt(&place.hours, &Time.local(&StdTime.instantOf(frame.nowMillis)))
+}
+
+/// One place as a card: cover, open-now, rating, name, town, and the category's highlighted facts.
+export fn card(frame: &Frame.Frame, catalog: &Catalog.Catalog, place: &Place.Listing) -> H.Node {
+  let category = Catalog.category(catalog, place.category.slug)
+  let facts = Facts.highlightTexts(frame, &category, Catalog.PLACE, &place.highlights)
+  let distance = Format.distance(&frame.locale, place.distanceM)
+  H.article().class("card card-place").holding([
+      H.a().class("card-link").href(Routes.PLACE_PREFIX + place.slug).holding([
+          H.div().class("card-media").holding([
+              H.img().src(coverOf(place)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),
+              match openNow(frame, place) {
+                case Some(true) => H.span().class("pill pill-open card-price").says(Frame.t(frame, "place.open_now"))
+                case Some(false) => H.span().class("pill pill-light card-price").says(Frame.t(frame, "place.closed_now"))
+                case None => H.nothing()
+              },
+              if place.verified { H.span().class("pill pill-dark card-flag").holding([Icons.sized("check", 14), H.span().says(Frame.t(frame, "place.verified"))]) } else { H.nothing() }
+            ]),
+          H.div().class("card-body").holding([
+              H.p().class("card-when").says(Format.categoryName(&frame.locale, &place.category)),
+              H.h3().class("card-title").says(place.name),
+              H.p().class("card-place").holding([Icons.sized("pin", 14), H.span().says(place.municipality.name)]),
+              H.div().class("card-meta").holding([
+                  match Place.ratingText(place) {
+                    case Some(average) => H.span().class("meta meta-rating").holding([Icons.sized("star", 14), H.span().says(average + " · " + Translate.count(&frame.locale, "place.reviews", place.ratingCount))])
+                    case None => H.span().class("meta").says(Frame.t(frame, "place.no_reviews"))
+                  },
+                  if distance.isEmpty() { H.nothing() } else { H.span().class("meta").says(distance) }
+                ]),
+              if facts.isEmpty() { H.nothing() } else { H.ul().class("card-facts").holding(facts.map(|fact: Str| H.li().says(fact))) }
+            ])
+        ])
+    ])
+}
+
+/// A titled row of place cards that scrolls sideways on phones, with a link to see more.
+export fn rail(frame: &Frame.Frame, catalog: &Catalog.Catalog, id: Str, title: Str, places: &Array[Place.Listing], more: Str) -> H.Node {
+  if places.isEmpty() { return H.nothing() }
+  H.section().class("rail").at("aria-labelledby", id).holding([
+      H.div().class("rail-head").holding([
+          H.h2().class("section-title").id(id).says(title),
+          if more.isEmpty() { H.nothing() } else { H.a().class("text-link").href(more).holding([H.span().says(Frame.t(frame, "home.see_all")), Icons.sized("chevron-right", 16)]) }
+        ]),
+      H.div().class("rail-track").role("list").holding(places.map(|place: Place.Listing| H.div().class("rail-item").role("listitem").holding([card(frame, catalog, &place)])))
+    ])
+}

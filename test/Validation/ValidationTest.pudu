@@ -3,18 +3,54 @@ module Validation.ValidationTest
 
 import Std.Bytes as Bytes
 import Std.Io as Io
+import Std.Json as Json
 import Std.Option as Option
 import Std.Result as Result
 import Std.Test as Test
+import Domain.Catalog as Catalog
 import Domain.Credentials as Credentials
 import Domain.Draft as Draft
 import Domain.Location as Location
+import Domain.Place as Place
 import Domain.Problem as Problem
+import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
 import Validation.Account as Account
 import Validation.Avatar as Avatar
 import Validation.EventForm as EventForm
 import Validation.Location as LocationRules
 import Validation.Participation as ParticipationRules
+import Validation.PlaceForm as PlaceForm
+
+/// The catalogue of the recorded category profiles and two towns.
+fn profiles() -> Catalog.Catalog {
+  let categories: Array[Catalog.Category] = Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), [])
+  Catalog.Catalog{categories: categories, municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}, Catalog.Municipality{slug: "luquillo", name: "Luquillo", region: "este", lat: 18.37, lng: -65.72}], scenes: []}
+}
+
+/// A restaurant draft that passes every rule.
+fn goodPlace() -> Place.Draft {
+  Place.Draft {
+    ..Place.blank("comida"),
+    municipality: "san-juan",
+    name: "La Fonda",
+    summary: "Mofongo, pescado frito y café de la montaña.",
+    lat: "18.4655",
+    lng: "-66.1057",
+    phone: "(787) 555-0100",
+    website: "https://lafonda.example.org",
+    facts: mapOf([("d.cuisine", "criolla"), ("d.price_level", "2"), ("d.service.dine_in", "1"), ("d.service.takeout", "1"), ("d.accessible", "on"), ("d.stars", "5")]),
+    hours: mapOf([("h.1.0.from", "11:00"), ("h.1.0.to", "22:00"), ("h.5.0.from", "18:00"), ("h.5.0.to", "02:00")])
+  }
+}
+
+/// The field names a place draft is refused for.
+fn placeRefusals(draft: &Place.Draft) -> Array[Str] {
+  match PlaceForm.check(draft, &profiles()) {
+    case Ok(_) => []
+    case Err(problem) => Problem.fieldErrors(&problem).map(|error: Problem.FieldError| error.field)
+  }
+}
 
 /// A draft that passes every rule.
 fn goodDraft() -> Draft.Draft {
@@ -47,6 +83,17 @@ fn main() -> Int {
   let ready = EventForm.check(&goodDraft())
   let signUp = Credentials.SignUp{displayName: "Ana", email: "ana@example.com", password: "boricua2026", confirmation: "boricua2026", birthDate: "1990-05-17", terms: true, privacy: true}
   let checks = Test.suite("Validation", &[
+      Test.equals("a complete restaurant passes", &placeRefusals(&goodPlace()), &[]),
+      Test.equals("facts are converted by type and unknown names are ignored", &Json.encode(&(match PlaceForm.check(&goodPlace(), &profiles()) { case Ok(found) => found case Err(_) => panic("good place refused") }).details), &"\{\"cuisine\":\"criolla\",\"price_level\":\"2\",\"service\":[\"dine_in\",\"takeout\"],\"accessible\":true\}"),
+      Test.equals("hours are keyed by weekday and may run past midnight", &Json.encode(&(match PlaceForm.check(&goodPlace(), &profiles()) { case Ok(found) => found case Err(_) => panic("good place refused") }).hours), &"\{\"1\":[[\"11:00\",\"22:00\"]],\"5\":[[\"18:00\",\"02:00\"]]\}"),
+      Test.equals("a required fact is required", &placeRefusals(&Place.Draft{..goodPlace(), facts: mapOf([])}), &["d.cuisine"]),
+      Test.equals("a choice outside the options is refused", &placeRefusals(&Place.Draft{..goodPlace(), facts: mapOf([("d.cuisine", "sushi")])}), &["d.cuisine"]),
+      Test.equals("a category without places is refused", &placeRefusals(&Place.Draft{..goodPlace(), category: "civica"}), &["category"]),
+      Test.equals("an incomplete or empty range is refused", &(placeRefusals(&Place.Draft{..goodPlace(), hours: mapOf([("h.2.0.from", "09:00")])}), placeRefusals(&Place.Draft{..goodPlace(), hours: mapOf([("h.2.0.from", "09:00"), ("h.2.0.to", "09:00")])}), placeRefusals(&Place.Draft{..goodPlace(), hours: mapOf([("h.2.0.from", "25:00"), ("h.2.0.to", "26:00")])})), &(["hours"], ["hours"], ["hours"])),
+      Test.equals("contact must be a phone and an https address", &placeRefusals(&Place.Draft{..goodPlace(), phone: "call me", website: "http://lafonda.example.org"}), &["phone", "website"]),
+      Test.equals("a place outside the island is refused", &placeRefusals(&Place.Draft{..goodPlace(), lat: "40.7", lng: "-74.0"}), &["location"]),
+      Test.equals("a beach number and toggle convert, a bad number is refused", &(placeRefusals(&Place.Draft{..goodPlace(), category: "playa", facts: mapOf([("d.water", "calm"), ("d.blue_flag", "1")])}), placeRefusals(&Place.Draft{..goodPlace(), category: "hospedaje", facts: mapOf([("d.lodging_type", "hotel"), ("d.price_from", "-5")])}), placeRefusals(&Place.Draft{..goodPlace(), category: "hospedaje", facts: mapOf([("d.lodging_type", "hotel"), ("d.price_from", "129.50")])})), &([], ["d.price_from"], [])),
+      Test.that("phone and web address rules", PlaceForm.phoneOk("+1 787-555-0100") && !PlaceForm.phoneOk("555") && PlaceForm.urlOk("https://a.example/menu?x=1") && !PlaceForm.urlOk("https://bad host.example") && !PlaceForm.urlOk("javascript:alert(1)")),
       Test.succeeded("a complete draft is ready", &ready),
       Test.equals("unknown price and end stay unknown", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), endsAt: "", price: ""}), |r| (r.endsAt, r.priceCents)), &Ok((None, None))),
       Test.equals("explicit zero is free", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), price: "0"}), |r| r.priceCents), &Ok(Some(0))),
