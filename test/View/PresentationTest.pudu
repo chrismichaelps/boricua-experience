@@ -16,6 +16,7 @@ import Domain.Locale as Locale
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Profile as Profile
+import Domain.Review as Review
 import Domain.Search as Search
 import I18n.Dates as Dates
 import I18n.Format as Format
@@ -109,8 +110,14 @@ fn main() -> Int {
   let restaurantForm = Html.render(&PlaceFormPage.render(&es, &profiled, &PlaceFormPage.Creating, &Place.blank("comida"), &None))
   let beachForm = Html.render(&PlaceFormPage.render(&en, &profiled, &PlaceFormPage.Creating, &Place.blank("playa"), &None))
   let refusedForm = Html.render(&PlaceFormPage.render(&en, &profiled, &PlaceFormPage.Creating, &Place.blank("comida"), &Some(Problem.Invalid([Problem.FieldError{field: "d.cuisine", key: "form.fact_required"}, Problem.FieldError{field: "hours", key: "form.hours_invalid"}]))))
-  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda))
-  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}))
+  let board: Review.ReviewBoard = match Wire.decode(&Fixtures.json("review-board.json")) { case Ok(found) => found case Err(why) => panic("board fixture: " + Json.explainDecode(&why)) }
+  let ownerBoard = Review.ReviewBoard{..board, canReview: false, isOwner: true}
+  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda, &ownerBoard, &Review.blank(), &None))
+  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}, &Review.ReviewBoard{..board, canReview: false}, &Review.blank(), &None))
+  let member: Profile.MyProfile = match Wire.decode(&Fixtures.json("my-profile.json")) { case Ok(found) => found case Err(_) => panic("profile fixture") }
+  let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
+  let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &Review.blank(), &None))
+  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
@@ -133,6 +140,15 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.that("reviews show the average, breakdown and each review", memberPlace.contains("Reviews") && memberPlace.contains("2 reviews") && memberPlace.contains("width:50%") && memberPlace.contains("Muy buen mofongo") && memberPlace.contains("Visited September 2026")),
+      Test.that("review text is escaped", !memberPlace.contains("<script>x</script>") && memberPlace.contains("&lt;script&gt;")),
+      Test.that("a member can rate, write and report", memberPlace.contains("name=\"rating\"") && memberPlace.contains("action=\"/lugar/la-fonda-4f1c7a/review\"") && memberPlace.contains("/reviews/11111111-1111-4111-8111-111111111111/report")),
+      Test.that("an already reported review offers no second report", memberPlace.contains("You reported this review.") && !memberPlace.contains("/reviews/22222222-2222-4222-8222-222222222222/report")),
+      Test.that("the owner's answer is shown and the owner can answer", memberPlace.contains("Answer from the place") && placePage.contains("/reviews/11111111-1111-4111-8111-111111111111/respond") && !memberPlace.contains("/respond")),
+      Test.that("the owner cannot review their own place", !placePage.contains("action=\"/lugar/la-fonda-4f1c7a/review\"") && placePage.contains("Administras este lugar")),
+      Test.that("a guest is invited to sign in to review", guestPlace.contains("Entra para escribir una reseña") && !guestPlace.contains("/report")),
+      Test.that("a refused review keeps what was written and marks the fields", refusedReview.contains("Choose from 1 to 5 stars.") && refusedReview.contains("Write between 20 and 2,000 characters.") && refusedReview.contains(">corto</textarea>")),
+      Test.that("more reviews page through the place", memberPlace.contains("/lugar/la-fonda-4f1c7a?resenas=10#reviews")),
       Test.that("the chooser offers only the kinds each category takes", chooserPage.contains("/create/place?category=hospedaje") && !chooserPage.contains("/create?category=hospedaje") && chooserPage.contains("/create?category=civica") && !chooserPage.contains("/create/place?category=civica")),
       Test.that("a restaurant form asks restaurant facts, not beach facts", restaurantForm.contains("Tipo de comida") && restaurantForm.contains("name=\"d.service.takeout\"") && !restaurantForm.contains("d.water")),
       Test.that("a beach form asks beach facts", beachForm.contains("Water") && beachForm.contains("name=\"d.facilities.lifeguard\"") && !beachForm.contains("d.cuisine")),

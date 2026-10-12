@@ -8,6 +8,8 @@ import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Review as Review
 import I18n.Dates as Dates
 import I18n.Format as Format
 import I18n.Translate as Translate
@@ -16,6 +18,7 @@ import View.Components.Facts as Facts
 import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.PlaceCard as PlaceCard
+import View.Components.Reviews as Reviews
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -24,7 +27,7 @@ import View.Seo as Seo
 const WEEK: Array[Int] = [1, 2, 3, 4, 5, 6, 0]
 
 /// The place page.
-export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail) -> Html.Html {
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
   let card = detail.card
   let path = Routes.PLACE_PREFIX + card.slug
   let category = Catalog.category(catalog, card.category.slug)
@@ -50,7 +53,8 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
                   ]),
                 facts(frame, &card, &fields, detail),
                 hours(frame, &card),
-                location(frame, detail)
+                location(frame, detail),
+                Reviews.section(frame, card.slug, board, draft, problem)
               ]),
             H.aside().class("event-side").holding([contact(frame, detail), owner(frame, detail)])
           ])

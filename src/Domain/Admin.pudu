@@ -15,7 +15,10 @@ export type Overview = {
   @json("views_7d") views7d: Int,
   @json("live_now") liveNow: Int,
   @json("reports_open") reportsOpen: Int,
-  @json("data_requests_open") dataRequestsOpen: Int
+  @json("data_requests_open") dataRequestsOpen: Int,
+  @default("0") places: Int,
+  @default("0") @json("reviews_7d") reviews7d: Int,
+  @default("0") @json("review_reports_open") reviewReportsOpen: Int
 } derives Json.Decode
 
 /** @Domain.Admin.ReportedEvent — the event a report names */

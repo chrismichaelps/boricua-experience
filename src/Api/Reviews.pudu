@@ -1,0 +1,51 @@
+/** @Api.Reviews.Client — reviews of places, answers, reports, and moderation */
+module Api.Reviews
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Problem as Problem
+import Domain.Review as Review
+
+/// A place's reviews, newest first, from a cursor.
+export fn board(gateway: &Gateway.Gateway, placeId: Str, after: Str, token: Option[Str]) -> Result[Review.ReviewBoard, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLACE_REVIEWS, &[("p_place_id", Gateway.text(placeId)), ("p_limit", Json.Number(10)), ("p_after", Gateway.textOrNull(after))], token, Gateway.Read)
+}
+
+/// Writes or rewrites the member's review of a place.
+export fn save(gateway: &Gateway.Gateway, placeId: Str, ready: &Review.ReviewReady, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.SAVE_REVIEW, &[
+      ("p_place_id", Gateway.text(placeId)), ("p_rating", Json.Number(ready.rating)), ("p_body", Gateway.text(ready.body)),
+      ("p_visited_on", match ready.visitedOn { case Some(day) => Gateway.text(day) case None => Json.Null })
+    ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Deletes the member's own review.
+export fn delete(gateway: &Gateway.Gateway, reviewId: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.DELETE_REVIEW, &[("p_review_id", Gateway.text(reviewId))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// The owner's answer to a review; empty clears it.
+export fn respond(gateway: &Gateway.Gateway, reviewId: Str, response: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.RESPOND_REVIEW, &[("p_review_id", Gateway.text(reviewId)), ("p_response", Gateway.text(response))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Reports someone else's review.
+export fn report(gateway: &Gateway.Gateway, reviewId: Str, reason: Str, detail: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.REPORT_REVIEW, &[("p_review_id", Gateway.text(reviewId)), ("p_reason", Gateway.text(reason)), ("p_detail", Gateway.text(detail))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Reviews waiting for moderation.
+export fn queue(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Review.ReportedReview], Problem.Problem] {
+  Gateway.query(gateway, Supabase.ADMIN_REVIEW_REPORTS, &[], Some(token), Gateway.Read)
+}
+
+/// Keeps or removes a reported review.
+export fn resolve(gateway: &Gateway.Gateway, reviewId: Str, keep: Bool, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.ADMIN_RESOLVE_REVIEW, &[("p_review_id", Gateway.text(reviewId)), ("p_action", Gateway.text(if keep { "keep" } else { "remove" }))], Some(token), Gateway.Write) ?
+  Ok(())
+}

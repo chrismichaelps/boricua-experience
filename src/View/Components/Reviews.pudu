@@ -1,0 +1,171 @@
+/** @View.Components.Reviews.Opinions — a place's rating summary, reviews, the review form, answers, and reports */
+module View.Components.Reviews
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Option as Option
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import Domain.Review as Review
+import I18n.Dates as Dates
+import I18n.Translate as Translate
+import Utils.Time as Time
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The reviews section of a place page.
+export fn section(frame: &Frame.Frame, slug: Str, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> H.Node {
+  let base = Routes.PLACE_PREFIX + slug
+  H.section().class("panel reviews").id("reviews").at("aria-labelledby", "reviews-title").holding([
+      H.h2().class("section-title").id("reviews-title").says(Frame.t(frame, "review.title")),
+      summary(frame, board),
+      composer(frame, base, board, draft, problem),
+      if board.items.isEmpty() { H.p().class("muted").says(Frame.t(frame, "review.none")) } else {
+        H.ol().class("review-list").holding(board.items.map(|review: Review.Review| item(frame, base, board, &review)))
+      },
+      match board.next {
+        case Some(cursor) => H.a().class("button button-ghost load-more").href(base + "?resenas=" + cursor + "#reviews").says(Frame.t(frame, "review.more"))
+        case None => H.nothing()
+      }
+    ])
+}
+
+/// Filled and empty stars for a rating, read aloud as "4 of 5".
+fn stars(frame: &Frame.Frame, rating: Int) -> H.Node {
+  H.span().class("stars").role("img").label(Frame.tf(frame, "review.stars_label", &[("count", show(rating))])).holding([1, 2, 3, 4, 5].map(|n: Int| H.span().class(if n <= rating { "star star-on" } else { "star" }).at("aria-hidden", "true").says("★")))
+}
+
+/// The average, the count, and a bar per number of stars.
+fn summary(frame: &Frame.Frame, board: &Review.ReviewBoard) -> H.Node {
+  if board.count == 0 { return H.nothing() }
+  let average = Option.unwrapOr(board.average, 0.0)
+  H.div().class("review-summary").holding([
+      H.div().class("review-average").holding([
+          H.strong().says(show(average)),
+          stars(frame, roundStars(average)),
+          H.span().class("muted").says(Translate.count(&frame.locale, "place.reviews", board.count))
+        ]),
+      H.ul().class("review-bars").holding([5, 4, 3, 2, 1].map(|n: Int| {
+            let count = Review.countOf(board, n)
+            H.li().holding([
+                H.span().says(show(n) + " ★"),
+                H.span().class("review-bar").holding([H.span().class("review-bar-fill").at("style", "width:" + show(if board.count == 0 { 0 } else { count * 100 / board.count }) + "%")]),
+                H.span().class("muted").says(show(count))
+              ])
+          }))
+    ])
+}
+
+/// The nearest whole number of stars of an average.
+fn roundStars(average: Float64) -> Int {
+  var whole = 1
+  for (n, threshold) in [(2, 1.5), (3, 2.5), (4, 3.5), (5, 4.5)] {
+    if average >= threshold { whole = n }
+  }
+  whole
+}
+
+/// The review form for a member who may review, the owner's note, or an invitation to sign in.
+fn composer(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> H.Node {
+  if board.isOwner { return H.p().class("banner").says(Frame.t(frame, "review.owner_note")) }
+  if !Frame.signedIn(frame) { return H.a().class("button button-ghost").href(Routes.SIGN_IN + "?return=" + base + "%23reviews").says(Frame.t(frame, "review.sign_in")) }
+  if !board.canReview { return H.nothing() }
+  let errors = match problem {
+    case Some(found) => Problem.fieldErrors(&found)
+    case None => []
+  }
+  let current = match board.mine {
+    case Some(mine) => if draft.body.isEmpty() && draft.rating.isEmpty() { Review.draftOf(&mine) } else { *draft }
+    case None => *draft
+  }
+  let refusedRating = Problem.errorFor(&errors, "rating")
+  H.div().class("review-composer").holding([
+      match board.mine {
+        case Some(mine) => if mine.status == "held" { H.p().class("banner").role("status").says(Frame.t(frame, "review.held_note")) } else { H.nothing() }
+        case None => H.nothing()
+      },
+      Form.problemBanner(frame, problem),
+      H.form().class("stack-form").action(base + "/review").method("post").holding([
+          Form.token(frame),
+          H.fieldset().class(if refusedRating == None { "field rating-input" } else { "field rating-input field-invalid" }).holding([
+              H.legend().class("label").says(Frame.t(frame, if board.mine == None { "review.your_rating" } else { "review.edit_rating" })),
+              H.div().class("rating-choices").holding([5, 4, 3, 2, 1].map(|n: Int| {
+                    var radio = H.input().kind("radio").name("rating").id("rating-" + show(n)).value(show(n))
+                    if current.rating == show(n) { radio = radio.checked() }
+                    H.span().holding([radio, H.labelFor().at("for", "rating-" + show(n)).label(Frame.tf(frame, "review.stars_label", &[("count", show(n))])).says("★")])
+                  })),
+              match refusedRating {
+                case Some(key) => H.p().class("field-error").role("alert").says(Frame.t(frame, key))
+                case None => H.nothing()
+              }
+            ]),
+          Form.area(frame, &Form.Field{..Form.field("body", Frame.t(frame, "review.body"), current.body), hint: Frame.t(frame, "review.body_hint"), required: true}, 4, &errors),
+          Form.input(frame, &Form.Field{..Form.field("visited", Frame.t(frame, "review.visited"), current.visited), kind: "month"}, &errors, |c: H.Node| c.at("min", "2000-01")),
+          H.button().submit().class("button").says(Frame.t(frame, if board.mine == None { "review.publish" } else { "review.save" }))
+        ]),
+      match board.mine {
+        case Some(_) => H.form().action(base + "/review/delete").method("post").holding([
+            Form.token(frame),
+            H.button().submit().class("button button-ghost button-small").holding([Icons.sized("trash", 16), H.span().says(Frame.t(frame, "review.delete"))])
+          ])
+        case None => H.nothing()
+      }
+    ])
+}
+
+/// One review with the owner's answer, the owner's answer form, and the report form.
+fn item(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, review: &Review.Review) -> H.Node {
+  let reviewBase = base + "/reviews/" + review.id
+  H.li().class("review").id("review-" + review.id).holding([
+      H.div().class("review-head").holding([
+          H.strong().says(review.author.displayName),
+          stars(frame, review.rating),
+          H.span().class("muted small").says(when(frame, review))
+        ]),
+      H.p().class("review-body").says(review.body),
+      match review.response {
+        case Some(answer) => H.div().class("review-response").holding([H.p().class("small").holding([H.strong().says(Frame.t(frame, "review.owner_answer"))]), H.p().says(answer)])
+        case None => H.nothing()
+      },
+      if board.isOwner {
+        H.details().class("review-answer").holding([
+            H.summary().says(Frame.t(frame, if review.response == None { "review.answer" } else { "review.edit_answer" })),
+            H.form().class("stack-form").action(reviewBase + "/respond").method("post").holding([
+                Form.token(frame),
+                H.labelFor().class("sr-only").at("for", "answer-" + review.id).says(Frame.t(frame, "review.answer")),
+                H.textarea().name("response").id("answer-" + review.id).rows(3).at("maxlength", "1000").says(Option.unwrapOr(review.response, "")),
+                H.button().submit().class("button button-small").says(Frame.t(frame, "review.send_answer"))
+              ])
+          ])
+      } else { H.nothing() },
+      if Frame.signedIn(frame) && !review.isAuthor {
+        if review.reported { H.p().class("muted small").says(Frame.t(frame, "review.reported")) } else {
+          H.details().class("review-report").holding([
+              H.summary().class("small").says(Frame.t(frame, "review.report")),
+              H.form().class("stack-form").action(reviewBase + "/report").method("post").holding([
+                  Form.token(frame),
+                  H.labelFor().class("sr-only").at("for", "reason-" + review.id).says(Frame.t(frame, "review.report_reason")),
+                  H.select().name("reason").id("reason-" + review.id).holding(Review.REASONS.map(|reason: Str| H.option().value(reason).says(Frame.t(frame, "review.reason_" + reason)))),
+                  H.textarea().name("detail").rows(2).at("maxlength", "1000").label(Frame.t(frame, "review.report_detail")),
+                  H.button().submit().class("button button-ghost button-small").says(Frame.t(frame, "review.send_report"))
+                ])
+            ])
+        }
+      } else { H.nothing() }
+    ])
+}
+
+/// When the reviewer visited, else when they wrote the review.
+fn when(frame: &Frame.Frame, review: &Review.Review) -> Str {
+  match review.visitedOn {
+    case Some(day) => match Time.parseTimestamp(day + "T12:00:00Z") {
+      case Some(at) => Frame.tf(frame, "review.visited_on", &[("month", Dates.monthYear(&frame.locale, &Time.local(&at)))])
+      case None => ""
+    }
+    case None => match Time.parseTimestamp(review.createdAt) {
+      case Some(at) => Dates.monthYear(&frame.locale, &Time.local(&at))
+      case None => ""
+    }
+  }
+}

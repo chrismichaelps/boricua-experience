@@ -14,6 +14,7 @@ import Domain.Notification as Notification
 import Domain.Place as Listing
 import Domain.Problem as Problem
 import Domain.Profile as Profile
+import Domain.Review as Review
 import Domain.Search as Search
 import Domain.Session as Session
 import PuduLangMediator.Request as Request
@@ -43,6 +44,21 @@ export type PlaceEdit = { placeId: Str, draft: Listing.Draft }
 
 /** @App.Messages.PlaceStatus — publishing or hiding one place */
 export type PlaceStatus = { placeId: Str, visible: Bool }
+
+/** @App.Messages.ReviewRead — a page of a place's reviews */
+export type ReviewRead = { placeId: Str, after: Str }
+
+/** @App.Messages.ReviewSaving — the member's review of one place */
+export type ReviewSaving = { placeId: Str, draft: Review.ReviewDraft }
+
+/** @App.Messages.ReviewAnswer — the owner's answer to one review */
+export type ReviewAnswer = { reviewId: Str, response: Str }
+
+/** @App.Messages.ReviewReporting — a report about one review */
+export type ReviewReporting = { reviewId: Str, reason: Str, detail: Str }
+
+/** @App.Messages.ReviewDecision — an administrator's decision on one review */
+export type ReviewDecision = { reviewId: Str, keep: Bool }
 
 /** @App.Messages.Joining — a join request with its message */
 export type Joining = { eventId: Str, message: Str }
@@ -93,6 +109,12 @@ export type Kinds = {
   updatePlace: Request.Kind[Signed[PlaceEdit], Listing.Published, Problem.Problem],
   placeStatus: Request.Kind[Signed[PlaceStatus], (), Problem.Problem],
   myPlaces: Request.Kind[Signed[()], Array[Listing.Listing], Problem.Problem],
+  reviews: Request.Kind[Visit[ReviewRead], Review.ReviewBoard, Problem.Problem],
+  saveReview: Request.Kind[Signed[ReviewSaving], (), Problem.Problem],
+  deleteReview: Request.Kind[Signed[Str], (), Problem.Problem],
+  respondReview: Request.Kind[Signed[ReviewAnswer], (), Problem.Problem],
+  reportReview: Request.Kind[Signed[ReviewReporting], (), Problem.Problem],
+  resolveReview: Request.Kind[Signed[ReviewDecision], (), Problem.Problem],
   join: Request.Kind[Signed[Joining], Str, Problem.Problem],
   withdraw: Request.Kind[Signed[Str], (), Problem.Problem],
   decide: Request.Kind[Signed[Decision], Str, Problem.Problem],
@@ -162,6 +184,12 @@ export fn kinds() -> Kinds {
     updatePlace: kind("places.update", COMMAND),
     placeStatus: kind("places.status", COMMAND),
     myPlaces: kind("places.mine", READ),
+    reviews: kind("reviews.board", READ),
+    saveReview: kind("reviews.save", COMMAND),
+    deleteReview: kind("reviews.delete", COMMAND),
+    respondReview: kind("reviews.respond", COMMAND),
+    reportReview: kind("reviews.report", COMMAND),
+    resolveReview: kind("reviews.resolve", COMMAND),
     join: kind("participation.join", COMMAND),
     withdraw: kind("participation.withdraw", COMMAND),
     decide: kind("participation.decide", COMMAND),
