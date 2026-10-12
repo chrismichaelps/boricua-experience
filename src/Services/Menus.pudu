@@ -1,14 +1,24 @@
-/** @Services.Menus.Reads — menus visible to the current place viewer */
+/** @Services.Menus — viewer reads and conditional owner saves */
 module Services.Menus
 
 import Std.Option as Option
 import Api.Menus as MenusApi
+import Constants.Codes as Codes
 import Domain.Menu as Menu
+import Domain.MenuDraft as Draft
 import Domain.Problem as Problem
 import Domain.Session as Session
 import Services.Runtime as Runtime
+import Validation.MenuForm as MenuForm
 
 /// The menu board authorized for the viewer, including the owner's drafts.
 export fn board(runtime: &Runtime.Runtime, placeId: Str, session: Option[Session.Session]) -> Result[Menu.MenuBoard, Problem.Problem] {
   MenusApi.board(&runtime.gateway, placeId, Option.map(session, |found: Session.Session| found.accessToken))
+}
+
+/// Validates owner input and conditionally saves it without retrying the write.
+export fn save(runtime: &Runtime.Runtime, placeId: Str, draft: &Draft.MenuEditorDraft, expectedRevision: Int, menuId: Option[Str], session: &Session.Session) -> Result[Menu.MenuListing, Problem.Problem] {
+  if expectedRevision < 0 { return Err(Problem.Refused(Codes.MENU_CHANGED)) }
+  let document = MenuForm.check(draft) ?
+  MenusApi.save(&runtime.gateway, placeId, &document, expectedRevision, menuId, session.accessToken)
 }

@@ -4,7 +4,7 @@ tags: [handoff, product, places]
 ---
 # Product strategy continuation
 
-2026-10-12 · issue69 · feature/69-menu-pages.
+2026-10-12 · issue69 · feature/69-menu-editor-save.
 
 ## Re-anchor
 The recovered product-strategy session ends with0.3.0 releasePR68. Currentmain/dev3a87d40, assets52, category-aware places and reviews are present. Database catalogue has16original categories plus hospedaje. Existing place templates remain authoritative; no fake production places are permitted.
@@ -35,6 +35,8 @@ Menu capability is a database category capability, currently food places. Photos
 
 User refinement: owners can upload menu images and PDFs in addition to structured dishes. Place/card and menu headers use uploaded background photographs in the same home carousel container; without an uploaded background use the established default asset. A default photograph is presentation, never evidence of that venue's food or facilities. Upload validation, access control and deletion lifecycle remain required before release.
 
+All-category cover refinement: activities and permanent places in every supported category can replace their card background with an authorized uploaded photograph. Without an uploaded cover, or after its removal, use the existing category-specific default background. This applies consistently to discovery/search, own activity listings, map cards and assistant suggestions. Activity photo authorization belongs to the organizer; place photo authorization belongs to the owner. This expands the media work beyond restaurant/place-only headers and retains privacy/moderation controls.
+
 ## Delivery
 Implement additive schema/API first with rollback and ownership/race tests, then integrate owner and reader flows. Apply reviewed migrations to both projects and compare contracts/permissions. Do not mark the overall goal complete until every ledger item has current-state evidence.
 
@@ -52,3 +54,11 @@ Security advisors continue flagging the intentionally closed-table/RPC boundary:
 Place pages query the optional viewer-authorized board through the mediator and display a dedicated /lugar/:slug/menu link based on database capability. The reader distinguishes unknown/free/paid facts, labels unavailable dishes and owner drafts, escapes all content and marks private/empty pages noindex. Eight rendering regressions raise the full suite to335assertions; all18script harnesses pass. The generated bilingual fixture includes all25menu keys. Independent review reran143presentation assertions and the worker harness; its long-name overflow finding is fixed.
 
 Real isolated Chrome testing followed the parent menu link to live development dishes, switched English to Spanish, found no console/page errors, and checked80-character unbroken names at320/390px with document widths equal to the viewport. The first test session had cached an earlier stylesheet; a fresh isolated session confirmed the current wrapping rules. Missing places return404; existing empty food menus return200 with noindex. Only the newly created test menu and its audit row were removed, leaving the original development place/review untouched. No production data or schema changed in this reader increment. Media uploads, default header background, carousel and owner editing are required follow-up work; none is claimed complete.
+
+## Owner validation evidence
+Raw nested drafts preserve stable IDs, unknown prices and declared allergen uncertainty. Validation rejects malformed prices, duplicate IDs, unsupported protocol values and published empty menus before a conditional save. UTF-8 JSONB document-size accounting matches the database separator overhead. The owner service never retries a write. Independent review is clear after the byte-size correction; all156source checks,362assertions and formatting pass. Owner HTTP forms, uploads and default/photo carousel remain pending; these validation modules alone do not expose editing controls.
+
+## Current production source audit
+The25BSNF games match the official calendar feed for UTC start and team order, with both calendar pages inspected. The22town/wellness recurrences match the published schedule. Of43reservation listings,42start times and published durations match the current organizer pages. One reservation page now offers no dates; its existing record was reversibly held as draft rather than reported canceled. The fragrance expo dates and end time are supported by its organizer. All91curated database records match the ignored reviewed CSV after that hold; the existing native publication remains untouched. This verifies schedule and CSV parity, not every source fee or venue-coordinate claim. Further source-field and photo-permission review remains pending. No third-party logo or event image has been published without an established reuse basis.
+
+Private audit receipts, source snapshots and the reviewed CSV remain ignored, with restrictive filesystem permissions. They must not be copied into commits or pull requests. Photography credits spacing is merged into devPR73 with all six attributions and16external links retained; isolated Chrome verifies two columns at1280px and one at390px without overflow. Production application deployment remains pending.

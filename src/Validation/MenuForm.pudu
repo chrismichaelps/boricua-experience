@@ -1,0 +1,116 @@
+/** @Validation.MenuForm.Document — bounded owner input converted to a menu document */
+module Validation.MenuForm
+
+import Std.Json as Json
+import Std.Option as Option
+import Constants.Menus as Limits
+import Domain.Menu as Menu
+import Domain.MenuDraft as Draft
+import Domain.Problem as Problem
+import Utils.Money as Money
+
+/// A complete menu document, or indexed field errors while the original draft stays intact.
+export fn check(draft: &Draft.MenuEditorDraft) -> Result[Menu.MenuDocument, Problem.Problem] {
+  var errors: Array[Problem.FieldError] = []
+  let bad = |field: Str, key: Str| Problem.FieldError{field: field, key: key}
+  if !nameOk(draft.name, Limits.NAME_MAX) { errors = errors.push(bad("name", "menu.name_invalid")) }
+  if draft.description.length() > Limits.DESCRIPTION_MAX { errors = errors.push(bad("description", "menu.description_invalid")) }
+  if !Limits.LOCALES.contains(draft.locale) { errors = errors.push(bad("locale", "menu.invalid")) }
+  if !Limits.STATUSES.contains(draft.status) { errors = errors.push(bad("status", "menu.invalid")) }
+  if draft.sections.length() > Limits.SECTIONS_MAX { return Err(Problem.Invalid(errors.push(bad("sections", "menu.limit")))) }
+  var sections: Array[Menu.MenuSectionDraft] = []
+  var seenSections: Array[Str] = []
+  var seenItems: Array[Str] = []
+  var count = 0
+  for s in 0..draft.sections.length() {
+    let section = draft.sections[s]
+    let prefix = "s." + show(s)
+    if !nameOk(section.name, Limits.NAME_MAX) { errors = errors.push(bad(prefix + ".name", "menu.name_invalid")) }
+    if !idOk(section.id) || (!section.id.isEmpty() && seenSections.contains(section.id.toLower())) { errors = errors.push(bad(prefix + ".id", "menu.invalid")) }
+    if !section.id.isEmpty() { seenSections = seenSections.push(section.id.toLower()) }
+    count = count + section.items.length()
+    if count > Limits.ITEMS_MAX { return Err(Problem.Invalid(errors.push(bad("sections", "menu.limit")))) }
+    var items: Array[Menu.MenuItemDraft] = []
+    for i in 0..section.items.length() {
+      let item = section.items[i]
+      let field = prefix + ".i." + show(i)
+      if !nameOk(item.name, Limits.DISH_NAME_MAX) { errors = errors.push(bad(field + ".name", "menu.name_invalid")) }
+      if item.description.length() > Limits.DESCRIPTION_MAX { errors = errors.push(bad(field + ".description", "menu.description_invalid")) }
+      if item.priceNote.length() > Limits.PRICE_NOTE_MAX { errors = errors.push(bad(field + ".priceNote", "menu.note_invalid")) }
+      if !idOk(item.id) || (!item.id.isEmpty() && seenItems.contains(item.id.toLower())) { errors = errors.push(bad(field + ".id", "menu.invalid")) }
+      if !item.id.isEmpty() { seenItems = seenItems.push(item.id.toLower()) }
+      let amount = priceOf(item.price)
+      if !item.price.trim().isEmpty() && amount == None { errors = errors.push(bad(field + ".price", "menu.price_invalid")) }
+      if !Limits.AVAILABILITY.contains(item.available) { errors = errors.push(bad(field + ".available", "menu.invalid")) }
+      if !tagsOk(&item.dietary, &Limits.DIETARY) { errors = errors.push(bad(field + ".dietary", "menu.invalid")) }
+      if !tagsOk(&item.allergens, &Limits.ALLERGENS) || (!item.allergensKnown && !item.allergens.isEmpty()) { errors = errors.push(bad(field + ".allergens", "menu.invalid")) }
+      items = items.push(Menu.MenuItemDraft{id: optionalId(item.id), name: item.name.trim(), description: item.description.trim(),
+          priceCents: amount, priceNote: item.priceNote.trim(), available: if item.available.isEmpty() { None } else { Some(item.available == "yes") },
+          dietary: item.dietary, allergens: if item.allergensKnown { Some(item.allergens) } else { None } })
+    }
+    sections = sections.push(Menu.MenuSectionDraft{id: optionalId(section.id), name: section.name.trim(), items: items})
+  }
+  if draft.status == "published" && count == 0 { errors = errors.push(bad("sections", "menu.empty_publish")) }
+  let document = Menu.MenuDocument{name: draft.name.trim(), description: draft.description.trim(), locale: draft.locale, status: draft.status, sections: sections}
+  if documentBytes(&document.encode()) > Limits.DOCUMENT_BYTES_MAX { errors = errors.push(bad("sections", "menu.limit")) }
+  if !errors.isEmpty() { Err(Problem.Invalid(errors)) } else { Ok(document) }
+}
+
+/// Includes JSONB separator spaces so the editor does not admit an oversized compact document.
+export fn documentBytes(value: &Json.Json) -> Int { Json.encode(value).toBytes().length() + separatorSpaces(value) }
+
+/// JSONB adds a space after each object colon and each nonfinal collection comma.
+fn separatorSpaces(value: &Json.Json) -> Int {
+  match *value {
+    case Json.Object(entries) => {
+      var count = if entries.isEmpty() { 0 } else { entries.length() * 2 - 1 }
+      for entry in entries { count = count + separatorSpaces(&entry[1]) }
+      count
+    }
+    case Json.List(entries) => {
+      var count = if entries.isEmpty() { 0 } else { entries.length() - 1 }
+      for entry in entries { count = count + separatorSpaces(&entry) }
+      count
+    }
+    case _ => 0
+  }
+}
+
+/// Blank is unknown; a bounded decimal is converted only after its integer part is safe.
+export fn priceOf(written: Str) -> Option[Int] {
+  let value = written.trim()
+  if value.isEmpty() || value.length() > 9 { return None }
+  let parts = value.split(".")
+  if parts.length() > 2 || (!digits(parts[0]) && !(parts.length() == 2 && parts[0].isEmpty())) || parts[0].length() > 6 { return None }
+  if parts.length() == 2 && (!digits(parts[1]) || parts[1].length() > 2) { return None }
+  let amount = Money.parseCents(value) ?
+  if amount < 0 || amount > Limits.PRICE_CENTS_MAX { None } else { Some(amount) }
+}
+
+/// Digits cannot contain a sign, exponent, grouping, currency symbol or empty decimal part.
+fn digits(value: Str) -> Bool { !value.isEmpty() && value.chars().filter(|c: Char| c < '0' || c > '9').isEmpty() }
+
+/// Names require a trimmed nonempty value within their database limit.
+fn nameOk(value: Str, maximum: Int) -> Bool { !value.trim().isEmpty() && value.trim().length() <= maximum }
+
+/// Child identifiers are either new or canonical UUID text; ownership is checked in the database.
+fn idOk(value: Str) -> Bool {
+  if value.isEmpty() { return true }
+  if value.length() != 36 { return false }
+  for position in [8, 13, 18, 23] { if value.drop(position).take(1) != "-" { return false } }
+  let plain = value.replace("-", "")
+  plain.length() == 32 && plain.toLower().chars().filter(|c: Char| !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))).isEmpty()
+}
+
+/// Nonempty child identifiers are retained in the owner document.
+fn optionalId(value: Str) -> Option[Str] { if value.isEmpty() { None } else { Some(value.toLower()) } }
+
+/// Declaration labels must be allowed and must occur at most once.
+fn tagsOk(tags: &Array[Str], allowed: &Array[Str]) -> Bool {
+  var seen: Array[Str] = []
+  for tag in *tags {
+    if !allowed.contains(tag) || seen.contains(tag) { return false }
+    seen = seen.push(tag)
+  }
+  true
+}

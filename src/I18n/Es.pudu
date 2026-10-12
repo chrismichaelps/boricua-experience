@@ -3,6 +3,15 @@ module I18n.Es
 
 /// Spanish interface messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("menu.changed", "Este menú cambió mientras lo editabas. Conservamos tu borrador; revisa la versión actual antes de volver a guardar."),
+    ("menu.invalid", "Revisa los datos del menú. Uno de los valores no es válido."),
+    ("menu.unsupported", "Esta categoría no admite menús. Puedes archivar un menú existente."),
+    ("menu.limit", "El menú admite hasta 12 secciones y 100 platos. Reduce su tamaño antes de guardar."),
+    ("menu.empty_publish", "Añade al menos un plato antes de publicar el menú."),
+    ("menu.name_invalid", "Escribe un nombre dentro del límite indicado."),
+    ("menu.description_invalid", "La descripción admite hasta 500 caracteres."),
+    ("menu.note_invalid", "La nota del precio admite hasta 100 caracteres."),
+    ("menu.price_invalid", "Escribe un precio en USD entre 0 y 100,000, con hasta dos decimales y punto decimal; déjalo vacío si no lo sabes."),
     ("menu.view", "Ver menú"),
     ("menu.title", "Menú"),
     ("menu.empty_title", "El menú aún no está disponible"),

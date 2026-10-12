@@ -92,3 +92,6 @@ Resolved: missing price is null/None and never free; explicit zero is free. Miss
 
 ## Menu reader Grill Log · #69
 Resolved: Menu reader labels, unknown price, availability and owner-declared dietary/allergen labels are Spanish interface values; stored content is not translated or invented.
+
+## Menu editor validation Grill Log · #69
+Resolved: nested editor validation and revision conflicts have actionable interface messages. Invalid input stays in the form; a stale save requires reviewing the latest version instead of blind overwrite.

@@ -4,6 +4,11 @@ module Constants.Codes
 /// Failure codes the database API raises, each mapped to the message key shown to a person.
 /// A code missing here is shown with `problem.generic`.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("menu_changed", "menu.changed"),
+    ("menu_invalid", "menu.invalid"),
+    ("menu_empty", "menu.empty_publish"),
+    ("menu_unsupported", "menu.unsupported"),
+    ("menu_limit", "menu.limit"),
     ("not_authenticated", "problem.signed_out"),
     ("profile_missing", "problem.signed_out"),
     ("onboarding_required", "problem.onboarding"),
@@ -70,3 +75,5 @@ export const FORBIDDEN: Str = "forbidden"
 export const NOT_FOUND: Str = "not_found"
 export const SESSION_EXPIRED: Str = "session_expired"
 export const FLOW_EXPIRED: Str = "flow_expired"
+/// A menu save whose revision no longer matches.
+export const MENU_CHANGED: Str = "menu_changed"

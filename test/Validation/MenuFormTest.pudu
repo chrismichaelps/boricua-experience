@@ -1,0 +1,87 @@
+/** @Test.MenuForm.Suite — owner draft validation and nullable facts */
+module Validation.MenuFormTest
+
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Test as Test
+import Constants.Menus as Limits
+import Domain.Menu as Menu
+import Domain.MenuDraft as Draft
+import Domain.Problem as Problem
+import Validation.MenuForm as Rules
+
+/// A test-only menu with a single new dish and no invented price.
+fn sample() -> Draft.MenuEditorDraft {
+  Draft.MenuEditorDraft{name: "Test menu", description: "", locale: "es", status: "draft", sections: [Draft.MenuSectionInput{..Draft.emptySection(), name: "Test section", items: [Draft.MenuDishInput{..Draft.emptyDish(), name: "Test dish"}]}]}
+}
+
+/// The sample menu with a different first dish.
+fn withDish(item: Draft.MenuDishInput) -> Draft.MenuEditorDraft {
+  let draft = sample()
+  Draft.MenuEditorDraft{..draft, sections: [Draft.MenuSectionInput{..draft.sections[0], items: [item]}]}
+}
+
+/// Field paths reported by invalid input.
+fn errors(draft: Draft.MenuEditorDraft) -> Array[Str] {
+  match Rules.check(&draft) {
+    case Err(Problem.Invalid(found)) => found.map(|error: Problem.FieldError| error.field)
+    case _ => []
+  }
+}
+
+/// A valid sample must produce the strict typed document.
+fn ready(draft: Draft.MenuEditorDraft) -> Menu.MenuDocument {
+  match Rules.check(&draft) { case Ok(found) => found case Err(_) => panic("valid menu sample refused") }
+}
+
+/// Runs editor boundary and retained-fact regressions without a network call.
+fn main() -> Int {
+  let base = sample()
+  let item = base.sections[0].items[0]
+  let unknown = ready(base).sections[0].items[0]
+  let free = ready(withDish(Draft.MenuDishInput{..item, price: "0", available: "yes", allergensKnown: true})).sections[0].items[0]
+  let paid = ready(withDish(Draft.MenuDishInput{..item, price: "12.50", available: "no", dietary: ["vegetarian"], allergensKnown: true, allergens: ["milk"]})).sections[0].items[0]
+  let ids = ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"]
+  let dishes = |number: Int| (0..number).map(|_index: Int| item)
+  let sections = |number: Int| (0..number).map(|_index: Int| base.sections[0])
+  let badPrice = Draft.MenuDishInput{..item, price: "not a price"}
+  let listing = Menu.MenuListing{id: "menu", name: "Sample", description: "", locale: "es-en", status: "published", revision: 3, updatedAt: "", sections: [Menu.MenuSection{id: ids[0], name: "Main", items: [Menu.MenuItem{id: ids[1], name: "Dish", description: "", priceCents: None, priceNote: "", available: None, dietary: [], allergens: None}]}]}
+  let refilled = Draft.fromListing(&listing)
+  let nestedBytes = Json.object(&[("x", Json.Text("😀")), ("y", Json.list(&[Json.Number(1), Json.Number(2)]))])
+  let emptyBoundary = Json.object(&[("data", Json.Text("")), ("flags", Json.list(&[]))])
+  let overhead = Json.encode(&emptyBoundary).toBytes().length()
+  let boundary = Json.object(&[("data", Json.Text("x".repeat(Limits.DOCUMENT_BYTES_MAX - overhead))), ("flags", Json.list(&[]))])
+  let checks = Test.suite("MenuForm", &[
+      Test.equals("JSONB byte count matches the development database", &Rules.documentBytes(&nestedBytes), &26),
+      Test.that("compact JSON fitting the cap can exceed the spaced JSONB cap", Json.encode(&boundary).toBytes().length() == Limits.DOCUMENT_BYTES_MAX && Rules.documentBytes(&boundary) > Limits.DOCUMENT_BYTES_MAX),
+      Test.equals("new menu has no published data", &(Draft.blank("en").name, Draft.blank("en").status, Draft.blank("en").sections.length()), &("", "draft", 0)),
+      Test.equals("blank price and declaration remain unknown", &(unknown.priceCents, unknown.available, unknown.allergens), &(None, None, None)),
+      Test.equals("free and explicit declarations survive", &(free.priceCents, free.available, free.allergens), &(Some(0), Some(true), Some([]))),
+      Test.equals("paid and unavailable survive", &(paid.priceCents, paid.available, paid.allergens), &(Some(1250), Some(false), Some(["milk"]))),
+      Test.equals("decimal and cap boundaries", &(Rules.priceOf(".50"), Rules.priceOf("100000.00"), Rules.priceOf("100000.01")), &(Some(50), Some(10000000), None)),
+      Test.equals("oversized numeric input cannot overflow", &(Rules.priceOf("999999999999999999999999"), Rules.priceOf("999999.99")), &(None, None)),
+      Test.that("signs exponents and malformed decimals are refused", ["-1", "+1", "1e3", "NaN", "Infinity", "10.", "1.001", "$10", "1,000"].filter(|price: Str| Rules.priceOf(price) != None).isEmpty()),
+      Test.equals("invalid price points to its control", &errors(withDish(badPrice)), &["s.0.i.0.price"]),
+      Test.equals("raw invalid price is retained", &badPrice.price, &"not a price"),
+      Test.that("published menu requires a dish", errors(Draft.MenuEditorDraft{..base, status: "published", sections: []}).contains("sections")),
+      Test.that("empty named draft remains editable", Result.isOk(&Rules.check(&Draft.MenuEditorDraft{..base, sections: []}))),
+      Test.that("twelve sections are permitted", Result.isOk(&Rules.check(&Draft.MenuEditorDraft{..base, sections: sections(12)}))),
+      Test.that("thirteen sections are refused", errors(Draft.MenuEditorDraft{..base, sections: sections(13)}).contains("sections")),
+      Test.that("one hundred dishes are permitted", Result.isOk(&Rules.check(&Draft.MenuEditorDraft{..base, sections: [Draft.MenuSectionInput{..base.sections[0], items: dishes(100)}]}))),
+      Test.that("one hundred one dishes are refused", errors(Draft.MenuEditorDraft{..base, sections: [Draft.MenuSectionInput{..base.sections[0], items: dishes(101)}]}).contains("sections")),
+      Test.that("long names identify the dish", errors(withDish(Draft.MenuDishInput{..item, name: "x".repeat(121)})).contains("s.0.i.0.name")),
+      Test.that("unknown tags are refused", errors(withDish(Draft.MenuDishInput{..item, dietary: ["invented"]})).contains("s.0.i.0.dietary")),
+      Test.that("duplicate declared tags are refused", errors(withDish(Draft.MenuDishInput{..item, dietary: ["vegan", "vegan"]})).contains("s.0.i.0.dietary")),
+      Test.that("allergens require an explicit declaration state", errors(withDish(Draft.MenuDishInput{..item, allergens: ["milk"]})).contains("s.0.i.0.allergens")),
+      Test.that("malformed child IDs are refused", errors(withDish(Draft.MenuDishInput{..item, id: "not-a-uuid"})).contains("s.0.i.0.id")),
+      Test.that("duplicate child IDs compare canonically", errors(Draft.MenuEditorDraft{..base, sections: [Draft.MenuSectionInput{..base.sections[0], items: [Draft.MenuDishInput{..item, id: ids[1]}, Draft.MenuDishInput{..item, id: "BBBBBBBB-BBBB-4BBB-8BBB-BBBBBBBBBBBB"}]}]}).contains("s.0.i.1.id")),
+      Test.that("duplicate section IDs are refused", errors(Draft.MenuEditorDraft{..base, sections: [Draft.MenuSectionInput{..base.sections[0], id: ids[0]}, Draft.MenuSectionInput{..base.sections[0], id: ids[0]}]}).contains("s.1.id")),
+      Test.that("unsupported status and locale are refused", errors(Draft.MenuEditorDraft{..base, status: "public", locale: "fr"}).contains("status") && errors(Draft.MenuEditorDraft{..base, status: "public", locale: "fr"}).contains("locale")),
+      Test.equals("refill retains IDs and unknown facts", &(refilled.sections[0].id, refilled.sections[0].items[0].id, refilled.sections[0].items[0].price, refilled.sections[0].items[0].available, refilled.sections[0].items[0].allergensKnown), &(ids[0], ids[1], "", "", false)),
+      Test.that("UTF8 document size is bounded independently of characters", errors(Draft.MenuEditorDraft{..base, sections: [Draft.MenuSectionInput{..base.sections[0], items: dishes(100).map(|dish: Draft.MenuDishInput| Draft.MenuDishInput{..dish, description: "😀".repeat(500)})}]}).contains("sections"))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}
