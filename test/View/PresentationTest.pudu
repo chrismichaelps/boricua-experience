@@ -161,6 +161,9 @@ fn main() -> Int {
   let curatedEs = Html.render(&EventPage.render(&es, &curated, &None))
   let curatedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true, isOrganizer: true}}, &None))
   let curatedMember = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true}}, &None))
+  let organizerReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true, isOrganizer: true}}, &None))
+  let memberReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
+  let cancelledReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, card: Event.Card{..detail.card, status: "cancelled"}, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
   let curatedEnded = Html.render(&EventPage.render(&en, &Event.Detail{..curated, card: Event.Card{..curated.card, status: "ended"}}, &None))
   let curatedCancelled = Html.render(&EventPage.render(&en, &Event.Detail{..curated, card: Event.Card{..curated.card, status: "cancelled"}}, &None))
   let badSource = Event.Detail{..curated, sourceUrl: Some("javascript:alert(1)")}
@@ -182,6 +185,8 @@ fn main() -> Int {
       Test.that("owner media page offers script uploads with removal per file and is not indexed", mediaManager.contains("data-feature=\"media-upload\"") && mediaManager.contains("/media/g1/remove") && mediaManager.contains("application/pdf") && mediaManager.contains("noindex")),
       Test.that("categories without menus get no menu files and the default is called an illustration", !photoOnlyManager.contains("application/pdf") && photoOnlyManager.contains("No es una foto de tu lugar")),
       Test.that("owners reach photos and menu files from the place and menu pages", picturedPlace.contains("/media\"") && ownerMenu.contains("/media\"") && !menuReader.contains("/media\"")),
+      Test.that("guests are invited to sign in to like", singlePage.contains("/signin?return=/e/" + detail.card.slug) && !singlePage.contains("data-feature=\"react\"")),
+      Test.that("members can like; organizers and cancelled activities show only the count", memberReactions.contains("data-feature=\"react\"") && !organizerReactions.contains("data-feature=\"react\"") && !cancelledReactions.contains("data-feature=\"react\"")),
       Test.that("menu link follows database capability", menuEntry.contains("/menu") && unsupportedMenu.isEmpty()),
       Test.that("owners see new and edit menu links; guests do not", ownerMenu.contains("/menu/edit?menu=menu-test") && ownerMenu.contains("Add a menu") && guestEdit),
       Test.that("menu editor keeps identity, revision and stable IDs hidden", menuEditor.contains("name=\"revision\" value=\"2\"") && menuEditor.contains("name=\"menuId\" value=\"menu-test\"") && menuEditor.contains("name=\"s.0.i.1.id\" value=\"free-test\"")),

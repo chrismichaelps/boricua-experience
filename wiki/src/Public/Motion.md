@@ -54,3 +54,6 @@ Use original cotorra puertorriqueña SVG assets and optional Motion privacy disc
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
 
 Held-press contract: pointerdown/Enter/Space holds scale.97 until pointerup/cancel/keyup/blur. Release restores original transform and settles rebound; hidden/pagehide/reduced-motion settles both held and playing controls. Test explicitly resolves held animation and verifies it remains held until cancellation.
+
+## First-press collapse Grill Log · #76
+Resolved: the press feedback animates from an explicit `<base> scale(1)` to `<base> scale(.97)`. With only a target keyframe the animation library started a button's first press at scale(0), so the pointer released outside the collapsed button and the click landed on its form: the first tap on save or like did nothing. Both keyframes share one transform function list so interpolation is exact.

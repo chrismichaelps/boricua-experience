@@ -230,6 +230,7 @@ event.join_note
 event.join_now
 event.joining
 event.like
+event.likes_total
 event.live_body
 event.live_title
 event.location_locked
