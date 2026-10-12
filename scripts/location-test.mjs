@@ -26,7 +26,8 @@ assert.equal(api.isSharing(),false);assert.equal(states.at(-1),'error');assert.e
 api.startWatching();pending.reject({code:1});await flush();assert.equal(states.at(-1),'error');
 api.startWatching();const canceled=pending;api.stopWatching();canceled.resolve({lat:0,lng:0,accuracy:10});await flush();assert.equal(watches,1);
 api.startWatching();pending.resolve({lat:18.4,lng:-66.1,accuracy:40});await flush();
-const oldError=failure;failure({code:3});assert.equal(states.at(-1),'error');const count=cleared.length;oldError({code:2});assert.equal(cleared.length,count,'repeated provider errors do not restart');
+const oldError=failure;const kept=cleared.length;failure({code:3});failure({code:2});assert.equal(states.at(-1),'ready','transient watch errors after a fix keep locating');assert.equal(cleared.length,kept,'transient watch errors keep the watch');
+failure({code:1});assert.equal(states.at(-1),'error','denial stops locating');const count=cleared.length;oldError({code:2});assert.equal(cleared.length,count,'repeated provider errors do not restart');
 api.startSharing();handlers.get('pagehide')();await flush();assert.equal(api.isSharing(),false);assert.ok(aborts>=2);
 assert.equal(source.includes('sessionStorage'),false,'sharing is never persisted');
 let release;
@@ -41,4 +42,4 @@ api.startSharing();pending.resolve({lat:18.4,lng:-66.1,accuracy:20});await flush
 const stopBarrier=api.stopSharing();api.startSharing();pending.resolve({lat:18.41,lng:-66.1,accuracy:20});await flush();
 assert.equal(posted.at(-1),'/stop','restart waits for independently delayed revoke');
 stopRelease();await stopBarrier;await flush();assert.equal(posted.at(-1),'/location','restart records after every old revoke');await api.stopSharing();
-console.log('PASS: private locate, bounded acquisition, explicit sharing, failure/retry, stale callbacks, hide/exit and no automatic restoration');
+console.log('PASS: private locate, bounded acquisition, explicit sharing, failure/retry, transient watch errors, stale callbacks, hide/exit and no automatic restoration');
