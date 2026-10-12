@@ -15,7 +15,8 @@ function remember(on) {
 export function view3d(map, on, animate = true) {
   if (map.getLayer('building-3d')) map.setLayoutProperty('building-3d', 'visibility', on ? 'visible' : 'none');
   const camera = { pitch: on ? MAP.pitch3d : 0, bearing: on ? map.getBearing() : 0 };
-  if (on && map.getZoom() < MAP.buildingsZoom) camera.zoom = MAP.buildingsZoom;
+  // Only the visitor's own switch zooms in; restoring a remembered choice keeps the page's framing.
+  if (on && animate && map.getZoom() < MAP.buildingsZoom) camera.zoom = MAP.buildingsZoom;
   map.easeTo({ ...camera, duration: animate && !reduced() ? 600 : 0 });
 }
 

@@ -28,6 +28,7 @@ export const MAP = { minViewportPx: 8,
   // [below metres per second, zoom]: walking, cycling or bus, train or car, highway.
   speedZoom: [[2.5, 15], [9, 14], [22, 13], [Infinity, 12]],
   speedMinSeconds: 3,
+  speedMargin: 0.2,
   pitch3d: 50,
   buildingsZoom: 15.5,
 };

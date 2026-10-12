@@ -39,6 +39,14 @@ export function snapArea(area, zoom) {
 // so the next activities ahead are on screen before they are reached. Unknown speed keeps the zoom.
 export function speedZoom(speedMs, current) {
   if (!Number.isFinite(speedMs)) return current;
+  // Hysteresis: while the zoom is one of the bands, the speed must leave that band by a margin before
+  // the zoom changes, so stop-and-go traffic near an edge does not flip the camera (and its cache).
+  const index = MAP.speedZoom.findIndex(([, zoom]) => zoom === current);
+  if (index >= 0) {
+    const lower = index === 0 ? 0 : MAP.speedZoom[index - 1][0];
+    const upper = MAP.speedZoom[index][0];
+    if (speedMs >= lower * (1 - MAP.speedMargin) && speedMs < upper * (1 + MAP.speedMargin)) return current;
+  }
   const band = MAP.speedZoom.find(([below]) => speedMs < below);
   return band ? band[1] : MAP.speedZoom.at(-1)[1];
 }
