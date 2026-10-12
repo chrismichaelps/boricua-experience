@@ -1,0 +1,133 @@
+/** @View.Components.Facts.Profile — a category profile as form controls, fact lists, and card highlights */
+module View.Components.Facts
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Json as Json
+import Std.Option as Option
+import Domain.Catalog as Catalog
+import Domain.Locale as Locale
+import Domain.Place as Place
+import Domain.Problem as Problem
+import View.Components.Form as Form
+import View.Frame as Frame
+
+/// A fact's label in the frame's language.
+export fn label(frame: &Frame.Frame, field: &Catalog.Field) -> Str { if frame.locale == Locale.Es { field.labelEs } else { field.labelEn } }
+
+/// A fact's hint in the frame's language.
+fn hint(frame: &Frame.Frame, field: &Catalog.Field) -> Str { if frame.locale == Locale.Es { field.hintEs } else { field.hintEn } }
+
+/// An option's label in the frame's language.
+export fn choiceLabel(frame: &Frame.Frame, choice: &Catalog.Choice) -> Str { if frame.locale == Locale.Es { choice.labelEs } else { choice.labelEn } }
+
+/// One form control per fact the category asks for on a kind of listing, filled from the draft.
+export fn controls(frame: &Frame.Frame, fields: &Array[Catalog.Field], facts: &Map[Str, Str], errors: &Array[Problem.FieldError]) -> Array[H.Node] {
+  fields.map(|field: Catalog.Field| control(frame, &field, facts, errors))
+}
+
+/// The control of one fact, by its type.
+fn control(frame: &Frame.Frame, field: &Catalog.Field, facts: &Map[Str, Str], errors: &Array[Problem.FieldError]) -> H.Node {
+  let name = Place.factName(field.key)
+  let value = Option.unwrapOr(facts.get(name), "")
+  let spec = Form.Field{..Form.field(name, label(frame, field), value), hint: hint(frame, field), required: field.required}
+  match field.shape {
+    case "long_text" => Form.area(frame, &spec, 3, errors)
+    case "choice" => Form.select(frame, &spec, &[("", Frame.t(frame, "publish.choose"))].concat(field.options.map(|choice: Catalog.Choice| (choice.value, choiceLabel(frame, &choice)))), errors)
+    case "flags" => flags(frame, field, facts, errors)
+    case "toggle" => Form.checkbox(frame, name, H.span().says(label(frame, field)), Place.isOn(value), errors)
+    case "number" => Form.input(frame, &Form.Field{..spec, kind: "text"}, errors, |c: H.Node| {
+        var bounded = c.at("inputmode", "decimal")
+        if let Some(low) = field.min { bounded = bounded.at("data-min", show(low)) }
+        if let Some(high) = field.max { bounded = bounded.at("data-max", show(high)) }
+        bounded
+      })
+    case "url" => Form.input(frame, &Form.Field{..spec, kind: "url"}, errors, |c: H.Node| c.placeholder("https://").at("maxlength", "500"))
+    case "phone" => Form.input(frame, &Form.Field{..spec, kind: "tel"}, errors, |c: H.Node| c.at("maxlength", "21"))
+    case _ => Form.input(frame, &spec, errors, |c: H.Node| c.at("maxlength", show(Option.unwrapOr(field.maxLength, 200))))
+  }
+}
+
+/// A group of checkboxes, one per option of a flags fact.
+fn flags(frame: &Frame.Frame, field: &Catalog.Field, facts: &Map[Str, Str], errors: &Array[Problem.FieldError]) -> H.Node {
+  let name = Place.factName(field.key)
+  let refused = Problem.errorFor(errors, name)
+  H.fieldset().class(if refused == None { "field flags" } else { "field flags field-invalid" }).holding([
+      H.legend().class("label").says(label(frame, field) + (if field.required { " *" } else { "" })),
+      H.div().class("flag-grid").holding(field.options.map(|choice: Catalog.Choice| {
+            let id = "f-" + Place.flagName(field.key, choice.value)
+            var box = H.input().kind("checkbox").name(Place.flagName(field.key, choice.value)).id(id).value("1")
+            if Option.unwrapOr(facts.get(Place.flagName(field.key, choice.value)), "") == "1" { box = box.checked() }
+            H.labelFor().class("flag").at("for", id).holding([box, H.span().says(choiceLabel(frame, &choice))])
+          })),
+      match refused {
+        case Some(key) => H.p().class("field-error").role("alert").says(Frame.t(frame, key))
+        case None => if hint(frame, field).isEmpty() { H.nothing() } else { H.p().class("field-hint").says(hint(frame, field)) }
+      }
+    ])
+}
+
+/// The text of one stored fact for reading, or none when it is absent or a toggle that is off.
+export fn valueText(frame: &Frame.Frame, field: &Catalog.Field, value: &Json.Json) -> Option[Str] {
+  match field.shape {
+    case "choice" => {
+      let written = Json.asText(value) ?
+      Some(Option.unwrapOr(Option.map(Catalog.choiceOf(field, written), |choice: Catalog.Choice| choiceLabel(frame, &choice)), written))
+    }
+    case "flags" => {
+      let members = Json.asList(value) ?
+      let labels = members.map(|member: Json.Json| {
+          let written = Option.unwrapOr(Json.asText(&member), "")
+          Option.unwrapOr(Option.map(Catalog.choiceOf(field, written), |choice: Catalog.Choice| choiceLabel(frame, &choice)), written)
+        })
+      if labels.isEmpty() { None } else { Some(labels.join(" · ")) }
+    }
+    case "toggle" => if Json.asBool(value) == Some(true) { Some(Frame.t(frame, "place.yes")) } else { None }
+    case "number" => match value {
+      case Json.Number(whole) => Some(show(whole))
+      case Json.Fractional(written) => Some(written)
+      case _ => None
+    }
+    case _ => Json.asText(value)
+  }
+}
+
+/// The facts of a listing as a definition list, in the profile's order; web addresses become links.
+export fn list(frame: &Frame.Frame, fields: &Array[Catalog.Field], details: &Json.Json) -> H.Node {
+  var rows: Array[H.Node] = []
+  for field in *fields {
+    match Json.field(details, field.key) {
+      case Some(value) => match valueText(frame, &field, &value) {
+        case Some(text) => {
+          rows = rows.push(H.dt().says(label(frame, &field)))
+          rows = rows.push(if field.shape == "url" {
+              H.dd().holding([H.a().class("text-link").href(text).rel("noopener nofollow").at("target", "_blank").says(Frame.t(frame, "place.open_link"))])
+            } else if field.shape == "long_text" { H.dd().class("fact-long").says(text) } else { H.dd().says(text) })
+        }
+        case None => ()
+      }
+      case None => ()
+    }
+  }
+  if rows.isEmpty() { H.nothing() } else { H.dl().class("facts").holding(rows) }
+}
+
+/// The highlighted facts of a card as short texts, in highlight order.
+export fn highlightTexts(frame: &Frame.Frame, category: &Option[Catalog.Category], kind: Str, highlights: &Json.Json) -> Array[Str] {
+  match category {
+    case Some(found) => {
+      var texts: Array[Str] = []
+      for field in Catalog.highlights(&found, kind) {
+        match Json.field(highlights, field.key) {
+          case Some(value) => match valueText(frame, &field, &value) {
+            case Some(text) => { texts = texts.push(if field.shape == "number" { label(frame, &field) + ": " + text } else { text }) }
+            case None => ()
+          }
+          case None => ()
+        }
+      }
+      texts
+    }
+    case None => []
+  }
+}

@@ -20,3 +20,4 @@ tags: [moc, adr]
 [[00-INDEX]]
 - [[decisions/ADR-0008-separate-environments]] — local stack with seed for development; hosted project with real data only for production.
 - [[decisions/ADR-0009-event-expiry]] — events end at their end time; a job marks them ended, the row is kept.
+- [[decisions/ADR-0010-category-profiles-and-places]] — places beside activities; per-category facts declared in the database and rendered from the catalogue.

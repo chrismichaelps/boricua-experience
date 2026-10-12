@@ -10,6 +10,8 @@ export const DESCRIPTION_MAX: Int = 5000
 export const INSTRUCTIONS_MAX: Int = 2000
 export const VENUE_MIN: Int = 2
 export const VENUE_MAX: Int = 120
+/// Shortest place name.
+export const PLACE_NAME_MIN: Int = 2
 export const ADDRESS_MAX: Int = 200
 export const CAPACITY_MAX: Int = 100000
 export const PRICE_MAX_CENTS: Int = 10000000

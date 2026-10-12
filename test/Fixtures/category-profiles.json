@@ -1,0 +1,701 @@
+[
+    {
+        "icon": "food",
+        "slug": "comida",
+        "kinds": [
+            "place",
+            "activity"
+        ],
+        "fields": [
+            {
+                "key": "cuisine",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "criolla",
+                        "label_en": "Puerto Rican",
+                        "label_es": "Criolla"
+                    },
+                    {
+                        "value": "mariscos",
+                        "label_en": "Seafood",
+                        "label_es": "Mariscos"
+                    },
+                    {
+                        "value": "cafeteria",
+                        "label_en": "Café",
+                        "label_es": "Cafetería"
+                    },
+                    {
+                        "value": "panaderia",
+                        "label_en": "Bakery",
+                        "label_es": "Panadería"
+                    },
+                    {
+                        "value": "pizzeria",
+                        "label_en": "Pizza",
+                        "label_es": "Pizzería"
+                    },
+                    {
+                        "value": "vegana",
+                        "label_en": "Vegan",
+                        "label_es": "Vegana"
+                    },
+                    {
+                        "value": "internacional",
+                        "label_en": "International",
+                        "label_es": "Internacional"
+                    },
+                    {
+                        "value": "chinchorro",
+                        "label_en": "Roadside kiosk",
+                        "label_es": "Chinchorro"
+                    },
+                    {
+                        "value": "food_truck",
+                        "label_en": "Food truck",
+                        "label_es": "Food truck"
+                    },
+                    {
+                        "value": "postres",
+                        "label_en": "Desserts",
+                        "label_es": "Postres"
+                    },
+                    {
+                        "value": "bar",
+                        "label_en": "Bar & tapas",
+                        "label_es": "Bar y tapas"
+                    }
+                ],
+                "label_en": "Cuisine",
+                "label_es": "Tipo de comida",
+                "required": true,
+                "highlight": 1,
+                "max_length": null
+            },
+            {
+                "key": "price_level",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "1",
+                        "label_en": "$ · Budget",
+                        "label_es": "$ · Económico"
+                    },
+                    {
+                        "value": "2",
+                        "label_en": "$$ · Moderate",
+                        "label_es": "$$ · Moderado"
+                    },
+                    {
+                        "value": "3",
+                        "label_en": "$$$ · Upscale",
+                        "label_es": "$$$ · Alto"
+                    },
+                    {
+                        "value": "4",
+                        "label_en": "$$$$ · Fine dining",
+                        "label_es": "$$$$ · Lujo"
+                    }
+                ],
+                "label_en": "Price range",
+                "label_es": "Rango de precio",
+                "required": false,
+                "highlight": 2,
+                "max_length": null
+            },
+            {
+                "key": "service",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "flags",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "dine_in",
+                        "label_en": "Dine-in",
+                        "label_es": "Comer allí"
+                    },
+                    {
+                        "value": "takeout",
+                        "label_en": "Takeout",
+                        "label_es": "Para llevar"
+                    },
+                    {
+                        "value": "delivery",
+                        "label_en": "Delivery",
+                        "label_es": "Entrega"
+                    },
+                    {
+                        "value": "outdoor",
+                        "label_en": "Outdoor seating",
+                        "label_es": "Terraza"
+                    }
+                ],
+                "label_en": "Service",
+                "label_es": "Servicio",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "reservations",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "none",
+                        "label_en": "Not taken",
+                        "label_es": "No se aceptan"
+                    },
+                    {
+                        "value": "recommended",
+                        "label_en": "Recommended",
+                        "label_es": "Recomendadas"
+                    },
+                    {
+                        "value": "required",
+                        "label_en": "Required",
+                        "label_es": "Requeridas"
+                    }
+                ],
+                "label_en": "Reservations",
+                "label_es": "Reservaciones",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "reservation_url",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "url",
+                "hint_en": "The https address of your booking system.",
+                "hint_es": "Dirección https de tu sistema de reservaciones.",
+                "options": [
+                ],
+                "label_en": "Booking link",
+                "label_es": "Enlace para reservar",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "dietary",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "flags",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "vegetarian",
+                        "label_en": "Vegetarian",
+                        "label_es": "Vegetariana"
+                    },
+                    {
+                        "value": "vegan",
+                        "label_en": "Vegan",
+                        "label_es": "Vegana"
+                    },
+                    {
+                        "value": "gluten_free",
+                        "label_en": "Gluten-free",
+                        "label_es": "Sin gluten"
+                    }
+                ],
+                "label_en": "Dietary options",
+                "label_es": "Opciones dietéticas",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "parking",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "lot",
+                        "label_en": "Own lot",
+                        "label_es": "Estacionamiento propio"
+                    },
+                    {
+                        "value": "street",
+                        "label_en": "Street parking",
+                        "label_es": "En la calle"
+                    },
+                    {
+                        "value": "none",
+                        "label_en": "None",
+                        "label_es": "No hay"
+                    }
+                ],
+                "label_en": "Parking",
+                "label_es": "Estacionamiento",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "accessible",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "toggle",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                ],
+                "label_en": "Wheelchair accessible",
+                "label_es": "Acceso para sillas de ruedas",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            }
+        ],
+        "places": 0,
+        "name_en": "Food & drink",
+        "name_es": "Comida y bebida",
+        "upcoming": 2,
+        "default_kind": "place"
+    },
+    {
+        "icon": "flag",
+        "slug": "civica",
+        "kinds": [
+            "activity"
+        ],
+        "fields": [
+        ],
+        "places": 0,
+        "name_en": "Civic & political",
+        "name_es": "Cívica y política",
+        "upcoming": 2,
+        "default_kind": "activity"
+    },
+    {
+        "icon": "wave",
+        "slug": "playa",
+        "kinds": [
+            "place",
+            "activity"
+        ],
+        "fields": [
+            {
+                "key": "water",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "calm",
+                        "label_en": "Calm water",
+                        "label_es": "Aguas tranquilas"
+                    },
+                    {
+                        "value": "waves",
+                        "label_en": "Moderate waves",
+                        "label_es": "Oleaje moderado"
+                    },
+                    {
+                        "value": "surf",
+                        "label_en": "Surfing waves",
+                        "label_es": "Olas para surfear"
+                    },
+                    {
+                        "value": "currents",
+                        "label_en": "Strong currents",
+                        "label_es": "Corrientes fuertes"
+                    }
+                ],
+                "label_en": "Water",
+                "label_es": "Condición del agua",
+                "required": true,
+                "highlight": 1,
+                "max_length": null
+            },
+            {
+                "key": "facilities",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "flags",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "restrooms",
+                        "label_en": "Restrooms",
+                        "label_es": "Baños"
+                    },
+                    {
+                        "value": "showers",
+                        "label_en": "Showers",
+                        "label_es": "Duchas"
+                    },
+                    {
+                        "value": "lifeguard",
+                        "label_en": "Lifeguard",
+                        "label_es": "Salvavidas"
+                    },
+                    {
+                        "value": "parking",
+                        "label_en": "Parking",
+                        "label_es": "Estacionamiento"
+                    },
+                    {
+                        "value": "food",
+                        "label_en": "Food nearby",
+                        "label_es": "Comida cerca"
+                    },
+                    {
+                        "value": "shade",
+                        "label_en": "Shade",
+                        "label_es": "Sombra"
+                    },
+                    {
+                        "value": "accessible",
+                        "label_en": "Accessible access",
+                        "label_es": "Acceso universal"
+                    }
+                ],
+                "label_en": "Facilities",
+                "label_es": "Facilidades",
+                "required": false,
+                "highlight": 2,
+                "max_length": null
+            },
+            {
+                "key": "activities",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "flags",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "swim",
+                        "label_en": "Swimming",
+                        "label_es": "Nadar"
+                    },
+                    {
+                        "value": "snorkel",
+                        "label_en": "Snorkeling",
+                        "label_es": "Snorkel"
+                    },
+                    {
+                        "value": "surf",
+                        "label_en": "Surfing",
+                        "label_es": "Surf"
+                    },
+                    {
+                        "value": "paddle",
+                        "label_en": "Paddle boarding",
+                        "label_es": "Paddle board"
+                    },
+                    {
+                        "value": "family",
+                        "label_en": "Family friendly",
+                        "label_es": "Ideal para familias"
+                    }
+                ],
+                "label_en": "Things to do",
+                "label_es": "Qué hacer",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "parking_fee",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "free",
+                        "label_en": "Free",
+                        "label_es": "Gratis"
+                    },
+                    {
+                        "value": "paid",
+                        "label_en": "Paid",
+                        "label_es": "De pago"
+                    },
+                    {
+                        "value": "none",
+                        "label_en": "No parking",
+                        "label_es": "No hay estacionamiento"
+                    }
+                ],
+                "label_en": "Parking cost",
+                "label_es": "Costo de estacionamiento",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "blue_flag",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "toggle",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                ],
+                "label_en": "Blue Flag certified",
+                "label_es": "Certificada Bandera Azul",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "safety",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "long_text",
+                "hint_en": "Currents, unguarded areas, recommended times.",
+                "hint_es": "Corrientes, zonas sin salvavidas, horarios recomendados.",
+                "options": [
+                ],
+                "label_en": "Safety",
+                "label_es": "Seguridad",
+                "required": false,
+                "highlight": null,
+                "max_length": 600
+            }
+        ],
+        "places": 0,
+        "name_en": "Beach",
+        "name_es": "Playa",
+        "upcoming": 3,
+        "default_kind": "place"
+    },
+    {
+        "icon": "bed",
+        "slug": "hospedaje",
+        "kinds": [
+            "place"
+        ],
+        "fields": [
+            {
+                "key": "lodging_type",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "choice",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "hotel",
+                        "label_en": "Hotel",
+                        "label_es": "Hotel"
+                    },
+                    {
+                        "value": "parador",
+                        "label_en": "Parador",
+                        "label_es": "Parador"
+                    },
+                    {
+                        "value": "guesthouse",
+                        "label_en": "Guesthouse",
+                        "label_es": "Casa de huéspedes"
+                    },
+                    {
+                        "value": "rental",
+                        "label_en": "Vacation rental",
+                        "label_es": "Alquiler vacacional"
+                    },
+                    {
+                        "value": "hostel",
+                        "label_en": "Hostel",
+                        "label_es": "Hostal"
+                    },
+                    {
+                        "value": "camping",
+                        "label_en": "Camping",
+                        "label_es": "Acampar"
+                    }
+                ],
+                "label_en": "Type",
+                "label_es": "Tipo de hospedaje",
+                "required": true,
+                "highlight": 1,
+                "max_length": null
+            },
+            {
+                "key": "price_from",
+                "max": 10000,
+                "min": 0,
+                "kind": "place",
+                "type": "number",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                ],
+                "label_en": "From (USD per night)",
+                "label_es": "Desde (USD por noche)",
+                "required": false,
+                "highlight": 2,
+                "max_length": null
+            },
+            {
+                "key": "rooms",
+                "max": 2000,
+                "min": 1,
+                "kind": "place",
+                "type": "number",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                ],
+                "label_en": "Rooms",
+                "label_es": "Habitaciones",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "amenities",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "flags",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                    {
+                        "value": "pool",
+                        "label_en": "Pool",
+                        "label_es": "Piscina"
+                    },
+                    {
+                        "value": "wifi",
+                        "label_en": "Wi-Fi",
+                        "label_es": "Wi-Fi"
+                    },
+                    {
+                        "value": "parking",
+                        "label_en": "Parking",
+                        "label_es": "Estacionamiento"
+                    },
+                    {
+                        "value": "breakfast",
+                        "label_en": "Breakfast",
+                        "label_es": "Desayuno"
+                    },
+                    {
+                        "value": "beach",
+                        "label_en": "Beach access",
+                        "label_es": "Acceso a playa"
+                    },
+                    {
+                        "value": "pets",
+                        "label_en": "Pet friendly",
+                        "label_es": "Admite mascotas"
+                    },
+                    {
+                        "value": "ac",
+                        "label_en": "Air conditioning",
+                        "label_es": "Aire acondicionado"
+                    },
+                    {
+                        "value": "accessible",
+                        "label_en": "Accessible rooms",
+                        "label_es": "Habitaciones accesibles"
+                    }
+                ],
+                "label_en": "Amenities",
+                "label_es": "Comodidades",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "booking_url",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "url",
+                "hint_en": "",
+                "hint_es": "",
+                "options": [
+                ],
+                "label_en": "Booking link",
+                "label_es": "Enlace para reservar",
+                "required": false,
+                "highlight": null,
+                "max_length": null
+            },
+            {
+                "key": "check_in",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "text",
+                "hint_en": "For example 15:00.",
+                "hint_es": "Por ejemplo 15:00.",
+                "options": [
+                ],
+                "label_en": "Check-in (time)",
+                "label_es": "Entrada (hora)",
+                "required": false,
+                "highlight": null,
+                "max_length": 5
+            },
+            {
+                "key": "check_out",
+                "max": null,
+                "min": null,
+                "kind": "place",
+                "type": "text",
+                "hint_en": "For example 11:00.",
+                "hint_es": "Por ejemplo 11:00.",
+                "options": [
+                ],
+                "label_en": "Check-out (time)",
+                "label_es": "Salida (hora)",
+                "required": false,
+                "highlight": null,
+                "max_length": 5
+            }
+        ],
+        "places": 0,
+        "name_en": "Lodging",
+        "name_es": "Hospedaje",
+        "upcoming": 0,
+        "default_kind": "place"
+    }
+]

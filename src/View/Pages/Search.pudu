@@ -10,6 +10,7 @@ import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Place as Place
 import Domain.Search as Search
 import Utils.Geo as Geo
 import Utils.Query as Query
@@ -17,6 +18,7 @@ import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
+import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as SearchControls
 import View.Frame as Frame
 import View.Layout as Layout
@@ -73,7 +75,7 @@ export fn cards(frame: &Frame.Frame, items: &Array[Event.Card]) -> Str {
 }
 
 /// The results page.
-export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page) -> Html.Html {
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Array[Place.Listing]) -> Html.Html {
   let (title, description, path) = identity(frame, landing, filters)
   let indexable = match landing {
     case Open => !Search.isNarrowed(filters)
@@ -112,6 +114,11 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
           case ForTown(town) => neighbors(frame, catalog, &town)
           case _ => H.nothing()
         },
+        PlaceCard.rail(frame, catalog, "rail-places", match landing {
+            case ForCategory(category) => Frame.tf(frame, "place.rail_category", &[("category", SearchControls.categoryName(frame, &category))])
+            case ForTown(town) => Frame.tf(frame, "place.rail_town", &[("town", town.name)])
+            case Open => Frame.t(frame, "place.rail")
+          }, places, ""),
         if page.items.isEmpty() {
           Notice.empty("search", Frame.t(frame, "search.empty_title"), Frame.t(frame, "search.empty_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action")))
         } else {

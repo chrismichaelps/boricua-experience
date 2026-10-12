@@ -629,3 +629,30 @@ ul { padding: 0; list-style: none; }
 @media (prefers-reduced-motion: reduce) { .menu-panel, .bell.is-ringing .bell-icon, .bell.is-ringing .badge { animation: none; } }
 
 .admin-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--color-cloud);color:var(--color-ink);font-size:13px;font-weight:800;line-height:20px;margin:8px 0}
+
+/* Places and category profiles (ADR-0010) */
+.kind-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 16px 0 0; padding: 0; list-style: none; }
+.kind-card { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--color-divider); border-radius: 16px; background: var(--color-white); }
+.kind-name { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.kind-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.flags { border: 0; padding: 0; margin: 0; }
+.flag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 8px; }
+.flag { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--color-divider); border-radius: 12px; cursor: pointer; }
+.flag:has(input:checked) { border-color: var(--color-ocean); background: rgba(24, 120, 236, .06); }
+.hours-editor { display: grid; gap: 8px; }
+.hours-day { display: grid; grid-template-columns: 110px 1fr; align-items: center; gap: 8px; border: 0; padding: 0; margin: 0; }
+.hours-day legend { float: left; font-weight: 700; padding: 0; }
+.hours-slots { display: flex; flex-wrap: wrap; gap: 8px; }
+.hours-slot { display: inline-flex; align-items: center; gap: 4px; }
+.hours-slot input { min-height: 40px; padding: 4px 8px; border: 1px solid var(--color-divider); border-radius: 10px; font: inherit; }
+.hours { display: grid; gap: 4px; margin: 0; }
+.hours-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--color-mist); }
+.hours-row dd { margin: 0; text-align: right; }
+.card-facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.card-facts li { padding: 2px 10px; border-radius: var(--radius-pill); background: var(--color-mist); font-size: 12px; font-weight: 600; }
+.pill-open { background: #127a3b; color: var(--color-white); }
+.meta-rating svg { color: #e0a100; }
+.event-lines .is-open { color: #127a3b; font-weight: 700; }
+.fact-long { white-space: pre-line; }
+@media (max-width: 599px) { .hours-day { grid-template-columns: 1fr; } }
+.place-contact { display: grid; gap: 10px; }

@@ -32,6 +32,11 @@ export const PROFILE_PREFIX: Str = "/u/"
 export const PROFILE: Str = "/u/:id"
 /// Publishing a new event.
 export const CREATE: Str = "/create"
+export const CREATE_PLACE: Str = "/create/place"
+export const PLACE_PREFIX: Str = "/lugar/"
+export const PLACE: Str = "/lugar/:slug"
+export const PLACE_EDIT: Str = "/lugar/:slug/edit"
+export const PLACE_STATUS: Str = "/lugar/:slug/status"
 /// The member's requests, saved events, and organized events.
 export const ACTIVITY: Str = "/activity"
 export const NOTIFICATIONS: Str = "/notifications"

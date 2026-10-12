@@ -5,6 +5,7 @@ import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Json as Json
 import Std.Option as Option
+import Std.Result as Result
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.App as App
@@ -86,6 +87,11 @@ fn home(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 
 /// A listing for the filters, inside a landing when one fixes a category or town.
 fn listing(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPage.Landing, filters: Search.Filters) -> Http.Response {
+  listingWith(app, visitor, landing, filters, ("", ""))
+}
+
+/// A listing with the places of a category or town, named as (category, town); both empty for none.
+fn listingWith(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPage.Landing, filters: Search.Filters, placesOf: (Str, Str)) -> Http.Response {
   let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
@@ -94,7 +100,11 @@ fn listing(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPage.La
   match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, anchored)) {
     case Ok(page) => {
       if Context.wantsJson(visitor) { return Respond.json(200, &pageJson(app, visitor, &anchored, &landing, &page)) }
-      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page)))
+      // Places are a landing's extra: a failure to read them leaves the activities listed.
+      let places = if (placesOf[0].isEmpty() && placesOf[1].isEmpty()) || !filters.after.isEmpty() { [] } else {
+        Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, placesOf), [])
+      }
+      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places)))
     }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
@@ -161,12 +171,12 @@ fn landingPage(app: &Assembly.App, visitor: &Context.Visitor, byCategory: Bool) 
   let filters = filtersOf(visitor)
   if byCategory {
     match Catalog.category(&catalog, slug) {
-      case Some(category) => listing(app, visitor, SearchPage.ForCategory(category), Search.Filters{..filters, category: slug})
+      case Some(category) => listingWith(app, visitor, SearchPage.ForCategory(category), Search.Filters{..filters, category: slug}, (if Catalog.takes(&category, Catalog.PLACE) { slug } else { "" }, ""))
       case None => Respond.problem(app, visitor, &Problem.Missing)
     }
   } else {
     match Catalog.municipality(&catalog, slug) {
-      case Some(town) => listing(app, visitor, SearchPage.ForTown(town), Search.Filters{..filters, municipality: slug})
+      case Some(town) => listingWith(app, visitor, SearchPage.ForTown(town), Search.Filters{..filters, municipality: slug}, ("", slug))
       case None => Respond.problem(app, visitor, &Problem.Missing)
     }
   }
