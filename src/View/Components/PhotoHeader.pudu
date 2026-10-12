@@ -3,8 +3,22 @@ module View.Components.PhotoHeader
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
+import Domain.Media as Media
 import View.Components.Icons as Icons
 import View.Frame as Frame
+
+/// The header photographs: the uploaded cover, else the place's existing cover address, then the
+/// further photographs. Empty means the category's default image is shown instead.
+export fn photosOf(gallery: &Media.Gallery, cover: &Option[Str]) -> Array[Str] {
+  let uploaded = Media.ofKind(gallery, Media.COVER).map(|file: Media.MediaFile| file.url)
+  let first = if !uploaded.isEmpty() { uploaded } else {
+    match cover {
+      case Some(address) => [address]
+      case None => []
+    }
+  }
+  first.concat(Media.ofKind(gallery, Media.GALLERY).map(|file: Media.MediaFile| file.url))
+}
 
 /// The owner's photographs in the same rotating container as the home page, first photograph usable
 /// without scripts. With no photograph the category's default image is shown alone, as presentation

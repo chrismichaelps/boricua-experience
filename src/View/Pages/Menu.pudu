@@ -37,7 +37,7 @@ export fn render(frame: &Frame.Frame, detail: &Place.Detail, board: &Menu.MenuBo
   Layout.page(frame, &meta, Layout.Explore, H.article().class("menu-page").holding([
         H.a().class("text-link menu-back").href(base).says(detail.card.name),
         H.header().class("menu-heading").holding([
-            PhotoHeader.render(frame, &Media.ofKind(gallery, Media.COVER).concat(Media.ofKind(gallery, Media.GALLERY)).map(|file: Media.MediaFile| file.url), PlaceCard.coverOf(&detail.card), detail.card.name, base, "menu-cover"),
+            PhotoHeader.render(frame, &PhotoHeader.photosOf(gallery, &detail.card.coverUrl), PlaceCard.coverOf(&detail.card), detail.card.name, base, "menu-cover"),
             H.p().class("eyebrow").says(detail.card.municipality.name),
             H.h1().says(detail.card.name),
             H.p().class("menu-subtitle").says(Frame.t(frame, "menu.title")),

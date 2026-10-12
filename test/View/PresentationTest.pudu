@@ -42,6 +42,7 @@ import View.Pages.Event as EventPage
 import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
+import View.Components.PhotoHeader as PhotoHeader
 import View.Pages.Media as MediaPage
 import View.Pages.Menu as MenuPage
 import View.Pages.MenuForm as MenuFormPage
@@ -179,6 +180,7 @@ fn main() -> Int {
       Test.that("owner drafts carry status and noindex", privateMenu.contains("Draft · only you") && privateMenu.contains("noindex")),
       Test.that("empty menu explains its absence and is not indexed", emptyMenu.contains("The menu is not available yet") && emptyMenu.contains("noindex")),
       Test.that("menu titles are escaped", !unsafeMenu.contains("<script>unsafe</script>") && unsafeMenu.contains("&lt;script&gt;")),
+      Test.that("an existing cover stays first when only further photos are uploaded", PhotoHeader.photosOf(&Media.Gallery{isOwner: false, files: [photo("g1", "gallery", "image/webp", "")]}, &Some("/assets/img/curated.webp")) == ["/assets/img/curated.webp", "https://test.supabase.co/storage/v1/object/public/place-media/p/g1"] && PhotoHeader.photosOf(&noMedia, &None).isEmpty()),
       Test.that("uploaded photos rotate in the shared header, cover first", picturedPlace.contains("data-feature=\"hero-carousel\"") && picturedPlace.indexOf("place-media/p/c1") < picturedPlace.indexOf("place-media/p/g1") && picturedPlace.contains("Photo 2 of 2")),
       Test.that("without uploads the header shows the default image alone, without controls", bareMenu.contains("photo-header") && !bareMenu.contains("hero-dot")),
       Test.that("menu documents open from storage, escaped, with a PDF marker", picturedMenu.contains("place-media/p/m1") && picturedMenu.contains("noopener noreferrer") && picturedMenu.contains("&lt;b&gt;Lunch&lt;/b&gt;") && picturedMenu.contains(">PDF<") && picturedMenu.contains("Menu photo")),

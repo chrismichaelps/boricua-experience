@@ -10,7 +10,7 @@ const postJson = async (url, body) => {
   if (url.endsWith('/media') && refuseStart) throw refuseStart;
   return url.endsWith('/media') ? { id: 'm1', uploadUrl: 'https://test.supabase.co/storage/v1/object/upload/sign/place-media/p/m1.pdf?token=t', apiKey: 'public-key', finishUrl: '/lugar/test/media/m1/finish' } : { ok: true };
 };
-const scope = { RequestFailed, postJson, URL, Error, Math, location: {} };
+const scope = { RequestFailed, postJson, URL, Error, Math, Blob, location: {} };
 const source = readFileSync(new URL('../public/assets/js/features/mediaUpload.js', import.meta.url), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
 vm.runInNewContext(source + '\nthis.api={fitted,refusal,mediaUpload};', scope);
 
@@ -50,6 +50,9 @@ refuseStart = null;
 input.files = [{ type: 'application/pdf', size: 3145729 }];
 await submit({ preventDefault() {} });
 assert.equal(status.textContent, 'large', 'oversized files are refused before any request'); assert.equal(posts.length, 3);
+input.files = [{ type: '', name: 'Menu.PDF', size: 900 }];
+await submit({ preventDefault() {} });
+assert.equal(posts.at(-2).body.mediaType, 'application/pdf', 'a PDF without a reported type is sent as a PDF by its extension');
 input.files = [];
 await submit({ preventDefault() {} });
 assert.equal(status.textContent, 'choose');

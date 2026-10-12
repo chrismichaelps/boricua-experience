@@ -68,7 +68,9 @@ export function mediaUpload(form, send = fetch, reload = () => location.reload()
     form.setAttribute('aria-busy', 'true');
     status.textContent = form.dataset.working;
     try {
-      const body = file.type === PDF ? file : await preparePhoto(file);
+      // Some systems report no type for a PDF; its extension decides, and the server reads the bytes anyway.
+      const pdf = file.type === PDF || (!file.type && /\.pdf$/i.test(file.name || ''));
+      const body = file.type === PDF ? file : pdf ? new Blob([file], { type: PDF }) : await preparePhoto(file);
       if (body.size > MAX_BYTES) throw new Error('media_too_large');
       const ticket = await postJson(form.action, { kind: form.dataset.kind, mediaType: body.type, bytes: body.size, label: label?.value.trim() ?? '' });
       const stored = await send(ticket.uploadUrl, { method: 'PUT', headers: { 'content-type': body.type, 'x-upsert': 'false', apikey: ticket.apiKey }, body });

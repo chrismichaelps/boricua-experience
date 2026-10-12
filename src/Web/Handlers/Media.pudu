@@ -10,6 +10,7 @@ import Std.Option as Option
 import Std.Result as Result
 import App.Assembly as Assembly
 import App.Messages as Messages
+import Constants.Http as HttpConstants
 import Constants.Routes as Routes
 import Domain.Media as Media
 import Domain.Place as Place
@@ -56,13 +57,13 @@ fn manager(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sess
 
 /// Reserves a declared upload and answers where the browser sends that one file.
 fn start(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
-  let declared: Media.UploadRequest = match Wire.parse(visitor.request.message.body) {
-    case Ok(found) => found
-    case Err(_) => { return Respond.problem(app, visitor, &Problem.Invalid([Problem.FieldError{field: "file", key: "media.invalid"}])) }
-  }
   let detail = match owned(app, visitor, session) {
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let declared: Media.UploadRequest = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Invalid([Problem.FieldError{field: "file", key: "media.invalid"}])) }
   }
   match Serve.ask(app, &app.kinds.startMedia, Serve.signed(session, Messages.MediaStart{placeId: detail.card.id, request: declared})) {
     case Ok(ticket) => Respond.json(200, &Json.object(&[
@@ -89,6 +90,12 @@ fn finish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
 
 /// The scheduled cleanup. Without a configured secret, or with another one, the route does not exist.
 fn sweep(app: &Assembly.App, request: &Route.Request) -> Http.Response {
+  let answer = sweepAnswer(app, request)
+  Http.Response{..answer, headers: answer.headers.concat(HttpConstants.SECURITY_HEADERS).push(("cache-control", HttpConstants.CACHE_PRIVATE))}
+}
+
+/// The sweep's outcome before the shared headers are added.
+fn sweepAnswer(app: &Assembly.App, request: &Route.Request) -> Http.Response {
   let secret = app.runtime.cronSecret
   let given = Option.unwrapOr(Route.header(request, "authorization"), "")
   if secret.isEmpty() || !Crypto.bytesMatch(&Bytes.fromText("Bearer " + secret), &Bytes.fromText(given)) {

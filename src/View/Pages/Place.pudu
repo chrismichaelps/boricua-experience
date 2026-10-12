@@ -46,7 +46,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
     structured: if indexable { [Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (Format.categoryName(&frame.locale, &card.category), Routes.CATEGORY_PREFIX + card.category.slug), (card.name, path)])] } else { [] }
   }
   Layout.page(frame, &meta, Layout.Explore, H.article().class("event place").holding([
-        PhotoHeader.render(frame, &photosOf(gallery), PlaceCard.coverOf(&card), card.name, path, "place-photos"),
+        PhotoHeader.render(frame, &PhotoHeader.photosOf(gallery, &card.coverUrl), PlaceCard.coverOf(&card), card.name, path, "place-photos"),
         H.div().class("event-layout").holding([
             H.div().class("event-main").holding([
                 heading(frame, detail),
@@ -64,11 +64,6 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
             H.aside().class("event-side").holding([contact(frame, detail), owner(frame, detail)])
           ])
       ]))
-}
-
-/// The owner's photographs, cover first, as their public addresses.
-export fn photosOf(gallery: &Media.Gallery) -> Array[Str] {
-  Media.ofKind(gallery, Media.COVER).concat(Media.ofKind(gallery, Media.GALLERY)).map(|file: Media.MediaFile| file.url)
 }
 
 /// Name, category, town, verification, rating, and whether it is open now.
