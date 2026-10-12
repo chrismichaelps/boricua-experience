@@ -194,6 +194,10 @@ ul { padding: 0; list-style: none; }
 .card-body { display: grid; gap: 3px; padding: 0 2px; }
 .card-when { font-size: 13px; font-weight: 800; color: var(--color-ocean); text-transform: uppercase; letter-spacing: .3px; }
 .card-title { font-size: 17px; line-height: 1.3; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-series { display: flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 12px; font-weight: 700; color: var(--color-graphite); }
+.date-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.date-link { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border-radius: 12px; background: var(--color-mist, #f2f5f8); color: inherit; text-decoration: none; font-weight: 600; }
+.date-link:hover, .date-link:focus-visible { background: var(--color-sky, #e6f0fb); }
 .card-place { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--color-graphite); min-width: 0; }
 .card-place .icon { flex: none; width: 14px; height: 14px; }
 .card-place span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

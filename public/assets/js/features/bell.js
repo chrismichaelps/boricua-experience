@@ -1,4 +1,4 @@
-import { STORAGE } from '../constants/config.js?v=47';
+import { STORAGE } from '../constants/config.js?v=48';
 
 /** Rings the bell once when the unread count has grown since this browser last saw it. */
 export function bell(link) {

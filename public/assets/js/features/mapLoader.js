@@ -1,4 +1,4 @@
-import { MAP } from '../constants/config.js?v=47';
+import { MAP } from '../constants/config.js?v=48';
 
 let loading = null;
 

@@ -130,3 +130,4 @@ Release nullable publication facts, consistent finite discovery expiry, null-saf
 
 - 2026-10-12 · [[architecture/DELIVERY]] · the build refuses a site URL that is not a public https origin: a deployment built with the development origin refused every form post from the canonical site with 403 and named localhost in canonical links · risk HIGH · issue #55
 - 2026-10-12 · [[src/Public/Live]] · CoreLocation's transient "location unknown" (frequent on Chrome for macOS) is retried with backoff for the first fix, and transient watch errors after a fix keep locating; only denial stops. Asset/cache version 47 · risk MED · issue #57
+- 2026-10-12 · [[src/Database/EventSeries]] · recurring activities list once, with "N more dates" on the card and an Other dates section on the event page; no production row deleted. Asset/cache version 48 · risk MED · issue #59

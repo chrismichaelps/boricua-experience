@@ -45,6 +45,7 @@ export type Card = {
   lng: Float64,
   @json("distance_m") distanceM: Option[Int],
   @json("organizer_name") organizerName: Option[Str],
+  @default("0") @json("more_dates") moreDates: Int,
   @json("pending_count") pendingCount: Option[Int]
 } derives Json.Decode
 
@@ -88,6 +89,9 @@ export type Viewer = {
   saved: Bool
 } derives Json.Decode
 
+/** @Domain.Event.Occurrence — another date of the same recurring activity */
+export type Occurrence = { slug: Str, @json("starts_at") startsAt: Str, @json("ends_at") endsAt: Option[Str] } derives Json.Decode
+
 /** @Domain.Event.Detail — everything an event page shows */
 export type Detail = {
   card: Card,
@@ -105,6 +109,7 @@ export type Detail = {
   isFull: Bool,
   spotsLeft: Option[Int],
   viewer: Viewer,
+  otherDates: Array[Occurrence],
   updatedAt: Str
 }
 
@@ -124,6 +129,7 @@ type DetailWire = {
   @json("is_full") isFull: Bool,
   @json("spots_left") spotsLeft: Option[Int],
   viewer: Viewer,
+  @default("[]") @json("other_dates") otherDates: Array[Occurrence],
   @json("updated_at") updatedAt: Str
 } derives Json.Decode
 
@@ -147,6 +153,7 @@ export fn decodeDetail(json: &Json.Json) -> Result[Detail, Json.DecodeError] {
       isFull: wire.isFull,
       spotsLeft: wire.spotsLeft,
       viewer: wire.viewer,
+      otherDates: wire.otherDates,
       updatedAt: wire.updatedAt
     })
 }

@@ -88,6 +88,10 @@ fn main() -> Int {
   let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
   let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
+  let seriesCard = Html.render(&EventCard.card(&es, &Event.Card{..detail.card, moreDates: 3}).html())
+  let singleCard = Html.render(&EventCard.card(&es, &detail.card).html())
+  let seriesPage = Html.render(&EventPage.render(&en, &Event.Detail{..detail, otherDates: [Event.Occurrence{slug: "plaza-2026-11-21", startsAt: "2026-11-21T22:00:00+00:00", endsAt: None}]}, &None))
+  let singlePage = Html.render(&EventPage.render(&en, &detail, &None))
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -109,6 +113,10 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.that("a recurring card counts its later dates", seriesCard.contains("3 fechas más")),
+      Test.that("a single card names no later dates", !singleCard.contains("card-series")),
+      Test.that("a recurring page links its other dates", seriesPage.contains("Other dates") && seriesPage.contains("href=\"/e/plaza-2026-11-21\"")),
+      Test.that("a single page has no other dates", !singlePage.contains("other-dates")),
       Test.equals("signup requires password confirmation", &signup.contains("name=\"confirmation\""), &true),
       Test.equals("signup does not expose itself to indexing", &signup.contains("noindex,follow"), &true),
       Test.equals("password controls are localized", &signup.contains("Show password"), &true),

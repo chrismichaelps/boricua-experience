@@ -1,4 +1,4 @@
-import { GEO } from '../constants/config.js?v=47';
+import { GEO } from '../constants/config.js?v=48';
 
 export function requestLocation(signal, geolocation = navigator.geolocation) {
   return new Promise((resolve, reject) => {
