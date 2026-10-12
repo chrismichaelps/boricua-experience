@@ -4,10 +4,12 @@ module View.Pages.Menu
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Constants.Menus as Limits
 import Constants.Routes as Routes
 import Domain.Menu as Menu
 import Domain.Place as Place
 import Utils.Money as Money
+import Utils.Query as Query
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -38,23 +40,30 @@ export fn render(frame: &Frame.Frame, detail: &Place.Detail, board: &Menu.MenuBo
             },
             H.p().class("eyebrow").says(detail.card.municipality.name),
             H.h1().says(detail.card.name),
-            H.p().class("menu-subtitle").says(Frame.t(frame, "menu.title"))
+            H.p().class("menu-subtitle").says(Frame.t(frame, "menu.title")),
+            if board.isOwner && board.supported && board.menus.length() < Limits.MENUS_MAX {
+              H.p().holding([H.a().class("button button-small").href(base + "/menu/edit").says(Frame.t(frame, "menu.new"))])
+            } else { H.nothing() }
           ]),
         if board.menus.isEmpty() {
           H.section().class("panel menu-empty").holding([H.h2().says(Frame.t(frame, "menu.empty_title")), H.p().class("muted").says(Frame.t(frame, "menu.empty_body"))])
         } else {
-          H.div().class("menu-content").holding(board.menus.map(|menu: Menu.MenuListing| menuOf(frame, &menu)))
+          H.div().class("menu-content").holding(board.menus.map(|menu: Menu.MenuListing| menuOf(frame, &menu, if board.isOwner { Some(base + "/menu/edit" + Query.render(&[("menu", menu.id)])) } else { None })))
         },
         if board.menus.isEmpty() { H.nothing() } else { H.p().class("menu-disclaimer muted").says(Frame.t(frame, "menu.declarations")) }
       ]))
 }
 
-/// One menu, with unique section anchors and owner-only publication labels.
-fn menuOf(frame: &Frame.Frame, menu: &Menu.MenuListing) -> H.Node {
+/// One menu, with unique section anchors, owner-only publication labels and the owner's edit link.
+fn menuOf(frame: &Frame.Frame, menu: &Menu.MenuListing, edit: Option[Str]) -> H.Node {
   H.section().class("menu-board").at("aria-labelledby", "menu-" + menu.id).holding([
       H.header().class("menu-board-heading").holding([
           H.h2().id("menu-" + menu.id).says(menu.name),
           if menu.status == "published" { H.nothing() } else { H.span().class("chip chip-small").says(Frame.t(frame, "menu.status." + menu.status)) },
+          match edit {
+            case Some(address) => H.a().class("button button-ghost button-small").href(address).label(Frame.t(frame, "menu.edit_title") + " · " + menu.name).says(Frame.t(frame, "menu.edit_title"))
+            case None => H.nothing()
+          },
           if menu.description.isEmpty() { H.nothing() } else { H.p().class("muted").says(menu.description) }
         ]),
       if menu.sections.isEmpty() { H.nothing() } else {

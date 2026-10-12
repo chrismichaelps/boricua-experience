@@ -51,3 +51,6 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 ## Curated publication Grill Log · #42
 Resolved: external_booking is a stable refusal mapped to the bilingual official-source explanation.
+
+## Owner editor Grill Log · #69
+Resolved: `MENU_UNSUPPORTED` and `MENU_LIMIT` name the refusals the editor raises before a new menu reaches the database; both map to existing menu messages.

@@ -6,7 +6,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/test/Fixtures/message-keys.txt"
 {
   grep -rhoE '"(assistant|nav|footer|home|search|when|sort|date|event|visibility|status|report|publish|manage|map|location|activity|notifications|notification|profile|account|auth|cookies|admin|error|form|flash|problem|legal|about|place|review)\.[a-z0-9_.]+"' "$root/src/View" "$root/src/Web" "$root/src/I18n/Dates.pudu" "$root/src/I18n/Format.pudu" "$root/src/Validation" "$root/src/Constants/Codes.pudu" "$root/src/App/Pipeline.pudu" | tr -d '"'
-  sed -nE 's/.*\("((assistant|menu)\.[a-z0-9_.-]+)",.*/\1/p' "$root/src/I18n/Es.pudu"
+  sed -nE 's/.*\("((assistant|menu)\.[a-z0-9_.-]+)",.*/\1/p' "$root/src/I18n/Es.pudu" "$root/src/I18n/EsMenu.pudu"
   for family in status.pending status.approved status.rejected status.withdrawn \
     when.anytime when.today when.tomorrow when.weekend when.week when.month \
     sort.soon sort.near sort.relevant publish.kind_place publish.kind_activity review.reason_spam review.reason_fake review.reason_offensive review.reason_conflict review.reason_other \

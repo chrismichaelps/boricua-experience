@@ -24,6 +24,9 @@ export type MenuSectionInput = { id: Str, name: Str, items: Array[MenuDishInput]
 /** @Domain.MenuDraft.MenuEditorDraft — the complete menu as entered */
 export type MenuEditorDraft = { name: Str, description: Str, locale: Str, status: Str, sections: Array[MenuSectionInput] }
 
+/** @Domain.MenuDraft.MenuEditing — a draft with the menu identity and revision it was read at */
+export type MenuEditing = { draft: MenuEditorDraft, menuId: Option[Str], revision: Int }
+
 /// A new dish has unknown price, availability and allergen declaration.
 export fn emptyDish() -> MenuDishInput {
   MenuDishInput{id: "", name: "", description: "", price: "", priceNote: "", available: "", dietary: [], allergensKnown: false, allergens: []}

@@ -18,3 +18,6 @@ No service calls, fabricated dishes, inferred allergens or invented availability
 Resolved: public indexing requires a published parent and at least one published menu; all other menu states use noindex. Optional parent-page menu failures do not claim empty data. Owner-declared dietary/allergen labels are translated without changing underlying facts and include an allergy-contact note.
 ## Referenced by
 [[src/_MOC]] · [[src/Web/Handlers/Menus]] · [[src/View/Pages/Place]]
+
+## Owner editor Grill Log · #69
+Resolved: Add owner-only new/edit links bounded by database capability and menu count; old unsupported-category menus may be archived through editing.

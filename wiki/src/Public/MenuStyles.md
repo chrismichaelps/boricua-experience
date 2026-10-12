@@ -15,3 +15,6 @@ Resolved: this stylesheet is loaded through the versioned shell. No new motion d
 Resolved review: menu grids allow shrinking below their content width and headings wrap unbroken owner-provided names. Section chips scroll inside their own navigation rather than widening the document.
 ## Referenced by
 [[src/_MOC]] · [[src/View/Layout]] · [[src/View/Pages/Menu]]
+
+## Owner editor Grill Log · #69
+Resolved: Add responsive owner form groups and 44px structural action buttons with neutral spacing and no new decorative palette.

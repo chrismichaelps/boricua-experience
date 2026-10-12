@@ -95,3 +95,6 @@ Resolved: Menu reader labels, unknown price, availability and owner-declared die
 
 ## Menu editor validation Grill Log · #69
 Resolved: nested editor validation and revision conflicts have actionable interface messages. Invalid input stays in the form; a stale save requires reviewing the latest version instead of blind overwrite.
+
+## Owner editor Grill Log · #69
+Resolved: Add complete owner editor field/action/conflict labels and unknown declaration guidance.

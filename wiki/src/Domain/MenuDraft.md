@@ -18,3 +18,6 @@ No invented dishes, price or locale translation; raw input is never sent directl
 Resolved: separate raw form types preserve invalid submitted text and model unknown/free distinctly. Blank UI values are draft state only, not production seed data. Validation.MenuForm produces the strict owner document.
 ## Referenced by
 [[src/_MOC]] · [[src/Validation/MenuForm]] · [[src/Services/Menus]]
+
+## Owner editor Grill Log · #69
+Resolved: `MenuEditing` pairs the raw draft with the menu identity and the revision it was read at, so a refused or conflicting save re-renders all three unchanged.
