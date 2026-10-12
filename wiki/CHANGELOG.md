@@ -161,3 +161,5 @@ Release production site-URL guard, tolerant map location, empty-camera map reads
 
 ## v0.5.0
 Organizer cover photographs for activities across all categories, trusted server-only media confirmation, shared actor reservation limits, race-safe pending cleanup and48px removal controls. Existing source covers remain labeled accurately. Additive migrations prepare both environments before new callers deploy; legacy member confirmation grants are removed after cutover. Development browser upload/replace/remove and storage cleanup are verified; production smoke/parity follow deployment.
+
+- 2026-10-12 · [[seams/SearchConsole]] · verify the production Domain property through Cloudflare DNS, submit the generated sitemap (192discovered pages), and validate homepage indexing/crawl access · issue #45.
