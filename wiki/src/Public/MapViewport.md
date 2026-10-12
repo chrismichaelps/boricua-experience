@@ -39,3 +39,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]] · [[src/Public/Explorer]]
+
+## Moving nearby and 3D Grill Log · #78
+Resolved: `snapArea` widens the camera outward to a zoom-only grid so moving visitors share cached areas; `speedBetween` and `speedZoom` choose the following zoom from ground speed. See [[decisions/ADR-0011-moving-nearby-and-3d-map]].

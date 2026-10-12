@@ -102,3 +102,6 @@ Resolved: explicit app-search body class on the open search route gives its shel
 
 ## Resolved feedback Grill Log · #45
 Existing script initializes optional password/submit feedback; document semantics and source metadata remain server-rendered. Resolved.
+
+## Menu reader Grill Log · #69
+Resolved: Load versioned menu.css after existing styles; no script or private cache change.

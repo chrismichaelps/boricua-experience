@@ -1,0 +1,118 @@
+/** @Web.MenuFields.Decoding — indexed owner menu fields and draft-only structural edits */
+module Web.MenuFields
+
+import Std.Option as Option
+import Constants.Menus as Limits
+import Domain.MenuDraft as Draft
+import Domain.Problem as Problem
+import Utils.Form as Form
+
+/** @Web.MenuFields.Posted — the retained editor state and the command that submitted it */
+export type Posted = { editing: Draft.MenuEditing, action: Str }
+
+/// The posted editor, or a refusal when its counts are missing, oversized or truncated.
+export fn decode(fields: &Map[Str, Str]) -> Result[Posted, Problem.Problem] {
+  let sectionCount = count(fields, "sections", Limits.SECTIONS_MAX) ?
+  var sections: Array[Draft.MenuSectionInput] = []
+  var total = 0
+  for s in 0..sectionCount {
+    let prefix = "s." + show(s)
+    if fields.get(prefix + ".name") == None { return Err(refused(prefix + ".name", "menu.invalid")) }
+    let itemCount = count(fields, prefix + ".items", Limits.ITEMS_MAX) ?
+    total = total + itemCount
+    if total > Limits.ITEMS_MAX { return Err(refused("sections", "menu.limit")) }
+    var items: Array[Draft.MenuDishInput] = []
+    for i in 0..itemCount {
+      let field = prefix + ".i." + show(i)
+      if fields.get(field + ".name") == None { return Err(refused(field + ".name", "menu.invalid")) }
+      items = items.push(dishOf(fields, field))
+    }
+    sections = sections.push(Draft.MenuSectionInput{id: Form.text(fields, prefix + ".id"), name: Form.text(fields, prefix + ".name"), items: items})
+  }
+  let revision = Option.unwrapOr(Form.whole(fields, "revision"), -1)
+  if revision < 0 { return Err(refused("revision", "menu.invalid")) }
+  let menuId = Form.text(fields, "menuId")
+  let draft = Draft.MenuEditorDraft{name: Form.text(fields, "name"), description: Form.paragraph(fields, "description"),
+    locale: Form.text(fields, "locale"), status: Form.text(fields, "status"), sections: sections }
+  Ok(Posted{editing: Draft.MenuEditing{draft: draft, menuId: if menuId.isEmpty() { None } else { Some(menuId) }, revision: revision},
+      action: Form.text(fields, Limits.EDIT_FIELD) })
+}
+
+/// One dish exactly as entered; unchecked declarations stay distinct from unknown ones.
+fn dishOf(fields: &Map[Str, Str], field: Str) -> Draft.MenuDishInput {
+  var dietary: Array[Str] = []
+  for tag in Limits.DIETARY { if Form.flag(fields, field + ".diet." + tag) { dietary = dietary.push(tag) } }
+  var allergens: Array[Str] = []
+  for tag in Limits.ALLERGENS { if Form.flag(fields, field + ".allergen." + tag) { allergens = allergens.push(tag) } }
+  Draft.MenuDishInput{id: Form.text(fields, field + ".id"), name: Form.text(fields, field + ".name"),
+    description: Form.paragraph(fields, field + ".description"), price: Form.text(fields, field + ".price"),
+    priceNote: Form.text(fields, field + ".priceNote"), available: Form.text(fields, field + ".available"),
+    dietary: dietary, allergensKnown: Form.text(fields, field + ".allergensKnown") == "yes", allergens: allergens }
+}
+
+/// A required, bounded count field.
+fn count(fields: &Map[Str, Str], name: Str, maximum: Int) -> Result[Int, Problem.Problem] {
+  match Form.whole(fields, name) {
+    case Some(found) => if found < 0 { Err(refused(name, "menu.invalid")) } else if found > maximum { Err(refused(name, "menu.limit")) } else { Ok(found) }
+    case None => Err(refused(name, "menu.invalid"))
+  }
+}
+
+/// A single refused field.
+fn refused(field: Str, key: Str) -> Problem.Problem { Problem.Invalid([Problem.FieldError{field: field, key: key}]) }
+
+/// The draft after one structural command; a refusal leaves the caller's draft unchanged.
+export fn apply(draft: &Draft.MenuEditorDraft, action: Str) -> Result[Draft.MenuEditorDraft, Problem.Problem] {
+  let parts = action.split(":")
+  let verb = parts[0]
+  let sections = draft.sections
+  if verb == Limits.EDIT_ADD_SECTION && parts.length() == 1 {
+    if sections.length() >= Limits.SECTIONS_MAX { return Err(refused("sections", "menu.limit")) }
+    return Ok(Draft.MenuEditorDraft{..*draft, sections: sections.push(Draft.emptySection())})
+  }
+  let s = if parts.length() > 1 { Option.unwrapOr(parts[1].toInt(), -1) } else { -1 }
+  if s < 0 || s >= sections.length() { return Err(refused("sections", "menu.invalid")) }
+  let section = sections[s]
+  if parts.length() == 2 {
+    if verb == Limits.EDIT_REMOVE_SECTION { return Ok(Draft.MenuEditorDraft{..*draft, sections: without(&sections, s)}) }
+    if verb == Limits.EDIT_SECTION_UP { return Ok(Draft.MenuEditorDraft{..*draft, sections: swapped(&sections, s, s - 1)}) }
+    if verb == Limits.EDIT_SECTION_DOWN { return Ok(Draft.MenuEditorDraft{..*draft, sections: swapped(&sections, s, s + 1)}) }
+    if verb == Limits.EDIT_ADD_DISH {
+      var total = 0
+      for found in sections { total = total + found.items.length() }
+      if total >= Limits.ITEMS_MAX { return Err(refused("sections", "menu.limit")) }
+      return Ok(withSection(draft, s, Draft.MenuSectionInput{..section, items: section.items.push(Draft.emptyDish())}))
+    }
+    return Err(refused("sections", "menu.invalid"))
+  }
+  let i = if parts.length() == 3 { Option.unwrapOr(parts[2].toInt(), -1) } else { -1 }
+  if i < 0 || i >= section.items.length() { return Err(refused("sections", "menu.invalid")) }
+  if verb == Limits.EDIT_REMOVE_DISH { return Ok(withSection(draft, s, Draft.MenuSectionInput{..section, items: without(&section.items, i)})) }
+  if verb == Limits.EDIT_DISH_UP { return Ok(withSection(draft, s, Draft.MenuSectionInput{..section, items: swapped(&section.items, i, i - 1)})) }
+  if verb == Limits.EDIT_DISH_DOWN { return Ok(withSection(draft, s, Draft.MenuSectionInput{..section, items: swapped(&section.items, i, i + 1)})) }
+  Err(refused("sections", "menu.invalid"))
+}
+
+/// The draft with one section replaced.
+fn withSection(draft: &Draft.MenuEditorDraft, index: Int, section: Draft.MenuSectionInput) -> Draft.MenuEditorDraft {
+  var sections: Array[Draft.MenuSectionInput] = []
+  for position in 0..draft.sections.length() { sections = sections.push(if position == index { section } else { draft.sections[position] }) }
+  Draft.MenuEditorDraft{..*draft, sections: sections}
+}
+
+/// The entries without one position.
+fn without[T](entries: &Array[T], index: Int) -> Array[T] {
+  var kept: Array[T] = []
+  for position in 0..entries.length() { if position != index { kept = kept.push(entries[position]) } }
+  kept
+}
+
+/// The entries with two positions exchanged; an edge move answers them unchanged.
+fn swapped[T](entries: &Array[T], from: Int, to: Int) -> Array[T] {
+  if to < 0 || to >= entries.length() { return *entries }
+  var moved: Array[T] = []
+  for position in 0..entries.length() {
+    moved = moved.push(if position == from { entries[to] } else if position == to { entries[from] } else { entries[position] })
+  }
+  moved
+}

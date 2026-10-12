@@ -13,6 +13,9 @@ import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Media as Media
+import Domain.Menu as Menu
+import Domain.MenuDraft as MenuDraft
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Profile as Profile
@@ -28,6 +31,7 @@ import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
+import View.Components.PhotoHeader as PhotoHeader
 import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as Controls
 import View.Frame as Frame
@@ -39,6 +43,9 @@ import View.Pages.Event as EventPage
 import View.Pages.Home as HomePage
 import View.Pages.Legal as Legal
 import View.Pages.Map as MapPage
+import View.Pages.Media as MediaPage
+import View.Pages.Menu as MenuPage
+import View.Pages.MenuForm as MenuFormPage
 import View.Pages.Place as PlacePage
 import View.Pages.PlaceForm as PlaceFormPage
 import View.Pages.Profile as ProfilePage
@@ -112,12 +119,36 @@ fn main() -> Int {
   let refusedForm = Html.render(&PlaceFormPage.render(&en, &profiled, &PlaceFormPage.Creating, &Place.blank("comida"), &Some(Problem.Invalid([Problem.FieldError{field: "d.cuisine", key: "form.fact_required"}, Problem.FieldError{field: "hours", key: "form.hours_invalid"}]))))
   let board: Review.ReviewBoard = match Wire.decode(&Fixtures.json("review-board.json")) { case Ok(found) => found case Err(why) => panic("board fixture: " + Json.explainDecode(&why)) }
   let ownerBoard = Review.ReviewBoard{..board, canReview: false, isOwner: true}
-  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda, &ownerBoard, &Review.blank(), &None))
-  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}, &Review.ReviewBoard{..board, canReview: false}, &Review.blank(), &None))
+  let menus: Menu.MenuBoard = match Wire.decode(&Fixtures.json("menu-board.json")) { case Ok(found) => found case Err(why) => panic("menu fixture: " + Json.explainDecode(&why)) }
+  let noMedia = Media.empty()
+  let photo = |id: Str, kind: Str, kindType: Str, label: Str| Media.MediaFile{id: id, kind: kind, mediaType: kindType, label: label, bytes: 1000, url: "https://test.supabase.co/storage/v1/object/public/place-media/p/" + id}
+  let pictured = Media.Gallery{isOwner: true, files: [photo("c1", "cover", "image/webp", ""), photo("g1", "gallery", "image/webp", ""), photo("m1", "menu", "application/pdf", "<b>Lunch</b>"), photo("m2", "menu", "image/jpeg", "")]}
+  let menuReader = Html.render(&MenuPage.render(&en, &fonda, &menus, &noMedia))
+  let spanishMenu = Html.render(&MenuPage.render(&es, &fonda, &menus, &noMedia))
+  let privateMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, status: "draft"})}, &noMedia))
+  let emptyMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: []}, &noMedia))
+  let unsafeMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, menus: menus.menus.map(|menu: Menu.MenuListing| Menu.MenuListing{..menu, name: "<script>unsafe</script>"})}, &noMedia))
+  let menuEntry = H.render(&MenuPage.link(&en, fonda.card.slug, &Some(menus)))
+  let unsupportedMenu = H.render(&MenuPage.link(&en, fonda.card.slug, &Some(Menu.MenuBoard{..menus, supported: false, menus: []})))
+  let ownerMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true}, &noMedia))
+  let picturedMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &pictured))
+  let picturedPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &ownerBoard, &None, &pictured, &Review.blank(), &None))
+  let bareMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &noMedia))
+  let mediaManager = Html.render(&MediaPage.render(&en, &fonda, &pictured, true))
+  let photoOnlyManager = Html.render(&MediaPage.render(&es, &fonda, &Media.Gallery{isOwner: true, files: []}, false))
+  let guestEdit = !menuReader.contains("/menu/edit")
+  let editing = MenuDraft.MenuEditing{draft: MenuDraft.fromListing(&menus.menus[0]), menuId: Some("menu-test"), revision: 2}
+  let typed = MenuDraft.MenuEditing{..editing, draft: MenuDraft.MenuEditorDraft{..editing.draft, sections: [MenuDraft.MenuSectionInput{..editing.draft.sections[0], items: [MenuDraft.MenuDishInput{..editing.draft.sections[0].items[0], name: "<b>Typed</b>", price: "doce"}]}]}}
+  let menuEditor = Html.render(&MenuFormPage.render(&en, &fonda, &editing, &None, false))
+  let refusedEditor = Html.render(&MenuFormPage.render(&en, &fonda, &typed, &Some(Problem.Invalid([Problem.FieldError{field: "s.0.i.0.price", key: "menu.price_invalid"}])), false))
+  let conflictEditor = Html.render(&MenuFormPage.render(&es, &fonda, &editing, &Some(Problem.Refused("menu_changed")), true))
+  let newEditor = Html.render(&MenuFormPage.render(&en, &fonda, &MenuDraft.MenuEditing{draft: MenuDraft.blank("en"), menuId: None, revision: 0}, &None, false))
+  let placePage = Html.render(&PlacePage.render(&mondayNoon, &profiled, &fonda, &ownerBoard, &None, &noMedia, &Review.blank(), &None))
+  let guestPlace = Html.render(&PlacePage.render(&es, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: false, isOwner: false}}, &Review.ReviewBoard{..board, canReview: false}, &None, &noMedia, &Review.blank(), &None))
   let member: Profile.MyProfile = match Wire.decode(&Fixtures.json("my-profile.json")) { case Ok(found) => found case Err(_) => panic("profile fixture") }
   let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
-  let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &Review.blank(), &None))
-  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
+  let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.blank(), &None))
+  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
@@ -131,6 +162,9 @@ fn main() -> Int {
   let curatedEs = Html.render(&EventPage.render(&es, &curated, &None))
   let curatedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true, isOrganizer: true}}, &None))
   let curatedMember = Html.render(&EventPage.render(&en, &Event.Detail{..curated, viewer: Event.Viewer{..curated.viewer, signedIn: true}}, &None))
+  let organizerReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true, isOrganizer: true}}, &None))
+  let memberReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
+  let cancelledReactions = Html.render(&EventPage.render(&en, &Event.Detail{..detail, card: Event.Card{..detail.card, status: "cancelled"}, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
   let curatedEnded = Html.render(&EventPage.render(&en, &Event.Detail{..curated, card: Event.Card{..curated.card, status: "ended"}}, &None))
   let curatedCancelled = Html.render(&EventPage.render(&en, &Event.Detail{..curated, card: Event.Card{..curated.card, status: "cancelled"}}, &None))
   let badSource = Event.Detail{..curated, sourceUrl: Some("javascript:alert(1)")}
@@ -140,6 +174,31 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
   let checks = Test.suite("Presentation", &[
+      Test.that("menu renders distinct unknown, free and paid facts", menuReader.contains("Ask for price") && menuReader.contains("Free") && menuReader.contains("$12.50")),
+      Test.that("menu unavailable and declared allergens are readable", menuReader.contains("Currently unavailable") && menuReader.contains("Declared allergens: milk")),
+      Test.that("menu labels respect Spanish interface language", spanishMenu.contains("Precio por confirmar") && spanishMenu.contains("No disponible actualmente")),
+      Test.that("owner drafts carry status and noindex", privateMenu.contains("Draft · only you") && privateMenu.contains("noindex")),
+      Test.that("empty menu explains its absence and is not indexed", emptyMenu.contains("The menu is not available yet") && emptyMenu.contains("noindex")),
+      Test.that("menu titles are escaped", !unsafeMenu.contains("<script>unsafe</script>") && unsafeMenu.contains("&lt;script&gt;")),
+      Test.that("an existing cover stays first when only further photos are uploaded", PhotoHeader.photosOf(&Media.Gallery{isOwner: false, files: [photo("g1", "gallery", "image/webp", "")]}, &Some("/assets/img/curated.webp")) == ["/assets/img/curated.webp", "https://test.supabase.co/storage/v1/object/public/place-media/p/g1"] && PhotoHeader.photosOf(&noMedia, &None).isEmpty()),
+      Test.that("uploaded photos rotate in the shared header, cover first", picturedPlace.contains("data-feature=\"hero-carousel\"") && picturedPlace.indexOf("place-media/p/c1") < picturedPlace.indexOf("place-media/p/g1") && picturedPlace.contains("Photo 2 of 2")),
+      Test.that("without uploads the header shows the default image alone, without controls", bareMenu.contains("photo-header") && !bareMenu.contains("hero-dot")),
+      Test.that("menu documents open from storage, escaped, with a PDF marker", picturedMenu.contains("place-media/p/m1") && picturedMenu.contains("noopener noreferrer") && picturedMenu.contains("&lt;b&gt;Lunch&lt;/b&gt;") && picturedMenu.contains(">PDF<") && picturedMenu.contains("Menu photo")),
+      Test.that("owner media page offers script uploads with removal per file and is not indexed", mediaManager.contains("data-feature=\"media-upload\"") && mediaManager.contains("/media/g1/remove") && mediaManager.contains("application/pdf") && mediaManager.contains("noindex")),
+      Test.that("categories without menus get no menu files and the default is called an illustration", !photoOnlyManager.contains("application/pdf") && photoOnlyManager.contains("No es una foto de tu lugar")),
+      Test.that("owners reach photos and menu files from the place and menu pages", picturedPlace.contains("/media\"") && ownerMenu.contains("/media\"") && !menuReader.contains("/media\"")),
+      Test.that("guests are invited to sign in to like", singlePage.contains("/signin?return=/e/" + detail.card.slug) && !singlePage.contains("data-feature=\"react\"")),
+      Test.that("members can like; organizers and cancelled activities show only the count", memberReactions.contains("data-feature=\"react\"") && !organizerReactions.contains("data-feature=\"react\"") && !cancelledReactions.contains("data-feature=\"react\"")),
+      Test.that("menu link follows database capability", menuEntry.contains("/menu") && unsupportedMenu.isEmpty()),
+      Test.that("owners see new and edit menu links; guests do not", ownerMenu.contains("/menu/edit?menu=menu-test") && ownerMenu.contains("Add a menu") && guestEdit),
+      Test.that("menu editor keeps identity, revision and stable IDs hidden", menuEditor.contains("name=\"revision\" value=\"2\"") && menuEditor.contains("name=\"menuId\" value=\"menu-test\"") && menuEditor.contains("name=\"s.0.i.1.id\" value=\"free-test\"")),
+      Test.that("menu editor keeps unknown facts distinct from free", menuEditor.contains("id=\"f-s.0.i.0.price\" value=\"\"") && menuEditor.contains("id=\"f-s.0.i.1.price\" value=\"0\"") && menuEditor.contains("Not declared")),
+      Test.that("menu editor saves on Enter and edits structure without scripts", menuEditor.indexOf("value=\"save\"") < menuEditor.indexOf("value=\"add-section\"") && menuEditor.contains("value=\"dish-down:0:0\"") && menuEditor.contains("value=\"remove-section:0\"") && !menuEditor.contains("<script>")),
+      Test.that("refused editor retains escaped input beside its error", refusedEditor.contains("value=\"doce\"") && refusedEditor.contains("&lt;b&gt;Typed&lt;/b&gt;") && refusedEditor.contains("up to two decimal places")),
+      Test.that("conflict keeps the submitted revision and offers the current version", conflictEditor.contains("name=\"revision\" value=\"2\"") && conflictEditor.contains("/menu/edit?menu=menu-test") && conflictEditor.contains("Conservamos tu borrador")),
+      Test.that("new menu editor has no identity and is not indexed", newEditor.contains("New menu") && newEditor.contains("name=\"menuId\" value=\"\"") && newEditor.contains("noindex")),
+      Test.that("menu section links target stable IDs", menuReader.contains("href=\"#section-section-test\"") && menuReader.contains("id=\"section-section-test\"")),
+
       Test.that("reviews show the average, breakdown and each review", memberPlace.contains("Reviews") && memberPlace.contains("2 reviews") && memberPlace.contains("width:50%") && memberPlace.contains("Muy buen mofongo") && memberPlace.contains("Visited September 2026")),
       Test.that("review text is escaped", !memberPlace.contains("<script>x</script>") && memberPlace.contains("&lt;script&gt;")),
       Test.that("a member can rate, write and report", memberPlace.contains("name=\"rating\"") && memberPlace.contains("action=\"/lugar/la-fonda-4f1c7a/review\"") && memberPlace.contains("/reviews/11111111-1111-4111-8111-111111111111/report")),

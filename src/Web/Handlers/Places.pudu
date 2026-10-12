@@ -10,6 +10,7 @@ import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Media as Media
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Review as Review
@@ -71,11 +72,14 @@ fn page(app: &Assembly.App, visitor: &Context.Visitor, draft: &Review.ReviewDraf
     case Ok(detail) => {
       // Reviews are part of the page, but a place stays readable if they cannot be read.
       let board = Result.unwrapOr(Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: detail.card.id, after: Serve.query(visitor, "resenas")})), EMPTY_BOARD)
+      let menus = Result.toOption(Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)))
+      // Photographs are optional: without them the page shows the category's default image.
+      let gallery = Result.unwrapOr(Serve.ask(app, &app.kinds.placeMedia, Serve.visit(visitor, detail.card.id)), Media.empty())
       let status = match problem {
         case Some(found) => Problem.status(&found)
         case None => 200
       }
-      Respond.page(status, &PlacePage.render(&Context.frame(app, visitor), &catalog, &detail, &board, draft, &problem))
+      Respond.page(status, &PlacePage.render(&Context.frame(app, visitor), &catalog, &detail, &board, &menus, &gallery, draft, &problem))
     }
     case Err(found) => Respond.problem(app, visitor, &found)
   }

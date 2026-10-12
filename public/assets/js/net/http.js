@@ -1,10 +1,11 @@
-import { REQUESTED_WITH } from '../constants/config.js?v=52';
+import { REQUESTED_WITH } from '../constants/config.js?v=56';
 
 export class RequestFailed extends Error {
-  constructor(status, code) {
+  constructor(status, code, key) {
     super(code || `HTTP ${status}`);
     this.status = status;
     this.code = code;
+    this.key = key;
   }
 }
 
@@ -18,7 +19,7 @@ async function send(url, init) {
   headers.set('accept', 'application/json');
   const response = await fetch(url, { credentials: 'same-origin', ...init, headers });
   const body = response.headers.get('content-type')?.includes('json') ? await response.json() : null;
-  if (!response.ok) throw new RequestFailed(response.status, body?.error);
+  if (!response.ok) throw new RequestFailed(response.status, body?.error, body?.message);
   return body;
 }
 

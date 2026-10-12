@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-const scope = { MAP: {minViewportPx:8,searchBounds:[[-67.5,17.5],[-65.1,18.7]],maxRadiusM:200000}, distanceM:(a,b)=>Math.hypot(a.lat-b.lat,a.lng-b.lng)*111320 };
+const scope = { MAP: {minViewportPx:8,searchBounds:[[-67.5,17.5],[-65.1,18.7]],maxRadiusM:200000,gridMaxZoom:18,gridMinDeg:0.002,speedZoom:[[2.5,15],[9,14],[22,13],[Infinity,12]],speedMinSeconds:3,speedMargin:0.2}, distanceM:(a,b)=>Math.hypot(a.lat-b.lat,a.lng-b.lng)*111320 };
 const source=readFileSync(new URL('../public/assets/js/features/mapViewport.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
-vm.runInNewContext(source+'\nthis.api={visiblePins,viewportQuery,viewportBounds};',scope);
+vm.runInNewContext(source+'\nthis.api={visiblePins,viewportQuery,viewportBounds,snapArea,speedZoom,speedBetween};',scope);
 const pins=[{slug:'a',lng:10,lat:20},{slug:'b',lng:110,lat:20},{slug:'c',lng:10,lat:90},{slug:'d',lng:100,lat:70}];
 const project=([x,y])=>({x,y});
 assert.deepEqual(Array.from(scope.api.visiblePins(pins,project,100,100,30),p=>p.slug),['a','d']);
@@ -21,3 +21,25 @@ assert.equal(scope.api.viewportBounds(projected,0,0),null,'an unsized canvas sen
 assert.equal(scope.api.viewportBounds(projected,100,100,100).south,18,'a fully covered canvas queries the whole canvas');
 assert.equal(scope.api.viewportBounds({unproject:()=>({lng:-67.8,lat:19.36})},100,100),null,'a collapsed camera sends no query');
 assert.equal(camera.west,-67);assert.equal(camera.east,-66);assert.equal(camera.north,19);assert.equal(camera.south,18.3,'hidden sheet pixels excluded from server query');
+
+const walk=(dx)=>({west:-66.0712+dx,south:18.4501,east:-66.0631+dx,north:18.4612});
+const first=scope.api.snapArea(walk(0),15.4), moved=scope.api.snapArea(walk(0.0004),15.6);
+assert.equal(JSON.stringify(first),JSON.stringify(moved),'a short walk at one zoom level asks for the same cached area');
+const raw=walk(0);
+assert.ok(first.west<=raw.west&&first.south<=raw.south&&first.east>=raw.east&&first.north>=raw.north,'snapping only widens the camera');
+const coarse=scope.api.snapArea(walk(0),11);
+assert.ok(coarse.east-coarse.west>first.east-first.west,'wider zoom uses a coarser grid');
+assert.equal(Object.values(first).every((value)=>String(value).split('.')[1]?.length<=5),true,'grid edges have no floating-point noise');
+const edge=scope.api.snapArea({west:179.999,south:84.999,east:180,north:85},18);
+assert.ok(edge.east<=180&&edge.north<=85&&edge.west<edge.east&&edge.south<edge.north,'grid stays inside valid coordinates');
+assert.equal(scope.api.speedZoom(NaN,13.5),13.5,'unknown speed keeps the zoom');
+assert.equal(JSON.stringify([1.2,5,15,30].map((speed)=>scope.api.speedZoom(speed,10))),'[15,14,13,12]','walking, bus, train and highway zoom out progressively');
+assert.equal(JSON.stringify([2.4,2.6,2.9,2.2].map((speed)=>scope.api.speedZoom(speed,15))),'[15,15,15,15]','speeds just past a band edge keep the zoom');
+assert.equal(scope.api.speedZoom(3.2,15),14,'leaving the band by the margin changes the zoom');
+assert.equal(scope.api.speedZoom(2.1,14),14,'slowing slightly below the edge keeps the wider zoom');
+assert.equal(scope.api.speedZoom(1.5,14),15,'clearly walking again returns to street level');
+const at=(lat,lng,seconds,accuracy=5)=>({lat,lng,accuracy,at:seconds*1000});
+assert.ok(Number.isNaN(scope.api.speedBetween(at(18.45,-66.07,0),at(18.4501,-66.07,1))),'readings too close in time give no speed');
+assert.equal(scope.api.speedBetween(at(18.45,-66.07,0,50),at(18.4502,-66.07,10,50)),0,'movement inside the accuracy circle is standing still');
+assert.ok(Math.abs(scope.api.speedBetween(at(18.45,-66.07,0),at(18.4509,-66.07,10))-10)<0.5,'about ten metres per second on a train');
+console.log('PASS: grid-aligned shared areas, outward-only snapping, coordinate clamps and speed-aware following zoom');

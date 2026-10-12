@@ -16,6 +16,9 @@ tags: [module, constants]
 
 Every failure code the database API or the server raises, and the translation key shown for it.
 
+## Menu save Grill Log
+Resolved: menu_changed has a named server constant and a conflict message that preserves the user's draft rather than overwriting newer content. Menu invalid/empty/unsupported/limit codes map to bilingual actionable messages. No database error body is exposed.
+
 ## Interface
 
 `MESSAGES: Map[Str, Str]` code → key; one `Str` per code the server raises itself.
@@ -48,3 +51,6 @@ SHALLOW by design: a table of names. Deletion test: the values scatter as litera
 
 ## Curated publication Grill Log · #42
 Resolved: external_booking is a stable refusal mapped to the bilingual official-source explanation.
+
+## Owner editor Grill Log · #69
+Resolved: `MENU_UNSUPPORTED` and `MENU_LIMIT` name the refusals the editor raises before a new menu reaches the database; both map to existing menu messages.

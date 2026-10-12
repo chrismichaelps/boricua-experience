@@ -1,0 +1,62 @@
+/** @Domain.Menu.Menus — structured menus and owner-editable documents */
+module Domain.Menu
+
+import Std.Json as Json
+
+/** @Domain.Menu.MenuItem — a dish with declared facts and nullable price */
+export type MenuItem = {
+  id: Str,
+  name: Str,
+  description: Str,
+  @json("price_cents") priceCents: Option[Int],
+  @json("price_note") priceNote: Str,
+  available: Option[Bool],
+  dietary: Array[Str],
+  allergens: Option[Array[Str]]
+} derives Json.Decode
+
+/** @Domain.Menu.MenuSection — an ordered group of menu items */
+export type MenuSection = { id: Str, name: Str, items: Array[MenuItem] } derives Json.Decode
+
+/** @Domain.Menu.MenuListing — a saved menu with its edit revision */
+export type MenuListing = {
+  id: Str,
+  name: Str,
+  description: Str,
+  locale: Str,
+  status: Str,
+  revision: Int,
+  @json("updated_at") updatedAt: Str,
+  sections: Array[MenuSection]
+} derives Json.Decode
+
+/** @Domain.Menu.MenuBoard — menus visible to the current viewer */
+export type MenuBoard = {
+  supported: Bool,
+  @json("is_owner") isOwner: Bool,
+  menus: Array[MenuListing]
+} derives Json.Decode
+
+/** @Domain.Menu.MenuItemDraft — editable dish facts, with an ID only for an existing item */
+export type MenuItemDraft = {
+  id: Option[Str],
+  name: Str,
+  description: Str,
+  @json("price_cents") priceCents: Option[Int],
+  @json("price_note") priceNote: Str,
+  available: Option[Bool],
+  dietary: Array[Str],
+  allergens: Option[Array[Str]]
+} derives Json.Encode
+
+/** @Domain.Menu.MenuSectionDraft — an editable ordered section */
+export type MenuSectionDraft = { id: Option[Str], name: Str, items: Array[MenuItemDraft] } derives Json.Encode
+
+/** @Domain.Menu.MenuDocument — the complete editable menu, without server-owned fields */
+export type MenuDocument = {
+  name: Str,
+  description: Str,
+  locale: Str,
+  status: Str,
+  sections: Array[MenuSectionDraft]
+} derives Json.Encode

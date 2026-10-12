@@ -1,0 +1,132 @@
+/** @Web.Handlers.Menus.Reader — a dedicated place menu page and its owner editor */
+module Web.Handlers.Menus
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import Std.Result as Result
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Codes as Codes
+import Constants.Menus as Limits
+import Constants.Routes as Routes
+import Domain.Locale as Locale
+import Domain.Media as Media
+import Domain.Menu as Menu
+import Domain.MenuDraft as Draft
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Session as Session
+import View.Pages.Menu as MenuPage
+import View.Pages.MenuForm as MenuForm
+import Web.Context as Context
+import Web.MenuFields as Fields
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The dedicated menu reader and owner editor routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.PLACE_MENU, Serve.page(app, |visitor: Context.Visitor| reader(&held, &visitor))),
+    Route.get(Routes.PLACE_MENU_EDIT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| editor(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_MENU_EDIT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| submit(&held, &visitor, &session)))
+  ]
+}
+
+/// Reads the parent and its menus through the mediator's normal visibility boundary.
+fn reader(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let detail = match Serve.ask(app, &app.kinds.place, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)) {
+    case Ok(board) => if board.supported || (board.isOwner && !board.menus.isEmpty()) {
+      let gallery = Result.unwrapOr(Serve.ask(app, &app.kinds.placeMedia, Serve.visit(visitor, detail.card.id)), Media.empty())
+      Respond.page(200, &MenuPage.render(&Context.frame(app, visitor), &detail, &board, &gallery))
+    } else { Respond.problem(app, visitor, &Problem.Missing) }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The place the member may edit and its owner board, verified before any menu is selected.
+fn owned(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Result[(Place.Detail, Menu.MenuBoard), Problem.Problem] {
+  let (detail, _) = Serve.ask(app, &app.kinds.editablePlace, Serve.signed(session, Serve.param(visitor, "slug"))) ?
+  let board = Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)) ?
+  if board.isOwner { Ok((detail, board)) } else { Err(Problem.Forbidden) }
+}
+
+/// The menu of the board with this identifier.
+fn menuOf(board: &Menu.MenuBoard, id: Str) -> Option[Menu.MenuListing] {
+  for menu in board.menus { if menu.id == id.toLower() { return Some(menu) } }
+  None
+}
+
+/// The editor of the menu the query names, or of a new menu while the category and the limit allow one.
+fn editor(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let (detail, board) = match owned(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let frame = Context.frame(app, visitor)
+  let wanted = Serve.query(visitor, "menu")
+  let editing = if wanted.isEmpty() {
+    if !board.supported { return Respond.problem(app, visitor, &Problem.Refused(Codes.MENU_UNSUPPORTED)) }
+    if board.menus.length() >= Limits.MENUS_MAX { return Respond.problem(app, visitor, &Problem.Refused(Codes.MENU_LIMIT)) }
+    Draft.MenuEditing{draft: Draft.blank(Locale.code(&frame.locale)), menuId: None, revision: 0}
+  } else {
+    match menuOf(&board, wanted) {
+      case Some(menu) => Draft.MenuEditing{draft: Draft.fromListing(&menu), menuId: Some(menu.id), revision: menu.revision}
+      case None => { return Respond.problem(app, visitor, &Problem.Missing) }
+    }
+  }
+  Respond.page(200, &MenuForm.render(&frame, &detail, &editing, &None, false))
+}
+
+/// Applies a structural command to the retained draft, or conditionally saves it; only saving writes.
+fn submit(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  // Authorization comes first, so a request for another place never learns how its fields were judged.
+  let (detail, board) = match owned(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let posted = match Fields.decode(&Serve.fields(visitor)) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let shown = Context.resolve(app, &visitor.request, true)
+  let editing = posted.editing
+  match editing.menuId {
+    case Some(id) => if menuOf(&board, id) == None { return Respond.problem(app, visitor, &Problem.Missing) }
+    case None => if !board.supported { return form(app, &shown, &detail, &editing, Some(Problem.Refused(Codes.MENU_UNSUPPORTED))) }
+  }
+  if posted.action != Limits.EDIT_SAVE {
+    return match Fields.apply(&editing.draft, posted.action) {
+      case Ok(draft) => form(app, &shown, &detail, &Draft.MenuEditing{..editing, draft: draft}, None)
+      case Err(problem) => form(app, &shown, &detail, &editing, Some(problem))
+    }
+  }
+  match Serve.ask(app, &app.kinds.saveMenu, Serve.signed(session, Messages.MenuSaving{placeId: detail.card.id, editing: editing})) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + detail.card.slug + "/menu"), "flash.menu_saved")
+    case Err(problem) => match problem {
+      case Problem.Invalid(_) => form(app, &shown, &detail, &editing, Some(problem))
+      case Problem.Refused(_) => form(app, &shown, &detail, &editing, Some(problem))
+      case Problem.Throttled => form(app, &shown, &detail, &editing, Some(problem))
+      case Problem.Unavailable(_) => form(app, &shown, &detail, &editing, Some(problem))
+      case _ => Respond.problem(app, visitor, &problem)
+    }
+  }
+}
+
+/// The editor shown again with everything the owner submitted, including the revision it was read at.
+fn form(app: &Assembly.App, visitor: &Context.Visitor, detail: &Place.Detail, editing: &Draft.MenuEditing, problem: Option[Problem.Problem]) -> Http.Response {
+  let status = match problem {
+    case Some(found) => Problem.status(&found)
+    case None => 200
+  }
+  let conflict = match problem {
+    case Some(Problem.Refused(code)) => code == Codes.MENU_CHANGED
+    case _ => false
+  }
+  Respond.page(status, &MenuForm.render(&Context.frame(app, visitor), detail, editing, &problem, conflict))
+}

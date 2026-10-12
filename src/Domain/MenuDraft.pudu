@@ -1,0 +1,49 @@
+/** @Domain.MenuDraft.Input — raw menu form values retained on refusal */
+module Domain.MenuDraft
+
+import Std.Option as Option
+import Domain.Menu as Menu
+import Utils.Money as Money
+
+/** @Domain.MenuDraft.MenuDishInput — raw dish values, including unknown declarations */
+export type MenuDishInput = {
+  id: Str,
+  name: Str,
+  description: Str,
+  price: Str,
+  priceNote: Str,
+  available: Str,
+  dietary: Array[Str],
+  allergensKnown: Bool,
+  allergens: Array[Str]
+}
+
+/** @Domain.MenuDraft.MenuSectionInput — a section of editable dishes */
+export type MenuSectionInput = { id: Str, name: Str, items: Array[MenuDishInput] }
+
+/** @Domain.MenuDraft.MenuEditorDraft — the complete menu as entered */
+export type MenuEditorDraft = { name: Str, description: Str, locale: Str, status: Str, sections: Array[MenuSectionInput] }
+
+/** @Domain.MenuDraft.MenuEditing — a draft with the menu identity and revision it was read at */
+export type MenuEditing = { draft: MenuEditorDraft, menuId: Option[Str], revision: Int }
+
+/// A new dish has unknown price, availability and allergen declaration.
+export fn emptyDish() -> MenuDishInput {
+  MenuDishInput{id: "", name: "", description: "", price: "", priceNote: "", available: "", dietary: [], allergensKnown: false, allergens: []}
+}
+
+/// A new section has no invented name or dishes.
+export fn emptySection() -> MenuSectionInput { MenuSectionInput{id: "", name: "", items: []} }
+
+/// A new unpublished menu, with its selected content language.
+export fn blank(locale: Str) -> MenuEditorDraft { MenuEditorDraft{name: "", description: "", locale: locale, status: "draft", sections: []} }
+
+/// A saved menu refills the editor without losing stable IDs or unknown facts.
+export fn fromListing(menu: &Menu.MenuListing) -> MenuEditorDraft {
+  MenuEditorDraft{name: menu.name, description: menu.description, locale: menu.locale, status: menu.status,
+    sections: menu.sections.map(|section: Menu.MenuSection| MenuSectionInput{id: section.id, name: section.name,
+        items: section.items.map(|item: Menu.MenuItem| MenuDishInput{id: item.id, name: item.name, description: item.description,
+            price: Option.unwrapOr(Option.map(item.priceCents, |amount: Int| Money.dollars(amount).replace("$", "").replace(",", "")), ""),
+            priceNote: item.priceNote, available: match item.available { case Some(true) => "yes" case Some(false) => "no" case None => "" },
+            dietary: item.dietary, allergensKnown: item.allergens != None, allergens: Option.unwrapOr(item.allergens, []) }) }) }
+}

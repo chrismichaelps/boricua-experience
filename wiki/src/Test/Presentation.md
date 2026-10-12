@@ -88,3 +88,6 @@ Add output regressions for confirmation, accessible password controls, noindex s
 
 ## Unknown event facts Grill Log · #51
 Resolved: nullable prices/end retain explicit unknown state; known free/paid and dates regressions stay covered. No1970 null-date coercion. Unknown schedule24-hour discovery cutoff is separate from actual end. Boundary, malformed input, bilingual output and provider projections need focused tests.
+
+## Menu reader Grill Log · #69
+Resolved: Render dedicated menus and parent-page links from fictional fixtures; verify escaping, translated unknown/free/paid labels, unavailable state, owner-only status labels and noindex/empty behavior.

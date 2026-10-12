@@ -55,3 +55,6 @@ MAP.clusterRadius is 56 screen pixels; overview clustering stops at MAP.clusterM
 
 ## Publishing recovery Grill Log
 Resolved: GEO supplies high-accuracy12s and balanced10s requests, total25s deadline and100m approximate-warning threshold.
+
+## Moving nearby and 3D Grill Log · #78
+Resolved: grid, speed-zoom bands, 3D pitch and building zoom, and the 3D preference key are configuration values.

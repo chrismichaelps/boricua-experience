@@ -15,6 +15,7 @@ import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Event as Event
+import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Search as Search
 import Utils.Cookie as Cookie
@@ -232,7 +233,12 @@ fn viewport(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   if box.north < App.BOUNDS_SOUTH || box.south > App.BOUNDS_NORTH || box.east < App.BOUNDS_WEST || box.west > App.BOUNDS_EAST { return Respond.json(200, &Json.object(&[("items", Json.list(&[])), ("limited", Json.Boolean(false))])) }
   let filters = Search.Filters{..filtersOf(visitor), viewport: Some(box), after: ""}
   match Serve.ask(app, &app.kinds.pins, filters) {
-    case Ok(cards) => Respond.json(200, &Json.object(&[("items", MapPage.pinsValue(&Context.frame(app, visitor), &cards.items)), ("limited", Json.Boolean(cards.limited))]))
+    case Ok(cards) => {
+      let frame = Context.frame(app, visitor)
+      let answer = Respond.json(200, &Json.object(&[("items", MapPage.pinsValue(&frame, &cards.items)), ("limited", Json.Boolean(cards.limited))]))
+      // Pins depend only on the address once it names the language they are rendered in.
+      if Serve.query(visitor, "hl") == Locale.code(&frame.locale) { Http.Response{..answer, headers: answer.headers.push(("cache-control", HttpConstants.CACHE_SHARED_PINS))} } else { answer }
+    }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

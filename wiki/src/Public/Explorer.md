@@ -96,3 +96,6 @@ Resolved: nearby lookup stays private; initial acquisition uses the bounded accu
 
 ## Nullable schedule rendering Grill Log · #51
 Resolved: refreshed sheet data-ends normalizes null to empty; LocalTime treats malformed ends as unknown. Organizing activity final-state text uses archived when actual end unknown, retaining cancellation precedence. Test actual date renderer with null-end sheet data and bilingual archived output.
+
+## Moving nearby and 3D Grill Log · #78
+Resolved: area requests are grid-aligned and carry `hl`; a hidden tab defers its refresh until shown; following zoom adapts to speed; the 3D switch is wired through [[src/Public/Map3d]]. See [[decisions/ADR-0011-moving-nearby-and-3d-map]].

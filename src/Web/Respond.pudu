@@ -138,10 +138,17 @@ export fn finish(app: &Assembly.App, visitor: &Context.Visitor, response: Http.R
   let personal = visitor.session != None || Http.hasHeader(&finished.headers, "set-cookie") || !visitor.flash.isEmpty()
   let cacheable = finished.status.code == 200 && visitor.request.message.method == Http.Get && !personal
   var headers = finished.headers.concat(HttpConstants.SECURITY_HEADERS)
-  if !Http.hasHeader(&headers, "cache-control") {
+  let chosen = Http.hasHeader(&headers, "cache-control")
+  let cookied = Http.hasHeader(&finished.headers, "set-cookie")
+  if !chosen {
     headers = headers.push(("cache-control", if cacheable { HttpConstants.CACHE_GUEST_PAGE } else { HttpConstants.CACHE_PRIVATE }))
+  } else if cookied {
+    // A response that sets a cookie is never stored by a shared cache, whatever its handler chose.
+    headers = Http.setHeader(&headers, "cache-control", HttpConstants.CACHE_PRIVATE)
   }
-  if !cacheable { headers = headers.push(("vary", "cookie")) }
+  // A handler's own public policy covers a body that is the same for everyone; varying it by cookie
+  // would split the shared cache per visitor.
+  if !cacheable && (!chosen || cookied) { headers = headers.push(("vary", "cookie")) }
   Http.Response{..finished, headers: headers}
 }
 

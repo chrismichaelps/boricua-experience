@@ -1,0 +1,49 @@
+/** @View.Components.PhotoHeader.Carousel — a listing's photographs in the home carousel's container */
+module View.Components.PhotoHeader
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Domain.Media as Media
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The header photographs: the uploaded cover, else the place's existing cover address, then the
+/// further photographs. Empty means the category's default image is shown instead.
+export fn photosOf(gallery: &Media.Gallery, cover: &Option[Str]) -> Array[Str] {
+  let uploaded = Media.ofKind(gallery, Media.COVER).map(|file: Media.MediaFile| file.url)
+  let first = if !uploaded.isEmpty() { uploaded } else {
+    match cover {
+      case Some(address) => [address]
+      case None => []
+    }
+  }
+  first.concat(Media.ofKind(gallery, Media.GALLERY).map(|file: Media.MediaFile| file.url))
+}
+
+/// The owner's photographs in the same rotating container as the home page, first photograph usable
+/// without scripts. With no photograph the category's default image is shown alone, as presentation
+/// only: it never stands for the venue itself.
+export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, caption: Str, href: Str, modifier: Str) -> H.Node {
+  let shown = if photos.isEmpty() { [fallback] } else { *photos }
+  var slides: Array[H.Node] = []
+  var dots: Array[H.Node] = []
+  for index in 0..shown.length() {
+    slides = slides.push(H.img().class(if index == 0 { "hero-slide is-current" } else { "hero-slide" }).src(shown[index]).alt("")
+        .at("loading", if index == 0 { "eager" } else { "lazy" }).at("decoding", "async").at("fetchpriority", if index == 0 { "high" } else { "low" })
+        .at("width", "1280").at("height", "720").data("place", caption).data("href", href))
+    dots = dots.push(H.button().kind("button").class("hero-dot").data("slide", show(index)).label(Frame.tf(frame, "media.slide", &[("number", show(index + 1)), ("total", show(shown.length()))])).at("aria-pressed", if index == 0 { "true" } else { "false" }).holding([H.span().at("aria-hidden", "true")]))
+  }
+  H.div().class("hero-frame photo-header " + modifier).data("feature", "hero-carousel").role("region").label(Frame.tf(frame, "media.photos_of", &[("name", caption)])).at("aria-roledescription", Frame.t(frame, "home.carousel_role")).holding([
+      H.div().class("hero-photos").at("aria-hidden", "true").holding(slides),
+      H.div().class("hero-bottom").holding([
+          H.a().class("hero-place").data("carousel", "place").href(href).says(caption),
+          if shown.length() < 2 { H.nothing() } else { H.div().class("hero-controls").holding([
+                H.div().class("hero-dots").role("group").label(Frame.tf(frame, "media.photos_of", &[("name", caption)])).holding(dots),
+                H.button().kind("button").class("hero-pause").data("carousel", "pause").data("pause-label", Frame.t(frame, "home.pause_slides")).data("play-label", Frame.t(frame, "home.play_slides")).label(Frame.t(frame, "home.pause_slides")).holding([
+                    H.span().class("carousel-pause-symbol").at("aria-hidden", "true").holding([Icons.sized("pause", 16)]),
+                    H.span().class("carousel-play-symbol").at("aria-hidden", "true").says("▶")
+                  ])
+              ]) }
+        ])
+    ])
+}

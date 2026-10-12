@@ -7,7 +7,7 @@ export const ENDPOINTS = {
   locationStop: '/api/location/stop',
 };
 export const MAP = { minViewportPx: 8,
-  style: '/assets/map/style.json?v=52',
+  style: '/assets/map/style.json?v=56',
   script: '/assets/vendor/maplibre-gl.js',
   stylesheet: '/assets/vendor/maplibre-gl.css',
   center: [-66.4, 18.22],
@@ -23,6 +23,14 @@ export const MAP = { minViewportPx: 8,
   searchBounds: [[-67.5, 17.5], [-65.1, 18.7]],
   clusterRadius: 56,
   clusterMaxZoom: 13,
+  gridMaxZoom: 18,
+  gridMinDeg: 0.002,
+  // [below metres per second, zoom]: walking, cycling or bus, train or car, highway.
+  speedZoom: [[2.5, 15], [9, 14], [22, 13], [Infinity, 12]],
+  speedMinSeconds: 3,
+  speedMargin: 0.2,
+  pitch3d: 50,
+  buildingsZoom: 15.5,
 };
 export const LIVE = {
   minIntervalMs: 15000,
@@ -32,7 +40,7 @@ export const LIVE = {
   watch: { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 },
 };
 export const SUGGEST = { minLength: 2, delayMs: 180 };
-export const STORAGE = { liveKey: 'bx-live', unreadKey: 'bx-unread' };
+export const STORAGE = { liveKey: 'bx-live', unreadKey: 'bx-unread', map3dKey: 'bx-map-3d' };
 
 export const CAROUSEL = { intervalMs: 6000 };
 

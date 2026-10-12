@@ -1,5 +1,23 @@
 # Changelog
 
+- 2026-10-12 · release 0.4.0 · owner menu editor, place photos and menu files, save/like fix, moving nearby and 3D map; asset version 56 · issues #69 #76 #78.
+
+- 2026-10-12 · [[src/Public/Explorer]] · nearby areas snap to a zoom grid and name their language so the edge cache shares them across moving visitors; hidden tabs defer refreshes; following zoom adapts to speed with hysteresis; optional 3D buildings from existing tiles · issue #78.
+
+- 2026-10-12 · [[src/Services/Media]] · owner covers, photos and menu files through reservation, one-path signed upload, server read-back verification and a daily sweep; shared photo header on place and menu pages · issue #69.
+
+- 2026-10-12 · [[src/Public/SubmitFeedback]] · save and like submit on the first tap: navigation decided after the form's own listeners, press animation with an explicit start; organizers and cancelled activities cannot react (database rule in both projects) · issue #76.
+
+- 2026-10-12 · [[src/View/Pages/MenuForm]] · script-free owner menu editor with draft-only structural edits, retained invalid input and revision conflicts · issue #69.
+
+- 2026-10-12 · [[src/Validation/MenuForm]] · validate raw nested owner menus and conditional saves with nullable facts, stable identities and JSONB byte limits; owner forms and uploads remain pending · issue #69.
+
+- 2026-10-12 · [[src/Public/CreditsStyles]] · separate photography attributions into spaced responsive cards while preserving every source and license · issue #72.
+
+- 2026-10-12 · [[src/View/Pages/Menu]] · add viewer-authorized dedicated menu reader and database-capability place links; bilingual declared facts, private/empty noindex and narrow-screen name wrapping verified; uploads/editor/carousel continue separately · issue #69.
+
+- 2026-10-12 · [[src/Database/Menus]] · add category-authorized structured menus with nullable facts, owner revisions and serialized daily quotas; matching migrations verified in both environments; typed read/write contracts and regression fixtures · issue #69. Reader/editor and uploads continue separately.
+
 - 2026-10-09 · [[architecture/_MOC]] · vault scaffolded: layers, grammar, domain, seams, ADR-0001 to ADR-0007 · risk LOW · issue #1
 - 2026-10-09 · [[grammar/database-api]] · database API: schema, indexes, functions, jobs, reactions, attendees · risk MED · issue #1
 

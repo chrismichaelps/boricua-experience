@@ -48,6 +48,8 @@ MEDIUM.
 
 ## Grill Log
 
+Resolved formatter maintenance: normalize indentation in the recurring-date list without changing tokens, rendering or behavior. The whole-tree formatter gate otherwise rejects the existing baseline.
+
 - **Q:** Templates or values?
   **A:** Values: a page is an `Html` tree, so escaping cannot be forgotten and pages are testable with fixtures.
 
@@ -64,3 +66,6 @@ Resolved: Curated detail uses official-source booking, hides local attendance/li
 
 ## Unknown publication facts Grill Log · #51
 Resolved: missing price is null/None and never free; explicit zero is free. Missing end is null/None. Start stays required and finite. discovery_until is a separate generated cutoff: known end, otherwise exactly24 elapsed hours after start; it is never a displayed/exported end or proof that an event is ongoing. Existing known dates retain after-start/14-day validation. Unknown-end expiration is labeled archived; recurrence uses independent dated records. API arguments and assistant projections preserve null; exports omit unknown end/offer. Tests cover boundaries and bilingual output.
+
+## Reaction audiences Grill Log · #76
+Resolved: guests see the like count as a sign-in link that returns to the activity; members can like or mark not interested; the organizer and everyone on a cancelled activity see only the count. Likes are social proof from other people and feed popularity, so self-likes are excluded. The database enforces the same rule ([[decisions/ADR-0005-reactions]]).

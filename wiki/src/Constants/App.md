@@ -99,3 +99,6 @@ Resolved: missing price is null/None and never free; explicit zero is free. Miss
 
 ## Asset graph46 · #51
 Resolved: browser import graph/worker/shell advance atomically; UNKNOWN_END_WINDOW_MILLIS is86400000, a discovery policy fallback matching the database generated UTC cutoff.
+
+## Menu reader Grill Log · #69
+Resolved: The menu stylesheet joins the current versioned shell; advance the complete asset graph together before the menu/media release.

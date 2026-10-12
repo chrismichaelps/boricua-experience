@@ -39,6 +39,9 @@ MEDIUM: asset provenance and presentation boundary.
 
 [[src/_MOC]] · [[src/Public/Styles]] · [[src/View/Components/Footer]]
 
+## Credits layout Grill Log
+Resolved: credits.html groups the unchanged six author/license/source attributions into spacious responsive cards, with derivative and endorsement notes separated from records. Dedicated credits.css owns spacing; no license or photographer identity is inferred or changed.
+
 ## Puerto Rican parrot Grill Log
 
 - **Q:** Which photograph replaces the Río Grande slide and tile?

@@ -1,0 +1,65 @@
+/** @Services.Media — place photographs and menu documents: listing, signed uploads, verification */
+module Services.Media
+
+import Std.Option as Option
+import Api.Media as MediaApi
+import Constants.Codes as Codes
+import Domain.Media as Media
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Validation.Media as Rules
+
+/// The ready files of a place the viewer may see, with their public addresses.
+export fn gallery(runtime: &Runtime.Runtime, placeId: Str, session: Option[Session.Session]) -> Result[Media.Gallery, Problem.Problem] {
+  let board = MediaApi.board(&runtime.gateway, placeId, Option.map(session, |found: Session.Session| found.accessToken)) ?
+  Ok(Media.Gallery{isOwner: board.isOwner, files: board.items.map(|item: Media.StoredMedia| Media.MediaFile {
+          id: item.id, kind: item.kind, mediaType: item.mediaType, label: item.label, bytes: item.bytes, url: MediaApi.publicUrl(&runtime.gateway, item.path) }) })
+}
+
+/// Reserves an upload as the owner and answers a one-path address to send that single file to.
+export fn start(runtime: &Runtime.Runtime, placeId: Str, declared: &Media.UploadRequest, session: &Session.Session) -> Result[Media.UploadTicket, Problem.Problem] {
+  let valid = Rules.request(declared) ?
+  let reserved = MediaApi.reserve(&runtime.gateway, placeId, &valid, session.accessToken) ?
+  match MediaApi.signUpload(&runtime.gateway, reserved.path) {
+    case Ok(address) => Ok(Media.UploadTicket{id: reserved.id, uploadUrl: address, apiKey: runtime.gateway.anonKey})
+    case Err(problem) => {
+      let _released = MediaApi.discard(&runtime.gateway, reserved.id, session.accessToken)
+      Err(problem)
+    }
+  }
+}
+
+/// Reads the stored file back, compares it with the reservation, and only then marks it ready. A file
+/// that is missing, of another type or another size is deleted with its record. Never retried.
+export fn finish(runtime: &Runtime.Runtime, placeId: Str, mediaId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let reserved = MediaApi.pending(&runtime.gateway, mediaId, session.accessToken) ?
+  if reserved.placeId != placeId { return Err(Problem.Missing) }
+  let genuine = match MediaApi.inspect(&runtime.gateway, reserved.path) {
+    case Ok((head, total)) => total == reserved.bytes && Rules.signatureMatches(&head, reserved.mediaType)
+    case Err(_) => false
+  }
+  if !genuine {
+    let _record = MediaApi.discard(&runtime.gateway, mediaId, session.accessToken)
+    let _file = MediaApi.remove(&runtime.gateway, &[reserved.path])
+    return Err(Problem.Refused(Codes.MEDIA_INVALID))
+  }
+  let confirmed = MediaApi.confirm(&runtime.gateway, mediaId, MediaApi.publicUrl(&runtime.gateway, reserved.path), session.accessToken) ?
+  // Replaced covers are already unlisted; a failed cleanup leaves an unreachable file, not a broken page.
+  let _cleaned = MediaApi.remove(&runtime.gateway, &confirmed.replaced)
+  Ok(())
+}
+
+/// Deletes stored files no record points to; answers how many were deleted.
+export fn sweep(runtime: &Runtime.Runtime) -> Result[Int, Problem.Problem] {
+  let found = MediaApi.sweep(&runtime.gateway) ?
+  MediaApi.remove(&runtime.gateway, &found.paths) ?
+  Ok(found.paths.length())
+}
+
+/// Removes a file as the owner: its record first, so nothing lists it, then the stored file.
+export fn remove(runtime: &Runtime.Runtime, mediaId: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let discarded = MediaApi.discard(&runtime.gateway, mediaId, session.accessToken) ?
+  let _file = MediaApi.remove(&runtime.gateway, &[discarded.path])
+  Ok(())
+}

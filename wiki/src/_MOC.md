@@ -31,6 +31,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 ## Domain
 
+- [[src/Domain/Menu]] — Structured menu projections and editable documents with unknown price and availability preserved.
+
 - [[src/Domain/Admin]] — The administrator's overview counts and open reports.
 - [[src/Domain/Catalog]] — Category and municipality reference values and lookups by slug.
 - [[src/Domain/Consent]] — Which optional cookie uses a visitor allowed, and the versioned cookie value that remembers it.
@@ -52,9 +54,11 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/I18n/Dates]] — Weekday and month names, short and long dates, relative days (today, tomorrow, weekday), card time lines, and full schedules, in Puerto Rico time.
 - [[src/I18n/En]] — The English catalogue.
 - [[src/I18n/EnAccount]] — English sign-in, account, form, problem, notice, and inbox text.
+- [[src/I18n/EnMenu]] — English menu reader and owner editor text.
 - [[src/I18n/EnLegal]] — English counterpart of [[src/I18n/EsLegal]].
 - [[src/I18n/Es]] — The Spanish catalogue: every user-facing string by key.
 - [[src/I18n/EsAccount]] — Spanish sign-in, account, form, problem, notice, and inbox text.
+- [[src/I18n/EsMenu]] — Spanish menu reader and owner editor text.
 - [[src/I18n/EsLegal]] — Spanish terms, privacy policy, cookie policy, and about page, section by section.
 - [[src/I18n/Format]] — Price (free or dollars), going counts, seats left, distance, and category names.
 - [[src/I18n/Translate]] — Looks up a key across the interface, account, and policy catalogues in the reader's language with Spanish as fallback, fills `:name` placeholders, and picks singular or plural forms.
@@ -73,6 +77,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Validation/Participation]] — Message and note lengths, report reasons, and reaction values.
 
 ## Api
+
+- [[src/Api/Menus]] — Typed menu read and revision-checked save adapter.
 
 - [[src/Api/Account]] — Account reads and writes, notifications, consent records, and the data-subject operations.
 - [[src/Api/Admin]] — Administrator overview, open reports, and resolution.
@@ -205,6 +211,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/MapClusters]] — grouping regressions.
 
 - [[src/Public/MapViewport]] · [[src/Test/MapViewport]] — viewport discovery and regression boundaries.
+- [[src/Public/Map3d]] — optional 3D buildings and tilted camera on the map page.
 
 - [[src/Public/LocalTime]] — dates and times in the reader's own zone.
 - [[src/Public/Haptics]] · [[src/Public/SheetGestures]] · [[src/Database/MapEvents]] · [[src/Test/Interactions]] — native mobile input and spatial read boundaries.
@@ -243,6 +250,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[Public/BrowserMessages]] — localized browser location and interaction feedback.
 
 - [[src/Test/Domain]] — domain and nullable account-profile regressions.
+- [[src/Test/Menus]] — Menu wire contract regressions for unknown facts and write shapes.
 
 [[src/Infrastructure/SupabaseConfig]]
 
@@ -250,3 +258,32 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/FormFeedback]] — native and asynchronous submission lifecycle regressions.
 
 - [[src/Database/OptionalEventFacts]] — nullable publication facts and finite discovery policy.
+
+- [[src/Database/Menus]] — normalized category-authorized restaurant menus and owner revisions.
+
+- [[src/Services/Menus]] — Viewer-authorized menu reads.
+- [[src/Web/Handlers/Menus]] — Dedicated menu reader route.
+- [[src/View/Pages/Menu]] — Bilingual structured menu reader.
+- [[src/Public/MenuStyles]] — Responsive menu layout.
+- [[src/Test/MessageKeys]] — Deterministic dynamic-menu translation key coverage.
+
+- [[src/Public/CreditsStyles]] — Readable photography attributions.
+
+- [[src/Constants/Menus]] — Owner menu protocol bounds.
+- [[src/Domain/MenuDraft]] — Raw owner input and refill.
+- [[src/Validation/MenuForm]] — Bounded nested menu validation.
+- [[src/Test/MenuForm]] — Raw menu validation boundary regressions.
+
+- [[src/Web/MenuFields]] — Bounded indexed menu fields and draft-only structural edits.
+- [[src/View/Pages/MenuForm]] — Script-free owner menu editor.
+- [[src/Test/MenuFields]] — Indexed field decoding and structural edit regressions.
+
+- [[src/Domain/Media]] — Kinds, stored records, galleries with public addresses, reservations, signed-upload answers and sweep results for place media.
+- [[src/Validation/Media]] — Checks a declared upload (kind, type, size, label) and compares the stored file's leading bytes with its declared type.
+- [[src/Api/Media]] — Owner RPCs (reserve, pending, confirm, discard, board) and server-only storage calls (signed upload, ranged read-back, delete, sweep) with the service key.
+- [[src/Services/Media]] — Lists a place's files with addresses.
+- [[src/Web/Handlers/Media]] — Owner page, JSON upload start and finish, removal form, and the cron-only sweep route.
+- [[src/View/Pages/Media]] — Owner page for the main photo, more photos and (for menu categories) menu files, with per-file removal and limits.
+- [[src/View/Components/PhotoHeader]] — A listing's photographs in the home carousel container, reusing the carousel script.
+- [[src/Public/MediaUpload]] — Re-encodes photographs to at most 1600 px WebP (dropping metadata), declares the upload, PUTs the file to the signed address with no overwrite, and asks the server to verify.
+- [[src/Test/Media]] — Declared-upload boundaries and stored-signature checks, including disguised markup.

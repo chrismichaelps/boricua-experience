@@ -40,3 +40,9 @@ Hidden places carry an owner notice and are not indexed. Hours list Monday first
 ## Referenced by
 
 [[src/_MOC]]
+
+## Menu reader Grill Log · #69
+Resolved: Accept optional MenuBoard and render a dedicated-menu entry only from database capability/visibility. Existing reviews, contact and owner controls remain intact.
+
+## Place media Grill Log · #69
+Resolved: The single cover image became the shared photo header (cover first, then more photos) and owners get a link to photos and menu files. See [[decisions/ADR-0012-place-media]].

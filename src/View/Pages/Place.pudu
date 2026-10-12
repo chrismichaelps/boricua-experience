@@ -7,6 +7,8 @@ import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Media as Media
+import Domain.Menu as Menu
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Review as Review
@@ -17,17 +19,19 @@ import Utils.Text as Text
 import View.Components.Facts as Facts
 import View.Components.Form as Form
 import View.Components.Icons as Icons
+import View.Components.PhotoHeader as PhotoHeader
 import View.Components.PlaceCard as PlaceCard
 import View.Components.Reviews as Reviews
 import View.Frame as Frame
 import View.Layout as Layout
+import View.Pages.Menu as MenuPage
 import View.Seo as Seo
 
 /// Weekdays in the order a week is read in Puerto Rico, Monday first; Sunday is 0.
 const WEEK: Array[Int] = [1, 2, 3, 4, 5, 6, 0]
 
 /// The place page.
-export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], gallery: &Media.Gallery, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
   let card = detail.card
   let path = Routes.PLACE_PREFIX + card.slug
   let category = Catalog.category(catalog, card.category.slug)
@@ -42,10 +46,11 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
     structured: if indexable { [Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (Format.categoryName(&frame.locale, &card.category), Routes.CATEGORY_PREFIX + card.category.slug), (card.name, path)])] } else { [] }
   }
   Layout.page(frame, &meta, Layout.Explore, H.article().class("event place").holding([
-        H.div().class("event-cover").holding([H.img().src(PlaceCard.coverOf(&card)).alt("").at("fetchpriority", "high").at("width", "1280").at("height", "720")]),
+        PhotoHeader.render(frame, &PhotoHeader.photosOf(gallery, &card.coverUrl), PlaceCard.coverOf(&card), card.name, path, "place-photos"),
         H.div().class("event-layout").holding([
             H.div().class("event-main").holding([
                 heading(frame, detail),
+                MenuPage.link(frame, card.slug, menus),
                 if card.status == "hidden" { H.div().class("banner").role("status").says(Frame.t(frame, "place.hidden_notice")) } else { H.nothing() },
                 H.section().class("panel prose").holding([
                     H.p().class("lead").says(card.summary),
@@ -143,6 +148,7 @@ fn owner(frame: &Frame.Frame, detail: &Place.Detail) -> H.Node {
   H.section().class("panel").holding([
       H.h2().class("section-title").says(Frame.t(frame, "place.manage")),
       H.a().class("button button-ghost button-block").href(base + "/edit").holding([Icons.sized("edit", 18), H.span().says(Frame.t(frame, "place.edit"))]),
+      H.a().class("button button-ghost button-block").href(base + "/media").holding([Icons.sized("camera", 18), H.span().says(Frame.t(frame, "media.manage"))]),
       H.form().action(base + "/status").method("post").holding([
           Form.token(frame),
           H.input().kind("hidden").name("visible").value(if hidden { "1" } else { "0" }),

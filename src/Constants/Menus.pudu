@@ -1,0 +1,30 @@
+/** @Constants.Menus.Contract — menu limits and permitted declaration values */
+module Constants.Menus
+
+/// Bounds enforced again by the menu save function.
+export const MENUS_MAX: Int = 3
+export const SECTIONS_MAX: Int = 12
+export const ITEMS_MAX: Int = 100
+export const NAME_MAX: Int = 80
+export const DISH_NAME_MAX: Int = 120
+export const DESCRIPTION_MAX: Int = 500
+export const PRICE_NOTE_MAX: Int = 100
+export const DOCUMENT_BYTES_MAX: Int = 100000
+export const PRICE_CENTS_MAX: Int = 10000000
+/// Publication, language and declaration values accepted by the database protocol.
+export const STATUSES: Array[Str] = ["draft", "published", "archived"]
+export const LOCALES: Array[Str] = ["es", "en", "es-en"]
+export const AVAILABILITY: Array[Str] = ["", "yes", "no"]
+export const DIETARY: Array[Str] = ["vegetarian", "vegan", "gluten-free", "spicy", "organic"]
+export const ALLERGENS: Array[Str] = ["milk", "eggs", "fish", "shellfish", "tree-nuts", "peanuts", "wheat", "soy", "sesame"]
+/// The submit field of the owner editor and its commands; structural commands carry `:section[:dish]`.
+export const EDIT_FIELD: Str = "do"
+export const EDIT_SAVE: Str = "save"
+export const EDIT_ADD_SECTION: Str = "add-section"
+export const EDIT_REMOVE_SECTION: Str = "remove-section"
+export const EDIT_SECTION_UP: Str = "section-up"
+export const EDIT_SECTION_DOWN: Str = "section-down"
+export const EDIT_ADD_DISH: Str = "add-dish"
+export const EDIT_REMOVE_DISH: Str = "remove-dish"
+export const EDIT_DISH_UP: Str = "dish-up"
+export const EDIT_DISH_DOWN: Str = "dish-down"

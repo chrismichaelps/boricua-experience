@@ -89,3 +89,12 @@ Resolved: Add Spanish administrator and curated source labels with English key p
 
 ## Unknown publication facts Grill Log · #51
 Resolved: missing price is null/None and never free; explicit zero is free. Missing end is null/None. Start stays required and finite. discovery_until is a separate generated cutoff: known end, otherwise exactly24 elapsed hours after start; it is never a displayed/exported end or proof that an event is ongoing. Existing known dates retain after-start/14-day validation. Unknown-end expiration is labeled archived; recurrence uses independent dated records. API arguments and assistant projections preserve null; exports omit unknown end/offer. Tests cover boundaries and bilingual output.
+
+## Menu reader Grill Log · #69
+Resolved: Menu reader labels, unknown price, availability and owner-declared dietary/allergen labels are Spanish interface values; stored content is not translated or invented.
+
+## Menu editor validation Grill Log · #69
+Resolved: nested editor validation and revision conflicts have actionable interface messages. Invalid input stays in the form; a stale save requires reviewing the latest version instead of blind overwrite.
+
+## Owner editor Grill Log · #69
+Resolved: Add complete owner editor field/action/conflict labels and unknown declaration guidance.
