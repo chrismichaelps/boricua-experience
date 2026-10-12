@@ -22,7 +22,7 @@ export fn ics(siteUrl: Str, card: &Event.Card, path: Str) -> Str {
     "UID:" + card.id + "@" + siteUrl.replace("https://", "").replace("http://", ""),
     "DTSTAMP:" + stamp(card.startsAt),
     "DTSTART:" + stamp(card.startsAt),
-    "DTEND:" + stamp(card.endsAt),
+    match card.endsAt { case Some(end) => "DTEND:" + stamp(end) case None => "" },
     "SUMMARY:" + escaped(card.title),
     "DESCRIPTION:" + escaped(card.summary + "\n" + siteUrl + path),
     "LOCATION:" + escaped(card.venueName + ", " + card.municipality.name + ", Puerto Rico"),
@@ -31,5 +31,5 @@ export fn ics(siteUrl: Str, card: &Event.Card, path: Str) -> Str {
     "END:VEVENT",
     "END:VCALENDAR",
     ""
-  ].join("\r\n")
+  ].filter(|line: Str| !line.isEmpty()).join("\r\n") + "\r\n"
 }

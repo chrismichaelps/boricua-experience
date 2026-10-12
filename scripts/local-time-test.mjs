@@ -44,3 +44,8 @@ if (zone === 'America/Puerto_Rico') {
   assert.equal(bad.textContent, 'Hoy · 7:30 PM', 'an unreadable instant keeps the server text');
 }
 console.log(`local time ok in ${zone}`);
+
+const unknown = moment('schedule', startsAt, null, 'Start · End time not provided');
+localize(unknown);
+assert(unknown.textContent.includes('End time not provided'), 'unknown end stays explicit in foreign zones');
+assert(!unknown.textContent.includes('1970'));

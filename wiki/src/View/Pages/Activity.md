@@ -60,3 +60,6 @@ Resolved: ended/canceled organizer cards retain their detail link but replace th
 
 ## Curated boundary Grill Log · #42
 Resolved: Upcoming curated publications show the official-source label instead of pending-request management; ended/canceled labels and native pending-request links remain unchanged.
+
+## Nullable schedule rendering Grill Log · #51
+Resolved: refreshed sheet data-ends normalizes null to empty; LocalTime treats malformed ends as unknown. Organizing activity final-state text uses archived when actual end unknown, retaining cancellation precedence. Test actual date renderer with null-end sheet data and bilingual archived output.

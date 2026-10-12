@@ -59,7 +59,7 @@ export fn check(draft: &Draft.Draft) -> Result[Draft.Ready, Problem.Problem] {
   let valid = Check.run(&validator(), *draft) ?
   let (lat, lng) = Option.unwrapOr(point(&valid), (0.0, 0.0))
   let starts = Option.unwrapOr(Time.parseLocalInput(valid.startsAt), Time.now())
-  let ends = Option.unwrapOr(Time.parseLocalInput(valid.endsAt), Time.now())
+  let ends = Time.parseLocalInput(valid.endsAt)
   Ok(Draft.Ready {
       title: valid.title.trim(),
       summary: valid.summary.trim(),
@@ -72,11 +72,11 @@ export fn check(draft: &Draft.Draft) -> Result[Draft.Ready, Problem.Problem] {
       lat: lat,
       lng: lng,
       startsAt: Time.toTimestamp(&starts),
-      endsAt: Time.toTimestamp(&ends),
+      endsAt: Option.map(ends, |at| Time.toTimestamp(&at)),
       visibility: valid.visibility,
       joinPolicy: valid.joinPolicy,
       capacity: valid.capacity.trim().toInt(),
-      priceCents: Option.unwrapOr(Money.parseCents(valid.price), 0)
+      priceCents: if valid.price.trim().isEmpty() { None } else { Money.parseCents(valid.price) }
     })
 }
 
@@ -89,6 +89,7 @@ fn point(draft: &Draft.Draft) -> Option[(Float64, Float64)] {
 
 /// Whether the end parses and comes after the start.
 fn endsAfterStart(draft: &Draft.Draft) -> Bool {
+  if draft.endsAt.trim().isEmpty() { return true }
   match (Time.parseLocalInput(draft.startsAt), Time.parseLocalInput(draft.endsAt)) {
     case (Some(starts), Some(ends)) => ends.millis > starts.millis
     case (None, Some(_)) => true
@@ -113,10 +114,11 @@ fn capacityOk(written: Str) -> Bool {
   }
 }
 
-/// Whether the price is empty (free) or a valid amount in range.
+/// Whether the price is empty (unknown) or a nonnegative amount in range.
 fn priceOk(written: Str) -> Bool {
+  if written.trim().isEmpty() { return true }
   match Money.parseCents(written) {
-    case Some(cents) => cents <= Limits.PRICE_MAX_CENTS
+    case Some(cents) => cents >= 0 && cents <= Limits.PRICE_MAX_CENTS
     case None => false
   }
 }

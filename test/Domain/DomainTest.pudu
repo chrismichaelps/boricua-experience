@@ -10,6 +10,7 @@ import Api.Account as AccountApi
 import Domain.Admin as Admin
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
+import Domain.Draft as Draft
 import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Notification as Notification
@@ -68,9 +69,15 @@ fn main() -> Int {
       Test.equals("sorts round-trip by name", &Search.sortFrom(Search.sortName(&Search.Near)), &Search.Near),
       Test.equals("windows round-trip by name", &Search.windowFrom(Search.windowName(&Search.Weekend)), &Search.Weekend),
       Test.equals("no filter is not narrowed", &Search.isNarrowed(&Search.everything()), &false),
-      Test.equals("an event is over once its end time passes", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: "2026-10-09T20:00:00Z"}, 1791576000000 + 1))), &Ok(Some(true))),
-      Test.equals("an event before its end time is not over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: "2026-10-09T20:00:00Z"}, 1791576000000 - 1))), &Ok(Some(false))),
-      Test.equals("an event the job marked ended is over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "ended", endsAt: "2999-01-01T00:00:00Z"}, 0))), &Ok(Some(true))),
+      Test.equals("unknown price is not free", &Result.map(page, |p| Event.isFree(&Event.Card{..p.items[0], priceCents: None})), &Ok(false)),
+      Test.equals("zero price is free", &Result.map(page, |p| Event.isFree(&Event.Card{..p.items[0], priceCents: Some(0)})), &Ok(true)),
+      Test.equals("unknown cutoff before boundary stays visible", &Result.map(page, |p| Event.hasEnded(&Event.Card{..p.items[0], status: "published", startsAt: "2026-10-09T23:00:00Z", endsAt: None, discoveryUntil: Some("2026-10-10T23:00:00Z")}, 1791673200000 - 1)), &Ok(false)),
+      Test.equals("unknown cutoff at boundary archives", &Result.map(page, |p| Event.hasEnded(&Event.Card{..p.items[0], status: "published", startsAt: "2026-10-09T23:00:00Z", endsAt: None, discoveryUntil: Some("2026-10-10T23:00:00Z")}, 1791673200000)), &Ok(true)),
+      Test.equals("unknown edit stays blank", &Result.map(guest, |d| Draft.fromDetail(&Event.Detail{..d, card: Event.Card{..d.card, endsAt: None, priceCents: None}}).price), &Ok("")),
+      Test.equals("free edit retains explicit zero", &Result.map(guest, |d| Draft.fromDetail(&Event.Detail{..d, card: Event.Card{..d.card, priceCents: Some(0)}}).price), &Ok("0.00")),
+      Test.equals("an event is over once its end time passes", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: Some("2026-10-09T20:00:00Z")}, 1791576000000 + 1))), &Ok(Some(true))),
+      Test.equals("an event before its end time is not over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: Some("2026-10-09T20:00:00Z")}, 1791576000000 - 1))), &Ok(Some(false))),
+      Test.equals("an event the job marked ended is over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "ended", endsAt: Some("2999-01-01T00:00:00Z")}, 0))), &Ok(Some(true))),
       Test.equals("seats left never go below zero", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.seatsLeft(&Event.Card{..card, capacity: Some(1), approvedCount: 3}))), &Ok(Some(Some(0))))
     ])
   let ran = Test.run(&checks)

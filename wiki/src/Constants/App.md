@@ -93,3 +93,9 @@ Resolved: search segments own one neutral2px inset focus indication; nested inpu
 
 ## Curated publication Grill Log · #42
 Resolved: Asset graph44 invalidates updated badge presentation and preserves existing browser import identities.
+
+## Unknown publication facts Grill Log · #51
+Resolved: missing price is null/None and never free; explicit zero is free. Missing end is null/None. Start stays required and finite. discovery_until is a separate generated cutoff: known end, otherwise exactly24 elapsed hours after start; it is never a displayed/exported end or proof that an event is ongoing. Existing known dates retain after-start/14-day validation. Unknown-end expiration is labeled archived; recurrence uses independent dated records. API arguments and assistant projections preserve null; exports omit unknown end/offer. Tests cover boundaries and bilingual output.
+
+## Asset graph46 · #51
+Resolved: browser import graph/worker/shell advance atomically; UNKNOWN_END_WINDOW_MILLIS is86400000, a discovery policy fallback matching the database generated UTC cutoff.

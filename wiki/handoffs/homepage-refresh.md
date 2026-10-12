@@ -262,3 +262,10 @@ Exact next action: finish the local SEO audit, promote reviewed issue45, and con
 
 ## SEO link audit · #48
 Architect → Implementer: own EnAccount/EsAccount cookies.learn_more labels. Local Lighthouse production audit92/100 identifies this as the only failed automated check. Independent review required; repeat live audit after promotion.
+
+## Unknown event facts continuation · #51
+Architect → Implementer: own nullable event/draft contracts, validation/API, price/date rendering, event/card/map/calendar/SEO, bilingual labels, assistant temporal enrichment, local-time messages, asset graph and private migration. Start remains required; unknown end expires from discovery24 elapsed hours after start without claiming actual completion. No category-specific duration guesses, undated live events or invented free prices. Apply reviewed migration to dev/prod before publishing25 BSNF CSV rows; retain the66 published IDs. Independent reviewer required.
+
+Implementer → Independent Reviewer → Implementer: optional-facts review resolved admin/deletion cutoff omissions, pending-decision locking, nullable map-date coercion and organizing/stale-submit completion wording.257assertions and allbrowser harnesses pass; all133source modules/compiler and formatter clean. Real320/390/1440 checks show unknown price/end, omitted SEO end, search/map and nohorizontaloverflow. Development rollback matrix and real competingdecision checks pass; privatefixture removed. Bothoptional_event_facts and optional_event_decision_lock migrations applied dev/prod;17affectedfunction definitions/ACL and nullable/generated columns/RLS match. Production retains66curated publications with0seed rows. BSNF CSV publication follows application promotion so old decoders never encounter null facts.
+
+Exact next action: after promotion, reconcile the25BSNF production IDs into the ignored CSV, then review newer official schedules before the next publication batch. Missing-start and date-only records remain blocked until a genuine scheduled time is verified; enduring venues require a separate catalog rather than a fabricated event.

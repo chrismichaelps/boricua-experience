@@ -1,6 +1,8 @@
 /** @View.Components.Moment.Time — dates and times as `<time>` elements the browser rewrites in the reader's zone */
 module View.Components.Moment
 
+import Std.Option as Option
+
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Time as StdTime
@@ -14,13 +16,13 @@ fn stamp(at: Str, style: Str, text: Str) -> H.Node {
 }
 
 /// A card's line (`Hoy · 7:30 PM`, or `Ahora · hasta 9:00 PM` while it is on).
-export fn when(frame: &Frame.Frame, startsAt: Str, endsAt: Str, now: &StdTime.Instant) -> H.Node {
-  stamp(startsAt, "when", Dates.when(&frame.locale, startsAt, endsAt, now)).data("ends", endsAt)
+export fn when(frame: &Frame.Frame, startsAt: Str, endsAt: Option[Str], now: &StdTime.Instant) -> H.Node {
+  stamp(startsAt, "when", Dates.when(&frame.locale, startsAt, endsAt, now)).data("ends", Option.unwrapOr(endsAt, ""))
 }
 
 /// An event's full schedule: date, start, and end.
-export fn schedule(frame: &Frame.Frame, startsAt: Str, endsAt: Str) -> H.Node {
-  stamp(startsAt, "schedule", Dates.schedule(&frame.locale, startsAt, endsAt)).data("ends", endsAt)
+export fn schedule(frame: &Frame.Frame, startsAt: Str, endsAt: Option[Str]) -> H.Node {
+  stamp(startsAt, "schedule", Dates.schedule(&frame.locale, startsAt, endsAt)).data("ends", Option.unwrapOr(endsAt, ""))
 }
 
 /// A short date, `Sáb 10 oct`.

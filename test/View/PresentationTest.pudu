@@ -15,9 +15,12 @@ import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Search as Search
+import I18n.Dates as Dates
+import I18n.Format as Format
 import Services.Participation as ParticipationService
 import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
+import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
@@ -75,7 +78,12 @@ fn main() -> Int {
   let missing = Html.render(&Errors.missing(&en))
   let map = Html.render(&MapPage.render(&en, &[], false, false))
   let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(_) => panic("fixture failed") }
-  let endedCard = Event.Card{..endedPage.items[0], status: "published", endsAt: "2026-10-09T20:00:00Z", capacity: Some(500), approvedCount: 0}
+  let detail = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(found) => found case Err(_) => panic("fixture failed") }
+  let unknownCard = Event.Card{..detail.card, priceCents: None, endsAt: None, discoveryUntil: Some("2026-10-13T02:00:00Z")}
+  let unknownDetail = Event.Detail{..detail, card: unknownCard}
+  let unknownSeo = Seo.event(en.siteUrl, &unknownDetail)
+  let unknownCalendar = Calendar.ics(en.siteUrl, &unknownCard, "/e/" + unknownCard.slug)
+  let endedCard = Event.Card{..endedPage.items[0], status: "published", endsAt: Some("2026-10-09T20:00:00Z"), capacity: Some(500), approvedCount: 0}
 
   let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
@@ -141,6 +149,21 @@ fn main() -> Int {
       Test.equals("footer removes the adult-only note", &openSearch.contains("For adults 18 and over"), &false),
       Test.equals("footer uses the frame year", &openSearch.contains("© 1969 Boricua Experience."), &true),
       Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
+      Test.equals("organizing unknown archive is neutral in English", &Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("This activity has ended."), &false),
+      Test.equals("organizing unknown archive is neutral in Spanish", &Html.render(&ActivityPage.render(&es, &ParticipationService.Activity{requests: [], saved: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("Esta actividad ya terminó."), &false),
+      Test.equals("unknown ended card says archived", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("Archived"), &true),
+      Test.equals("unknown archived card never claims actual end", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("This activity has ended"), &false),
+      Test.equals("stale English submission has neutral refusal", &Frame.t(&en, "problem.event_ended"), &"This activity is no longer accepting requests."),
+      Test.equals("stale Spanish submission has neutral refusal", &Frame.t(&es, "problem.event_ended"), &"Esta actividad ya no acepta solicitudes."),
+      Test.equals("unknown English price is explicit", &Format.price(&Locale.En, None), &"Price not provided"),
+      Test.equals("unknown Spanish price is explicit", &Format.price(&Locale.Es, None), &"Precio no informado"),
+      Test.equals("unknown English end is explicit", &Dates.schedule(&Locale.En, unknownCard.startsAt, None).contains("End time not provided"), &true),
+      Test.equals("unknown Spanish end is explicit", &Dates.schedule(&Locale.Es, unknownCard.startsAt, None).contains("Hora de fin no informada"), &true),
+      Test.equals("unknown SEO has no invented end", &Json.field(&unknownSeo, "endDate"), &None),
+      Test.equals("unknown SEO has no invented offer", &Json.field(&unknownSeo, "offers"), &None),
+      Test.equals("unknown calendar has no invented end", &unknownCalendar.contains("DTEND:"), &false),
+      Test.equals("unknown calendar keeps start", &unknownCalendar.contains("DTSTART:"), &true),
+      Test.equals("unknown card retains price message", &Html.render(&EventCard.card(&en, &unknownCard).html()).contains("Price not provided"), &true),
       Test.equals("deadline card immediately says ended", &endedOutput.contains("Esta actividad ya terminó."), &true),
       Test.equals("deadline card has no stale available seats", &endedOutput.contains("Quedan 500"), &false),
       Test.equals("ended activity keeps event navigation", &endedActivity.contains("href=\"/e/" + endedCard.slug + "\""), &true),

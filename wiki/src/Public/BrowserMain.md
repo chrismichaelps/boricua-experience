@@ -96,3 +96,6 @@ Resolved: Mechanical asset graph44 only; behavior unchanged.
 
 ## Resolved feedback Grill Log · #45
 Wire password controls and native submission feedback before feature dispatch. Prevent duplicate native submissions without dropping named submitter values; reset on pageshow; defer feedback until all submit listeners accept submission. Resolved.
+
+## Asset graph46 · #51
+Resolved: first-party import identities and worker cache advance together to46 for nullable schedule/price rendering. Public code changes are limited to LocalTime, BrowserMessages, AssistantStream and Explorer; other browser modules only change dependency identities. No private data enters precache.

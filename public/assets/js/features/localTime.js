@@ -1,4 +1,4 @@
-import { message } from '../constants/messages.js?v=45';
+import { message } from '../constants/messages.js?v=46';
 
 const PUERTO_RICO = 'America/Puerto_Rico';
 const DAY_MS = 86400000;
@@ -44,7 +44,7 @@ const STYLES = {
   },
   schedule: (start, end) => {
     const first = `${longDay(start)} · ${clock(start)}`;
-    if (!end) return `${first} ${zoneName(start)}`;
+    if (!end) return `${first} ${zoneName(start)} · ${message('endUnknown')}`;
     const sameDay = daysAway(start) === daysAway(end);
     return sameDay ? `${first} – ${clock(end)} ${zoneName(end)}` : `${first} – ${longDay(end)} · ${clock(end)} ${zoneName(end)}`;
   },
@@ -53,7 +53,8 @@ const STYLES = {
 /** Rewrites one `<time data-moment>` in the reader's zone, keeping the Puerto Rico text as its title. */
 export function localizeMoment(node) {
   const start = new Date(node.getAttribute('datetime'));
-  const end = node.dataset.ends ? new Date(node.dataset.ends) : null;
+  const parsedEnd = node.dataset.ends ? new Date(node.dataset.ends) : null;
+  const end = parsedEnd && !Number.isNaN(parsedEnd.getTime()) ? parsedEnd : null;
   const style = STYLES[node.dataset.moment];
   if (!style || Number.isNaN(start.getTime()) || node.dataset.localized === '1') return;
   node.dataset.localized = '1';
