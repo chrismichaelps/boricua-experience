@@ -115,3 +115,9 @@ Signup now requires matching passwords in server validation and progressively ex
 
 ## v0.2.5
 Released matching-password signup, progressive password controls, submission feedback, restrained empty/404 presentation and corrected SEO image metadata.231 assertions, browser lifecycle checks and independent review passed.
+
+## Descriptive cookie-policy link · #48
+Localized cookie-policy anchors explicitly describe their destination, addressing the sole failed automated SEO audit in the92/100 baseline.
+
+## v0.2.6
+Descriptive bilingual cookie-policy anchors resolve the only failed automated SEO check in the92/100 baseline. Includes the reviewed0.2.5 signup and action-feedback changes.

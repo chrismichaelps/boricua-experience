@@ -118,7 +118,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("auth.not_now", "Ahora no"),
     ("cookies.title", "Tu privacidad"),
     ("cookies.body", "Usamos cookies necesarias para que la app funcione. Con tu permiso, también podríamos usar cookies de análisis y marketing."),
-    ("cookies.learn_more", "Más información"),
+    ("cookies.learn_more", "Consulta nuestra política de cookies"),
     ("cookies.customize", "Personalizar"),
     ("cookies.necessary", "Necesarias (siempre activas)"),
     ("cookies.analytics", "Análisis"),
