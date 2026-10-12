@@ -4,10 +4,10 @@ tags: [handoff, product, places]
 ---
 # Product strategy continuation
 
-2026-10-12 · issue82 · feature/82-activity-covers.
+2026-10-12 · issue #45 · feature/45-search-console.
 
 ## Re-anchor
-The recovered product-strategy session ends with0.3.0 releasePR68. Currentmain/dev3a87d40, assets52, category-aware places and reviews are present. Database catalogue has16original categories plus hospedaje. Existing place templates remain authoritative; no fake production places are permitted.
+The recovered product-strategy session historically ended with the 0.3.0 release PR68. Current main/dev revision is 2be42c0, release 0.5.0, assets 57; category-aware places, reviews, menus and activity covers are deployed. The database catalogue has 16 original categories plus hospedaje. Existing place templates remain authoritative; no fake production places are permitted.
 
 ## Role transitions and ownership
 Architect → Implementer: own menu/media database migrations and mirrors, then their typed adapters, owner workflows, detail/menu presentation and carousel reuse. Preserve current discovery, reviews and category validation. An independent reviewer examines each bounded increment before production application or promotion.
@@ -17,8 +17,8 @@ Architect → Implementer: own menu/media database migrations and mirrors, then 
 |---|---|
 | Recover referenced session | Exact custom-title and final handoff read from local session; repo0.3.0 verified |
 | Category-specific places | Existing category_fields and adaptive forms present; retain and extend across entire catalogue |
-| Restaurant menus | Foundation, reader, validation merged to dev. Owner editor (create/edit sections and dishes, retained invalid input, revision conflicts) implemented and browser-verified on dev; image/PDF documents and deployment remain pending |
-| Place/review photos | Place covers, photos and menu files done (ADR-0012): reserve → signed upload → server verification → confirm, daily sweep, shared photo header. Development migrated and browser-verified; production migration and review photos pending |
+| Restaurant menus | Structured owner menus and image/PDF documents are deployed in0.4.0; shared trusted confirmation hardening deployed in0.5.0. Duplicate new-menu resubmission remains accepted pending idempotency refinement |
+| Place/review photos | Place covers/gallery/menu files deployed in0.4.0; trusted media confirmation in0.5.0; review photos remain the next ordered feature |
 | Activity category fields/place links | Pending implementation and validation |
 | Waitlists/attendance | Pending implementation and concurrency tests |
 | Organizer dashboard/analytics | Pending implementation |
@@ -41,7 +41,7 @@ All-category cover refinement: activities and permanent places in every supporte
 Implement additive schema/API first with rollback and ownership/race tests, then integrate owner and reader flows. Apply reviewed migrations to both projects and compare contracts/permissions. Do not mark the overall goal complete until every ledger item has current-state evidence.
 
 ## Exact next action
-Release 0.4.0 is merged to main (#81) and deployed to production (asset version 56): menu editor, place photos and menu files, save/like fix, moving nearby and 3D map. Production database has reaction_rules and the four place-media migrations with function hashes matching development; CRON_SECRET is set for the daily media sweep. Next: activity covers for every category (organizer-authorised, same reserve/verify/sweep pipeline), review photos, favorites and For You, waitlists, organizer tools, assistant grounded in places. Preserve all remaining goal ledger items.
+Design review-photo authorization, storage lifecycle and moderation contracts before implementing the next ordered feature. Search Console ownership, sitemap submission, homepage inspection and security reports are verified. Preserve every remaining goal ledger item.
 
 ## Release 0.4.0 evidence
 Each PR was reviewed before merge and its findings fixed (#77 reaction feedback; #75 authorize-before-decode, duplicate error, labels; #80 curated cover, typeless PDF, literal cover check migration, sweep headers; #79 remembered-3D framing, speed-zoom hysteresis, 3D harness). Release branch: 11 suites, 409 assertions, 28 harness passes. Production smoke: pages 200, assets v56, sweep route 404 without the secret, guest like links to sign-in, 3D switch present, identical map area MISS then HIT at the edge cache, zero error-level logs in the first ten minutes.
@@ -81,6 +81,13 @@ Current ordered backlog: activity covers for every category; review photos; favo
 
 Activity-cover implementation is present with independent review corrections: trusted server confirmations for both place/activity pipelines, pending-only invalid cleanup, storage-read failures preserved, route/media identity binding, parent/media rechecks and actor-wide serialized quota. Development migrations event_covers, media_confirmation_boundary, pending_media_cleanup and confirmation_cutover are applied. Rollback tests reject null/PDF type, wrong event, missing object, removed stale IDs and member confirmation; replacement and dynamic category fallback pass. Overlapping event/place reservation requests at39admit exactlyone and refuse the otherPT429; temporary audit/media fixtures are removed. Full417assertions and28harnesses pass before the additional source-cover rendering assertion; whole-source checks170modules passed. Source-cover presentation now avoids claiming real supplied photos are illustrations. Further browser verification is pending: local app catalog reads time out even though direct authenticated categories requests succeed. The local development process is live; do not restart solely on observation timeouts.
 
-Production has not received these changes yet. Prepare additive RPCs before deploying privileged callers, then remove legacy member-confirm grants immediately after deployment; compare function hashes, ACLs and RLS in both projects. No public production testing data or files were added. Exact next action: resolve the local dependency timeout and verify upload/replace/remove in desktop and phone browser, then finish the reviewed activity-cover PR and production cutover. Preserve every remaining backlog item.
+Production has not received these changes yet. Prepare additive RPCs before deploying privileged callers, then remove legacy member-confirm grants immediately after deployment; compare function hashes, ACLs and RLS in both projects. No public production testing data or files were added. Historical next action at that checkpoint: resolve the local dependency timeout and verify upload/replace/remove in desktop and phone browser, then finish the reviewed activity-cover PR and production cutover. Preserve every remaining backlog item.
 
 Browser retry recovered without a server restart or timeout-policy change. Existing development seed account completed authenticated desktop upload (1600px WebP), phone replacement at390px, and removal. Exactlyone ready cover remained after replacement; the old object was deleted. Removal restored null cover_url with0media records and0stored files. Browser inspection found a40px removal control; normal-size buttons now replace the compact style in both activity/place media managers. Production remains unchanged until release preparation and cutover.
+
+## Release0.5.0 current evidence
+Activity covers are deployed through featurePR83and releasePR84; main/dev share2be42c0and linked assets57. Vercel deploymentdpl_DWwS7thW5Upu1vLndqhYaJz4B8hUis Ready and aliased toboricuaexperience.com. Additive event_covers/media_confirmation_boundary/pending_media_cleanup migrations were applied in production before deploying new callers; confirmation_cutover revoked legacy member grants immediately after deployment. All17reviewed function definitions/ACLs match development; media tables have RLS and no guest/member table SELECT. Production has92publications,0seed rows and0newactivity media; no fake data or test photographs were added. Productionhome/search/map/signinandv57uploadmodule respond200; cleanup remains404withoutitssecret. Signed-in production upload and save/like testing remain unverified; actual upload/replace/remove was exercised only in development.
+
+The full release passes418assertions,28harnesses,170source checks, formatting and independent feature/release review. Existing intentional RPC/closed-table advisor notices and leaked-password-protection warning remain; no paid features or auth-policy changes were introduced. Latest next action is review-photo authorization/storage/moderation design and implementation, after the user-requested Search Console setup. The entire ordered backlog stays active.
+
+Search Console: production Domain property verified with manual Cloudflare TXT; Google reports sitemap Correcto/192pages. Homepage already indexed and live-test indexable. Homepage index-refresh request was accepted into the priority crawl queue. Manual Actions and Security Issues both report no detected problems. Search and map canonical pages are indexable. No paid feature, Google DNS delegation, production publication or source change was introduced by this setup.
