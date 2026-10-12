@@ -1,5 +1,5 @@
-import { MAP } from '../constants/config.js?v=54';
-import { distanceM } from '../utils/geo.js?v=54';
+import { MAP } from '../constants/config.js?v=55';
+import { distanceM } from '../utils/geo.js?v=55';
 
 export function visiblePins(pins, project, width, height, covered = 0) {
   return pins.filter((pin) => {

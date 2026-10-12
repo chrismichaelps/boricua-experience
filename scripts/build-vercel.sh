@@ -51,7 +51,8 @@ cat > "$function_dir/.vc-config.json" <<JSON
 JSON
 
 # Assets are immutable per version query; the service worker and manifest are always revalidated;
-# everything that is not a file goes to the function.
+# everything that is not a file goes to the function. One daily cron (the free plan's limit) deletes
+# unreferenced place media; it authenticates with CRON_SECRET.
 cat > "$output/config.json" <<'JSON'
 {
   "version": 3,
@@ -62,6 +63,9 @@ cat > "$output/config.json" <<'JSON'
     { "src": "^/api/chat$", "dest": "/chat" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/app" }
+  ],
+  "crons": [
+    { "path": "/internal/media-sweep", "schedule": "17 8 * * *" }
   ]
 }
 JSON

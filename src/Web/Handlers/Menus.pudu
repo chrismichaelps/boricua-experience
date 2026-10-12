@@ -4,12 +4,14 @@ module Web.Handlers.Menus
 import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Option as Option
+import Std.Result as Result
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Codes as Codes
 import Constants.Menus as Limits
 import Constants.Routes as Routes
 import Domain.Locale as Locale
+import Domain.Media as Media
 import Domain.Menu as Menu
 import Domain.MenuDraft as Draft
 import Domain.Place as Place
@@ -40,7 +42,8 @@ fn reader(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   }
   match Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)) {
     case Ok(board) => if board.supported || (board.isOwner && !board.menus.isEmpty()) {
-      Respond.page(200, &MenuPage.render(&Context.frame(app, visitor), &detail, &board))
+      let gallery = Result.unwrapOr(Serve.ask(app, &app.kinds.placeMedia, Serve.visit(visitor, detail.card.id)), Media.empty())
+      Respond.page(200, &MenuPage.render(&Context.frame(app, visitor), &detail, &board, &gallery))
     } else { Respond.problem(app, visitor, &Problem.Missing) }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }

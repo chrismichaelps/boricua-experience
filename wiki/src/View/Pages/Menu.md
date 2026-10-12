@@ -21,3 +21,6 @@ Resolved: public indexing requires a published parent and at least one published
 
 ## Owner editor Grill Log · #69
 Resolved: Add owner-only new/edit links bounded by database capability and menu count; old unsupported-category menus may be archived through editing.
+
+## Place media Grill Log · #69
+Resolved: The menu header reuses the shared photo header; menu files (photos and PDFs) are listed separately from structured dishes. See [[decisions/ADR-0012-place-media]].

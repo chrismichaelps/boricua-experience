@@ -1,4 +1,4 @@
-import { getJson } from '../net/http.js?v=54';
+import { getJson } from '../net/http.js?v=55';
 
 const hrefOf = (item) => item.querySelector('.card-link')?.getAttribute('href');
 

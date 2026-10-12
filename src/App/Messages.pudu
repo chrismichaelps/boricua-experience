@@ -10,6 +10,7 @@ import Domain.Draft as Draft
 import Domain.Event as Event
 import Domain.Index as Index
 import Domain.Location as Location
+import Domain.Media as Media
 import Domain.Menu as Menu
 import Domain.MenuDraft as MenuDraft
 import Domain.Notification as Notification
@@ -49,6 +50,12 @@ export type PlaceStatus = { placeId: Str, visible: Bool }
 
 /** @App.Messages.ReviewRead — a page of a place's reviews */
 export type ReviewRead = { placeId: Str, after: Str }
+
+/** @App.Messages.MediaStart — an owner's declared upload for one place */
+export type MediaStart = { placeId: Str, request: Media.UploadRequest }
+
+/** @App.Messages.MediaFinish — an upload the browser reports as sent, to be verified */
+export type MediaFinish = { placeId: Str, mediaId: Str }
 
 /** @App.Messages.MenuSaving — an owner's complete menu, conditional on the revision it was read at */
 export type MenuSaving = { placeId: Str, editing: MenuDraft.MenuEditing }
@@ -116,6 +123,10 @@ export type Kinds = {
   myPlaces: Request.Kind[Signed[()], Array[Listing.Listing], Problem.Problem],
   menuBoard: Request.Kind[Visit[Str], Menu.MenuBoard, Problem.Problem],
   saveMenu: Request.Kind[Signed[MenuSaving], Menu.MenuListing, Problem.Problem],
+  placeMedia: Request.Kind[Visit[Str], Media.Gallery, Problem.Problem],
+  startMedia: Request.Kind[Signed[MediaStart], Media.UploadTicket, Problem.Problem],
+  finishMedia: Request.Kind[Signed[MediaFinish], (), Problem.Problem],
+  removeMedia: Request.Kind[Signed[Str], (), Problem.Problem],
   reviews: Request.Kind[Visit[ReviewRead], Review.ReviewBoard, Problem.Problem],
   saveReview: Request.Kind[Signed[ReviewSaving], (), Problem.Problem],
   deleteReview: Request.Kind[Signed[Str], (), Problem.Problem],
@@ -193,6 +204,10 @@ export fn kinds() -> Kinds {
     myPlaces: kind("places.mine", READ),
     menuBoard: kind("menus.board", READ),
     saveMenu: kind("menus.save", COMMAND),
+    placeMedia: kind("media.gallery", READ),
+    startMedia: kind("media.start", COMMAND),
+    finishMedia: kind("media.finish", COMMAND),
+    removeMedia: kind("media.remove", COMMAND),
     reviews: kind("reviews.board", READ),
     saveReview: kind("reviews.save", COMMAND),
     deleteReview: kind("reviews.delete", COMMAND),

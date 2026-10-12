@@ -1,0 +1,120 @@
+/** @Web.Handlers.Media.Owner — a place owner's photographs and menu documents */
+module Web.Handlers.Media
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Option as Option
+import Std.Result as Result
+import App.Assembly as Assembly
+import App.Messages as Messages
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import Domain.Media as Media
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Media as MediaService
+import Utils.Wire as Wire
+import View.Pages.Media as MediaPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The owner's media routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.PLACE_MEDIA, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| manager(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_MEDIA, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| start(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_MEDIA_FINISH, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| finish(&held, &visitor, &session))),
+    Route.post(Routes.PLACE_MEDIA_REMOVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| remove(&held, &visitor, &session))),
+    Route.get(Routes.MEDIA_SWEEP, |request: Route.Request| sweep(&held, &request))
+  ]
+}
+
+/// The place the member owns and may edit, by the slug in the address.
+fn owned(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Result[Place.Detail, Problem.Problem] {
+  let (detail, _) = Serve.ask(app, &app.kinds.editablePlace, Serve.signed(session, Serve.param(visitor, "slug"))) ?
+  Ok(detail)
+}
+
+/// The owner's page of photographs and, where the category has menus, menu documents.
+fn manager(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match owned(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let gallery = match Serve.ask(app, &app.kinds.placeMedia, Serve.visit(visitor, detail.card.id)) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let menus = Result.unwrapOr(Result.map(Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)), |board| board.supported), false)
+  Respond.page(200, &MediaPage.render(&Context.frame(app, visitor), &detail, &gallery, menus))
+}
+
+/// Reserves a declared upload and answers where the browser sends that one file.
+fn start(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match owned(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let declared: Media.UploadRequest = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Invalid([Problem.FieldError{field: "file", key: "media.invalid"}])) }
+  }
+  match Serve.ask(app, &app.kinds.startMedia, Serve.signed(session, Messages.MediaStart{placeId: detail.card.id, request: declared})) {
+    case Ok(ticket) => Respond.json(200, &Json.object(&[
+          ("id", Json.Text(ticket.id)),
+          ("uploadUrl", Json.Text(ticket.uploadUrl)),
+          ("apiKey", Json.Text(ticket.apiKey)),
+          ("finishUrl", Json.Text(Routes.PLACE_PREFIX + detail.card.slug + "/media/" + ticket.id + "/finish"))
+        ]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Verifies the sent file against its reservation before it is shown.
+fn finish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match owned(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.finishMedia, Serve.signed(session, Messages.MediaFinish{placeId: detail.card.id, mediaId: Serve.param(visitor, "id")})) {
+    case Ok(_) => Respond.withFlash(app, Respond.json(200, &Json.object(&[("ok", Json.Boolean(true))])), "flash.media_saved")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The scheduled cleanup. Without a configured secret, or with another one, the route does not exist.
+fn sweep(app: &Assembly.App, request: &Route.Request) -> Http.Response {
+  let answer = sweepAnswer(app, request)
+  Http.Response{..answer, headers: answer.headers.concat(HttpConstants.SECURITY_HEADERS).push(("cache-control", HttpConstants.CACHE_PRIVATE))}
+}
+
+/// The sweep's outcome before the shared headers are added.
+fn sweepAnswer(app: &Assembly.App, request: &Route.Request) -> Http.Response {
+  let secret = app.runtime.cronSecret
+  let given = Option.unwrapOr(Route.header(request, "authorization"), "")
+  if secret.isEmpty() || !Crypto.bytesMatch(&Bytes.fromText("Bearer " + secret), &Bytes.fromText(given)) {
+    return Respond.json(404, &Json.object(&[("error", Json.Text("not_found"))]))
+  }
+  match MediaService.sweep(&app.runtime) {
+    case Ok(count) => Respond.json(200, &Json.object(&[("deleted", Json.Number(count))]))
+    case Err(problem) => Respond.json(503, &Json.object(&[("error", Json.Text(Problem.code(&problem)))]))
+  }
+}
+
+/// Removes one file and returns to the owner's page.
+fn remove(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let detail = match owned(app, visitor, session) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Serve.ask(app, &app.kinds.removeMedia, Serve.signed(session, Serve.param(visitor, "id"))) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + detail.card.slug + "/media"), "flash.media_removed")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

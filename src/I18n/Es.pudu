@@ -112,6 +112,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("search.radius_km", "A :km km o menos"),
     ("search.nearby_towns", "Pueblos cercanos"),
     ("search.around_town", "Alrededor de :town · :km km"),
+    ("flash.media_saved", "Tu foto está guardada."),
+    ("flash.media_removed", "Se quitó el archivo."),
     ("flash.menu_saved", "Tu menú está guardado."),
     ("flash.place_hidden", "Tu lugar está oculto. Solo tú puedes verlo."),
     ("flash.place_published", "Tu lugar está publicado."),
