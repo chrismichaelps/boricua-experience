@@ -1,7 +1,7 @@
-import { haptic } from './haptics.js?v=52';
-import { postForm } from '../net/http.js?v=52';
-import { message } from '../constants/messages.js?v=52';
-import { toast } from './toast.js?v=52';
+import { haptic } from './haptics.js?v=53';
+import { postForm, RequestFailed } from '../net/http.js?v=53';
+import { message } from '../constants/messages.js?v=53';
+import { toast } from './toast.js?v=53';
 
 export function saveToggle(form) {
   form.addEventListener('submit', async (event) => {
@@ -34,6 +34,7 @@ export function reactToggle(form) {
     group.setAttribute('aria-busy', 'true');
     const controls = [...group.querySelectorAll('button')];
     controls.forEach((control) => { control.disabled = true; });
+    let closed = false;
     try {
       const { reaction, likeCount } = await postForm(form);
       for (const other of form.closest('.reactions').querySelectorAll('form[data-feature="react"]')) {
@@ -47,12 +48,14 @@ export function reactToggle(form) {
         if (count) count.textContent = String(likeCount);
       }
       haptic('success');
-    } catch {
+    } catch (error) {
       haptic('error');
-      toast(message('tryAgain'));
+      // A refusal (own activity, cancelled) is final: say so and keep the controls off instead of inviting retries.
+      closed = error instanceof RequestFailed && error.status === 409;
+      toast(message(closed ? 'reactionClosed' : 'tryAgain'));
     } finally {
       group.setAttribute('aria-busy', 'false');
-      controls.forEach((control) => { control.disabled = false; });
+      controls.forEach((control) => { control.disabled = closed; });
     }
   });
 }

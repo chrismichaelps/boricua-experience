@@ -51,7 +51,9 @@ export function motion() {
     const original = button.style.transform;
     const base = getComputedStyle(button).transform === 'none' ? '' : getComputedStyle(button).transform;
     try {
-      const control = animate(button, { transform: `${base} scale(.97)` }, { duration: .08 });
+      // Both keyframes are explicit and share one function list: an implied start value is read as
+      // scale(0) on a button's first press, collapsing it so the release misses and no click lands.
+      const control = animate(button, { transform: [`${base} scale(1)`, `${base} scale(.97)`] }, { duration: .08 });
       held.set(id, { button, base, original, control });
     } catch { button.style.transform = original; }
   };
