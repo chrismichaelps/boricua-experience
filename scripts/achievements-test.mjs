@@ -38,7 +38,7 @@ for (const name of files) {
   assert.ok(!/<script|on[a-z]+=|href="http|xlink:href="http|<foreignObject/i.test(svg), `${badge} carries nothing active`);
   assert.ok(svg.includes('prefers-reduced-motion'), `${badge} rests under reduced motion`);
   for (const id of svg.matchAll(/ id="([^"]+)"/g)) assert.ok(id[1].startsWith(`bx-${badge}-`), `${badge} prefixes its ids (${id[1]})`);
-  assert.ok(/class="b-(float|sway|pulse|twinkle|spin)/.test(svg), `${badge} moves gently`);
+  assert.ok(/class="b-(float|sway|pulse|twinkle|spin|blink)/.test(svg), `${badge} moves gently`);
   assert.ok(/bx-badge-(common|rare|epic|legendary)/.test(svg), `${badge} names its rarity`);
   const body = svg.replace(/<style>[\s\S]*?<\/style>/, '').replace(/ id="[^"]+"| data-badge="[^"]+"|url\(#[^)]+\)/g, '');
   assert.ok(!drawn.has(body), `${badge} is unique`);

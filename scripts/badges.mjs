@@ -15,10 +15,10 @@ const C = {
 
 // Rarity frames: background, ring and sparkle colors.
 const RARITY = {
-  common: { bg: ['#fffdf5', '#e4f1d6'], ring: ['#8fd16f', '#3f9440', '#2d7a33'], spark: '#6fc055', sparks: 1 },
-  rare: { bg: ['#f6fbff', '#d3e6fb'], ring: ['#7cbcff', '#1878ec', '#0f5cc0'], spark: '#5aa6f5', sparks: 2 },
-  epic: { bg: ['#fcf6ff', '#e4d3fb'], ring: ['#c3a3f5', '#7b4bd1', '#55309f'], spark: '#a77ce8', sparks: 3 },
-  legendary: { bg: ['#fffbef', '#fde3a3'], ring: ['#ffe28a', '#e0a100', '#a86c00'], spark: '#f2b630', sparks: 4 },
+  common: { bg: ['#f3f9ea', '#cfe8bb'], ring: ['#8fd16f', '#3f9440', '#2d7a33'], spark: '#6fc055', sparks: 1 },
+  rare: { bg: ['#eef6ff', '#c4dcf7'], ring: ['#7cbcff', '#1878ec', '#0f5cc0'], spark: '#5aa6f5', sparks: 2 },
+  epic: { bg: ['#f6efff', '#dccaf7'], ring: ['#c3a3f5', '#7b4bd1', '#55309f'], spark: '#a77ce8', sparks: 3 },
+  legendary: { bg: ['#fff7df', '#f8dc95'], ring: ['#ffe28a', '#e0a100', '#a86c00'], spark: '#f2b630', sparks: 4 },
 };
 
 // Motion shared by every badge. The same classes are defined in badges.css for badges drawn inline.
@@ -56,7 +56,7 @@ const MOTIFS = {
   bio: () => `<circle cx="60" cy="60" r="40" fill="${C.night}" opacity=".18"/><path d="M76 30A11 11 0 1 0 86 44A9 9 0 1 1 76 30Z" fill="${C.sun}"/><path d="M24 62Q36 54 48 62T72 62T96 62V86H24Z" fill="${C.night}"/><path d="M24 70Q36 64 48 70T72 70T96 70" stroke="#3ad1e8" stroke-width="2.6" fill="none" class="b-pulse"/>${[[36, 76, 0], [52, 80, 0.5], [66, 75, 1], [80, 79, 1.5], [44, 69, 2], [72, 68, 0.8]].map(([x, y, d]) => `<circle class="b-twinkle" style="animation-delay:${d}s" cx="${x}" cy="${y}" r="2.2" fill="#7ef3ff"/>`).join('')}`,
   piragua: () => `<g class="b-float"><path d="M44 44C44 32 52 26 60 26C68 26 76 32 76 44Z" fill="${C.red}"/><path d="M52 30C56 28 60 28 62 30C58 34 54 40 54 44H44C44 38 47 33 52 30Z" fill="${C.sea}"/><path d="M42 44H78L60 84Z" fill="${C.cream}" stroke="${C.beak}" stroke-width="1.6" stroke-linejoin="round"/><path d="M48 52L72 52M51 60L69 60M54 68L66 68" stroke="${C.beak}" stroke-width="1.4"/><circle cx="66" cy="36" r="2" fill="#fff" opacity=".8"/></g>`,
   coffee: () => `<path d="M22 72L40 46L52 60L66 40L98 72Z" fill="${C.green}"/><path d="M40 46L46 54M66 40L72 50" stroke="${C.lime}" stroke-width="2.5" stroke-linecap="round"/><path d="M40 62H76V70C76 80 68 86 58 86C48 86 40 80 40 70Z" fill="${C.bark}"/><path d="M76 66C84 66 84 76 76 76" stroke="${C.bark}" stroke-width="4" fill="none"/><path d="M40 62H76" stroke="#6b4423" stroke-width="3" stroke-linecap="round"/><g class="b-float">${[[50, 0], [58, 0.7], [66, 1.4]].map(([x, d]) => `<path class="b-pulse" style="animation-delay:${d}s" d="M${x} 56C${x - 4} 50 ${x + 4} 46 ${x} 40" stroke="${C.sand}" stroke-width="2.6" stroke-linecap="round" fill="none"/>`).join('')}</g>`,
-  island: () => `<g class="b-float"><path d="M26 58C30 52 38 52 44 50C52 48 58 46 66 47C74 48 82 47 88 50C92 52 92 58 88 60C82 62 76 62 70 64C62 66 54 66 46 65C38 64 30 63 27 61Z" fill="${C.fern}" stroke="${C.leaf}" stroke-width="2" stroke-linejoin="round"/><path d="M40 57Q52 52 62 56T82 55" stroke="${C.leaf}" stroke-width="1.6" fill="none" opacity=".6"/><ellipse cx="93" cy="62" rx="3.4" ry="1.8" fill="${C.fern}"/><ellipse cx="95" cy="55" rx="2.2" ry="1.6" fill="${C.fern}"/></g><path d="M24 74Q42 70 60 74T96 74" stroke="${C.sea}" stroke-width="2.4" fill="none" opacity=".55" class="b-pulse"/>`,
+  island: () => `<path d="M22 72Q40 67 60 71T98 71" stroke="${C.sea}" stroke-width="2.2" fill="none" opacity=".5" class="b-pulse"/><g class="b-float"><path d="M24.5 51.2L27.6 49.1L34 48.9L41 48.3L48 48.7L55 48.4L62 48.7L69 48.5L76 49.1L82 49.6L87 50.4L90.6 52.1L91.4 54.6L89.2 56.9L88 60.4L84.6 62.4L79 63.1L73 63.4L67.4 64.1L61 64.4L55.6 65.4L50.6 65.1L45.4 64.3L39.6 64.6L33.6 64.4L30.4 63.6L28.6 61.4L26.2 58.6L25.4 54.8Z" fill="${C.fern}" stroke="${C.leaf}" stroke-width="1.6" stroke-linejoin="round"/><path d="M33 58.2C41 55.4 49 57.6 57 55.6C65 53.6 73 56 82 54.8" stroke="${C.leaf}" stroke-width="2" stroke-linecap="round" fill="none" opacity=".75"/><path d="M28.4 50.6L40 49.8L54 49.6" stroke="${C.lime}" stroke-width="1.4" stroke-linecap="round" fill="none" opacity=".9"/><path d="M93.6 60.6C95.4 59.8 99 60 100.2 60.8C99 61.8 95.4 62 93.6 60.6Z" fill="${C.fern}" stroke="${C.leaf}" stroke-width="1"/><path d="M96.2 54.4C97.4 53.8 99.2 54.2 99.6 55C98.6 55.8 96.8 55.6 96.2 54.4Z" fill="${C.fern}" stroke="${C.leaf}" stroke-width="1"/><circle cx="16.6" cy="58" r="1.3" fill="${C.fern}" stroke="${C.leaf}" stroke-width=".8"/></g>`,
   'island-small': () => `<path d="M24 70Q42 64 60 70T96 70V88H24Z" fill="${C.sea}" opacity=".3"/><g class="b-float"><path d="M34 64C36 56 46 54 54 56C60 58 60 64 54 66C46 68 36 68 34 64Z" fill="${C.fern}" stroke="${C.leaf}" stroke-width="2"/><path d="M66 60C68 54 78 52 84 56C88 60 84 64 78 64C72 65 66 64 66 60Z" fill="${C.lime}" stroke="${C.leaf}" stroke-width="2"/><path d="M46 56V44M46 44C42 42 38 44 36 47M46 44C50 41 55 42 57 45M46 44C45 40 47 37 50 36" stroke="${C.leaf}" stroke-width="2.4" stroke-linecap="round" fill="none"/></g>`,
   pin: () => `<ellipse cx="60" cy="82" rx="12" ry="3.5" fill="${C.ink}" opacity=".18"/><g class="b-float"><path d="M60 82C60 82 40 62 40 48C40 36 49 28 60 28C71 28 80 36 80 48C80 62 60 82 60 82Z" fill="${C.red}"/><circle cx="60" cy="48" r="8.5" fill="${C.cream}"/><circle cx="60" cy="48" r="4" fill="${C.green}"/></g>`,
   'home-pin': () => `<ellipse cx="60" cy="82" rx="12" ry="3.5" fill="${C.ink}" opacity=".18"/><g class="b-float"><path d="M60 82C60 82 40 62 40 48C40 36 49 28 60 28C71 28 80 36 80 48C80 62 60 82 60 82Z" fill="${C.green}"/><path d="M51 49L60 41L69 49V57H51Z" fill="${C.cream}"/><path d="M57 57V51H63V57" fill="${C.red}"/></g>`,
@@ -127,7 +127,53 @@ export const BADGES = [
   ['sanse', 'epic', 'cabezudo'], ['verano', 'rare', 'parasol', '3'], ['flamboyan', 'common', 'flamboyan'],
 ];
 
-const SPARKLE_SPOTS = [[24, 34], [94, 30], [98, 78], [22, 82]];
+const SPARKLE_SPOTS = [[25, 33], [95, 31], [97, 74]];
+
+// Points around the badge's center, for rim studs, dots and the legendary seal's scallops.
+const around = (count, radius, draw, offset = 0) => Array.from({ length: count }, (_, i) => {
+  const angle = (i / count) * Math.PI * 2 + offset;
+  return draw(+(60 + Math.cos(angle) * radius).toFixed(2), +(60 + Math.sin(angle) * radius).toFixed(2), i);
+}).join('');
+
+// The rim: a bevel lit from the top left like the logo, and a detail that names the tier in the
+// craft itself — plain for common, a dotted keyline for rare, studs for epic, a scalloped seal for
+// legendary — so rarity reads even without color.
+function rim(rarity, frame, id) {
+  const [light, mid, dark] = frame.ring;
+  const seal = rarity === 'legendary' ? around(30, 55.2, (x, y) => `<circle cx="${x}" cy="${y}" r="4.4" fill="${dark}"/>`) : '';
+  const base = `${seal}<circle cx="60" cy="60" r="56.5" fill="${dark}"/><circle cx="60" cy="59" r="55.2" fill="url(#${id}-ring)"/>`
+    + `<path d="M17.5 46A44.5 44.5 0 0 1 102.5 46" fill="none" stroke="${light}" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>`;
+  const detail = {
+    common: '',
+    rare: around(36, 52.6, (x, y) => `<circle cx="${x}" cy="${y}" r=".95" fill="#fff" opacity=".85"/>`),
+    epic: around(8, 52.6, (x, y) => `<circle cx="${x}" cy="${y}" r="2.3" fill="${light}" stroke="${dark}" stroke-width=".8"/>`, Math.PI / 8),
+    legendary: around(12, 52.6, (x, y) => `<path d="M${x} ${y - 2.6}L${x + 2.6} ${y}L${x} ${y + 2.6}L${x - 2.6} ${y}Z" fill="#fff6d6" stroke="${dark}" stroke-width=".7"/>`, Math.PI / 12)
+      + `<circle class="b-spin" cx="60" cy="60" r="50.6" fill="none" stroke="#fff6d6" stroke-width="1" stroke-dasharray="1.5 5" stroke-linecap="round" opacity=".9"/>`,
+  }[rarity];
+  return base + detail + `<circle cx="60" cy="60" r="49.4" fill="${dark}"/><circle cx="60" cy="60" r="48.2" fill="#fff8e6"/>`;
+}
+
+// The field: sky, two island hills and the ground the motif stands on.
+function scene(frame, id) {
+  const [sky, hill] = frame.bg;
+  return `<circle cx="60" cy="60" r="46.4" fill="${sky}"/>`
+    + `<path d="M12 80C24 70 36 68 48 72C58 75 66 66 78 66C90 66 100 72 108 78V108H12Z" fill="${hill}"/>`
+    + `<path d="M12 88C30 80 46 82 62 86C78 90 92 82 108 84V108H12Z" fill="${frame.ring[0]}" opacity=".38"/>`
+    + `<ellipse cx="60" cy="85" rx="22" ry="3.6" fill="#26372c" opacity=".13"/>`;
+}
+
+// A banner with folded tails for tiers; the label sits on its face.
+function banner(label, frame, id) {
+  const half = 9 + label.length * 4.6;
+  const left = 60 - half;
+  const right = 60 + half;
+  const [, mid, dark] = frame.ring;
+  return `<g><path d="M${left - 7} 92L${left + 2} 92L${left + 2} 104L${left - 7} 104L${left - 3.5} 98Z" fill="${dark}"/>`
+    + `<path d="M${right + 7} 92L${right - 2} 92L${right - 2} 104L${right + 7} 104L${right + 3.5} 98Z" fill="${dark}"/>`
+    + `<path d="M${left} 88H${right}V101H${left}Z" fill="url(#${id}-ring)" stroke="${dark}" stroke-width="1.2"/>`
+    + `<path d="M${left + 2} 90.4H${right - 2}" stroke="#fff" stroke-width="1" opacity=".45" stroke-linecap="round"/>`
+    + `<text x="60" y="98.4" text-anchor="middle" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif" font-size="10.5" font-weight="800" letter-spacing=".4" fill="#fff">${label}</text></g>`;
+}
 
 /** The SVG of one badge. */
 export function badge([name, rarity, motif, label]) {
@@ -136,20 +182,16 @@ export function badge([name, rarity, motif, label]) {
   if (!frame || !draw) throw new Error(`badge ${name}: unknown rarity or motif`);
   const id = `bx-${name}`;
   const legendary = rarity === 'legendary';
-  const ribbon = label ? `<g><rect x="${60 - (10 + label.length * 5)}" y="86" width="${20 + label.length * 10}" height="17" rx="8.5" fill="url(#${id}-ring)" stroke="#fff" stroke-width="2"/><text x="60" y="98.6" text-anchor="middle" font-family="system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif" font-size="12.5" font-weight="800" fill="#fff">${label}</text></g>` : '';
+  const sparkles = { common: 0, rare: 1, epic: 2, legendary: 3 }[rarity];
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="bx-badge bx-badge-${rarity}" data-badge="${name}"><style>${STYLE}</style><defs>`
-    + `<radialGradient id="${id}-bg" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="${frame.bg[0]}"/><stop offset="1" stop-color="${frame.bg[1]}"/></radialGradient>`
-    + `<linearGradient id="${id}-ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${frame.ring[0]}"/><stop offset=".55" stop-color="${frame.ring[1]}"/><stop offset="1" stop-color="${frame.ring[2]}"/></linearGradient>`
-    + `<clipPath id="${id}-clip"><circle cx="60" cy="60" r="47"/></clipPath>${crownDefs(id)}</defs>`
-    + `<circle cx="60" cy="60" r="57" fill="url(#${id}-ring)"/>`
-    + (legendary ? `<circle class="b-spin" cx="60" cy="60" r="53.5" fill="none" stroke="#fff6d6" stroke-width="1.6" stroke-dasharray="2 6" stroke-linecap="round"/>` : '')
-    + `<circle cx="60" cy="60" r="50" fill="#fff"/><circle cx="60" cy="60" r="47" fill="url(#${id}-bg)"/>`
-    + `<g clip-path="url(#${id}-clip)">`
-    + (legendary ? `<g class="b-spin" opacity=".45">${Array.from({ length: 12 }, (_, i) => `<path d="M60 60L56 6H64Z" fill="#fff3c4" transform="rotate(${i * 30} 60 60)"/>`).join('')}</g>` : '')
-    + `<circle class="b-pulse" cx="60" cy="58" r="30" fill="${frame.ring[0]}" opacity=".35"/>`
-    + draw(id) + `</g>`
-    + SPARKLE_SPOTS.slice(0, frame.sparks).map(([x, y], i) => sparkle(x, y, 5, frame.spark, i * 0.7)).join('')
-    + ribbon + `</svg>\n`;
+    + `<linearGradient id="${id}-ring" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="${frame.ring[0]}"/><stop offset=".5" stop-color="${frame.ring[1]}"/><stop offset="1" stop-color="${frame.ring[2]}"/></linearGradient>`
+    + `<clipPath id="${id}-clip"><circle cx="60" cy="60" r="46.4"/></clipPath>${crownDefs(id)}</defs>`
+    + rim(rarity, frame, id)
+    + `<g clip-path="url(#${id}-clip)">${scene(frame, id)}`
+    + (legendary ? `<g class="b-spin" opacity=".35">${Array.from({ length: 12 }, (_, i) => `<path d="M60 60L57 10H63Z" fill="#fff3c4" transform="rotate(${i * 30} 60 60)"/>`).join('')}</g>` : '')
+    + `<g transform="translate(0 2)">${draw(id)}</g></g>`
+    + SPARKLE_SPOTS.slice(0, sparkles).map(([x, y], i) => sparkle(x, y, 4.2, i % 2 ? '#fff6d6' : frame.spark, i * 0.9)).join('')
+    + (label ? banner(label, frame, id) : '') + `</svg>\n`;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
