@@ -22,7 +22,7 @@ fn frameAt(locale: Locale.Locale, path: Str) -> Frame.Frame {
 
 /// An achievement with only what a case needs.
 fn item(slug: Str, progress: Int, target: Int, unlockedAt: Option[Str]) -> Achievement.Item {
-  Achievement.Item{slug: slug, category: "discovery", rarity: "rare", badge: slug, title: Some("Title " + slug), description: Some("About " + slug), target: target, progress: progress, unlockedAt: unlockedAt, seasonal: false, open: true, seasonFrom: None, seasonUntil: None, availableUntil: None}
+  Achievement.Item{slug: slug, category: "discovery", rarity: "rare", badge: slug, title: Some("Title " + slug), description: Some("About " + slug), target: target, progress: progress, unlockedAt: unlockedAt, unlockedNow: unlockedAt != None, editions: [], seasonal: false, open: true, window: None}
 }
 
 /// Runs the achievement checks.
@@ -38,6 +38,12 @@ fn main() -> Int {
   let season = Option.fromArray(&board.items.filter(|found: Achievement.Item| found.slug == "navidad"))
   let half = item("towns-10", 5, 10, None)
   let over = item("rsvp-5", 9, 5, None)
+  let seasonalDetail = match season {
+    case Some(found) => Html.render(&AchievementsPage.renderOne(&frameAt(Locale.Es, "/achievements/navidad"), &found))
+    case None => ""
+  }
+  let earnedSeason = Achievement.Item{..item("asalto", 1, 3, Some("2026-01-02T16:00:00+00:00")), seasonal: true, open: true, unlockedNow: false, editions: ["2026–2027", "2025–2026"], window: Some(Achievement.Window{open: true, ended: false, label: Some("2026–2027"), starts: Some("2026-12-01"), ends: Some("2027-01-06")})}
+  let earnedDetail = Html.render(&AchievementsPage.renderOne(&frameAt(Locale.En, "/achievements/asalto"), &earnedSeason))
   let detail = Html.render(&AchievementsPage.renderOne(&frameAt(Locale.Es, "/achievements/towns-10"), &half))
   let signals = [
     Achievement.Signal{metric: "town_view", key: "loiza"},
@@ -50,7 +56,15 @@ fn main() -> Int {
       Test.that("the database board decodes", board.total == 81 && board.items.length() == 5 && board.categories.length() == 3),
       Test.that("categories decode with their own title", board.categories.length() > 0 && board.categories[0].title == "Discovery and map"),
       Test.that("a secret locked achievement has no title", match secret { case Some(found) => found.title == None && found.description == None case None => false }),
-      Test.that("a seasonal achievement carries its season", match season { case Some(found) => found.seasonal && found.seasonFrom == Some("12-01") case None => false }),
+      Test.that("a seasonal achievement carries its next edition with years", match season {
+          case Some(found) => found.seasonal && match found.window { case Some(window) => window.starts == Some("2026-12-01") && window.ends == Some("2027-01-06") && window.label == Some("2026–2027") case None => false }
+          case None => false
+        }),
+      Test.that("a seasonal detail names the edition's years", seasonalDetail.contains("1 dic 2026 – 6 ene 2027") && seasonalDetail.contains("próxima edición")),
+      Test.that("earned editions are listed with their years", earnedDetail.contains("Earned in 2026–2027 · 2025–2026")),
+      Test.that("a new edition shows its own progress after an earlier one was earned", earnedDetail.contains("1 / 3")),
+      Test.equals("a full date reads in Spanish with its year", &Dates.fullDate(&Locale.Es, "2027-01-06"), &"6 ene 2027"),
+      Test.equals("a full date reads in English with its year", &Dates.fullDate(&Locale.En, "2026-12-01"), &"Dec 1, 2026"),
       Test.equals("the unlocked filter keeps unlocked ones", &unlockedOnly.length(), &2),
       Test.equals("a category filter keeps its own", &AchievementsPage.shown(&board, "participation").length(), &board.items.filter(|found: Achievement.Item| found.category == "participation").length()),
       Test.that("unlocked tiles are marked with their rarity", page.contains("ach-tile is-unlocked rarity-")),

@@ -7,14 +7,14 @@
    "title": "Count me in!",
    "rarity": "common",
    "target": 1,
+   "window": null,
    "category": "participation",
+   "editions": [],
    "progress": 1,
    "seasonal": false,
    "description": "Join your first activity.",
-   "season_from": null,
-   "unlocked_at": "2026-10-13T15:43:47.375084+00:00",
-   "season_until": null,
-   "available_until": null
+   "unlocked_at": "2026-10-13T16:14:34.702532+00:00",
+   "unlocked_now": true
   },
   {
    "open": true,
@@ -23,14 +23,14 @@
    "title": "Support local",
    "rarity": "common",
    "target": 1,
+   "window": null,
    "category": "participation",
+   "editions": [],
    "progress": 1,
    "seasonal": false,
    "description": "Join a paid activity.",
-   "season_from": null,
-   "unlocked_at": "2026-10-13T15:43:47.375084+00:00",
-   "season_until": null,
-   "available_until": null
+   "unlocked_at": "2026-10-13T16:14:34.702532+00:00",
+   "unlocked_now": true
   },
   {
    "open": true,
@@ -39,14 +39,14 @@
    "title": "Town to town",
    "rarity": "common",
    "target": 3,
+   "window": null,
    "category": "discovery",
+   "editions": [],
    "progress": 0,
    "seasonal": false,
    "description": "Explore 3 different towns.",
-   "season_from": null,
    "unlocked_at": null,
-   "season_until": null,
-   "available_until": null
+   "unlocked_now": false
   },
   {
    "open": true,
@@ -55,14 +55,14 @@
    "title": null,
    "rarity": "epic",
    "target": 2,
+   "window": null,
    "category": "boricua",
+   "editions": [],
    "progress": 0,
    "seasonal": false,
    "description": null,
-   "season_from": null,
    "unlocked_at": null,
-   "season_until": null,
-   "available_until": null
+   "unlocked_now": false
   },
   {
    "open": false,
@@ -71,14 +71,21 @@
    "title": "Christmas parranda",
    "rarity": "rare",
    "target": 1,
+   "window": {
+    "ends": "2027-01-06",
+    "open": false,
+    "ended": false,
+    "label": "2026–2027",
+    "starts": "2026-12-01",
+    "edition": "2026"
+   },
    "category": "seasonal",
+   "editions": [],
    "progress": 0,
    "seasonal": true,
    "description": "Join an activity during the Christmas season.",
-   "season_from": "12-01",
    "unlocked_at": null,
-   "season_until": "01-06",
-   "available_until": null
+   "unlocked_now": false
   }
  ],
  "total": 81,

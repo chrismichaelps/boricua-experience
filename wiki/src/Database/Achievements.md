@@ -11,7 +11,7 @@ Tables (RLS on, no policies, no client grants):
 - `achievement_categories(slug, title_es, title_en, sort)`.
 - `achievements(slug, category, rarity, metric, mode, step_days, target, criteria, keys, badge, title_*, description_*, sort, active, secret, available_from, available_until, season_from, season_until, meta)`. `rarity` is common, rare, epic or legendary. `mode` is `count` or `streak`. `season_*` are `MM-DD` and may wrap the year (12-01 → 01-06).
 - `achievement_signals(user_id, metric, key, attrs, occurred_at)`, primary key (user, metric, key), so a repeated action never counts twice.
-- `user_achievements(user_id, achievement, progress, unlocked_at, seen_at)`.
+- `user_achievements(user_id, achievement, edition, progress, unlocked_at, seen_at)`, one row per edition.
 
 Functions:
 - `private.achievement_signal(user, metric, key, attrs, at)` is the single unlock mechanism. It answers the slugs it unlocked.
@@ -35,6 +35,15 @@ Browser metrics and their keys:
 - `event_view`, `share` and `calendar_add` take the slug of a published activity, stored as its id.
 
 Unknown metrics and invalid keys are ignored. A member records at most 300 browser signals a day.
+
+## Seasons and editions
+A yearly season repeats every year, so its progress and unlocks belong to an **edition**, named by the year the season starts in Puerto Rico time. A season that wraps the new year (12-01 → 01-06) belongs to the year of its December days, so 3 January 2027 is in the 2026 edition. Every other achievement has the single edition `''`, including one-off editions set with `available_from`/`available_until`.
+- Progress counts only signals inside the edition, so two activities in one Christmas season and one in the next never add up to three.
+- Each edition is earned once, and earning it again in a later year adds an edition rather than re-dating the first. The `achievement` signal is keyed by slug, so achievements that count other achievements count each achievement once.
+- A stored signal is refreshed when the same action happens again at least 20 hours later. Its new date can then fall in a later edition (the same San Juan visit counts for SanSe 2026 and SanSe 2027).
+- The board shows the open edition, or else the next one, with full dates and years ("1 dic 2026 – 6 ene 2027"), and the editions already earned ("2026–2027 · 2025–2026").
+- A finished one-off edition says it has ended.
+- Season days must exist in every year: 02-29, 04-31 and equal start and end days are refused.
 
 ## Negative Logic
 No points, store or rewards. Secret achievements hide their title and description until unlocked. An inactive achievement stops progressing and disappears from the board unless the member already unlocked it. A seasonal achievement only progresses and unlocks inside its window; outside it, the board shows it locked with its season.

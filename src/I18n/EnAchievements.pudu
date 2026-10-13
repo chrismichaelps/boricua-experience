@@ -7,7 +7,6 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.intro", "Badges you earn by exploring, joining and hosting across Puerto Rico. Just for fun: no points, no prizes."),
     ("achievements.secret", "Secret achievement"),
     ("achievements.secret_hint", "Keep exploring to discover this one."),
-    ("achievements.until", "Until :date"),
     ("achievements.progress", ":progress / :target"),
     ("achievements.unlocked_label", "Unlocked"),
     ("achievements.locked_label", "Not unlocked yet"),
@@ -16,8 +15,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.rarity.epic", "Epic"),
     ("achievements.rarity.legendary", "Legendary"),
     ("achievements.unlocked_on", "Unlocked on :date"),
-    ("achievements.season_open", "Seasonal, available now: :season"),
-    ("achievements.season_closed", "Seasonal, returns :season"),
+    ("achievements.season_open", "Seasonal, available now until :date"),
+    ("achievements.season_closed", "Seasonal, next edition :season"),
     ("achievements.filters", "Filter achievements"),
     ("achievements.all", "All"),
     ("achievements.unlocked_filter", "Unlocked"),
@@ -30,5 +29,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.link_body", "Your badges for exploring, joining and hosting."),
     ("achievements.showcase", "Badges"),
     ("achievements.showcase_count.one", "1 badge unlocked"),
-    ("achievements.showcase_count.other", ":count badges unlocked")
+    ("achievements.showcase_count.other", ":count badges unlocked"),
+    ("achievements.season_ended", "This edition has ended"),
+    ("achievements.editions", "Earned in :years")
   ])

@@ -51,6 +51,18 @@ export fn short(locale: &Locale.Locale, at: &Time.Local) -> Str {
   }
 }
 
+/// A calendar date written `YYYY-MM-DD` as `1 dic 2026` or `Dec 1, 2026`; text of any other shape is answered as given.
+export fn fullDate(locale: &Locale.Locale, text: Str) -> Str {
+  let parts = text.split("-")
+  if parts.length() != 3 { return text }
+  let day = monthDay(locale, parts[1] + "-" + parts[2])
+  if day == parts[1] + "-" + parts[2] { return text }
+  match locale {
+    case Locale.Es => day + " " + parts[0]
+    case Locale.En => day + ", " + parts[0]
+  }
+}
+
 /// A yearly date written `MM-DD` as `1 dic` or `Dec 1`; text of any other shape is answered as given.
 export fn monthDay(locale: &Locale.Locale, text: Str) -> Str {
   let parts = text.split("-")

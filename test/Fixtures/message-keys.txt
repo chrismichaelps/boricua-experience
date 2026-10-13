@@ -76,6 +76,7 @@ account.your_data
 account.your_data_body
 achievements.all
 achievements.close
+achievements.editions
 achievements.empty_body
 achievements.empty_title
 achievements.filters
@@ -88,6 +89,7 @@ achievements.rarity.epic
 achievements.rarity.legendary
 achievements.rarity.rare
 achievements.season_closed
+achievements.season_ended
 achievements.season_open
 achievements.secret
 achievements.secret_hint
@@ -100,7 +102,6 @@ achievements.toast
 achievements.unlocked_filter
 achievements.unlocked_label
 achievements.unlocked_on
-achievements.until
 achievements.view
 activity.delete_search
 activity.no_organizing

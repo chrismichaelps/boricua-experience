@@ -32,17 +32,35 @@ fn art(item: &Achievement.Item, size: Int) -> H.Node {
 /// The title shown for an achievement; a secret one stays hidden until unlocked.
 fn title(frame: &Frame.Frame, item: &Achievement.Item) -> Str { Option.unwrapOr(item.title, Frame.t(frame, "achievements.secret")) }
 
-/// The season of a seasonal achievement, such as `1 dic – 6 ene`, or nothing.
+/// The dates of the edition open now, or of the next one, with their years: `1 dic 2026 – 6 ene 2027`.
 fn season(frame: &Frame.Frame, item: &Achievement.Item) -> Str {
-  match (item.seasonFrom, item.seasonUntil) {
-    case (Some(from), Some(until)) => Dates.monthDay(&frame.locale, from) + " – " + Dates.monthDay(&frame.locale, until)
-    case _ => match item.availableUntil {
-      case Some(until) => match Time.parseTimestamp(until) {
-        case Some(at) => Frame.tf(frame, "achievements.until", &[("date", Dates.short(&frame.locale, &Time.local(&at)))])
-        case None => ""
-      }
-      case None => ""
+  match item.window {
+    case Some(window) => match (window.starts, window.ends) {
+      case (Some(starts), Some(ends)) => Dates.fullDate(&frame.locale, starts) + " – " + Dates.fullDate(&frame.locale, ends)
+      case _ => ""
     }
+    case None => ""
+  }
+}
+
+/// The short season shown on a tile: `1 dic – 6 ene`, the year being on the detail.
+fn seasonShort(frame: &Frame.Frame, item: &Achievement.Item) -> Str {
+  match item.window {
+    case Some(window) => match (window.starts, window.ends) {
+      case (Some(starts), Some(ends)) => Dates.monthDay(&frame.locale, starts.drop(5)) + " – " + Dates.monthDay(&frame.locale, ends.drop(5))
+      case _ => ""
+    }
+    case None => ""
+  }
+}
+
+/// What the detail says about the season: open until a date, the next edition, or over.
+fn seasonLine(frame: &Frame.Frame, item: &Achievement.Item) -> Str {
+  match item.window {
+    case Some(window) => if window.ended { Frame.t(frame, "achievements.season_ended") } else if window.open {
+      Frame.tf(frame, "achievements.season_open", &[("date", Dates.fullDate(&frame.locale, Option.unwrapOr(window.ends, "")))])
+    } else { Frame.tf(frame, "achievements.season_closed", &[("season", season(frame, item))]) }
+    case None => ""
   }
 }
 
@@ -80,7 +98,7 @@ fn tile(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
           H.span().class("ach-name").says(title(frame, item)),
           H.span().class("sr-only").says(status + " · " + Frame.t(frame, "achievements.rarity." + item.rarity)),
           if !done && item.target > 1 { progress(frame, item, false) } else { H.nothing() },
-          if item.seasonal { H.span().class("ach-season").holding([Icons.sized("calendar", 12), H.span().says(season(frame, item))]) } else { H.nothing() }
+          if item.seasonal { H.span().class("ach-season").holding([Icons.sized("calendar", 12), H.span().says(seasonShort(frame, item))]) } else { H.nothing() }
         ]),
       detailTemplate(frame, item)
     ])
@@ -97,8 +115,11 @@ fn detailBody(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
       if done {
         H.p().class("ach-when").holding([Icons.sized("check", 16), H.span().says(Frame.tf(frame, "achievements.unlocked_on", &[("date", unlockedOn(frame, item))]))])
       } else if item.target > 1 { progress(frame, item, true) } else { H.p().class("ach-when muted").says(Frame.t(frame, "achievements.locked_label")) },
+      if item.editions.isEmpty() { H.nothing() } else { H.p().class("ach-when").says(Frame.tf(frame, "achievements.editions", &[("years", item.editions.join(" · "))])) },
+      // A seasonal one earned in an earlier year can be earned again in the edition open now.
+      if done && item.open && !item.unlockedNow && item.target > 1 { progress(frame, item, true) } else { H.nothing() },
       if item.seasonal {
-        H.p().class("ach-when muted").holding([Icons.sized("calendar", 16), H.span().says(Frame.tf(frame, if item.open { "achievements.season_open" } else { "achievements.season_closed" }, &[("season", season(frame, item))]))])
+        H.p().class("ach-when muted").holding([Icons.sized("calendar", 16), H.span().says(seasonLine(frame, item))])
       } else { H.nothing() }
     ])
 }

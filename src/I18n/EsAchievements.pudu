@@ -7,7 +7,6 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.intro", "Insignias que ganas explorando, participando y organizando por todo Puerto Rico. Solo por diversión: sin puntos ni premios."),
     ("achievements.secret", "Logro secreto"),
     ("achievements.secret_hint", "Sigue explorando para descubrirlo."),
-    ("achievements.until", "Hasta el :date"),
     ("achievements.progress", ":progress / :target"),
     ("achievements.unlocked_label", "Desbloqueado"),
     ("achievements.locked_label", "Aún sin desbloquear"),
@@ -16,8 +15,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.rarity.epic", "Épico"),
     ("achievements.rarity.legendary", "Legendario"),
     ("achievements.unlocked_on", "Desbloqueado el :date"),
-    ("achievements.season_open", "De temporada, disponible ahora: :season"),
-    ("achievements.season_closed", "De temporada, vuelve del :season"),
+    ("achievements.season_open", "De temporada, disponible ahora hasta el :date"),
+    ("achievements.season_closed", "De temporada, próxima edición: :season"),
     ("achievements.filters", "Filtrar logros"),
     ("achievements.all", "Todos"),
     ("achievements.unlocked_filter", "Desbloqueados"),
@@ -30,5 +29,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.link_body", "Tus insignias por explorar, participar y organizar."),
     ("achievements.showcase", "Insignias"),
     ("achievements.showcase_count.one", "1 insignia desbloqueada"),
-    ("achievements.showcase_count.other", ":count insignias desbloqueadas")
+    ("achievements.showcase_count.other", ":count insignias desbloqueadas"),
+    ("achievements.season_ended", "Esta edición ya terminó"),
+    ("achievements.editions", "Ganado en :years")
   ])
