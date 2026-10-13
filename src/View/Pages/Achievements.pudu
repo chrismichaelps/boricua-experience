@@ -1,0 +1,164 @@
+/** @View.Pages.Achievements.Board — the member's achievements as a grid of badges, and one achievement's detail */
+module View.Pages.Achievements
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Option as Option
+import Constants.App as App
+import Constants.Routes as Routes
+import Domain.Achievement as Achievement
+import I18n.Dates as Dates
+import Utils.Time as Time
+import View.Components.Icons as Icons
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The filter that shows only unlocked achievements, beside one per category.
+export const UNLOCKED_FILTER: Str = "unlocked"
+
+/// The address of an achievement's detail.
+export fn detailPath(slug: Str) -> Str { Routes.ACHIEVEMENT.replace(":slug", slug) }
+
+/// The badge image; its animations run only once the page script draws it inline.
+fn art(item: &Achievement.Item, size: Int) -> H.Node {
+  H.span().class("ach-art").data("badge", item.badge).holding([
+      H.img().src(Achievement.badgePath(item.badge) + "?v=" + App.ASSET_VERSION).alt("").at("width", show(size)).at("height", show(size)).at("loading", "lazy").at("decoding", "async")
+    ])
+}
+
+/// The title shown for an achievement; a secret one stays hidden until unlocked.
+fn title(frame: &Frame.Frame, item: &Achievement.Item) -> Str { Option.unwrapOr(item.title, Frame.t(frame, "achievements.secret")) }
+
+/// The season of a seasonal achievement, such as `1 dic – 6 ene`, or nothing.
+fn season(frame: &Frame.Frame, item: &Achievement.Item) -> Str {
+  match (item.seasonFrom, item.seasonUntil) {
+    case (Some(from), Some(until)) => Dates.monthDay(&frame.locale, from) + " – " + Dates.monthDay(&frame.locale, until)
+    case _ => match item.availableUntil {
+      case Some(until) => match Time.parseTimestamp(until) {
+        case Some(at) => Frame.tf(frame, "achievements.until", &[("date", Dates.short(&frame.locale, &Time.local(&at)))])
+        case None => ""
+      }
+      case None => ""
+    }
+  }
+}
+
+/// The date an achievement was unlocked, written for a reader.
+fn unlockedOn(frame: &Frame.Frame, item: &Achievement.Item) -> Str {
+  match item.unlockedAt {
+    case Some(at) => match Time.parseTimestamp(at) {
+      case Some(instant) => Dates.long(&frame.locale, &Time.local(&instant))
+      case None => ""
+    }
+    case None => ""
+  }
+}
+
+/// A progress bar with its value read out as `3 / 10`.
+fn progress(frame: &Frame.Frame, item: &Achievement.Item, label: Bool) -> H.Node {
+  let reached = if item.progress > item.target { item.target } else { item.progress }
+  let text = Frame.tf(frame, "achievements.progress", &[("progress", show(reached)), ("target", show(item.target))])
+  H.span().class("ach-progress").holding([
+      H.span().class("ach-bar").role("progressbar").at("aria-valuemin", "0").at("aria-valuemax", show(item.target)).at("aria-valuenow", show(reached)).label(text).holding([
+          H.span().class("ach-fill").at("style", "width: " + show(Achievement.percent(item)) + "%")
+        ]),
+      if label { H.span().class("ach-progress-text").says(text) } else { H.nothing() }
+    ])
+}
+
+/// One tile: the badge, its name, and progress while locked. Opens the detail.
+fn tile(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
+  let done = Achievement.unlocked(item)
+  let state = if done { "is-unlocked" } else { "is-locked" }
+  let status = if done { Frame.t(frame, "achievements.unlocked_label") } else { Frame.t(frame, "achievements.locked_label") }
+  H.li().holding([
+      H.a().class("ach-tile " + state + " rarity-" + item.rarity).href(detailPath(item.slug)).data("achievement", item.slug).holding([
+          art(item, 96),
+          H.span().class("ach-name").says(title(frame, item)),
+          H.span().class("sr-only").says(status + " · " + Frame.t(frame, "achievements.rarity." + item.rarity)),
+          if !done && item.target > 1 { progress(frame, item, false) } else { H.nothing() },
+          if item.seasonal { H.span().class("ach-season").holding([Icons.sized("calendar", 12), H.span().says(season(frame, item))]) } else { H.nothing() }
+        ]),
+      detailTemplate(frame, item)
+    ])
+}
+
+/// The detail of one achievement, also held in each tile for the script's dialog.
+fn detailBody(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
+  let done = Achievement.unlocked(item)
+  H.div().class("ach-detail " + (if done { "is-unlocked" } else { "is-locked" }) + " rarity-" + item.rarity).holding([
+      art(item, 200),
+      H.p().class("ach-rarity").says(Frame.t(frame, "achievements.rarity." + item.rarity)),
+      H.h2().class("ach-detail-title").says(title(frame, item)),
+      H.p().class("ach-detail-text").says(Option.unwrapOr(item.description, Frame.t(frame, "achievements.secret_hint"))),
+      if done {
+        H.p().class("ach-when").holding([Icons.sized("check", 16), H.span().says(Frame.tf(frame, "achievements.unlocked_on", &[("date", unlockedOn(frame, item))]))])
+      } else if item.target > 1 { progress(frame, item, true) } else { H.p().class("ach-when muted").says(Frame.t(frame, "achievements.locked_label")) },
+      if item.seasonal {
+        H.p().class("ach-when muted").holding([Icons.sized("calendar", 16), H.span().says(Frame.tf(frame, if item.open { "achievements.season_open" } else { "achievements.season_closed" }, &[("season", season(frame, item))]))])
+      } else { H.nothing() }
+    ])
+}
+
+/// The detail kept inert inside a tile until the dialog shows it.
+fn detailTemplate(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
+  H.tag("template").data("detail", item.slug).holding([detailBody(frame, item)])
+}
+
+/// The filters: every category, the seasonal ones, and what the member has unlocked.
+fn filters(frame: &Frame.Frame, board: &Achievement.Board, chosen: Str) -> H.Node {
+  let chip = |value: Str, label: Str| {
+    let link = H.a().class("chip" + (if value == chosen { " is-on" } else { "" })).href(if value.isEmpty() { Routes.ACHIEVEMENTS } else { Routes.ACHIEVEMENTS + "?c=" + value }).says(label)
+    H.li().holding([if value == chosen { link.at("aria-current", "page") } else { link }])
+  }
+  H.nav().class("ach-filters").label(Frame.t(frame, "achievements.filters")).holding([
+      H.ul().class("chips").holding([chip("", Frame.t(frame, "achievements.all")), chip(UNLOCKED_FILTER, Frame.t(frame, "achievements.unlocked_filter"))].concat(board.categories.map(|category: Achievement.Group| chip(category.slug, category.title))))
+    ])
+}
+
+/// The achievements a filter keeps.
+export fn shown(board: &Achievement.Board, chosen: Str) -> Array[Achievement.Item] {
+  if chosen.isEmpty() { return board.items }
+  if chosen == UNLOCKED_FILTER { return board.items.filter(|item: Achievement.Item| Achievement.unlocked(&item)) }
+  board.items.filter(|item: Achievement.Item| item.category == chosen)
+}
+
+/// The board page.
+export fn render(frame: &Frame.Frame, board: &Achievement.Board, chosen: Str) -> Html.Html {
+  let meta = Seo.meta(Frame.t(frame, "achievements.title"), Frame.t(frame, "achievements.intro"), Routes.ACHIEVEMENTS, false)
+  let items = shown(board, chosen)
+  let percent = if board.total > 0 { board.unlocked * 100 / board.total } else { 0 }
+  Layout.page(frame, &meta, Layout.Me, H.div().class("achievements").data("feature", "achievement-board").holding([
+        H.header().class("ach-head").holding([
+            H.a().class("text-link small").href(Routes.ACCOUNT).holding([Icons.sized("chevron-left", 16), H.span().says(Frame.t(frame, "nav.profile"))]),
+            H.h1().class("page-title").says(Frame.t(frame, "achievements.title")),
+            H.p().class("muted").says(Frame.t(frame, "achievements.intro")),
+            H.div().class("ach-summary").holding([
+                H.strong().says(Frame.tf(frame, "achievements.summary", &[("unlocked", show(board.unlocked)), ("total", show(board.total))])),
+                H.span().class("ach-bar ach-bar-wide").role("progressbar").at("aria-valuemin", "0").at("aria-valuemax", show(board.total)).at("aria-valuenow", show(board.unlocked)).label(Frame.t(frame, "achievements.title")).holding([
+                    H.span().class("ach-fill").at("style", "width: " + show(percent) + "%")
+                  ])
+              ])
+          ]),
+        filters(frame, board, chosen),
+        if items.isEmpty() { Notice.empty("star", Frame.t(frame, "achievements.empty_title"), Frame.t(frame, "achievements.empty_body"), H.nothing()) } else {
+          H.ul().class("ach-grid").holding(items.map(|item: Achievement.Item| tile(frame, &item)))
+        },
+        H.dialog().class("ach-dialog").id("ach-dialog").at("aria-labelledby", "ach-dialog-title").holding([
+            H.button().kind("button").class("ach-dialog-close").data("close", "dialog").label(Frame.t(frame, "achievements.close")).holding([Icons.sized("x", 22)]),
+            H.div().class("ach-dialog-body")
+          ])
+      ]))
+}
+
+/// One achievement's own page, for links and for browsers without the dialog.
+export fn renderOne(frame: &Frame.Frame, item: &Achievement.Item) -> Html.Html {
+  let meta = Seo.meta(title(frame, item) + " · " + Frame.t(frame, "achievements.title"), Option.unwrapOr(item.description, Frame.t(frame, "achievements.intro")), detailPath(item.slug), false)
+  Layout.page(frame, &meta, Layout.Me, H.div().class("narrow achievements").holding([
+        H.a().class("text-link small").href(Routes.ACHIEVEMENTS).holding([Icons.sized("chevron-left", 16), H.span().says(Frame.t(frame, "achievements.title"))]),
+        H.div().class("ach-page").holding([detailBody(frame, item)])
+      ]))
+}

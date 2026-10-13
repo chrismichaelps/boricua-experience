@@ -66,6 +66,9 @@ export const PLACE_REVIEW_REPORT: Str = "/lugar/:slug/reviews/:id/report"
 /// The member's requests, saved events, and organized events.
 export const ACTIVITY: Str = "/activity"
 export const NOTIFICATIONS: Str = "/notifications"
+/// The member's achievements and one achievement's detail.
+export const ACHIEVEMENTS: Str = "/achievements"
+export const ACHIEVEMENT: Str = "/achievements/:slug"
 /// The member's profile and settings.
 export const ACCOUNT: Str = "/account"
 export const ACCOUNT_PROFILE: Str = "/account/profile"
@@ -115,6 +118,8 @@ export const API_SUGGEST: Str = "/api/suggest"
 export const API_LOCATION: Str = "/api/location"
 export const API_LOCATION_STOP: Str = "/api/location/stop"
 export const API_PARTICIPANTS: Str = "/api/e/:slug/positions"
+/// Actions only the browser sees, posted for achievements; answers new unlocks.
+export const API_ACHIEVEMENT_SIGNALS: Str = "/api/achievements/signals"
 /// Static assets served by the CDN, or by the local server in development.
 export const ASSETS_PREFIX: Str = "/assets/"
 export const SERVICE_WORKER: Str = "/sw.js"

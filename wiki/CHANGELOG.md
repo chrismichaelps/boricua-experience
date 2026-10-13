@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-13 · [[src/Database/Achievements]] · data-driven achievements: 81 seeded across discovery, participation, hosting, social, profile, Puerto Rico and seasonal categories; one unlock mechanism over existing actions and browser signals; animated rarity badges; board, detail dialog, unlock toasts with chime; public badge showcase; backfill for existing members.
+
 - 2026-10-13 · [[src/Database/Community]] · waitlist with automatic promotion, organizer overview with views-to-requests conversion, approve-all and guest spreadsheet, review holds after repeated reports with administrator restore, Google/Outlook/file calendar links, share menu and a private subscribable calendar feed.
 
 - 2026-10-12 · [[src/Database/EventCovers]] · organizer-managed activity covers across categories; trusted server confirmation, shared reservation quota and pending-only cleanup; development verification passes, production cutover pending · issue #82.

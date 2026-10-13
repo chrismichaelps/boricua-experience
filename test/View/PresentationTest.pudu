@@ -11,6 +11,7 @@ import Std.List as List
 import Std.Result as Result
 import Std.Test as Test
 import Constants.App as App
+import Domain.Achievement as Achievement
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
@@ -176,8 +177,9 @@ fn main() -> Int {
   let unavailable = Html.render(&EventPage.render(&en, &badSource, &None))
   let sourceCard = Html.render(&EventCard.card(&en, &curated.card).html())
   let profile: Profile.PublicProfile = match Wire.decode(&Fixtures.json("public-profile.json")) { case Ok(p) => p case Err(_) => panic("profile fixture") }
-  let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
-  let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
+  let noBadges = Achievement.Showcase{total: 0, items: []}
+  let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
+  let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let checks = Test.suite("Presentation", &[
       Test.that("menu renders distinct unknown, free and paid facts", menuReader.contains("Ask for price") && menuReader.contains("Free") && menuReader.contains("$12.50")),
       Test.that("menu unavailable and declared allergens are readable", menuReader.contains("Currently unavailable") && menuReader.contains("Declared allergens: milk")),
@@ -264,7 +266,7 @@ fn main() -> Int {
       Test.equals("curated SEO avoids availability claims", &Json.encode(&Seo.event(en.siteUrl, &curated)).contains("InStock"), &false),
       Test.equals("admin profile badge is English", &adminEn.contains("Administrator"), &true),
       Test.equals("admin profile badge is Spanish", &adminEs.contains("Administrador"), &true),
-      Test.equals("member profile never has admin badge", &Html.render(&ProfilePage.render(&en, &profile)).contains("admin-badge"), &false),
+      Test.equals("member profile never has admin badge", &Html.render(&ProfilePage.render(&en, &profile, &noBadges)).contains("admin-badge"), &false),
 
       Test.equals("signed-out JSON status", &signedOutReply.status.code, &401),
       Test.equals("signed-out JSON expires secure session", &expiredCookies.filter(|cookie: Str| cookie.startsWith("bx_session=") && cookie.contains("Max-Age=0") && cookie.contains("Secure")).length(), &1),

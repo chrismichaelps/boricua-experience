@@ -114,6 +114,11 @@ export const CALL_TIMEOUT_MILLIS: Int = 8000
 /// Milliseconds one attempt may take.
 export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000
 
+/// Achievements: the board, browser signals, and public badges.
+export const MY_ACHIEVEMENTS: Str = "my_achievements"
+export const RECORD_ACHIEVEMENT_SIGNALS: Str = "record_achievement_signals"
+export const PUBLIC_ACHIEVEMENTS: Str = "public_achievements"
+
 /// Organizer tools and the private calendar feed.
 export const EVENT_INSIGHTS: Str = "event_insights"
 export const APPROVE_PENDING: Str = "approve_pending"

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" class="bx-badge bx-badge-common" data-badge="piragua"><style>.b-float{animation:b-float 4.8s ease-in-out infinite}
+.b-sway{animation:b-sway 5.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.b-pulse{animation:b-pulse 3.6s ease-in-out infinite}
+.b-twinkle{animation:b-twinkle 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.b-spin{animation:b-spin 28s linear infinite;transform-origin:60px 60px}
+.b-blink{animation:b-blink 5.2s 1.2s infinite;transform-box:fill-box;transform-origin:center;transform:scaleY(0)}
+@keyframes b-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.5px)}}
+@keyframes b-sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes b-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes b-twinkle{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+@keyframes b-spin{to{transform:rotate(360deg)}}
+@keyframes b-blink{0%,92%,100%{transform:scaleY(0)}95%{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){.b-float,.b-sway,.b-pulse,.b-twinkle,.b-spin,.b-blink{animation:none}}</style><defs><radialGradient id="bx-piragua-bg" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#fffdf5"/><stop offset="1" stop-color="#e4f1d6"/></radialGradient><linearGradient id="bx-piragua-ring" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8fd16f"/><stop offset=".55" stop-color="#3f9440"/><stop offset="1" stop-color="#2d7a33"/></linearGradient><clipPath id="bx-piragua-clip"><circle cx="60" cy="60" r="47"/></clipPath><radialGradient id="bx-piragua-crown" cx=".4" cy=".28" r=".85"><stop offset="0" stop-color="#6fc055"/><stop offset=".65" stop-color="#3f9440"/><stop offset="1" stop-color="#2d7a33"/></radialGradient></defs><circle cx="60" cy="60" r="57" fill="url(#bx-piragua-ring)"/><circle cx="60" cy="60" r="50" fill="#fff"/><circle cx="60" cy="60" r="47" fill="url(#bx-piragua-bg)"/><g clip-path="url(#bx-piragua-clip)"><circle class="b-pulse" cx="60" cy="58" r="30" fill="#8fd16f" opacity=".35"/><g class="b-float"><path d="M44 44C44 32 52 26 60 26C68 26 76 32 76 44Z" fill="#d93a31"/><path d="M52 30C56 28 60 28 62 30C58 34 54 40 54 44H44C44 38 47 33 52 30Z" fill="#1878ec"/><path d="M42 44H78L60 84Z" fill="#f7f4ea" stroke="#c7b48d" stroke-width="1.6" stroke-linejoin="round"/><path d="M48 52L72 52M51 60L69 60M54 68L66 68" stroke="#c7b48d" stroke-width="1.4"/><circle cx="66" cy="36" r="2" fill="#fff" opacity=".8"/></g></g><path class="b-twinkle" style="animation-delay:0s" fill="#6fc055" d="M24 29Q25.1 32.9 29 34Q25.1 35.1 24 39Q22.9 35.1 19 34Q22.9 32.9 24 29Z"/></svg>

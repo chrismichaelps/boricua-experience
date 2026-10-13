@@ -4,6 +4,7 @@ import { toast } from './toast.js?v=59';
 export function share(button) {
   button.addEventListener('click', async () => {
     const data = { title: button.dataset.title || document.title, url: location.href };
+    shared('share');
     if (navigator.share && button.dataset.mode !== 'copy') {
       try { await navigator.share(data); } catch { /* the visitor closed the sheet */ }
       return;
@@ -14,8 +15,19 @@ export function share(button) {
   });
 }
 
+// Sharing and adding to a calendar are achievement signals, named by the activity's address.
+function shared(action) {
+  const slug = location.pathname.match(/^\/e\/([a-z0-9-]+)/)?.[1];
+  if (slug) document.dispatchEvent(new CustomEvent('bx:action', { detail: { action, key: slug } }));
+}
+
 // Menus built on <details>: one open at a time, closed by Escape or a click outside.
 export function disclosures() {
+  document.addEventListener('click', (event) => {
+    const link = event.target.closest?.('.disclosure-list a');
+    if (!link) return;
+    shared(/calendar\.google\.com|outlook\.live\.com|\.ics$/.test(link.href) ? 'calendar_add' : 'share');
+  });
   const open = () => [...document.querySelectorAll('details.menu-disclosure[open]')];
   document.addEventListener('toggle', (event) => {
     const opened = event.target;

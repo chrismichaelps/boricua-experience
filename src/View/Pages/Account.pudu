@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Std.Option as Option
+import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Problem as Problem
@@ -37,6 +38,11 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
         if me.status == Profile.PAUSED { H.div().class("banner").holding([H.p().says(Frame.t(frame, "account.paused_notice")), H.form().action(Routes.ACCOUNT_REACTIVATE).method("post").holding([Form.token(frame), H.button().submit().class("button button-small").says(Frame.t(frame, "account.reactivate"))])]) } else { H.nothing() },
         if me.isAdmin { H.a().class("button button-ghost").href(Routes.ADMIN).holding([Icons.sized("settings", 18), H.span().says(Frame.t(frame, "admin.title"))]) } else { H.nothing() },
         Form.problemBanner(frame, problem),
+        H.a().class("panel ach-link").href(Routes.ACHIEVEMENTS).holding([
+            H.img().src("/assets/badges/golden-cotorra.svg?v=" + App.ASSET_VERSION).alt("").at("width", "56").at("height", "56"),
+            H.span().class("ach-link-text").holding([H.strong().says(Frame.t(frame, "achievements.title")), H.span().class("muted small").says(Frame.t(frame, "achievements.link_body"))]),
+            Icons.sized("chevron-right", 20)
+          ]),
         H.section().class("panel").id("profile").holding([
             H.h2().class("section-title").says(Frame.t(frame, "account.profile")),
             H.form().class("stack-form").action(Routes.ACCOUNT_PROFILE).method("post").holding([

@@ -11,6 +11,7 @@ import Constants.Cookies as Cookies
 import Constants.Routes as Routes
 import Domain.Credentials as Credentials
 import Domain.Locale as Locale
+import Domain.Achievement as Achievement
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
@@ -134,7 +135,13 @@ fn changePassword(app: &Assembly.App, visitor: &Context.Visitor, session: &Sessi
 /// An organizer's public profile.
 fn profilePage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.profile, Serve.param(visitor, "id")) {
-    case Ok(person) => Respond.page(200, &ProfilePage.render(&Context.frame(app, visitor), &person))
+    case Ok(person) => {
+      let badges = match Serve.ask(app, &app.kinds.showcase, (person.id, Locale.code(&visitor.locale))) {
+        case Ok(found) => found
+        case Err(_) => Achievement.Showcase{total: 0, items: []}
+      }
+      Respond.page(200, &ProfilePage.render(&Context.frame(app, visitor), &person, &badges))
+    }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

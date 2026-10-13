@@ -1,0 +1,80 @@
+/** @Test.View.Achievements — the board decodes from the database, renders locked and unlocked tiles, and filters signals */
+module View.AchievementsTest
+
+import Std.Html as Html
+import Std.Io as Io
+import Std.Json as Json
+import Std.Option as Option
+import Std.Test as Test
+import Domain.Achievement as Achievement
+import Domain.Locale as Locale
+import I18n.Dates as Dates
+import Services.Achievements as AchievementsService
+import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
+import View.Frame as Frame
+import View.Pages.Achievements as AchievementsPage
+
+/// A frame for a page at a path.
+fn frameAt(locale: Locale.Locale, path: Str) -> Frame.Frame {
+  Frame.Frame{locale: locale, siteUrl: "http://localhost:8080", path: path, query: "", member: None, formToken: "", consent: None, flash: "", nowMillis: 0}
+}
+
+/// An achievement with only what a case needs.
+fn item(slug: Str, progress: Int, target: Int, unlockedAt: Option[Str]) -> Achievement.Item {
+  Achievement.Item{slug: slug, category: "discovery", rarity: "rare", badge: slug, title: Some("Title " + slug), description: Some("About " + slug), target: target, progress: progress, unlockedAt: unlockedAt, seasonal: false, open: true, seasonFrom: None, seasonUntil: None, availableUntil: None}
+}
+
+/// Runs the achievement checks.
+fn main() -> Int {
+  let decoded: Result[Achievement.Board, Json.DecodeError] = Wire.decode(&Fixtures.json("my-achievements.json"))
+  let board = match decoded {
+    case Ok(found) => found
+    case Err(_) => Achievement.Board{categories: [], items: [], unlocked: 0, total: 0}
+  }
+  let page = Html.render(&AchievementsPage.render(&frameAt(Locale.En, "/achievements"), &board, ""))
+  let unlockedOnly = AchievementsPage.shown(&board, AchievementsPage.UNLOCKED_FILTER)
+  let secret = Option.fromArray(&board.items.filter(|found: Achievement.Item| found.slug == "hidden-island"))
+  let season = Option.fromArray(&board.items.filter(|found: Achievement.Item| found.slug == "navidad"))
+  let half = item("towns-10", 5, 10, None)
+  let over = item("rsvp-5", 9, 5, None)
+  let detail = Html.render(&AchievementsPage.renderOne(&frameAt(Locale.Es, "/achievements/towns-10"), &half))
+  let signals = [
+    Achievement.Signal{metric: "town_view", key: "loiza"},
+    Achievement.Signal{metric: "Bad-Metric", key: "x"},
+    Achievement.Signal{metric: "x", key: "too-short-metric"},
+    Achievement.Signal{metric: "event_view", key: "a".repeat(81)}
+  ]
+  let many = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].map(|n: Int| Achievement.Signal{metric: "map_open", key: show(n)})
+  let checks = Test.suite("Achievements", &[
+      Test.that("the database board decodes", board.total == 81 && board.items.length() == 5 && board.categories.length() == 3),
+      Test.that("categories decode with their own title", board.categories.length() > 0 && board.categories[0].title == "Discovery and map"),
+      Test.that("a secret locked achievement has no title", match secret { case Some(found) => found.title == None && found.description == None case None => false }),
+      Test.that("a seasonal achievement carries its season", match season { case Some(found) => found.seasonal && found.seasonFrom == Some("12-01") case None => false }),
+      Test.equals("the unlocked filter keeps unlocked ones", &unlockedOnly.length(), &2),
+      Test.equals("a category filter keeps its own", &AchievementsPage.shown(&board, "participation").length(), &board.items.filter(|found: Achievement.Item| found.category == "participation").length()),
+      Test.that("unlocked tiles are marked with their rarity", page.contains("ach-tile is-unlocked rarity-")),
+      Test.that("locked tiles are marked locked", page.contains("ach-tile is-locked")),
+      Test.that("tiles open the detail page without a script", page.contains("href=\"/achievements/rsvp-1\"")),
+      Test.that("each tile holds its detail for the dialog", page.contains("<template data-detail=\"rsvp-1\">")),
+      Test.that("the secret tile is named as a secret", page.contains("Secret achievement")),
+      Test.that("the seasonal tile shows its season", page.contains("Dec 1 – Jan 6")),
+      Test.that("the summary counts unlocked of total", page.contains("8 of 81 unlocked")),
+      Test.that("badges load from the versioned assets", page.contains("/assets/badges/rsvp-1.svg?v=")),
+      Test.that("the page script and dialog are present", page.contains("data-feature=\"achievement-board\"") && page.contains("id=\"ach-dialog\"")),
+      Test.that("filters mark the current one", page.contains("aria-current=\"page\"")),
+      Test.equals("half the target is fifty percent", &Achievement.percent(&half), &50),
+      Test.equals("progress past the target shows as complete", &Achievement.percent(&over), &100),
+      Test.that("a locked detail shows progress as a bar", detail.contains("role=\"progressbar\"") && detail.contains("aria-valuenow=\"5\"") && detail.contains("5 / 10")),
+      Test.that("the detail is translated", detail.contains("Logros") && detail.contains("Raro")),
+      Test.equals("only well-shaped signals are sent", &AchievementsService.usable(&signals).length(), &1),
+      Test.equals("one request carries at most twenty signals", &AchievementsService.usable(&many).length(), &Achievement.SIGNALS_MAX),
+      Test.that("metric names allow letters, digits and underscores", AchievementsService.metricShape("map_3d") && !AchievementsService.metricShape("map-3d") && !AchievementsService.metricShape("Map")),
+      Test.equals("a yearly date reads in Spanish", &Dates.monthDay(&Locale.Es, "12-01"), &"1 dic"),
+      Test.equals("a yearly date reads in English", &Dates.monthDay(&Locale.En, "01-06"), &"Jan 6"),
+      Test.equals("a malformed yearly date is kept as given", &Dates.monthDay(&Locale.En, "13-40"), &"13-40")
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

@@ -117,6 +117,7 @@ export function assistant(root) {
     const message = input.value.trim();
     if (!message || message.length > 1200) return;
     stopVoice();
+    document.dispatchEvent(new CustomEvent('bx:action', { detail: { action: 'ai_chat' } }));
     const current = ++ticket; controller?.abort(); controller = new AbortController();
     const requestController = controller;
     const timer = setTimeout(() => requestController.abort(), 95000);

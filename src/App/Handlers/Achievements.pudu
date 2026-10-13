@@ -1,0 +1,20 @@
+/** @App.Handlers.Achievements.Registrations — the board, browser signals, and public badges */
+module App.Handlers.Achievements
+
+import App.Messages as Messages
+import Domain.Achievement as Achievement
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
+import Services.Achievements as Achievements
+import Services.Runtime as Runtime
+
+/// The handlers of achievements.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.achievements, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Achievements.board(&held, asked.input, &asked.session))),
+    Registration.handler(&kinds.achievementSignals, |asked: Messages.Signed[(Array[Achievement.Signal], Str)], _context: Context.Context| Messaging.lift(Achievements.record(&held, &asked.input[0], asked.input[1], &asked.session))),
+    Registration.handler(&kinds.showcase, |asked: (Str, Str), _context: Context.Context| Messaging.lift(Ok(Achievements.showcase(&held, asked[0], asked[1]))))
+  ]
+}

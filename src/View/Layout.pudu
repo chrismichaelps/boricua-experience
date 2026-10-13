@@ -33,11 +33,21 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           tabBar(frame, &section),
           if frame.path == Routes.HOME && section == Explore { Assistant.render(frame) } else { H.nothing() },
           A11y.render(frame),
+          achievementToasts(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
           H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])
         ])
     ]).html()
+}
+
+/// Where unlocked achievements are announced, for signed-in members only. The script records what only
+/// the browser sees and shows each new unlock here.
+fn achievementToasts(frame: &Frame.Frame) -> H.Node {
+  match frame.member {
+    case Some(_) => H.div().class("ach-toasts").data("feature", "achievements").data("label", Frame.t(frame, "achievements.toast")).data("view", Frame.t(frame, "achievements.view")).data("href", Routes.ACHIEVEMENTS).role("status").at("aria-live", "polite")
+    case None => H.nothing()
+  }
 }
 
 /// The body class for a section, so full-screen tools can drop the footer.
@@ -73,6 +83,8 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
     H.link().rel("stylesheet").href("/assets/css/a11y.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/achievements.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/badges.css" + version),
     H.script().src("/assets/js/a11y-boot.js" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })

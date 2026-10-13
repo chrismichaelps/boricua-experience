@@ -2,6 +2,7 @@
 module App.Assembly
 
 import App.Handlers.Account as AccountHandlers
+import App.Handlers.Achievements as AchievementHandlers
 import App.Handlers.Admin as AdminHandlers
 import App.Handlers.Discover as DiscoverHandlers
 import App.Handlers.Events as EventHandlers
@@ -34,6 +35,7 @@ export fn assemble(runtime: &Runtime.Runtime, logs: &Logging.Logs) -> Result[App
     .concat(IdentityHandlers.registrations(&kinds, runtime))
     .concat(AdminHandlers.registrations(&kinds, runtime))
     .concat(SiteHandlers.registrations(&kinds, runtime))
+    .concat(AchievementHandlers.registrations(&kinds, runtime))
   match Mediator.build(registrations) {
     case Ok(mediator) => Ok(App{runtime: *runtime, mediator: mediator, kinds: kinds, logs: *logs})
     case Err(invalid) => Err(Mediator.explain(&invalid))

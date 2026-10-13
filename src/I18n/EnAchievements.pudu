@@ -1,0 +1,34 @@
+/** @I18n.EnAchievements.Catalog — English text of the achievements board and unlock toasts */
+module I18n.EnAchievements
+
+/// English achievements messages by key.
+export const MESSAGES: Map[Str, Str] = mapOf([
+    ("achievements.title", "Achievements"),
+    ("achievements.intro", "Badges you earn by exploring, joining and hosting across Puerto Rico. Just for fun: no points, no prizes."),
+    ("achievements.secret", "Secret achievement"),
+    ("achievements.secret_hint", "Keep exploring to discover this one."),
+    ("achievements.until", "Until :date"),
+    ("achievements.progress", ":progress / :target"),
+    ("achievements.unlocked_label", "Unlocked"),
+    ("achievements.locked_label", "Not unlocked yet"),
+    ("achievements.rarity.common", "Common"),
+    ("achievements.rarity.rare", "Rare"),
+    ("achievements.rarity.epic", "Epic"),
+    ("achievements.rarity.legendary", "Legendary"),
+    ("achievements.unlocked_on", "Unlocked on :date"),
+    ("achievements.season_open", "Seasonal, available now: :season"),
+    ("achievements.season_closed", "Seasonal, returns :season"),
+    ("achievements.filters", "Filter achievements"),
+    ("achievements.all", "All"),
+    ("achievements.unlocked_filter", "Unlocked"),
+    ("achievements.summary", ":unlocked of :total unlocked"),
+    ("achievements.empty_title", "Nothing here yet"),
+    ("achievements.empty_body", "Explore towns, join activities and save your favorites to start unlocking badges."),
+    ("achievements.close", "Close"),
+    ("achievements.toast", "Achievement unlocked!"),
+    ("achievements.view", "See achievements"),
+    ("achievements.link_body", "Your badges for exploring, joining and hosting."),
+    ("achievements.showcase", "Badges"),
+    ("achievements.showcase_count.one", "1 badge unlocked"),
+    ("achievements.showcase_count.other", ":count badges unlocked")
+  ])

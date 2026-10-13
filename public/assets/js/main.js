@@ -41,6 +41,8 @@ const FEATURES = {
   'join-panel': joinPanel,
   retry,
   explorer: (node) => import('./features/explorer.js?v=59').then((module) => module.explorer(node)),
+  achievements: (node) => import('./features/achievements.js?v=59').then((module) => module.achievements(node)).catch(() => {}),
+  'achievement-board': (node) => import('./features/achievements.js?v=59').then((module) => module.achievementBoard(node)).catch(() => {}),
   a11y: (node) => import('./features/a11y.js?v=59').then((module) => module.a11y(node)).catch(() => {}),
   'mini-map': (node) => import('./features/eventMaps.js?v=59').then((module) => module.miniMap(node)),
   participants: (node) => import('./features/eventMaps.js?v=59').then((module) => module.participants(node)),

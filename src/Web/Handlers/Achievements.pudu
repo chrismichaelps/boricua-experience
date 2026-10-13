@@ -1,0 +1,63 @@
+/** @Web.Handlers.Achievements.Routes — the board, one achievement, and the browser's signals */
+module Web.Handlers.Achievements
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Routes as Routes
+import Domain.Achievement as Achievement
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Wire as Wire
+import View.Pages.Achievements as AchievementsPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/** @Web.Handlers.Achievements.Posted — the JSON the browser posts */
+type Posted = { signals: Array[Achievement.Signal] } derives Json.Decode
+
+/// The achievement routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.ACHIEVEMENTS, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| board(&held, &visitor, &session))),
+    Route.get(Routes.ACHIEVEMENT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| one(&held, &visitor, &session))),
+    Route.post(Routes.API_ACHIEVEMENT_SIGNALS, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| signals(&held, &visitor, &session)))
+  ]
+}
+
+/// The board, filtered by a category, the seasonal ones, or the unlocked ones.
+fn board(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.achievements, Serve.signed(session, Locale.code(&visitor.locale))) {
+    case Ok(found) => Respond.page(200, &AchievementsPage.render(&Context.frame(app, visitor), &found, Serve.query(visitor, "c")))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// One achievement's page; an unknown or hidden one is missing.
+fn one(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let slug = Serve.param(visitor, "slug")
+  match Serve.ask(app, &app.kinds.achievements, Serve.signed(session, Locale.code(&visitor.locale))) {
+    case Ok(found) => match Option.fromArray(&found.items.filter(|item: Achievement.Item| item.slug == slug)) {
+      case Some(item) => Respond.page(200, &AchievementsPage.renderOne(&Context.frame(app, visitor), &item))
+      case None => Respond.problem(app, visitor, &Problem.Missing)
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Records what the browser saw and answers the unlocks the member has not been shown.
+fn signals(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let posted: Posted = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Refused("invalid_signals")) }
+  }
+  match Serve.ask(app, &app.kinds.achievementSignals, Serve.signed(session, (posted.signals, Locale.code(&visitor.locale)))) {
+    case Ok(unlocked) => Respond.json(200, &Json.object(&[("unlocked", Json.list(&unlocked.map(|found: Achievement.Unlocked| found.encode())))]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

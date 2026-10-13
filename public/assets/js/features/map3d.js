@@ -72,6 +72,9 @@ export function buildings3d(map, button, group = null) {
     view3d(map, on, animate);
     showControls(on);
   };
-  button.addEventListener('click', () => { on = !on; remember(on); apply(true); });
+  button.addEventListener('click', () => {
+    on = !on; remember(on); apply(true);
+    if (on) document.dispatchEvent(new CustomEvent('bx:action', { detail: { action: 'map_3d', user: true } }));
+  });
   if (map.isStyleLoaded()) apply(false); else map.once('load', () => apply(false));
 }

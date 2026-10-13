@@ -1,0 +1,34 @@
+/** @I18n.EsAchievements.Catalog — Spanish text of the achievements board and unlock toasts */
+module I18n.EsAchievements
+
+/// Spanish achievements messages by key.
+export const MESSAGES: Map[Str, Str] = mapOf([
+    ("achievements.title", "Logros"),
+    ("achievements.intro", "Insignias que ganas explorando, participando y organizando por todo Puerto Rico. Solo por diversión: sin puntos ni premios."),
+    ("achievements.secret", "Logro secreto"),
+    ("achievements.secret_hint", "Sigue explorando para descubrirlo."),
+    ("achievements.until", "Hasta el :date"),
+    ("achievements.progress", ":progress / :target"),
+    ("achievements.unlocked_label", "Desbloqueado"),
+    ("achievements.locked_label", "Aún sin desbloquear"),
+    ("achievements.rarity.common", "Común"),
+    ("achievements.rarity.rare", "Raro"),
+    ("achievements.rarity.epic", "Épico"),
+    ("achievements.rarity.legendary", "Legendario"),
+    ("achievements.unlocked_on", "Desbloqueado el :date"),
+    ("achievements.season_open", "De temporada, disponible ahora: :season"),
+    ("achievements.season_closed", "De temporada, vuelve del :season"),
+    ("achievements.filters", "Filtrar logros"),
+    ("achievements.all", "Todos"),
+    ("achievements.unlocked_filter", "Desbloqueados"),
+    ("achievements.summary", ":unlocked de :total desbloqueados"),
+    ("achievements.empty_title", "Todavía no hay nada aquí"),
+    ("achievements.empty_body", "Explora pueblos, únete a actividades y guarda tus favoritas para empezar a desbloquear insignias."),
+    ("achievements.close", "Cerrar"),
+    ("achievements.toast", "¡Logro desbloqueado!"),
+    ("achievements.view", "Ver logros"),
+    ("achievements.link_body", "Tus insignias por explorar, participar y organizar."),
+    ("achievements.showcase", "Insignias"),
+    ("achievements.showcase_count.one", "1 insignia desbloqueada"),
+    ("achievements.showcase_count.other", ":count insignias desbloqueadas")
+  ])

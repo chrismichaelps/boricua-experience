@@ -2,6 +2,7 @@
 module App.Messages
 
 import Std.Json as Json
+import Domain.Achievement as Achievement
 import Domain.Assistant as Conversation
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
@@ -185,7 +186,10 @@ export type Kinds = {
   sitemap: Request.Kind[(), Array[Index.Entry], Problem.Problem],
   dashboard: Request.Kind[Signed[()], AdminService.Dashboard, Problem.Problem],
   resolve: Request.Kind[Signed[Resolution], (), Problem.Problem],
-  contact: Request.Kind[ContactService.Sending, ContactService.Outcome, Problem.Problem]
+  contact: Request.Kind[ContactService.Sending, ContactService.Outcome, Problem.Problem],
+  achievements: Request.Kind[Signed[Str], Achievement.Board, Problem.Problem],
+  achievementSignals: Request.Kind[Signed[(Array[Achievement.Signal], Str)], Array[Achievement.Unlocked], Problem.Problem],
+  showcase: Request.Kind[(Str, Str), Achievement.Showcase, Problem.Problem]
 }
 
 /// Tags grouping kinds for behaviors: pages read, commands change state.
@@ -276,6 +280,9 @@ export fn kinds() -> Kinds {
     sitemap: kind("seo.sitemap", READ),
     dashboard: kind("admin.dashboard", READ),
     resolve: kind("admin.resolve", COMMAND),
-    contact: kind("site.contact", COMMAND)
+    contact: kind("site.contact", COMMAND),
+    achievements: kind("achievements.board", READ),
+    achievementSignals: kind("achievements.signals", COMMAND),
+    showcase: kind("achievements.showcase", READ)
   }
 }

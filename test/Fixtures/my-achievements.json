@@ -1,0 +1,100 @@
+{
+ "items": [
+  {
+   "open": true,
+   "slug": "rsvp-1",
+   "badge": "rsvp-1",
+   "title": "Count me in!",
+   "rarity": "common",
+   "target": 1,
+   "category": "participation",
+   "progress": 1,
+   "seasonal": false,
+   "description": "Join your first activity.",
+   "season_from": null,
+   "unlocked_at": "2026-10-13T15:43:47.375084+00:00",
+   "season_until": null,
+   "available_until": null
+  },
+  {
+   "open": true,
+   "slug": "paid-1",
+   "badge": "paid-1",
+   "title": "Support local",
+   "rarity": "common",
+   "target": 1,
+   "category": "participation",
+   "progress": 1,
+   "seasonal": false,
+   "description": "Join a paid activity.",
+   "season_from": null,
+   "unlocked_at": "2026-10-13T15:43:47.375084+00:00",
+   "season_until": null,
+   "available_until": null
+  },
+  {
+   "open": true,
+   "slug": "towns-3",
+   "badge": "towns-3",
+   "title": "Town to town",
+   "rarity": "common",
+   "target": 3,
+   "category": "discovery",
+   "progress": 0,
+   "seasonal": false,
+   "description": "Explore 3 different towns.",
+   "season_from": null,
+   "unlocked_at": null,
+   "season_until": null,
+   "available_until": null
+  },
+  {
+   "open": true,
+   "slug": "hidden-island",
+   "badge": "hidden-island",
+   "title": null,
+   "rarity": "epic",
+   "target": 2,
+   "category": "boricua",
+   "progress": 0,
+   "seasonal": false,
+   "description": null,
+   "season_from": null,
+   "unlocked_at": null,
+   "season_until": null,
+   "available_until": null
+  },
+  {
+   "open": false,
+   "slug": "navidad",
+   "badge": "navidad",
+   "title": "Christmas parranda",
+   "rarity": "rare",
+   "target": 1,
+   "category": "seasonal",
+   "progress": 0,
+   "seasonal": true,
+   "description": "Join an activity during the Christmas season.",
+   "season_from": "12-01",
+   "unlocked_at": null,
+   "season_until": "01-06",
+   "available_until": null
+  }
+ ],
+ "total": 81,
+ "unlocked": 8,
+ "categories": [
+  {
+   "slug": "discovery",
+   "title": "Discovery and map"
+  },
+  {
+   "slug": "participation",
+   "title": "Participation"
+  },
+  {
+   "slug": "hosting",
+   "title": "Hosting"
+  }
+ ]
+}
