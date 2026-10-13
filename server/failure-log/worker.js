@@ -5,6 +5,8 @@ const LIMITS = { body: 2048, path: 200, reason: 400, release: 40 };
 const METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']);
 // A burst guard per isolate: at most this many rows a minute, so a flood cannot exhaust free writes.
 const PER_MINUTE = 120;
+// The shared cap across every isolate, checked in D1: far under the free plan's daily writes.
+const PER_DAY = 5000;
 let windowStart = 0;
 let windowCount = 0;
 
@@ -65,8 +67,10 @@ export default {
     if (!event) return new Response('Invalid', { status: 400 });
     if (!admitted(Date.now())) return new Response('Busy', { status: 429 });
     console.log(JSON.stringify({ failure: event }));
-    await env.DB.prepare('insert into failures (at, release, method, path, status, elapsed_ms, reason) values (?, ?, ?, ?, ?, ?, ?)')
-      .bind(new Date().toISOString(), event.release, event.method, event.path, event.status, event.elapsed, event.reason).run();
+    // One statement inserts only while today's rows are under the shared cap.
+    const written = await env.DB.prepare("insert into failures (at, release, method, path, status, elapsed_ms, reason) select ?, ?, ?, ?, ?, ?, ? where (select count(*) from failures where at >= strftime('%Y-%m-%dT00:00:00Z', 'now')) < ?")
+      .bind(new Date().toISOString(), event.release, event.method, event.path, event.status, event.elapsed, event.reason, PER_DAY).run();
+    if (!written.meta?.changes) return new Response('Busy', { status: 429 });
     return new Response(null, { status: 204 });
   },
   async scheduled(_controller, env) {
