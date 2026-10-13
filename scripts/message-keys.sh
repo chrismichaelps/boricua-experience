@@ -9,7 +9,7 @@ out="$root/test/Fixtures/message-keys.txt"
   sed -nE 's/.*\("((assistant|menu|media)\.[a-z0-9_.-]+)",.*/\1/p' "$root/src/I18n/Es.pudu" "$root/src/I18n/EsMenu.pudu"
   for family in status.pending status.approved status.rejected status.withdrawn \
     when.anytime when.today when.tomorrow when.weekend when.week when.month \
-    sort.soon sort.near sort.relevant publish.kind_place publish.kind_activity review.reason_spam review.reason_fake review.reason_offensive review.reason_conflict review.reason_other \
+    sort.soon sort.near sort.relevant sort.top publish.kind_place publish.kind_activity review.reason_spam review.reason_fake review.reason_offensive review.reason_conflict review.reason_other \
     report.spam report.scam report.unsafe report.minors report.offensive report.other \
     notification.request_received notification.request_approved notification.request_rejected \
     notification.event_reminder notification.event_changed notification.event_cancelled; do echo "$family"; done

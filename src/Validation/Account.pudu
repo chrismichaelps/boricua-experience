@@ -105,6 +105,14 @@ export fn profile(edit: &Profile.ProfileEdit) -> Result[Profile.ProfileEdit, Pro
 }
 
 /// Preferences with a known location visibility.
+export fn discovery(chosen: &Profile.Discovery) -> Result[Profile.Discovery, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("radius", |d: Profile.Discovery| d.radiusKm, |v: Option[Int]| match v { case Some(km) => Profile.DISCOVERY_RADII.contains(km) case None => true }, "form.radius_invalid"),
+        Check.rule("towns", |d: Profile.Discovery| d.towns.length(), |v: Int| v <= Profile.DISCOVERY_TOWNS_MAX, "form.too_many_towns")
+      ]), *chosen)
+}
+
+/// Preferences with a known location visibility.
 export fn preferences(chosen: &Profile.Preferences) -> Result[Profile.Preferences, Problem.Problem] {
   Check.run(&Check.all(&[
         Check.rule("locationVisibility", |p: Profile.Preferences| p.locationVisibility, |v: Str| v == Profile.ONLY_ME || v == Profile.APPROVED_ACTIVITIES, VISIBILITY)

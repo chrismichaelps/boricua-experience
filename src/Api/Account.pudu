@@ -56,6 +56,15 @@ export fn updateProfile(gateway: &Gateway.Gateway, edit: &Profile.ProfileEdit, t
   Ok(())
 }
 
+/// Changes the member's discovery radius and favourite towns.
+export fn updateDiscovery(gateway: &Gateway.Gateway, chosen: &Profile.Discovery, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_DISCOVERY, &[
+      ("p_radius_km", Gateway.whole(chosen.radiusKm)),
+      ("p_towns", Json.list(&chosen.towns.map(|town: Str| Json.Text(town))))
+    ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
 /// Changes the member's notification, marketing, location, and attendee-list choices.
 export fn updatePreferences(gateway: &Gateway.Gateway, chosen: &Profile.Preferences, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_PREFERENCES, &[

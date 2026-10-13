@@ -7,6 +7,7 @@ import Constants.Supabase as Supabase
 import Domain.Event as Event
 import Domain.Participation as Participation
 import Domain.Problem as Problem
+import Domain.Search as Search
 
 /// Asks to join an event; answers the status reached.
 export fn requestJoin(gateway: &Gateway.Gateway, eventId: Str, message: Str, token: Str) -> Result[Participation.JoinOutcome, Problem.Problem] {
@@ -61,4 +62,21 @@ export fn report(gateway: &Gateway.Gateway, eventId: Str, reason: Str, detail: S
       ("p_detail", Gateway.text(detail))
     ], Some(token), Gateway.Write) ?
   Ok(())
+}
+
+/// Keeps a listing under a label; keeping the same query again renames it.
+export fn saveSearch(gateway: &Gateway.Gateway, saving: &Search.Saving, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.SAVE_SEARCH, &[("p_label", Gateway.text(saving.label)), ("p_query", Gateway.text(saving.query))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Removes one of the member's saved searches.
+export fn deleteSearch(gateway: &Gateway.Gateway, id: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.DELETE_SAVED_SEARCH, &[("p_id", Gateway.text(id))], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// The member's saved searches, newest first.
+export fn savedSearches(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Search.SavedSearch], Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_SAVED_SEARCHES, &[], Some(token), Gateway.Read)
 }

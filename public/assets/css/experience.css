@@ -235,3 +235,24 @@ button[disabled] { cursor: wait; }
 
 /* The contact form trap field is kept out of sight and out of the tab order. */
 .contact-trap { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+/* Favourite towns in account settings: compact checkbox columns grouped by region. */
+.town-groups { display: grid; gap: 14px; max-height: 420px; overflow: auto; padding: 4px 2px; }
+.town-group { margin: 0; padding: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 2px 12px; }
+.town-group legend { padding: 0 0 6px; font-weight: 700; font-size: 14px; color: var(--color-graphite); }
+.town-choice { display: flex; align-items: center; gap: 8px; min-height: 40px; font-size: 15px; cursor: pointer; }
+.town-choice input { width: 20px; height: 20px; accent-color: var(--color-ocean); }
+
+/* Saved searches on the activity page, and the save button beside the map link in results. */
+.results-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.save-search { margin: 0; }
+.saved-searches { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.saved-search { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border: 1px solid var(--color-divider); border-radius: 14px; }
+.saved-search-link { flex: 1; display: flex; align-items: center; gap: 10px; min-height: 44px; color: var(--color-ink); font-weight: 700; text-decoration: none; overflow-wrap: anywhere; }
+.saved-search-link .icon { color: var(--color-ocean); flex: none; }
+.saved-search form { margin: 0; }
+
+/* The map sheet's filters: one wrapping row above the count, matching the listing's filter bar. */
+.map-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 12px 8px; }
+.map-filters .filter select { min-height: 40px; }
+.map-list-link { margin-left: auto; }

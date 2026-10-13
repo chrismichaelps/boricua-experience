@@ -31,6 +31,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   [
     Route.get(Routes.ACCOUNT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| accountPage(&held, &visitor, &session, None))),
     Route.post(Routes.ACCOUNT_PROFILE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveProfile(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_DISCOVERY, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveDiscovery(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_PREFERENCES, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| savePreferences(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_PASSWORD, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changePassword(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_AVATAR, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changeAvatar(&held, &visitor, &session))),
@@ -78,6 +79,24 @@ fn saveProfile(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.
   let edit = Profile.ProfileEdit{displayName: Form.text(&fields, "displayName"), bio: Form.paragraph(&fields, "bio"), homeMunicipality: Form.text(&fields, "town"), locale: Locale.code(&Locale.fromCode(Form.text(&fields, "locale")))}
   match Serve.ask(app, &app.kinds.updateProfile, Serve.signed(session, edit)) {
     case Ok(_) => Respond.withPreference(app, Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT), "flash.saved_profile"), Cookies.LOCALE, edit.locale)
+    case Err(problem) => refused(app, visitor, session, &problem)
+  }
+}
+
+/// Saves the discovery radius and favourite towns; each town is a `town_<slug>` checkbox.
+fn saveDiscovery(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  var towns: Array[Str] = []
+  for town in catalog.municipalities {
+    if Form.flag(&fields, "town_" + town.slug) { towns = towns.push(town.slug) }
+  }
+  let chosen = Profile.Discovery{radiusKm: Form.whole(&fields, "radius"), towns: towns}
+  match Serve.ask(app, &app.kinds.updateDiscovery, Serve.signed(session, chosen)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT + "#discovery"), "flash.saved_settings")
     case Err(problem) => refused(app, visitor, session, &problem)
   }
 }

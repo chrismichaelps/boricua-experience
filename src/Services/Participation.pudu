@@ -9,12 +9,13 @@ import Api.Participation as ParticipationApi
 import Domain.Event as Event
 import Domain.Participation as Participation
 import Domain.Problem as Problem
+import Domain.Search as Search
 import Domain.Session as Session
 import Services.Runtime as Runtime
 import Validation.Participation as Rules
 
 /** @Services.Participation.Activity — what the activity page shows */
-export type Activity = { requests: Array[Participation.MyRequest], saved: Array[Event.Card], organizing: Array[Event.Card] }
+export type Activity = { requests: Array[Participation.MyRequest], saved: Array[Event.Card], organizing: Array[Event.Card], searches: Array[Search.SavedSearch] }
 
 /** @Services.Participation.Queue — an event and the requests waiting on its organizer */
 export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest] }
@@ -52,6 +53,17 @@ export fn toggleSaved(runtime: &Runtime.Runtime, eventId: Str, session: &Session
   Ok(state.saved)
 }
 
+/// Keeps a listing; the label and query are built by the server from parsed filters.
+export fn saveSearch(runtime: &Runtime.Runtime, saving: &Search.Saving, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.saving(saving) ?
+  ParticipationApi.saveSearch(&runtime.gateway, &valid, session.accessToken)
+}
+
+/// Removes one saved search.
+export fn deleteSearch(runtime: &Runtime.Runtime, id: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  ParticipationApi.deleteSearch(&runtime.gateway, id, session.accessToken)
+}
+
 /// Sets the member's reaction; answers the reaction and the new like count.
 export fn react(runtime: &Runtime.Runtime, eventId: Str, value: Int, session: &Session.Session) -> Result[Participation.ReactionState, Problem.Problem] {
   let valid = Rules.reaction(value) ?
@@ -71,7 +83,9 @@ export fn activity(runtime: &Runtime.Runtime, session: &Session.Session) -> Resu
   let requests = Sync.cell(Ok([]))
   let saved = Sync.cell(Ok([]))
   let organizing = Sync.cell(Ok([]))
+  let searches = Sync.cell(Ok([]))
   let ran = Concurrent.parallel(&[
+        || { let _set = Sync.set(&searches, ParticipationApi.savedSearches(&held.gateway, token)) },
         || { let _set = Sync.set(&requests, ParticipationApi.mine(&held.gateway, token)) },
         || { let _set = Sync.set(&saved, ParticipationApi.saved(&held.gateway, token)) },
         || { let _set = Sync.set(&organizing, EventsApi.mine(&held.gateway, token)) }
@@ -80,6 +94,7 @@ export fn activity(runtime: &Runtime.Runtime, session: &Session.Session) -> Resu
   Ok(Activity {
       requests: Result.unwrapOr(Sync.get(&requests), Err(Problem.Unavailable("lost"))) ?,
       saved: Result.unwrapOr(Sync.get(&saved), Err(Problem.Unavailable("lost"))) ?,
-      organizing: Result.unwrapOr(Sync.get(&organizing), Err(Problem.Unavailable("lost"))) ?
+      organizing: Result.unwrapOr(Sync.get(&organizing), Err(Problem.Unavailable("lost"))) ?,
+      searches: Result.unwrapOr(Sync.get(&searches), Err(Problem.Unavailable("lost"))) ?
     })
 }

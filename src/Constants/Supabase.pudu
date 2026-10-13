@@ -114,6 +114,14 @@ export const CALL_TIMEOUT_MILLIS: Int = 8000
 /// Milliseconds one attempt may take.
 export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000
 
+/// A member's saved searches.
+export const SAVE_SEARCH: Str = "save_search"
+export const DELETE_SAVED_SEARCH: Str = "delete_saved_search"
+export const MY_SAVED_SEARCHES: Str = "my_saved_searches"
+
+/// A member's discovery radius and favourite towns.
+export const UPDATE_MY_DISCOVERY: Str = "update_my_discovery"
+
 /// Service-only contact relay: record a message under rate windows, then mark its delivery.
 export const SUBMIT_CONTACT: Str = "submit_contact"
 export const MARK_CONTACT: Str = "mark_contact"

@@ -24,7 +24,9 @@ export type MyProfile = {
   @json("marketing_opt_in") marketingOptIn: Bool,
   @json("sharing_live") sharingLive: Bool,
   @json("unread_notifications") unreadNotifications: Int,
-  @json("created_at") createdAt: Str
+  @json("created_at") createdAt: Str,
+  @json("preferred_radius_km") preferredRadiusKm: Option[Int],
+  @default("[]") @json("preferred_towns") preferredTowns: Array[Str]
 } derives Json.Decode
 
 /** @Domain.Profile.PublicProfile — an organizer as anyone may see them */
@@ -56,6 +58,15 @@ export type Preferences = {
   locationVisibility: Str,
   showInAttendeeLists: Bool
 }
+
+/** @Domain.Profile.Discovery — the radius and favourite towns that shape what a member discovers */
+export type Discovery = { radiusKm: Option[Int], towns: Array[Str] }
+
+/// Radii a member may prefer, in kilometres.
+export const DISCOVERY_RADII: Array[Int] = [5, 10, 25, 50]
+
+/// Favourite towns a member may keep.
+export const DISCOVERY_TOWNS_MAX: Int = 5
 
 /// Status of an account that may act.
 export const ACTIVE: Str = "active"

@@ -5,6 +5,9 @@ module Constants.Routes
 export const HOME: Str = "/"
 /// Search results and filters.
 export const SEARCH: Str = "/search"
+/// Keeping a listing, and removing a kept one.
+export const SEARCH_SAVE: Str = "/search/save"
+export const SEARCH_DELETE: Str = "/searches/:id/delete"
 /// The map of upcoming events.
 export const MAP: Str = "/map"
 /// Prefix of an event page; the slug follows.
@@ -62,6 +65,7 @@ export const NOTIFICATIONS: Str = "/notifications"
 export const ACCOUNT: Str = "/account"
 export const ACCOUNT_PROFILE: Str = "/account/profile"
 export const ACCOUNT_PREFERENCES: Str = "/account/preferences"
+export const ACCOUNT_DISCOVERY: Str = "/account/discovery"
 export const ACCOUNT_PASSWORD: Str = "/account/password"
 export const ACCOUNT_EXPORT: Str = "/account/export"
 export const ACCOUNT_LOCATION_HISTORY: Str = "/account/location-history"

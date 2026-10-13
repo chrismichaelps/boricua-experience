@@ -68,6 +68,7 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
                 H.button().submit().class("button").says(Frame.t(frame, "account.save"))
               ])
           ]),
+        discoveryPanel(frame, me, catalog),
         H.section().class("panel").id("location").holding([
             H.h2().class("section-title").says(Frame.t(frame, "account.location")),
             H.p().class(if me.sharingLive { "status status-live" } else { "muted" }).says(Frame.t(frame, if me.sharingLive { "account.sharing_now" } else { "account.not_sharing" })),
@@ -135,5 +136,38 @@ fn photoEditor(frame: &Frame.Frame, me: &Profile.MyProfile) -> H.Node {
         case None => removePhoto(frame).at("hidden", "hidden")
       },
       H.p().class("photo-status small muted").role("status").at("aria-live", "polite")
+    ])
+}
+
+/// The discovery radius and up to five favourite towns, grouped by region; they shape the nearby
+/// rail on the home page and lift recommendations from those towns.
+fn discoveryPanel(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.Catalog) -> H.Node {
+  let chosenRadius = match me.preferredRadiusKm { case Some(km) => show(km) case None => "" }
+  let radii = [("", Frame.t(frame, "account.radius_none"))].concat(Profile.DISCOVERY_RADII.map(|km: Int| (show(km), Frame.tf(frame, "account.radius_km", &[("km", show(km))]))))
+  var groups: Array[H.Node] = []
+  for region in Catalog.regions(catalog) {
+    var boxes: Array[H.Node] = []
+    for town in catalog.municipalities {
+      if town.region == region {
+        var box = H.input().kind("checkbox").name("town_" + town.slug).id("f-town-" + town.slug).value("on")
+        if me.preferredTowns.contains(town.slug) { box = box.checked() }
+        boxes = boxes.push(H.labelFor().class("town-choice").at("for", "f-town-" + town.slug).holding([box, H.span().says(town.name)]))
+      }
+    }
+    groups = groups.push(H.fieldset().class("town-group").holding([H.legend().says(Frame.t(frame, "region." + region))].concat(boxes)))
+  }
+  H.section().class("panel").id("discovery").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "account.discovery")),
+      H.p().class("muted small").says(Frame.t(frame, "account.discovery_body")),
+      H.form().class("stack-form").action(Routes.ACCOUNT_DISCOVERY).method("post").holding([
+          Form.token(frame),
+          Form.select(frame, &Form.field("radius", Frame.t(frame, "account.radius"), chosenRadius), &radii, &[]),
+          H.div().class("field").holding([
+              H.p().class("label").says(Frame.t(frame, "account.towns")),
+              H.p().class("field-hint").says(Frame.t(frame, "account.towns_hint")),
+              H.div().class("town-groups").holding(groups)
+            ]),
+          H.button().submit().class("button").says(Frame.t(frame, "account.save"))
+        ])
     ])
 }

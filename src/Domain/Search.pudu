@@ -10,7 +10,7 @@ import Domain.Event as Event
 export type Pins = { items: Array[Event.Card], limited: Bool } derives Json.Decode
 
 /** @Domain.Search.Sort — the order of a listing */
-export type Sort = Soon | Near | Relevant
+export type Sort = Soon | Near | Relevant | Top
 
 /** @Domain.Search.When — a date window chosen from presets */
 export type When = Anytime | Today | Tomorrow | Weekend | Week | Month
@@ -34,6 +34,15 @@ export type Filters = {
   sort: Sort,
   after: Str
 }
+
+/** @Domain.Search.SavedSearch — a listing a member kept, by its canonical query string */
+export type SavedSearch = { id: Str, label: Str, query: Str, @json("created_at") createdAt: Str } derives Json.Decode
+
+/** @Domain.Search.Saving — a listing to keep under a label */
+export type Saving = { label: Str, query: Str }
+
+/// Saved searches a member may keep.
+export const SAVED_SEARCHES_MAX: Int = 20
 
 /// Filters that select every upcoming event, soonest first.
 export fn everything() -> Filters {
@@ -60,6 +69,7 @@ export fn sortName(sort: &Sort) -> Str {
     case Soon => "soon"
     case Near => "near"
     case Relevant => "relevant"
+    case Top => "top"
   }
 }
 
@@ -67,6 +77,7 @@ export fn sortName(sort: &Sort) -> Str {
 export fn sortFrom(name: Str) -> Sort {
   if name == "near" { return Near }
   if name == "relevant" { return Relevant }
+  if name == "top" { return Top }
   Soon
 }
 

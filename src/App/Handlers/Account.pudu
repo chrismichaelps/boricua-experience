@@ -17,6 +17,7 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.profile, |asked: Str, _context: Context.Context| Messaging.lift(Account.publicProfile(&held, asked))),
     Registration.handler(&kinds.onboard, |asked: Messages.Signed[Messages.Onboard], _context: Context.Context| Messaging.lift(Account.onboard(&held, &asked.input.form, asked.input.locale, &asked.session))),
     Registration.handler(&kinds.updateProfile, |asked: Messages.Signed[Profile.ProfileEdit], _context: Context.Context| Messaging.lift(Account.updateProfile(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.updateDiscovery, |asked: Messages.Signed[Profile.Discovery], _context: Context.Context| Messaging.lift(Account.updateDiscovery(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.updatePreferences, |asked: Messages.Signed[Profile.Preferences], _context: Context.Context| Messaging.lift(Account.updatePreferences(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.changeAvatar, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Account.changeAvatar(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.removeAvatar, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Account.removeAvatar(&held, &asked.session))),

@@ -35,6 +35,12 @@ export fn updateProfile(runtime: &Runtime.Runtime, edit: &Profile.ProfileEdit, s
 }
 
 /// Saves the member's choices.
+export fn updateDiscovery(runtime: &Runtime.Runtime, chosen: &Profile.Discovery, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.discovery(chosen) ?
+  AccountApi.updateDiscovery(&runtime.gateway, &valid, session.accessToken)
+}
+
+/// Saves the member's notification, marketing, location, and attendee-list choices.
 export fn updatePreferences(runtime: &Runtime.Runtime, chosen: &Profile.Preferences, session: &Session.Session) -> Result[(), Problem.Problem] {
   let valid = Rules.preferences(chosen) ?
   AccountApi.updatePreferences(&runtime.gateway, &valid, session.accessToken)

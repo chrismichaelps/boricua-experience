@@ -116,7 +116,7 @@ export fn filterBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Se
     categorySelect = categorySelect.holding([item])
   }
   var sortSelect = H.select().name("sort").id("filter-sort")
-  for sort in [Search.Soon, Search.Near, Search.Relevant] {
+  for sort in [Search.Soon, Search.Top, Search.Near, Search.Relevant] {
     var item = H.option().value(Search.sortName(&sort)).says(Frame.t(frame, "sort." + Search.sortName(&sort)))
     if sort == filters.sort { item = item.flag("selected") }
     sortSelect = sortSelect.holding([item])
@@ -142,4 +142,25 @@ export fn filterBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Se
         }).data("geo", "lng"),
       H.button().submit().class("button button-small").says(Frame.t(frame, "search.apply"))
     ])
+}
+
+/// The map's filters: date, category and free, posted back to the map so its pins and sheet follow
+/// them; the query, town and nearby choice ride along unchanged. A link opens the same filters as a list.
+export fn mapBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, listHref: Str) -> H.Node {
+  var categorySelect = H.select().name("category").id("map-filter-category").holding([H.option().value("").says(Frame.t(frame, "search.all_categories"))])
+  for category in catalog.categories {
+    var item = H.option().value(category.slug).says(categoryName(frame, &category))
+    if category.slug == filters.category { item = item.flag("selected") }
+    categorySelect = categorySelect.holding([item])
+  }
+  var free = H.input().kind("checkbox").name("free").id("map-filter-free").value("1")
+  if filters.freeOnly { free = free.checked() }
+  let kept = [("q", filters.query), ("pueblo", filters.municipality), ("cerca", filters.near), ("radio", if filters.near.isEmpty() { "" } else { show(Search.radiusKm(filters)) })]
+  H.form().class("map-filters").action(Routes.MAP).method("get").data("feature", "filters").holding(kept.filter(|pair: (Str, Str)| !pair[1].isEmpty()).map(|pair: (Str, Str)| H.input().kind("hidden").name(pair[0]).value(pair[1])).concat([
+        H.div().class("filter").holding([H.labelFor().at("for", "map-filter-when").class("sr-only").says(Frame.t(frame, "search.when")), windowSelect(frame, &filters.window, "map-filter-when")]),
+        H.div().class("filter").holding([H.labelFor().at("for", "map-filter-category").class("sr-only").says(Frame.t(frame, "search.category")), categorySelect]),
+        H.labelFor().class("filter filter-toggle").at("for", "map-filter-free").holding([free, H.span().says(Frame.t(frame, "search.free_only"))]),
+        H.button().submit().class("button button-small").says(Frame.t(frame, "search.apply")),
+        H.a().class("button button-ghost button-small map-list-link").href(listHref).holding([Icons.sized("list", 16), H.span().says(Frame.t(frame, "map.show_list"))])
+      ]))
 }

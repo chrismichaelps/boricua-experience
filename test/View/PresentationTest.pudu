@@ -92,7 +92,7 @@ fn main() -> Int {
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let signup = Html.render(&Auth.signUp(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let missing = Html.render(&Errors.missing(&en))
-  let map = Html.render(&MapPage.render(&en, &[], false, false))
+  let map = Html.render(&MapPage.render(&en, &[], false, false, &emptyCatalog, &Search.Filters{..Search.everything(), category: "musica", freeOnly: true}, "/search?category=musica&free=1"))
   let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(why) => panic("fixture failed: " + Json.explainDecode(&why)) }
   let detail = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(found) => found case Err(_) => panic("fixture failed") }
   let unknownCard = Event.Card{..detail.card, priceCents: None, endsAt: None, discoveryUntil: Some("2026-10-13T02:00:00Z")}
@@ -103,7 +103,7 @@ fn main() -> Int {
 
   let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
-  let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
+  let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [endedCard]}))
   let seriesCard = Html.render(&EventCard.card(&es, &Event.Card{..detail.card, moreDates: 3}).html())
   let singleCard = Html.render(&EventCard.card(&es, &detail.card).html())
   let seriesPage = Html.render(&EventPage.render(&en, &Event.Detail{..detail, otherDates: [Event.Occurrence{slug: "plaza-2026-11-21", startsAt: "2026-11-21T22:00:00+00:00", endsAt: None}]}, &None))
@@ -156,8 +156,8 @@ fn main() -> Int {
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
   let original = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(d) => d case Err(_) => panic("detail fixture") }
   let curated = Event.Detail{..original, source: "curated", sourceUrl: Some("https://example.org/official"), card: Event.Card{..original.card, source: "curated"}}
-  let curatedActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [curated.card]}))
-  let nativeActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [original.card]}))
+  let curatedActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [curated.card]}))
+  let nativeActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [original.card]}))
   let nativeEndedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..original, card: Event.Card{..original.card, status: "ended"}, viewer: Event.Viewer{..original.viewer, signedIn: true, isOrganizer: true}}, &None))
   let curatedGuest = Html.render(&EventPage.render(&en, &curated, &None))
   let curatedEs = Html.render(&EventPage.render(&es, &curated, &None))
@@ -276,8 +276,8 @@ fn main() -> Int {
       Test.equals("footer removes the adult-only note", &openSearch.contains("For adults 18 and over"), &false),
       Test.equals("footer uses the frame year", &openSearch.contains("© 1969 Boricua Experience."), &true),
       Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
-      Test.equals("organizing unknown archive is neutral in English", &Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("This activity has ended."), &false),
-      Test.equals("organizing unknown archive is neutral in Spanish", &Html.render(&ActivityPage.render(&es, &ParticipationService.Activity{requests: [], saved: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("Esta actividad ya terminó."), &false),
+      Test.equals("organizing unknown archive is neutral in English", &Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("This activity has ended."), &false),
+      Test.equals("organizing unknown archive is neutral in Spanish", &Html.render(&ActivityPage.render(&es, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("Esta actividad ya terminó."), &false),
       Test.equals("unknown ended card says archived", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("Archived"), &true),
       Test.equals("unknown archived card never claims actual end", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("This activity has ended"), &false),
       Test.equals("stale English submission has neutral refusal", &Frame.t(&en, "problem.event_ended"), &"This activity is no longer accepting requests."),
@@ -326,6 +326,9 @@ fn main() -> Int {
       Test.equals("login omits assistant", &login.contains("data-feature=\"assistant\""), &false),
       Test.equals("signup omits assistant", &signup.contains("data-feature=\"assistant\""), &false),
       Test.equals("map omits the assistant", &map.contains("data-feature=\"assistant\""), &false),
+      Test.that("map carries its filters to the list and back to itself", map.contains("href=\"/search?category=musica&amp;free=1\"") && map.contains("class=\"map-filters\"") && map.contains("action=\"/map\"")),
+      Test.that("map keeps location help for screen readers without the visible box", map.contains("class=\"sr-only\" id=\"map-location-help\"") && !map.contains("How location works")),
+      Test.that("map offers the 3D turn controls", map.contains("data-turn=\"north\"") && map.contains("Face north")),
       Test.equals("map explains private location", &map.contains("Near me centers the map privately"), &true),
       Test.equals("map sheet has a named keyboard button", &map.contains("Expand or collapse the activity list"), &true),
       Test.equals("map sheet exposes its controlled list", &map.contains("aria-controls=\"map-list\""), &true),

@@ -8,11 +8,14 @@ import Std.Json as Json
 import Std.Time as StdTime
 import Constants.App as App
 import Constants.Routes as Routes
+import Domain.Catalog as Catalog
 import Domain.Event as Event
+import Domain.Search as Search
 import I18n.Dates as Dates
 import I18n.Format as Format
 import View.Components.EventCard as EventCard
 import View.Components.Icons as Icons
+import View.Components.Search as SearchControls
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -48,7 +51,7 @@ fn turnControls(frame: &Frame.Frame) -> H.Node {
 }
 
 /// The map page: the map, the live-location switch, and a sheet listing the pins.
-export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, startNear: Bool) -> Html.Html {
+export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, startNear: Bool, catalog: &Catalog.Catalog, filters: &Search.Filters, listHref: Str) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "map.title"), Frame.t(frame, "map.description"), Routes.MAP, true)
   Layout.page(frame, &meta, Layout.MapView, H.div().class("map-page").data("feature", "explorer").data("count-one", Frame.t(frame, "map.count_one")).data("limited", if limited { "1" } else { "0" }).data("cluster-label", Frame.t(frame, "map.cluster")).data("fit", if frame.query.isEmpty() || startNear { "island" } else { "pins" }).data("near", if startNear { "1" } else { "0" }).data("member", if Frame.signedIn(frame) { "1" } else { "0" }).holding([
         H.div().class("map-canvas").id("map").data("lat", show(App.MAP_CENTER_LAT)).data("lng", show(App.MAP_CENTER_LNG)).role("application").label(Frame.t(frame, "map.label")),
@@ -65,6 +68,7 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
           ]),
         H.section().class("map-sheet").label(Frame.t(frame, "map.list")).holding([
             H.button().kind("button").class("sheet-handle").label(Frame.t(frame, "map.sheet_toggle")).at("aria-expanded", "false").at("aria-controls", "map-list").holding([H.span().at("aria-hidden", "true")]),
+            SearchControls.mapBar(frame, catalog, filters, listHref),
             H.p().class("sheet-title").id("map-count").says(Frame.tf(frame, "map.count", &[("count", show(cards.length()))])),
             H.p().class("map-limit" + (if limited { "" } else { " is-hidden" })).id("map-limit").role("status").says(Frame.t(frame, "map.limited")),
             H.div().class("sheet-list").id("map-list").holding(cards.map(|card: Event.Card| H.div().class("sheet-item").data("slug", card.slug).holding([EventCard.card(frame, &card)])))
