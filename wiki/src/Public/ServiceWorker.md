@@ -98,3 +98,6 @@ Resolved: advance the linked local asset/cache graph from56to57together for the 
 
 ## Home-only assistant Grill Log · #86
 Resolved: Worker revision58 precaches new document styles/branding/main and assistant58; unchanged shared dependencies retain57. Personalized HTML remains network-only.
+
+## Pending release cache Grill Log · #88
+Resolved: advance document entry/styles/branding to60 and changed join-panel module import to60. Unchanged modules retain their current single identities; no private HTML enters the worker cache.

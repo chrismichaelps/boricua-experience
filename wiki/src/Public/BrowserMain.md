@@ -105,3 +105,6 @@ Resolved: advance the linked local asset/cache graph from56to57together for the 
 
 ## Home-only assistant Grill Log · #86
 Resolved: Main58 loads the corrected assistant58; unchanged modules retain57 identities. This focused cache invalidation avoids duplicate live-location state.
+
+## Pending release cache Grill Log · #88
+Resolved: advance document entry/styles/branding to60 and changed join-panel module import to60. Unchanged modules retain their current single identities; no private HTML enters the worker cache.

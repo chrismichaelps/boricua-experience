@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const events=new Map(),props=new Map(),footer={};
+let height=150,zoom='1',observed=[],disconnects=0,callback;
+const panel={getBoundingClientRect:()=>({height}),querySelector:()=>null};
+const source=readFileSync('public/assets/js/features/app.js','utf8').replace(/^export /gm,'');
+const scope={document:{documentElement:{style:{setProperty:(name,value)=>props.set(name,value)}},querySelector:()=>footer},getComputedStyle:()=>({zoom}),addEventListener:(name,fn)=>events.set(name,fn),ResizeObserver:class{constructor(fn){callback=fn;}observe(node){observed.push(node);}disconnect(){disconnects++;}},console};
+vm.runInNewContext(source+'\njoinPanel(panel);',{...scope,panel});
+assert.equal(props.get('--join-panel'),'150px');
+height=300;zoom='2';callback();assert.equal(props.get('--join-panel'),'150px','text zoom does not count screen pixels twice');
+height=640;callback();assert.equal(props.get('--join-panel'),'320px','expanded panel reserves its unscaled height');
+zoom='1.6';height=240;events.get('resize')();assert.equal(props.get('--join-panel'),'150px');
+zoom='normal';height=0;events.get('resize')();assert.equal(props.get('--join-panel'),'0px','desktop zero-height state is safe');
+zoom='1';height=150;events.get('resize')();assert.equal(props.get('--join-panel'),'150px','phone restoration remeasures');
+events.get('pagehide')();assert.equal(disconnects,1);observed=[];events.get('pageshow')();assert.deepEqual(observed,[panel,footer]);
+console.log('PASS: initial/expanded join reserve, accessibility zoom, viewport resize and BFCache observer lifecycle');
