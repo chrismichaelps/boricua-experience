@@ -14,7 +14,7 @@ tags: [module, view]
 
 ## Purpose
 
-Illustrated answers that need no message beside the form card; a hidden trap field out of the tab order; no address in the markup.
+The app's form layout (narrow column, page title, lead, one form section) like publishing an activity; no illustrations or motion. A hidden trap field out of the tab order; no address in the markup. A `?topic=` link preselects an offered topic.
 
 ## Interface
 

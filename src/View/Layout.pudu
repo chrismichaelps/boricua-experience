@@ -8,6 +8,7 @@ import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Locale as Locale
 import Domain.Profile as Profile
+import View.Components.A11y as A11y
 import View.Components.Assistant as Assistant
 import View.Components.Avatar as Avatar
 import View.Components.Footer as Footer
@@ -31,6 +32,7 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           Footer.render(frame),
           tabBar(frame, &section),
           if frame.path == Routes.HOME && section == Explore { Assistant.render(frame) } else { H.nothing() },
+          A11y.render(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
           H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])
@@ -70,6 +72,8 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
     H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/a11y.css" + version),
+    H.script().src("/assets/js/a11y-boot.js" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }

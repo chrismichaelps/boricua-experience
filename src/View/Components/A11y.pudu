@@ -1,0 +1,97 @@
+/** @View.Components.A11y.Toolbar — the accessibility toolbar: profiles, content, colors, and orientation */
+module View.Components.A11y
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.Routes as Routes
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The universal access figure on the launcher; decorative, the button carries the label.
+const FIGURE: Str = "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"4.2\" r=\"2.2\" fill=\"currentColor\"/><path d=\"M4 7.6c2.7.8 5.3 1.2 8 1.2s5.3-.4 8-1.2M12 8.8v5.4m0 0-3.2 7.2M12 14.2l3.2 7.2\" stroke=\"currentColor\" stroke-width=\"2.2\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
+
+/// The profiles: name and icon. Each one switches a set of settings the script defines.
+const PROFILES: Array[(Str, Str)] = [("seizure", "pause"), ("vision", "eye"), ("adhd", "sparkle"), ("cognitive", "star"), ("keyboard", "crosshair"), ("dyslexia", "edit")]
+
+/// The stepped settings: name and label key.
+const STEPS: Array[(Str, Str)] = [("scale", "a11y.text_size"), ("line", "a11y.line_height"), ("spacing", "a11y.letter_spacing")]
+
+/// The content switches: setting, label key, and icon.
+const CONTENT: Array[(Str, Str, Str)] = [
+  ("font:readable", "a11y.readable_font", "edit"),
+  ("font:dyslexia", "a11y.dyslexia_font", "edit"),
+  ("titles", "a11y.highlight_titles", "star"),
+  ("links", "a11y.highlight_links", "share"),
+  ("align", "a11y.align_left", "list")
+]
+
+/// The color modes, of which at most one is on: value and icon.
+const COLORS: Array[(Str, Str)] = [("dark", "moon"), ("light", "sparkle"), ("high", "eye"), ("mono", "mask"), ("saturate", "wave"), ("desaturate", "leaf")]
+
+/// The orientation switches: setting, label key, and icon.
+const ORIENTATION: Array[(Str, Str, Str)] = [
+  ("still", "a11y.still", "pause"),
+  ("noimg", "a11y.no_images", "camera"),
+  ("mute", "a11y.mute", "bell"),
+  ("guide", "a11y.guide", "list"),
+  ("mask", "a11y.mask", "eye"),
+  ("cursor", "a11y.cursor", "navigation"),
+  ("focus", "a11y.focus", "crosshair")
+]
+
+/// A pressable tile that switches one setting.
+fn tile(attribute: Str, value: Str, label: Str, icon: Str) -> H.Node {
+  H.button().kind("button").class("a11y-tile").data(attribute, value).at("aria-pressed", "false").holding([Icons.sized(icon, 20), H.span().says(label)])
+}
+
+/// A labelled stepper for one stepped setting, with its current value announced.
+fn stepper(frame: &Frame.Frame, name: Str, label: Str) -> H.Node {
+  H.div().class("a11y-stepper").role("group").label(Frame.t(frame, label)).holding([
+      H.span().class("a11y-stepper-label").says(Frame.t(frame, label)),
+      H.button().kind("button").class("a11y-step").data("step", name).data("by", "-1").label(Frame.t(frame, "a11y.smaller") + ": " + Frame.t(frame, label)).says("−"),
+      H.span().class("a11y-step-value").data("value", name).at("aria-live", "polite").says(Frame.t(frame, "a11y.default")),
+      H.button().kind("button").class("a11y-step").data("step", name).data("by", "1").label(Frame.t(frame, "a11y.larger") + ": " + Frame.t(frame, label)).says("+")
+    ])
+}
+
+/// A titled group of the panel.
+fn group(title: Str, children: Array[H.Node]) -> H.Node {
+  H.section().class("a11y-group").holding([H.h3().says(title)].concat(children))
+}
+
+/// The launcher and its panel. Settings are kept in this browser and applied before the page paints.
+export fn render(frame: &Frame.Frame) -> H.Node {
+  let t = |key: Str| Frame.t(frame, key)
+  H.div().class("a11y").data("feature", "a11y").data("default", t("a11y.default")).data("saved", t("a11y.saved")).data("landmark", t("a11y.landmark")).holding([
+      H.button().kind("button").class("a11y-launch").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").label(t("a11y.open")).holding([H.span().class("a11y-figure").raw(FIGURE)]),
+      H.dialog().class("a11y-panel").id("a11y-panel").at("aria-labelledby", "a11y-title").holding([
+          H.header().class("a11y-head").holding([
+              H.span().class("a11y-head-figure").raw(FIGURE),
+              H.div().holding([H.h2().id("a11y-title").says(t("a11y.title")), H.p().says(t("a11y.intro"))]),
+              H.button().kind("button").class("icon-button a11y-close").data("a11y", "close").label(t("a11y.close")).holding([Icons.sized("x", 22)])
+            ]),
+          H.div().class("a11y-body").holding([
+              group(t("a11y.profiles"), [H.div().class("a11y-profiles").holding(PROFILES.map(|entry: (Str, Str)| H.button().kind("button").class("a11y-profile").data("profile", entry[0]).at("aria-pressed", "false").holding([
+                          H.span().class("a11y-profile-icon").holding([Icons.sized(entry[1], 20)]),
+                          H.span().class("a11y-profile-text").holding([H.strong().says(t("a11y.profile." + entry[0])), H.small().says(t("a11y.profile." + entry[0] + "_hint"))]),
+                          H.span().class("a11y-switch").at("aria-hidden", "true")
+                        ])))]),
+              group(t("a11y.content"), STEPS.map(|entry: (Str, Str)| stepper(frame, entry[0], entry[1])).concat([H.div().class("a11y-tiles").holding(CONTENT.map(|entry: (Str, Str, Str)| tile("toggle", entry[0], t(entry[1]), entry[2])))])),
+              group(t("a11y.colors"), [H.div().class("a11y-tiles").holding(COLORS.map(|entry: (Str, Str)| tile("color", entry[0], t("a11y.color." + entry[0]), entry[1])))]),
+              group(t("a11y.navigation"), [
+                  H.div().class("a11y-tiles").holding(ORIENTATION.map(|entry: (Str, Str, Str)| tile("toggle", entry[0], t(entry[1]), entry[2]))),
+                  H.details().class("a11y-structure").data("a11y", "structure").holding([
+                      H.summary().holding([Icons.sized("list", 18), H.span().says(t("a11y.structure"))]),
+                      H.p().class("small").says(t("a11y.structure_hint")),
+                      H.ul().class("a11y-structure-list")
+                    ])
+                ])
+            ]),
+          H.footer().class("a11y-foot").holding([
+              H.button().kind("button").class("button a11y-reset").data("a11y", "reset").says(t("a11y.reset")),
+              H.a().class("a11y-statement").href(Routes.CONTACT + "?topic=accessibility").says(t("a11y.statement")),
+              H.button().kind("button").class("a11y-hide").data("a11y", "hide").says(t("a11y.hide"))
+            ])
+        ])
+    ])
+}

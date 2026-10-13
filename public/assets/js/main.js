@@ -40,6 +40,7 @@ const FEATURES = {
   'join-panel': joinPanel,
   retry,
   explorer: (node) => import('./features/explorer.js?v=59').then((module) => module.explorer(node)),
+  a11y: (node) => import('./features/a11y.js?v=59').then((module) => module.a11y(node)).catch(() => {}),
   'mini-map': (node) => import('./features/eventMaps.js?v=59').then((module) => module.miniMap(node)),
   participants: (node) => import('./features/eventMaps.js?v=59').then((module) => module.participants(node)),
   'avatar-upload': (node) => import('./features/avatarUpload.js?v=59').then((module) => module.avatarUpload(node)),
