@@ -181,3 +181,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - 2026-10-12 · [[src/View/Components/A11y]] · accessibility panel laid out as a floating card: header with close, language, title and Reset / Statement / Hide pills; OFF/ON profile rows with outline glyphs on transparent backgrounds; content, color and orientation cards; footer with the Alt + A shortcut. New accessibility statement at `/accessibility` on the existing legal template, linked from the panel and the footer · risk LOW
 
 - 2026-10-13 · #88 · restore essential contact delivery with separate environment-scoped application credentials; normalize fixed-panel footer reservation under accessibility scaling, and make shared operational logging admission transactional. Live production application rollout remains pending.
+
+- 2026-10-13 · #89 · enforce private activity detail/direct attendee audiences and approved-cohort attendee lists; member public/historical cards derive coarse coordinates. Both databases verified with role rollback tests and unchanged production publication count; the full published-contract gate remains open.

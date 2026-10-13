@@ -306,3 +306,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/FailureLogIngestion]] · [[src/Test/JoinPanel]] — operational quota and footer lifecycle regressions.
 
 - [[src/Test/Community]] — pure calendar, referral and spreadsheet safety regressions.
+
+- [[src/Database/LegalAudiences]] — event and attendee audience protection.
