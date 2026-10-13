@@ -90,6 +90,7 @@ export const ADMIN_REVIEW: Str = "/admin/reviews/:id"
 export const TERMS: Str = "/terms"
 export const PRIVACY: Str = "/privacy"
 export const COOKIES: Str = "/cookies"
+export const ACCESSIBILITY: Str = "/accessibility"
 export const ABOUT: Str = "/about"
 /// The contact form.
 export const CONTACT: Str = "/contact"

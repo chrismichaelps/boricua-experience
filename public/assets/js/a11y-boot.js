@@ -8,7 +8,7 @@
   var FONTS = ['readable', 'dyslexia'];
   var PROFILES = {
     seizure: { still: true, color: 'desaturate' },
-    vision: { scale: 2, titles: true, links: true, focus: true },
+    vision: { scale: 2, color: 'high', titles: true, links: true, focus: true },
     adhd: { mask: true, still: true },
     cognitive: { font: 'readable', guide: true, titles: true, links: true },
     keyboard: { focus: true },

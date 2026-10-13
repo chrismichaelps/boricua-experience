@@ -20,7 +20,8 @@ out="$root/test/Fixtures/message-keys.txt"
   for section in what necessary storage optional third choices; do echo "legal.cookies.$section.title"; echo "legal.cookies.$section.body"; done
   for region in metro norte este centro sur oeste islas; do echo "region.$region"; done
   for section in mission how safety privacy; do echo "about.$section.title"; echo "about.$section.body"; done
-  for doc in legal.terms legal.privacy legal.cookies about; do echo "$doc.title"; echo "$doc.description"; echo "$doc.intro"; done
-  for doc in legal.terms legal.privacy legal.cookies; do echo "$doc.summary"; done
-} | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|event\.going|event\.more_dates|place\.reviews|publish\.kind_|review\.reason_|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
+  for section in commitment standard tools compatibility limitations feedback; do echo "legal.accessibility.$section.title"; echo "legal.accessibility.$section.body"; done
+  for doc in legal.terms legal.privacy legal.cookies legal.accessibility about; do echo "$doc.title"; echo "$doc.description"; echo "$doc.intro"; done
+  for doc in legal.terms legal.privacy legal.cookies legal.accessibility; do echo "$doc.summary"; done
+} | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|legal\.accessibility|event\.going|event\.more_dates|place\.reviews|publish\.kind_|review\.reason_|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
 echo "$(wc -l < "$out" | tr -d ' ') keys written to $out"

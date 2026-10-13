@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Std.Http as Http
+import Std.Io as Io
 import Std.Json as Json
 import Std.List as List
 import Std.Result as Result
@@ -275,7 +276,7 @@ fn main() -> Int {
       Test.equals("category and town landings retain their own heading", &listing.contains("search-hero-photo"), &false),
       Test.equals("footer removes the adult-only note", &openSearch.contains("For adults 18 and over"), &false),
       Test.equals("footer uses the frame year", &openSearch.contains("© 1969 Boricua Experience."), &true),
-      Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
+      Test.equals("every language action carries the session token (bar, menu, accessibility panel)", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &3),
       Test.equals("organizing unknown archive is neutral in English", &Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("This activity has ended."), &false),
       Test.equals("organizing unknown archive is neutral in Spanish", &Html.render(&ActivityPage.render(&es, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("Esta actividad ya terminó."), &false),
       Test.equals("unknown ended card says archived", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("Archived"), &true),
@@ -352,5 +353,7 @@ fn main() -> Int {
       Test.equals("Spanish search remains translated", &spanish.contains("Dónde"), &true),
       Test.equals("local refresh styles are versioned", &home.contains("/assets/css/home.css?v=" + App.ASSET_VERSION), &true)
     ])
-  Test.report(&Test.run(&checks))
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
 }

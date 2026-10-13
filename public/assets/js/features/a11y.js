@@ -103,7 +103,7 @@ export function a11y(root, view = window) {
     returnFocus = doc.activeElement;
     panel.showModal();
     launch.setAttribute('aria-expanded', 'true');
-    panel.querySelector('.a11y-profile')?.focus({ preventScroll: true });
+    panel.querySelector('.a11y-onoff')?.focus({ preventScroll: true });
   };
   const close = () => {
     if (panel.open) panel.close();

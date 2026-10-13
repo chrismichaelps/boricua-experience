@@ -32,7 +32,7 @@ export fn render(frame: &Frame.Frame) -> H.Node {
               group(frame, "footer.discover", [(Routes.SEARCH, "nav.explore"), (Routes.SEARCH + "?when=weekend", "home.weekend"), (Routes.SEARCH + "?free=1", "footer.free"), (Routes.MAP, "nav.map")]),
               group(frame, "home.towns", [(Routes.HOME + "#towns", "home.all_towns"), (Routes.MAP, "nav.map")]),
               group(frame, "footer.community", [(Routes.CREATE, "nav.create"), (Routes.ACTIVITY, "nav.activity"), (Routes.ACCOUNT, "nav.profile"), (Routes.ABOUT, "footer.about"), (Routes.CONTACT, "footer.contact")]),
-              group(frame, "footer.legal", [(Routes.TERMS, "footer.terms"), (Routes.PRIVACY, "footer.privacy"), (Routes.COOKIES, "footer.cookies"), (Routes.RECOVER, "footer.recover")])
+              group(frame, "footer.legal", [(Routes.TERMS, "footer.terms"), (Routes.PRIVACY, "footer.privacy"), (Routes.COOKIES, "footer.cookies"), (Routes.ACCESSIBILITY, "footer.accessibility"), (Routes.RECOVER, "footer.recover")])
             ]),
           H.div().class("footer-bottom").holding([
               H.p().class("footer-note").says(Frame.tf(frame, "footer.copyright", &[("year", show(Time.local(&StdTime.instantOf(frame.nowMillis)).year))])),
