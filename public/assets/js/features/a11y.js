@@ -1,7 +1,9 @@
 // The accessibility toolbar: profiles, stepped text settings, switches, one color mode, a reading
 // guide and mask that follow the pointer or keyboard focus, and a map of the page's headings and
 // regions. Settings live in this browser through the model the boot script defines.
-const HIDDEN_KEY = 'bx-a11y-hidden';
+// Hiding tucks the launcher into a small tab at the screen edge; it never leaves the page, so the
+// tools stay one tap or Alt+A away.
+const TUCKED_KEY = 'bx-a11y-tucked';
 
 export function a11y(root, view = window) {
   const model = view.bxA11y;
@@ -13,12 +15,20 @@ export function a11y(root, view = window) {
   let overlays = null;
   let returnFocus = null;
 
-  try { if (view.sessionStorage.getItem(HIDDEN_KEY) === '1') root.hidden = true; } catch { /* stays visible */ }
+  const tuck = (on) => {
+    root.classList.toggle('is-tucked', on);
+    launch.setAttribute('aria-label', on ? root.dataset.show : root.dataset.open);
+    try { if (on) view.localStorage.setItem(TUCKED_KEY, '1'); else view.localStorage.removeItem(TUCKED_KEY); } catch { /* tucked for this page */ }
+  };
+  // A flag from the earlier session-wide hide is dropped: it removed the launcher entirely.
+  try { view.sessionStorage.removeItem('bx-a11y-hidden'); } catch { /* nothing kept */ }
+  root.hidden = false;
+  try { if (view.localStorage.getItem(TUCKED_KEY) === '1') tuck(true); } catch { /* stays out */ }
 
   const label = (name) => {
     const value = settings[name];
     if (!value) return root.dataset.default;
-    if (name === 'scale') return `${Math.round(model.STEPS.scale[value] * 100)}%`;
+    if (name === 'scale' || name === 'text') return `${Math.round(model.STEPS[name][value] * 100)}%`;
     return `+${value}`;
   };
   const profileOn = (name) => Object.entries(model.PROFILES[name]).every(([key, value]) => (typeof value === 'number' ? settings[key] >= value : settings[key] === value));
@@ -28,6 +38,10 @@ export function a11y(root, view = window) {
       button.setAttribute('aria-pressed', String(value ? settings[name] === value : settings[name] === true));
     }
     for (const button of root.querySelectorAll('[data-color]')) button.setAttribute('aria-pressed', String(settings.color === button.dataset.color));
+    for (const button of root.querySelectorAll('[data-paint]')) {
+      const [name, value] = button.dataset.paint.split('=');
+      button.setAttribute('aria-pressed', String(value ? settings[name] === value : !settings[name]));
+    }
     for (const button of root.querySelectorAll('[data-profile]')) button.setAttribute('aria-pressed', String(profileOn(button.dataset.profile)));
     for (const output of root.querySelectorAll('[data-value]')) output.textContent = label(output.dataset.value);
     for (const button of root.querySelectorAll('[data-step]')) {
@@ -78,6 +92,9 @@ export function a11y(root, view = window) {
       const [name, value] = button.dataset.toggle.split(':');
       if (value) commit({ ...settings, [name]: settings[name] === value ? '' : value });
       else commit({ ...settings, [name]: !settings[name] });
+    } else if (button.dataset.paint) {
+      const [name, value] = button.dataset.paint.split('=');
+      commit({ ...settings, [name]: value || '' });
     } else if (button.dataset.color) {
       commit({ ...settings, color: settings.color === button.dataset.color ? '' : button.dataset.color });
     } else if (button.dataset.step) {
@@ -91,9 +108,9 @@ export function a11y(root, view = window) {
     } else if (button.dataset.a11y === 'reset') {
       commit(model.defaults());
     } else if (button.dataset.a11y === 'hide') {
-      try { view.sessionStorage.setItem(HIDDEN_KEY, '1'); } catch { /* hidden for this page */ }
       close();
-      root.hidden = true;
+      tuck(true);
+      launch.focus({ preventScroll: true });
     } else if (button.dataset.a11y === 'close') {
       close();
     }
@@ -110,7 +127,14 @@ export function a11y(root, view = window) {
     launch.setAttribute('aria-expanded', 'false');
     returnFocus?.focus?.({ preventScroll: true });
   };
-  launch.addEventListener('click', () => (panel.open ? close() : open()));
+  launch.addEventListener('click', () => {
+    if (root.classList.contains('is-tucked')) { tuck(false); open(); return; }
+    if (panel.open) close(); else open();
+  });
+
+  // Useful links: a short list of the site's main pages, reached from inside the panel.
+  const links = root.querySelector('[data-a11y="links"]');
+  links?.addEventListener('change', () => { if (links.value) view.location.assign(links.value); });
   panel.addEventListener('cancel', (event) => { event.preventDefault(); close(); });
   panel.addEventListener('click', (event) => { if (event.target === panel) close(); });
 
@@ -145,7 +169,7 @@ export function a11y(root, view = window) {
   doc.addEventListener('keydown', (event) => {
     if (event.altKey && !event.ctrlKey && !event.metaKey && (event.key === 'a' || event.key === 'A' || event.code === 'KeyA')) {
       event.preventDefault();
-      root.hidden = false;
+      if (root.classList.contains('is-tucked')) tuck(false);
       if (panel.open) close(); else open();
     }
   });
