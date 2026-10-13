@@ -1,4 +1,4 @@
-/** @Services.Digest.Weekly — the optional weekly email summary, batched within the free allowance */
+/** @Services.Digest.Weekly — the optional weekly email summary, with current consent checked before delivery */
 module Services.Digest
 
 import Std.Bytes as Bytes
@@ -27,9 +27,14 @@ export fn stopValid(runtime: &Runtime.Runtime, userId: Str, token: Str) -> Bool 
   !userId.isEmpty() && Crypto.bytesMatch(&Bytes.fromText(stopToken(runtime, userId)), &Bytes.fromText(token))
 }
 
+/// A canonical same-origin action for a validated stop link.
+export fn stopPath(userId: Str, token: Str) -> Str {
+  Routes.DIGEST_STOP.replace(":user", userId).replace(":token", token)
+}
+
 /// A member's one-click stop address.
 export fn stopUrl(runtime: &Runtime.Runtime, userId: Str) -> Str {
-  runtime.siteUrl + Routes.DIGEST_STOP.replace(":user", userId).replace(":token", stopToken(runtime, userId))
+  runtime.siteUrl + stopPath(userId, stopToken(runtime, userId))
 }
 
 /// The week a run belongs to, so a retried run never sends a second copy the same week.
@@ -68,13 +73,19 @@ export fn run(runtime: &Runtime.Runtime, nowMillis: Int) -> Result[Digest.Run, P
   let due: Array[Digest.Due] = Gateway.queryAsService(&runtime.gateway, Supabase.DIGEST_BATCH, &[("p_limit", Json.Number(Limits.DIGEST_BATCH))]) ?
   var sent = 0
   var failed = 0
+  var skipped = 0
   for member in due {
-    match Mail.send(&mailer, &letter(runtime, &member, nowMillis)) {
-      case Ok(_) => { sent = sent + 1 }
+    let allowed: Result[Bool, Problem.Problem] = Gateway.queryAsService(&runtime.gateway, Supabase.DIGEST_ALLOWED, &[("p_user_id", Gateway.text(member.userId)), ("p_generation", Json.Number(member.generation))])
+    match allowed {
+      case Ok(false) => { skipped = skipped + 1 }
       case Err(_) => { failed = failed + 1 }
+      case Ok(true) => match Mail.send(&mailer, &letter(runtime, &member, nowMillis)) {
+        case Ok(_) => { sent = sent + 1 }
+        case Err(_) => { failed = failed + 1 }
+      }
     }
   }
-  Ok(Digest.Run{due: due.length(), sent: sent, failed: failed})
+  Ok(Digest.Run{due: due.length(), sent: sent, failed: failed, skipped: skipped})
 }
 
 /// Stops a member's summaries from their own link.

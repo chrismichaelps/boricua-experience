@@ -24,10 +24,12 @@ import Web.Serve as Serve
 /// mail clients send it as a one-click unsubscribe.
 export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   let held = *app
+  let confirmation = Serve.api(app, |visitor: Context.Visitor| confirm(&held, &visitor))
+  let stopping = Serve.api(app, |visitor: Context.Visitor| stop(&held, &visitor))
   [
     Route.get(Routes.DIGEST_RUN, |request: Route.Request| runAnswer(&held, &request)),
-    Route.get(Routes.DIGEST_STOP, Serve.page(app, |visitor: Context.Visitor| confirm(&held, &visitor))),
-    Route.post(Routes.DIGEST_STOP, Serve.api(app, |visitor: Context.Visitor| stop(&held, &visitor)))
+    Route.get(Routes.DIGEST_STOP, |request: Route.Request| privateAnswer(confirmation(request))),
+    Route.post(Routes.DIGEST_STOP, |request: Route.Request| privateAnswer(stopping(request)))
   ]
 }
 
@@ -41,7 +43,7 @@ fn runAnswer(app: &Assembly.App, request: &Route.Request) -> Http.Response {
     match DigestService.run(&app.runtime, Time.now().millis) {
       case Ok(done) => {
         if done.failed > 0 { app.logs.requests.warning("Weekly summaries: \{Failed\} of \{Due\} could not be sent", [Value.int(done.failed), Value.int(done.due)]) }
-        Respond.json(200, &Json.object(&[("due", Json.Number(done.due)), ("sent", Json.Number(done.sent)), ("failed", Json.Number(done.failed))]))
+        Respond.json(200, &Json.object(&[("due", Json.Number(done.due)), ("sent", Json.Number(done.sent)), ("failed", Json.Number(done.failed)), ("skipped", Json.Number(done.skipped))]))
       }
       case Err(problem) => {
         app.logs.requests.error("Weekly summaries did not run: \{Reason\}", [Value.text(Problem.code(&problem))])
@@ -55,15 +57,21 @@ fn runAnswer(app: &Assembly.App, request: &Route.Request) -> Http.Response {
 /// The stop link's page: a button that stops the summaries, or missing for a forged link.
 fn confirm(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   if !DigestService.stopValid(&app.runtime, Serve.param(visitor, "user"), Serve.param(visitor, "token")) { return Respond.problem(app, visitor, &Problem.Missing) }
-  Respond.page(200, &DigestPage.render(&Context.frame(app, visitor), visitor.request.path, false))
+  Respond.page(200, &DigestPage.render(&Context.frame(app, visitor), DigestService.stopPath(Serve.param(visitor, "user"), Serve.param(visitor, "token")), false))
 }
 
 /// Stops the summaries; a mail client's one-click post gets an empty answer, a browser a page.
 fn stop(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match DigestService.stop(&app.runtime, Serve.param(visitor, "user"), Serve.param(visitor, "token")) {
     case Ok(_) => if Option.unwrapOr(Route.header(&visitor.request, "accept"), "").contains("text/html") {
-      Respond.page(200, &DigestPage.render(&Context.frame(app, &Context.resolve(app, &visitor.request, true)), visitor.request.path, true))
+      Respond.page(200, &DigestPage.render(&Context.frame(app, &Context.resolve(app, &visitor.request, true)), DigestService.stopPath(Serve.param(visitor, "user"), Serve.param(visitor, "token")), true))
     } else { Respond.json(200, &Json.object(&[("stopped", Json.Boolean(true))])) }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
+}
+
+/// Capability responses are never stored and never propagate their path as a referrer.
+fn privateAnswer(response: Http.Response) -> Http.Response {
+  let headers = Http.setHeader(&response.headers, "cache-control", HttpConstants.CACHE_PRIVATE)
+  Http.Response{..response, headers: Http.setHeader(&headers, "referrer-policy", "no-referrer")}
 }

@@ -310,3 +310,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Database/LegalAudiences]] — event and attendee audience protection.
 
 - [[src/Web/FailureLog]] · [[src/Test/FailureLog]] — private capability redaction in operational logs.
+
+- [[src/Services/Digest]] · [[src/Domain/Digest]] · [[src/Web/Handlers/Digest]] · [[src/Test/Digest]] · [[src/Database/EmailUnsubscribe]] — revision-aware optional email suppression.

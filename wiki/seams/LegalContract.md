@@ -42,3 +42,6 @@ Resolved: the legal release gate is behavioral verification, not a claim of lega
 
 ## Operational privacy verification
 Private calendar and digest unsubscribe links are bearer capabilities; normalize their user/signature segments to route templates before platform and remote logs, including repeated-slash and encoded variants. The corrected source is tested; production application deployment remains gated.
+
+## Optional email opt-out evidence · #89
+Digest opt-out is now recorded and invalidates selected recipient generations in both environments. Application delivery rechecks current consent and fails closed; route verification proves ungated scanner-safe GET and signed no-login POST, repeated success and invalid-token rejection. Essential recovery remains separate. Database prerequisites applied; production optional digest sender remains disabled pending full release. Account settings retain separate marketing consent (no promotional sender introduced). Provider-accepted mail cannot be recalled; received-message DKIM coverage of unsubscribe headers and shared capacity/retry handling are still pending.

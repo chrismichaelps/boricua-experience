@@ -185,3 +185,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - 2026-10-13 · #89 · enforce private activity detail/direct attendee audiences and approved-cohort attendee lists; member public/historical cards derive coarse coordinates. Both databases verified with role rollback tests and unchanged production publication count; the full published-contract gate remains open.
 
 - 2026-10-13 · #89 · redact private calendar/digest URL capabilities in platform and remote access logs, including repeated-slash/encoded variants; source release remains gated by the full published-contract audit.
+
+2026-10-13 · #89 — Guard optional digest delivery with current consent generation, record digest preference changes, retain idempotent service-only unsubscribe and canonical no-login confirmation routes with private/no-store/no-referrer. Additive suppression migration applied and rollback-verified in both databases; no optional production scheduling enabled.17suites/541assertions plus browser harnesses pass.

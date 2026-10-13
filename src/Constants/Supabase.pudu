@@ -120,6 +120,8 @@ export const MY_ACHIEVEMENTS: Str = "my_achievements"
 /// Weekly email summaries: the members due one, and stopping them from a letter.
 export const DIGEST_BATCH: Str = "digest_batch"
 export const STOP_DIGEST: Str = "stop_digest"
+/// Revalidates a claimed recipient against their current consent generation.
+export const DIGEST_ALLOWED: Str = "digest_allowed"
 export const RECORD_ACHIEVEMENT_SIGNALS: Str = "record_achievement_signals"
 export const PUBLIC_ACHIEVEMENTS: Str = "public_achievements"
 

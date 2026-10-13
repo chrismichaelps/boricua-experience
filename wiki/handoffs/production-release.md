@@ -28,3 +28,6 @@ Full live Terms read and compared with applied development functions. Confirmed 
 
 ## Operational credential paths
 Web.Access and Web.FailureLog now share private capability-path redaction, including router-equivalent repeated separators and encoded variants. Calendar/digest-stop user/signature segments never enter either logging transport. Source correction is independently reviewed and tested before commit; new application deployment remains pending.
+
+## Optional email opt-out · #89
+Latest priority implemented: optional summaries retain unsubscribe text and one-click headers; account settings also disable them. Revision-aware database check runs before each provider submission, errors fail closed, opt-out is idempotent and recorded. Scanner GET only confirms; no-cookie/cross-origin signed POST succeeds. Canonical form action fixes repeated-leading-slash capability exposure; explicit privacy headers wrap after generic response finishing. Independently reviewed source and migration. Both projects applied/verified suppression prerequisites; future digest migration amended to preserve them. Password recovery and SMTP/signup configuration untouched. Full541assertions/browser harnesses pass; production seed guard passes. No app promotion yet. Received-mail DKIM coverage, shared provider capacity and digest retry lifecycle remain release gates.

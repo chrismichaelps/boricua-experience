@@ -9,6 +9,7 @@ export type Upcoming = { title: Str, slug: Str, @json("starts_at") startsAt: Str
 /** @Domain.Digest.Due — a member due a summary, with what it says */
 export type Due = {
   @json("user_id") userId: Str,
+  generation: Int,
   email: Str,
   name: Str,
   locale: Str,
@@ -17,4 +18,4 @@ export type Due = {
 } derives Json.Decode
 
 /** @Domain.Digest.Run — how one daily run went */
-export type Run = { due: Int, sent: Int, failed: Int }
+export type Run = { due: Int, sent: Int, failed: Int, skipped: Int }

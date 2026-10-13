@@ -15,6 +15,7 @@ import Domain.Problem as Problem
 import PuduLangHttpClient.Client as Client
 import PuduLangHttpClient as HttpClient
 import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
 import PuduLangHttpClient.Response as Response
 import Services.Digest as DigestService
 import Services.Runtime as Runtime
@@ -24,7 +25,46 @@ const NOW: Int = 1792000000000
 
 /// A member due a summary.
 fn due(locale: Str, unread: Int, upcoming: Array[Digest.Upcoming]) -> Digest.Due {
-  Digest.Due{userId: "user-1", email: "ana@example.com", name: "Ana", locale: locale, unread: unread, upcoming: upcoming}
+  Digest.Due{userId: "user-1", generation: 1, email: "ana@example.com", name: "Ana", locale: locale, unread: unread, upcoming: upcoming}
+}
+
+/// A claimed recipient whose final consent check is answered by the stub.
+fn delivery(consentStatus: Int, allowed: Bool) -> (Result[Digest.Run, Problem.Problem], Int) {
+  let sends: Sync.Cell[Int] = Sync.cell(0)
+  let gateway = Gateway.over(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      if request.uri.contains("digest_batch") {
+        let member = due("en", 1, [])
+        let payload = Json.list(&[Json.object(&[("user_id", Json.Text(member.userId)), ("generation", Json.Number(member.generation)), ("email", Json.Text(member.email)), ("name", Json.Text(member.name)), ("locale", Json.Text(member.locale)), ("unread", Json.Number(1)), ("upcoming", Json.list(&[]))])])
+        return Ok(Response.answer(&request, 200).withJson(&payload))
+      }
+      let claimMatches = match request.content {
+        case Some(content) => {
+          let text = Result.unwrapOr(Bytes.toText(&content.payload), "")
+          text.contains("\"p_generation\":1") && text.contains("\"p_user_id\":\"user-1\"")
+        }
+        case None => false
+      }
+      Ok(Response.answer(&request, if claimMatches { consentStatus } else { 400 }).withJson(&Json.Boolean(allowed)))
+    }, "https://example.test", "fixture")
+  let mailer = Mail.over(Client.create(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+        let _counted = Sync.set(&sends, Result.unwrapOr(Sync.get(&sends), 0) + 1)
+        Ok(Response.answer(&request, 200))
+      }), "Boricua Experience <noreply@example.test>")
+  let runtime = Runtime.Runtime{..Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://example.test"), mailer: Some(mailer)}
+  let answer = DigestService.run(&runtime, NOW)
+  (answer, Result.unwrapOr(Sync.get(&sends), 0))
+}
+
+/// Repeated valid stops return success without an email submission.
+fn repeatedStops() -> Bool {
+  let stops: Sync.Cell[Int] = Sync.cell(0)
+  let gateway = Gateway.over(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      let _counted = Sync.set(&stops, Result.unwrapOr(Sync.get(&stops), 0) + 1)
+      Ok(Response.answer(&request, 200).withJson(&Json.object(&[("stopped", Json.Boolean(true))])))
+    }, "https://example.test", "fixture")
+  let runtime = Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://example.test")
+  let token = DigestService.stopToken(&runtime, "user-1")
+  DigestService.stop(&runtime, "user-1", token) == Ok(()) && DigestService.stop(&runtime, "user-1", token) == Ok(()) && Result.unwrapOr(Sync.get(&stops), 0) == 2
 }
 
 /// Runs the digest checks.
@@ -43,6 +83,10 @@ fn main() -> Int {
   let mailer = Mail.over(Client.create(fn(_request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] { Err(HttpClient.Rejected("offline")) }), "Boricua Experience <hola@boricuaexperience.com>")
   let body = Json.encode(&Mail.body(&mailer, &spanish))
   let unconfigured = DigestService.run(&runtime, NOW)
+  let suppressed = delivery(200, false)
+  let unavailable = delivery(503, false)
+  let permitted = delivery(200, true)
+  let forgedStop = DigestService.stop(&runtime, "user-1", "forged")
   let checks = Test.suite("Digest", &[
       Test.equals("the subject is in the member's language", &spanish.subject, &"Tu semana en Boricua Experience"),
       Test.equals("an English member reads English", &english.subject, &"Your week on Boricua Experience"),
@@ -54,6 +98,12 @@ fn main() -> Int {
       Test.that("mail clients get list unsubscribe headers", body.contains("List-Unsubscribe") && body.contains("List-Unsubscribe=One-Click")),
       Test.that("one summary a week per member, even if a run repeats", spanish.idempotencyKey == DigestService.letter(&runtime, &due("es", 2, [event]), NOW + 3600000).idempotencyKey && spanish.idempotencyKey != nextWeek.idempotencyKey),
       Test.that("the stop link's signature is checked", DigestService.stopValid(&runtime, "user-1", token) && !DigestService.stopValid(&runtime, "user-2", token) && !DigestService.stopValid(&runtime, "", "")),
+      Test.equals("the form action is a same-origin canonical path", &DigestService.stopPath("user-1", token), &("/digest/stop/user-1/" + token)),
+      Test.that("repeated valid stop requests are successful", repeatedStops()),
+      Test.that("revoked consent suppresses an already claimed letter", suppressed[0] == Ok(Digest.Run{due: 1, sent: 0, failed: 0, skipped: 1}) && suppressed[1] == 0),
+      Test.that("unavailable consent fails closed without provider calls", unavailable[0] == Ok(Digest.Run{due: 1, sent: 0, failed: 1, skipped: 0}) && unavailable[1] == 0),
+      Test.that("current consent allows one provider submission", permitted[0] == Ok(Digest.Run{due: 1, sent: 1, failed: 0, skipped: 0}) && permitted[1] == 1),
+      Test.that("a forged opt-out never touches the database", forgedStop == Err(Problem.Missing) && Result.unwrapOr(Sync.get(&calls), 0) == 0),
       Test.that("without a mail key no member is claimed", match unconfigured { case Err(Problem.Unavailable(reason)) => reason == "mail_not_configured" case _ => false } && Result.unwrapOr(Sync.get(&calls), 0) == 0)
     ])
   let ran = Test.run(&checks)
