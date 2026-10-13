@@ -1,0 +1,65 @@
+/** @Web.Handlers.Contact.Routes — the contact form and its relay */
+module Web.Handlers.Contact
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Routes as Routes
+import Domain.Contact as Contact
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import Services.Contact as ContactService
+import Utils.Form as Form
+import Utils.Time as Time
+import View.Pages.Contact as ContactPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The contact routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.CONTACT, Serve.page(app, |visitor: Context.Visitor| show(&held, &visitor, &ContactPage.Writing(Contact.empty(), None), 200))),
+    Route.post(Routes.CONTACT, Serve.action(app, |visitor: Context.Visitor| send(&held, &visitor)))
+  ]
+}
+
+/// The page in a state, with a fresh stamp; the thank-you is the address with `?sent=1`.
+fn show(app: &Assembly.App, visitor: &Context.Visitor, state: &ContactPage.State, status: Int) -> Http.Response {
+  let shown = if Serve.query(visitor, "sent") == "1" && status == 200 { ContactPage.Sent } else { *state }
+  Respond.page(status, &ContactPage.render(&Context.frame(app, visitor), &shown, ContactService.stamp(&app.runtime, Time.now().millis)))
+}
+
+/// The address the request came from, as the platform reports it; it only feeds a keyed fingerprint.
+fn senderAddress(request: &Route.Request) -> Str {
+  match Route.header(request, "x-real-ip") {
+    case Some(address) => address.trim()
+    case None => match Route.header(request, "x-forwarded-for") {
+      case Some(chain) => Option.unwrapOr(Option.fromArray(&chain.split(",")), "").trim()
+      case None => "direct"
+    }
+  }
+}
+
+/// Records and relays a posted message; a refused form is shown again with its values.
+fn send(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let given = Contact.Form{topic: Form.text(&fields, "topic"), name: Form.text(&fields, "name"), email: Form.text(&fields, "email"), body: Form.paragraph(&fields, "body")}
+  let sending = ContactService.Sending {
+    form: given,
+    locale: Locale.code(&visitor.locale),
+    address: senderAddress(&visitor.request),
+    stamp: Form.text(&fields, "stamp"),
+    trap: Form.text(&fields, "website"),
+    memberId: match visitor.session { case Some(session) => session.userId case None => "" },
+    nowMillis: Time.now().millis
+  }
+  match Serve.ask(app, &app.kinds.contact, sending) {
+    case Ok(_) => Respond.redirect(Routes.CONTACT + "?sent=1")
+    case Err(Problem.Invalid(errors)) => show(app, visitor, &ContactPage.Writing(given, Some(Problem.Invalid(errors))), 422)
+    case Err(Problem.Refused(reason)) => show(app, visitor, &ContactPage.Writing(given, Some(Problem.Refused(reason))), if reason == "contact_limit" || reason == "contact_busy" { 429 } else { 409 })
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

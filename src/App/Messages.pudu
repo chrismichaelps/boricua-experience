@@ -23,6 +23,7 @@ import Domain.Session as Session
 import PuduLangMediator.Request as Request
 import Services.Admin as AdminService
 import Services.Auth.Accounts as Accounts
+import Services.Contact as ContactService
 import Services.Discovery as Discovery
 import Services.Participation as Participation
 import Validation.Participation as ParticipationRules
@@ -178,7 +179,8 @@ export type Kinds = {
   signOut: Request.Kind[Signed[()], (), Problem.Problem],
   sitemap: Request.Kind[(), Array[Index.Entry], Problem.Problem],
   dashboard: Request.Kind[Signed[()], AdminService.Dashboard, Problem.Problem],
-  resolve: Request.Kind[Signed[Resolution], (), Problem.Problem]
+  resolve: Request.Kind[Signed[Resolution], (), Problem.Problem],
+  contact: Request.Kind[ContactService.Sending, ContactService.Outcome, Problem.Problem]
 }
 
 /// Tags grouping kinds for behaviors: pages read, commands change state.
@@ -263,6 +265,7 @@ export fn kinds() -> Kinds {
     signOut: kind("identity.sign_out", IDENTITY),
     sitemap: kind("seo.sitemap", READ),
     dashboard: kind("admin.dashboard", READ),
-    resolve: kind("admin.resolve", COMMAND)
+    resolve: kind("admin.resolve", COMMAND),
+    contact: kind("site.contact", COMMAND)
   }
 }

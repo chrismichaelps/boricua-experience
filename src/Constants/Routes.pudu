@@ -87,6 +87,9 @@ export const TERMS: Str = "/terms"
 export const PRIVACY: Str = "/privacy"
 export const COOKIES: Str = "/cookies"
 export const ABOUT: Str = "/about"
+/// The culture page and the contact form.
+export const CULTURE: Str = "/culture"
+export const CONTACT: Str = "/contact"
 export const OFFLINE: Str = "/offline"
 /// Language choice and cookie consent, both posted from every page.
 export const LANGUAGE: Str = "/language"

@@ -7,10 +7,12 @@ import I18n.En as En
 import I18n.EnAccount as EnAccount
 import I18n.EnLegal as EnLegal
 import I18n.EnMenu as EnMenu
+import I18n.EnStory as EnStory
 import I18n.Es as Es
 import I18n.EsAccount as EsAccount
 import I18n.EsLegal as EsLegal
 import I18n.EsMenu as EsMenu
+import I18n.EsStory as EsStory
 
 /// The text of a key in a language; the Spanish text when English lacks it; the key itself when
 /// neither has it, so a missing entry is visible rather than blank.
@@ -22,11 +24,11 @@ export fn text(locale: &Locale.Locale, key: Str) -> Str {
   Option.unwrapOr(Option.orElse(found, spanish(key)), key)
 }
 
-/// The Spanish text of a key from the interface, account, policy, or menu catalogue.
-fn spanish(key: Str) -> Option[Str] { Option.firstPresent(&[Es.MESSAGES.get(key), EsAccount.MESSAGES.get(key), EsLegal.MESSAGES.get(key), EsMenu.MESSAGES.get(key)]) }
+/// The Spanish text of a key from the interface, account, policy, menu, or story catalogue.
+fn spanish(key: Str) -> Option[Str] { Option.firstPresent(&[Es.MESSAGES.get(key), EsAccount.MESSAGES.get(key), EsLegal.MESSAGES.get(key), EsMenu.MESSAGES.get(key), EsStory.MESSAGES.get(key)]) }
 
-/// The English text of a key from the interface, account, policy, or menu catalogue.
-fn english(key: Str) -> Option[Str] { Option.firstPresent(&[En.MESSAGES.get(key), EnAccount.MESSAGES.get(key), EnLegal.MESSAGES.get(key), EnMenu.MESSAGES.get(key)]) }
+/// The English text of a key from the interface, account, policy, menu, or story catalogue.
+fn english(key: Str) -> Option[Str] { Option.firstPresent(&[En.MESSAGES.get(key), EnAccount.MESSAGES.get(key), EnLegal.MESSAGES.get(key), EnMenu.MESSAGES.get(key), EnStory.MESSAGES.get(key)]) }
 
 /// Whether a language's catalogues hold a key, without falling back.
 export fn has(locale: &Locale.Locale, key: Str) -> Bool {

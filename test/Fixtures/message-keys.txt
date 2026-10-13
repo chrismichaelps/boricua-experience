@@ -312,8 +312,10 @@ flash.welcome_back
 flash.withdrawn
 footer.about
 footer.community
+footer.contact
 footer.cookies
 footer.copyright
+footer.culture
 footer.discover
 footer.free
 footer.legal
@@ -330,6 +332,9 @@ form.bio_length
 form.birth_date_invalid
 form.capacity_invalid
 form.category_required
+form.contact_body
+form.contact_name
+form.contact_topic
 form.description_length
 form.detail_length
 form.duration_too_long
@@ -393,6 +398,7 @@ home.title
 home.towns
 home.towns_body
 home.weekend
+legal.back_to_top
 legal.contents
 legal.cookies.choices.body
 legal.cookies.choices.title
@@ -410,7 +416,9 @@ legal.cookies.third.title
 legal.cookies.title
 legal.cookies.what.body
 legal.cookies.what.title
+legal.documents
 legal.effective
+legal.eyebrow
 legal.privacy.changes.body
 legal.privacy.changes.title
 legal.privacy.collect.body
@@ -441,6 +449,8 @@ legal.privacy.use.body
 legal.privacy.use.title
 legal.privacy.visibility.body
 legal.privacy.visibility.title
+legal.questions
+legal.reading
 legal.summary_title
 legal.terms.account.body
 legal.terms.account.title
@@ -698,6 +708,10 @@ problem.already_decided
 problem.already_requested
 problem.capacity_below_approved
 problem.consent_required
+problem.contact_busy
+problem.contact_expired
+problem.contact_limit
+problem.contact_too_fast
 problem.email_not_confirmed
 problem.email_taken
 problem.event_cancelled

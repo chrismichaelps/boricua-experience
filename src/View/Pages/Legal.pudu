@@ -1,4 +1,4 @@
-/** @View.Pages.Legal.Policies — terms, privacy, cookies, and about */
+/** @View.Pages.Legal.Policies — terms, privacy, and cookies */
 module View.Pages.Legal
 
 import Std.Html.Build {Building}
@@ -6,61 +6,99 @@ import Std.Html.Build as H
 import Std.Html as Html
 import Constants.Routes as Routes
 import View.Components.Form as Form
-import View.Components.Hero as Hero
+import View.Components.Icons as Icons
+import View.Components.Story as Story
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
 
 /** @View.Pages.Legal.Document — which policy page to render */
-export type Document = Terms | Privacy | Cookies | About
+export type Document = Terms | Privacy | Cookies
 
 /// The section keys of each document, in reading order.
 const TERMS_SECTIONS: Array[Str] = ["service", "eligibility", "account", "publishing", "joining", "minors", "conduct", "safety", "content", "moderation", "disclaimers", "liability", "indemnity", "changes", "law", "contact"]
 const PRIVACY_SECTIONS: Array[Str] = ["scope", "collect", "use", "visibility", "location", "providers", "retention", "rights", "deletion", "security", "minors", "transfers", "changes"]
 const COOKIES_SECTIONS: Array[Str] = ["what", "necessary", "storage", "optional", "third", "choices"]
-const ABOUT_SECTIONS: Array[Str] = ["mission", "how", "safety", "privacy"]
 
-/// The key prefix, sections, path, and whether it carries an effective-date line.
-fn shape(document: &Document) -> (Str, Array[Str], Str, Bool) {
+/// The illustration beside a document's title.
+fn art(document: &Document) -> Str {
   match document {
-    case Terms => ("legal.terms", TERMS_SECTIONS, Routes.TERMS, true)
-    case Privacy => ("legal.privacy", PRIVACY_SECTIONS, Routes.PRIVACY, true)
-    case Cookies => ("legal.cookies", COOKIES_SECTIONS, Routes.COOKIES, true)
-    case About => ("about", ABOUT_SECTIONS, Routes.ABOUT, false)
+    case Terms => "thumbs-up"
+    case Privacy => "shield"
+    case Cookies => "key"
   }
 }
 
-/// A policy page: title, effective date, summary, contents, then numbered sections. The about page has no
-/// effective date, summary, or contents.
+/// The key prefix, sections, and path of a document.
+fn shape(document: &Document) -> (Str, Array[Str], Str) {
+  match document {
+    case Terms => ("legal.terms", TERMS_SECTIONS, Routes.TERMS)
+    case Privacy => ("legal.privacy", PRIVACY_SECTIONS, Routes.PRIVACY)
+    case Cookies => ("legal.cookies", COOKIES_SECTIONS, Routes.COOKIES)
+  }
+}
+
+/// The legal documents a reader can switch between: path, title key, and icon.
+const DOCUMENTS: Array[(Str, Str, Str)] = [(Routes.TERMS, "footer.terms", "check"), (Routes.PRIVACY, "footer.privacy", "lock"), (Routes.COOKIES, "footer.cookies", "settings")]
+
+/// Words an adult reads in a minute, for the reading-time estimate.
+const WORDS_PER_MINUTE: Int = 200
+
+/// The switch between the three legal documents, marking the current one.
+fn documents(frame: &Frame.Frame, current: Str) -> H.Node {
+  H.nav().class("legal-docs").label(Frame.t(frame, "legal.documents")).holding(DOCUMENTS.map(|entry: (Str, Str, Str)| {
+        var link = H.a().class("legal-doc").href(entry[0]).holding([Icons.sized(entry[2], 18), H.span().says(Frame.t(frame, entry[1]))])
+        if entry[0] == current { link = link.at("aria-current", "page") }
+        link
+      }))
+}
+
+/// A policy page: a reading-progress bar, the document switch, a header with its effective date and
+/// reading time, the summary, a contents list that follows the reader, numbered sections that fade in,
+/// and a way back to the top. The text of every section is unchanged by the presentation.
 export fn render(frame: &Frame.Frame, document: &Document) -> Html.Html {
-  let (prefix, sections, path, versioned) = shape(document)
+  let (prefix, sections, path) = shape(document)
   let title = Frame.t(frame, prefix + ".title")
   let meta = Seo.meta(title, Frame.t(frame, prefix + ".description"), path, true)
   var numbered: Array[H.Node] = []
   var links: Array[H.Node] = []
+  var words = 0
   for index in 0..sections.length() {
     let section = sections[index]
     let anchor = "s-" + section
     let heading = Frame.t(frame, prefix + "." + section + ".title")
-    let number = if versioned { show(index + 1) + ". " } else { "" }
-    links = links.push(H.li().holding([H.a().href("#" + anchor).says(number + heading)]))
-    numbered = numbered.push(H.section().id(anchor).class("legal-section").holding([
-          H.h2().says(number + heading)
-        ].concat(Frame.t(frame, prefix + "." + section + ".body").split("\n\n").map(|paragraph: Str| H.p().says(paragraph)))))
+    let body = Frame.t(frame, prefix + "." + section + ".body")
+    words = words + body.split(" ").length()
+    links = links.push(H.li().holding([H.a().href("#" + anchor).data("spy", anchor).holding([H.span().class("legal-toc-number").says(show(index + 1)), H.span().says(heading)])]))
+    numbered = numbered.push(H.section().id(anchor).class("legal-section st-reveal").holding([
+          H.h2().holding([H.span().class("legal-number").at("aria-hidden", "true").says(show(index + 1)), H.span().says(heading)])
+        ].concat(body.split("\n\n").map(|paragraph: Str| H.p().says(paragraph)))))
   }
-  let about = *document == About
-  let head = H.header().class(if about { "about-hero" } else { "legal-head" }).holding([
-      if about { H.img().class("about-hero-photo").src("/assets/img/el-morro-flags-photo.webp").at("srcset", Hero.photoSet("/assets/img/el-morro-flags-photo.webp")).at("sizes", "(min-width: 1248px) 1200px, 100vw").alt("").at("width", "2200").at("height", "1467").at("fetchpriority", "high") } else { H.nothing() },
-      H.h1().class("page-title").says(title),
-      if versioned { H.p().class("legal-version").says(Frame.t(frame, "legal.effective")) } else { H.nothing() },
-      H.p().class("lead").says(Frame.t(frame, prefix + ".intro"))
+  let minutes = if words / WORDS_PER_MINUTE < 1 { 1 } else { words / WORDS_PER_MINUTE }
+  let head = H.header().class("legal-hero").holding([
+      H.p().class("st-eyebrow").says(Frame.t(frame, "legal.eyebrow")),
+      H.h1().class("legal-title").says(title),
+      H.ul().class("legal-meta").holding([
+          H.li().holding([Icons.sized("calendar", 16), H.span().says(Frame.t(frame, "legal.effective"))]),
+          H.li().holding([Icons.sized("clock", 16), H.span().says(Frame.tf(frame, "legal.reading", &[("minutes", show(minutes))]))])
+        ]),
+      H.p().class("lead").says(Frame.t(frame, prefix + ".intro")),
+      H.span().class("legal-hero-art").holding([Story.illustration(art(document), 150)])
     ])
-  let summary = if versioned { H.aside().class("legal-summary").holding([H.h2().says(Frame.t(frame, "legal.summary_title")), H.p().says(Frame.t(frame, prefix + ".summary"))]) } else { H.nothing() }
-  let contents = if versioned { H.nav().class("legal-contents").label(Frame.t(frame, "legal.contents")).holding([H.p().says(Frame.t(frame, "legal.contents")), H.ol().holding(links)]) } else { H.nothing() }
-  let reset = if *document == Cookies { H.form().action(Routes.CONSENT).method("post").holding([Form.token(frame), H.input().kind("hidden").name("choice").value("reset"), H.input().kind("hidden").name("return").value(Routes.COOKIES), H.button().submit().class("button button-ghost").says(Frame.t(frame, "cookies.change"))]) } else { H.nothing() }
-  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class(if versioned { "legal-page" } else { "legal-page is-plain about-page" }).holding([
-        contents,
-        if about { head } else { H.nothing() },
-        H.article().class("prose legal").holding([if about { H.nothing() } else { head }, summary].concat(numbered).concat([reset]))
+  let summary = H.aside().class("legal-summary st-reveal").holding([H.span().class("legal-summary-icon").holding([Icons.sized("sparkle", 22)]), H.div().holding([H.h2().says(Frame.t(frame, "legal.summary_title")), H.p().says(Frame.t(frame, prefix + ".summary"))])])
+  let contents = H.nav().class("legal-contents").label(Frame.t(frame, "legal.contents")).holding([H.p().says(Frame.t(frame, "legal.contents")), H.ol().holding(links)])
+  let reset = if *document == Cookies { H.form().action(Routes.CONSENT).method("post").class("legal-reset").holding([Form.token(frame), H.input().kind("hidden").name("choice").value("reset"), H.input().kind("hidden").name("return").value(Routes.COOKIES), H.button().submit().class("button button-ghost").says(Frame.t(frame, "cookies.change"))]) } else { H.nothing() }
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("legal-shell").data("feature", "reveal").holding([
+        H.div().class("legal-progress").at("aria-hidden", "true"),
+        documents(frame, path),
+        head,
+        H.div().class("legal-page").holding([
+            contents,
+            H.article().class("prose legal").holding([summary].concat(numbered).concat([
+                  reset,
+                  H.p().class("legal-more").holding([H.span().says(Frame.t(frame, "legal.questions") + " "), H.a().href(Routes.CONTACT).says(Frame.t(frame, "footer.contact"))]),
+                  H.a().class("legal-top").href("#content").holding([Icons.sized("chevron-left", 16), H.span().says(Frame.t(frame, "legal.back_to_top"))])
+                ]))
+          ])
       ]))
 }

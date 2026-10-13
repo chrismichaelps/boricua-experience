@@ -10,6 +10,7 @@ import Constants.Routes as Routes
 import I18n.Translate as Translate
 import View.Pages.Errors as Errors
 import View.Pages.Legal as Legal
+import View.Pages.Story as Story
 import View.Seo as Seo
 import Web.Context as Context
 import Web.Respond as Respond
@@ -26,7 +27,8 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.TERMS, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Terms)))),
     Route.get(Routes.PRIVACY, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Privacy)))),
     Route.get(Routes.COOKIES, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Cookies)))),
-    Route.get(Routes.ABOUT, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.About)))),
+    Route.get(Routes.ABOUT, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Story.about(&Context.frame(&held, &visitor))))),
+    Route.get(Routes.CULTURE, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Story.culture(&Context.frame(&held, &visitor))))),
     Route.get(Routes.OFFLINE, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Errors.offline(&Context.frame(&held, &visitor)))))
   ]
 }

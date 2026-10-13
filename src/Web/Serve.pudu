@@ -83,7 +83,7 @@ fn gate(app: &Assembly.App, visitor: &Context.Visitor, handle: fn(Context.Visito
 }
 
 /// Pages an account that has not finished onboarding may still read.
-const OPEN_PATHS: Set[Str] = setOf([Routes.ONBOARDING, Routes.TERMS, Routes.PRIVACY, Routes.COOKIES, Routes.ABOUT, Routes.OFFLINE])
+const OPEN_PATHS: Set[Str] = setOf([Routes.ONBOARDING, Routes.TERMS, Routes.PRIVACY, Routes.COOKIES, Routes.ABOUT, Routes.CULTURE, Routes.CONTACT, Routes.OFFLINE])
 
 /// The value a member route reads from the request: a path parameter or a posted field.
 export fn param(visitor: &Context.Visitor, name: Str) -> Str { Option.unwrapOr(Route.param(&visitor.request, name), "") }

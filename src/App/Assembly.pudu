@@ -10,6 +10,7 @@ import App.Handlers.Location as LocationHandlers
 import App.Handlers.Participation as ParticipationHandlers
 import App.Handlers.Places as PlaceHandlers
 import App.Handlers.Privacy as PrivacyHandlers
+import App.Handlers.Site as SiteHandlers
 import App.Logging as Logging
 import App.Messages as Messages
 import App.Pipeline as Pipeline
@@ -32,6 +33,7 @@ export fn assemble(runtime: &Runtime.Runtime, logs: &Logging.Logs) -> Result[App
     .concat(PrivacyHandlers.registrations(&kinds, runtime))
     .concat(IdentityHandlers.registrations(&kinds, runtime))
     .concat(AdminHandlers.registrations(&kinds, runtime))
+    .concat(SiteHandlers.registrations(&kinds, runtime))
   match Mediator.build(registrations) {
     case Ok(mediator) => Ok(App{runtime: *runtime, mediator: mediator, kinds: kinds, logs: *logs})
     case Err(invalid) => Err(Mediator.explain(&invalid))

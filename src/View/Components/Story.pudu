@@ -1,0 +1,132 @@
+/** @View.Components.Story.Sections — the illustrated, playful section vocabulary of the story pages */
+module View.Components.Story
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.App as App
+import View.Components.Icons as Icons
+
+/// The accent strokes drawn after a headline's last word; decorative only.
+const SPARK: Str = "<svg viewBox=\"0 0 40 40\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8 30 15 23M20 32V22M32 30 25 23\" stroke=\"currentColor\" stroke-width=\"3.6\" stroke-linecap=\"round\"/></svg>"
+
+/// The strokes flanking a centered heading, mirrored on the right; decorative only.
+const FLANK: Str = "<svg viewBox=\"0 0 28 28\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 6l6 5M3 15h8M6 24l6-5\" stroke=\"currentColor\" stroke-width=\"3.2\" stroke-linecap=\"round\"/></svg>"
+
+/// The soft wave where a white section meets a tinted band; decorative only.
+const WAVE: Str = "<svg viewBox=\"0 0 1440 90\" preserveAspectRatio=\"none\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M0 60C240 10 480 0 720 22s480 60 720 18v50H0z\" fill=\"currentColor\"/></svg>"
+
+/// The address of an illustration, versioned with the other assets.
+fn source(name: Str) -> Str { "/assets/illustrations/" + name + ".svg?v=" + App.ASSET_VERSION }
+
+/// A decorative illustration at a size in pixels.
+export fn illustration(name: Str, size: Int) -> H.Node {
+  H.img().class("st-illustration").src(source(name)).alt("").at("width", show(size)).at("height", show(size)).at("loading", "lazy").at("decoding", "async")
+}
+
+/// A small uppercase label above a heading.
+export fn eyebrow(text: Str) -> H.Node { H.p().class("st-eyebrow").says(text) }
+
+/// A node that pops into view once it is scrolled to, with a stagger step.
+export fn reveal(node: H.Node, order: Int) -> H.Node {
+  H.div().class("st-reveal").at("style", "--st-step:" + show(order)).holding([node])
+}
+
+/// A phrase whose last word carries the accent strokes, so they follow the word when it wraps.
+export fn accented(phrase: Str) -> H.Node {
+  let words = phrase.trim().split(" ")
+  let last = words[words.length() - 1]
+  let lead = phrase.trim().take(phrase.trim().length() - last.length())
+  H.span().class("st-line").holding([
+      if lead.isEmpty() { H.nothing() } else { H.span().says(lead) },
+      H.span().class("st-accent").holding([H.span().says(last), H.span().class("st-spark").raw(SPARK)])
+    ])
+}
+
+/// A two-line oversized headline whose last word carries the accent strokes.
+export fn headline(top: Str, bottom: Str) -> H.Node {
+  H.h1().class("st-headline").holding([H.span().class("st-line").says(top), accented(bottom)])
+}
+
+/// The opening section: headline, lead, actions, and the mascot scene.
+export fn hero(title: H.Node, lead: Str, actions: Array[H.Node], art: Str) -> H.Node {
+  H.section().class("st-hero").holding([
+      H.div().class("st-hero-text").holding([
+          title,
+          H.p().class("st-lead").says(lead),
+          if actions.isEmpty() { H.nothing() } else { H.div().class("st-actions").holding(actions) }
+        ]),
+      H.div().class("st-hero-art").holding([H.img().class("st-mascot").src(source(art)).alt("").at("width", "400").at("height", "400").at("fetchpriority", "high")])
+    ])
+}
+
+/// A primary or outlined call to action.
+export fn action(href: Str, label: Str, primary: Bool) -> H.Node {
+  H.a().class(if primary { "st-button" } else { "st-button is-outline" }).href(href).says(label)
+}
+
+/// A tinted band that rises out of the section above on a soft wave.
+export fn band(children: Array[H.Node]) -> H.Node {
+  H.section().class("st-band").holding([H.div().class("st-wave").raw(WAVE), H.div().class("st-band-inner").holding(children)])
+}
+
+/// A centered statement under a small label, as the mission is told.
+export fn statement(label: Str, text: Str, body: Str) -> H.Node {
+  H.div().class("st-statement").holding([
+      reveal(eyebrow(label), 0),
+      reveal(H.p().class("st-statement-text").says(text), 1),
+      if body.isEmpty() { H.nothing() } else { reveal(H.p().class("st-body").says(body), 2) }
+    ])
+}
+
+/// A centered heading flanked by accent strokes in a tone, with its label and paragraph.
+export fn heading(label: Str, title: Str, body: Str, tone: Str) -> H.Node {
+  H.div().class("st-heading").holding([
+      if label.isEmpty() { H.nothing() } else { eyebrow(label) },
+      H.h2().class("st-title st-flank-" + tone).holding([
+          H.span().class("st-flank").raw(FLANK),
+          H.span().says(title),
+          H.span().class("st-flank is-mirrored").raw(FLANK)
+        ]),
+      if body.isEmpty() { H.nothing() } else { H.p().class("st-body").says(body) }
+    ])
+}
+
+/// An illustration in a cream disc, a colored tag, a title, and an optional paragraph.
+export fn tile(art: Str, tag: Str, tone: Str, title: Str, body: Str) -> H.Node {
+  H.li().class("st-tile").holding([
+      H.span().class("st-disc").holding([illustration(art, 120)]),
+      if tag.isEmpty() { H.nothing() } else { H.span().class("st-pill st-pill-" + tone).says(tag) },
+      H.h3().says(title),
+      if body.isEmpty() { H.nothing() } else { H.p().says(body) }
+    ])
+}
+
+/// A small blue round icon over a bold title and a paragraph.
+export fn feature(icon: Str, title: Str, body: Str) -> H.Node {
+  H.li().class("st-feature").holding([H.span().class("st-feature-icon").holding([Icons.sized(icon, 18)]), H.h3().says(title), H.p().says(body)])
+}
+
+/// A large figure with its caption, for the facts row.
+export fn fact(figure: Str, caption: Str) -> H.Node {
+  H.li().class("st-fact").holding([H.strong().says(figure), H.span().says(caption)])
+}
+
+/// A photograph beside a text block.
+export fn split(photo: Str, block: H.Node) -> H.Node {
+  H.section().class("st-split").holding([
+      reveal(block, 0),
+      reveal(H.div().class("st-photo").holding([H.img().src(photo).at("srcset", photo.replace(".webp", "-1300.webp") + " 1300w, " + photo + " 2200w").at("sizes", "(min-width: 960px) 520px, 100vw").alt("").at("loading", "lazy").at("decoding", "async").at("width", "1300").at("height", "867")]), 1)
+    ])
+}
+
+/// The closing band: an illustration, a heading, a line, and actions, rising on a wave.
+export fn closing(art: Str, title: Str, body: Str, actions: Array[H.Node]) -> H.Node {
+  band([
+      H.div().class("st-closing").holding([
+          reveal(illustration(art, 140), 0),
+          reveal(H.h2().says(title), 1),
+          reveal(H.p().says(body), 2),
+          reveal(H.div().class("st-actions").holding(actions), 3)
+        ])
+    ])
+}

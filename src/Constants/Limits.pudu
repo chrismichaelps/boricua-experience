@@ -64,3 +64,12 @@ export const MEDIA_BYTES_MAX: Int = 3145728
 export const MEDIA_LABEL_MAX: Int = 80
 /// Leading bytes read back from storage to confirm a file is what its upload declared.
 export const MEDIA_SIGNATURE_BYTES: Int = 16
+
+/// Contact form bounds: name and message lengths, and the seconds a genuine visitor needs at least
+/// and may take at most between opening the form and sending it.
+export const CONTACT_NAME_MIN: Int = 2
+export const CONTACT_NAME_MAX: Int = 80
+export const CONTACT_BODY_MIN: Int = 20
+export const CONTACT_BODY_MAX: Int = 3000
+export const CONTACT_MIN_SECONDS: Int = 4
+export const CONTACT_MAX_SECONDS: Int = 7200

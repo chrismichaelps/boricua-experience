@@ -1,0 +1,44 @@
+/** @Validation.Contact.Form — a contact message checked before it is recorded */
+module Validation.Contact
+
+import Constants.Limits as Limits
+import Domain.Contact as Contact
+import Domain.Problem as Problem
+import Validation.Check as Check
+
+/// Message keys of the contact form.
+const TOPIC: Str = "form.contact_topic"
+const NAME: Str = "form.contact_name"
+const EMAIL: Str = "form.email_invalid"
+const BODY: Str = "form.contact_body"
+
+/// Whether text is a plausible single mailbox: one `@`, a dotted domain, no spaces or line breaks,
+/// and no characters that only appear in injected header or markup text.
+export fn mailbox(text: Str) -> Bool {
+  let value = text.trim()
+  if value.length() < 6 || value.length() > Limits.EMAIL_MAX { return false }
+  for forbidden in [" ", "\t", "\r", "\n", ",", ";", "<", ">", "\"", "(", ")", "\\"] {
+    if value.contains(forbidden) { return false }
+  }
+  let parts = value.split("@")
+  if parts.length() != 2 || parts[0].isEmpty() { return false }
+  let labels = parts[1].split(".")
+  if labels.length() < 2 { return false }
+  for label in labels {
+    if label.isEmpty() { return false }
+  }
+  labels[labels.length() - 1].length() >= 2
+}
+
+/// A name with no line breaks.
+fn singleLine(text: Str) -> Bool { !text.contains("\n") && !text.contains("\r") }
+
+/// The form when every field holds.
+export fn form(given: &Contact.Form) -> Result[Contact.Form, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("topic", |f: Contact.Form| f.topic, |v: Str| Contact.TOPICS.contains(v), TOPIC),
+        Check.rule("name", |f: Contact.Form| f.name, |v: Str| Check.lengthWithin(v, Limits.CONTACT_NAME_MIN, Limits.CONTACT_NAME_MAX) && singleLine(v), NAME),
+        Check.rule("email", |f: Contact.Form| f.email, |v: Str| mailbox(v), EMAIL),
+        Check.rule("body", |f: Contact.Form| f.body, |v: Str| Check.lengthWithin(v, Limits.CONTACT_BODY_MIN, Limits.CONTACT_BODY_MAX), BODY)
+      ]), *given)
+}

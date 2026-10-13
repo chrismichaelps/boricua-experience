@@ -1,0 +1,16 @@
+/** @Domain.Contact.Message — a message from a visitor to the team */
+module Domain.Contact
+
+import Std.Json as Json
+
+/** @Domain.Contact.Form — what the contact form posts */
+export type Form = { topic: Str, name: Str, email: Str, body: Str }
+
+/** @Domain.Contact.Receipt — the id the database gave a recorded message */
+export type Receipt = { id: Int } derives Json.Decode
+
+/// The topics a visitor may choose, in the order they are offered.
+export const TOPICS: Array[Str] = ["general", "safety", "organizers", "press", "privacy", "accessibility"]
+
+/// An empty form, as the page first shows it.
+export fn empty() -> Form { Form{topic: "general", name: "", email: "", body: ""} }

@@ -70,6 +70,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
     H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/story.css" + version),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }
@@ -146,6 +147,7 @@ fn languageRow(frame: &Frame.Frame) -> H.Node {
 fn accountMenu(frame: &Frame.Frame) -> H.Node {
   let legal = H.div().class("menu-foot").holding([
       H.a().href(Routes.ABOUT).says(Frame.t(frame, "footer.about")),
+      H.a().href(Routes.CONTACT).says(Frame.t(frame, "footer.contact")),
       H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms")),
       H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy"))
     ])

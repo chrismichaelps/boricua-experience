@@ -113,3 +113,7 @@ export const CLIENT_NAME: Str = "supabase"
 export const CALL_TIMEOUT_MILLIS: Int = 8000
 /// Milliseconds one attempt may take.
 export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000
+
+/// Service-only contact relay: record a message under rate windows, then mark its delivery.
+export const SUBMIT_CONTACT: Str = "submit_contact"
+export const MARK_CONTACT: Str = "mark_contact"

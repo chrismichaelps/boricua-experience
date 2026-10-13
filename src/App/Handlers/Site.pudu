@@ -1,0 +1,17 @@
+/** @App.Handlers.Site.Registrations — the contact relay */
+module App.Handlers.Site
+
+import App.Messages as Messages
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
+import Services.Contact as Contact
+import Services.Runtime as Runtime
+
+/// The handlers of site-wide forms.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.contact, |asked: Contact.Sending, _context: Context.Context| Messaging.lift(Contact.submit(&held, &asked)))
+  ]
+}
