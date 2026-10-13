@@ -21,10 +21,11 @@ export fn around(logger: &Logger.Logger, failures: &Option[FailureLog.Sink], req
   let (reason, response) = FailureLog.takeReason(handle(request))
   let took = Time.elapsed() - began
   let method = Http.methodName(&request.message.method)
-  let values = [Value.text(method), Value.text(request.path), Value.int(response.status.code), Value.int(took)]
+  let path = FailureLog.pathForLog(request.path)
+  let values = [Value.text(method), Value.text(path), Value.int(response.status.code), Value.int(took)]
   if response.status.code >= 500 {
     logger.error(FAILED, values.push(Value.text(reason)))
-    FailureLog.report(failures, method, request.path, response.status.code, took, reason)
+    FailureLog.report(failures, method, path, response.status.code, took, reason)
   } else { logger.information(COMPLETED, values) }
   response
 }

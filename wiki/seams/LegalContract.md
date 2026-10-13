@@ -39,3 +39,6 @@ Resolved: the legal release gate is behavioral verification, not a claim of lega
 
 ## Backlinks
 [[seams/_MOC]] · [[handoffs/production-release]] · [[architecture/SECURITY]]
+
+## Operational privacy verification
+Private calendar and digest unsubscribe links are bearer capabilities; normalize their user/signature segments to route templates before platform and remote logs, including repeated-slash and encoded variants. The corrected source is tested; production application deployment remains gated.

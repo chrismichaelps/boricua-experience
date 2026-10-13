@@ -308,3 +308,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/Community]] — pure calendar, referral and spreadsheet safety regressions.
 
 - [[src/Database/LegalAudiences]] — event and attendee audience protection.
+
+- [[src/Web/FailureLog]] · [[src/Test/FailureLog]] — private capability redaction in operational logs.

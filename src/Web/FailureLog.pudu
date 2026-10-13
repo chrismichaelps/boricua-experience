@@ -3,7 +3,9 @@ module Web.FailureLog
 
 import Std.Http as Http
 import Std.Json as Json
+import Std.Url as Url
 import Constants.App as App
+import Constants.Routes as Routes
 import PuduLangHttpClient.Client as Client
 import PuduLangHttpClient.Content as Content
 import PuduLangHttpClient.Factory.Builder as Builder
@@ -43,12 +45,23 @@ export fn reasonLine(reason: Str) -> Str {
   if flat.length() > REASON_MAX { flat.take(REASON_MAX) } else { flat }
 }
 
-/// The JSON a failure is reported as: method, path without its query, status, time, reason, release.
+/// An operation path without its query, fragment or private URL capability.
+export fn pathForLog(path: Str) -> Str {
+  let query = path.indexOf("?")
+  let plain = if query < 0 { path } else { path.take(query) }
+  let fragment = plain.indexOf("#")
+  let clean = if fragment < 0 { plain } else { plain.take(fragment) }
+  let normalized = "/" + Url.decodeSegment(clean).split("/").filter(|part: Str| !part.isEmpty()).join("/")
+  if normalized.startsWith(Routes.CALENDAR_FEED.split(":")[0]) { return Routes.CALENDAR_FEED }
+  if normalized.startsWith(Routes.DIGEST_STOP.split(":")[0]) { return Routes.DIGEST_STOP }
+  clean
+}
+
+/// The bounded operational fields sent to the remote failure log.
 export fn event(method: Str, path: Str, status: Int, elapsed: Int, reason: Str) -> Json.Json {
-  let mark = path.indexOf("?")
   Json.object(&[
       ("method", Json.Text(method)),
-      ("path", Json.Text(if mark < 0 { path } else { path.take(mark) })),
+      ("path", Json.Text(pathForLog(path))),
       ("status", Json.Number(status)),
       ("elapsed", Json.Number(elapsed)),
       ("reason", Json.Text(reasonLine(reason))),

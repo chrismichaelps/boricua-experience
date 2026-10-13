@@ -56,3 +56,6 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Private capability paths Grill Log · #89
+Resolved: use FailureLog.pathForLog for both platform access events and remote failures. Calendar/subscription and digest-stop user/signature segments are replaced with route templates; method/status/timing/reason remain useful.

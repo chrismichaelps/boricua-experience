@@ -183,3 +183,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - 2026-10-13 · #88 · restore essential contact delivery with separate environment-scoped application credentials; normalize fixed-panel footer reservation under accessibility scaling, and make shared operational logging admission transactional. Live production application rollout remains pending.
 
 - 2026-10-13 · #89 · enforce private activity detail/direct attendee audiences and approved-cohort attendee lists; member public/historical cards derive coarse coordinates. Both databases verified with role rollback tests and unchanged production publication count; the full published-contract gate remains open.
+
+- 2026-10-13 · #89 · redact private calendar/digest URL capabilities in platform and remote access logs, including repeated-slash/encoded variants; source release remains gated by the full published-contract audit.
