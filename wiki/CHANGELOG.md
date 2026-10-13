@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-13 · [[seams/FailureLog]] · server failures with their reason reported to a free Cloudflare Worker and kept 30 days in D1.
+
 - 2026-10-13 · [[src/Database/NotificationDigest]] · low-cost notifications: optional weekly email summary only when there is something to say, batched daily within the free mail allowance, one-click stop.
 
 - 2026-10-13 · [[src/Database/DiscoveryFunnel]] · discovery-to-request conversion by channel (referrer or tagged assistant, share and notification links), aggregate counts only, in the administrator dashboard.

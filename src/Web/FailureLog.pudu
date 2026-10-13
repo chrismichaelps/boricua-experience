@@ -1,0 +1,76 @@
+/** @Web.FailureLog.Sink — every server failure reported to the failure log kept on Cloudflare */
+module Web.FailureLog
+
+import Std.Http as Http
+import Std.Json as Json
+import Constants.App as App
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Factory.Builder as Builder
+import PuduLangHttpClient.Factory.Builder {Configuring}
+import PuduLangHttpClient.Factory as Factory
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
+
+/** @Web.FailureLog.Sink — the client and address of the failure log */
+export type Sink = { http: Client.Client, url: Str }
+
+/// The response header a failure's reason travels in, from the handler to the access log; it is
+/// removed before the response leaves the server.
+export const REASON_HEADER: Str = "x-boricua-failure"
+
+/// Milliseconds a report may take; a slow log never holds a failed response for long.
+const TIMEOUT_MILLIS: Int = 1500
+/// Characters of a reason kept.
+const REASON_MAX: Int = 380
+/// The client name in the factory.
+const CLIENT_NAME: Str = "failure-log"
+
+/// The sink for a configured address, or nothing when the log is not configured.
+export fn create(url: Str) -> Result[Option[Sink], Str] {
+  let address = url.trim()
+  if address.isEmpty() { return Ok(None) }
+  if !address.startsWith("https://") { return Err("BORICUA_FAILURE_LOG_URL must be an https address") }
+  match Factory.build([Builder.named(CLIENT_NAME).withTimeout(TIMEOUT_MILLIS)]) {
+    case Ok(factory) => Ok(Some(Sink{http: Factory.createClient(&factory, CLIENT_NAME), url: address}))
+    case Err(invalid) => Err(Factory.explain(&invalid))
+  }
+}
+
+/// A reason as one short line, safe for a header and a log.
+export fn reasonLine(reason: Str) -> Str {
+  let flat = reason.replace("\r", " ").replace("\n", " ").trim()
+  if flat.length() > REASON_MAX { flat.take(REASON_MAX) } else { flat }
+}
+
+/// The JSON a failure is reported as: method, path without its query, status, time, reason, release.
+export fn event(method: Str, path: Str, status: Int, elapsed: Int, reason: Str) -> Json.Json {
+  let mark = path.indexOf("?")
+  Json.object(&[
+      ("method", Json.Text(method)),
+      ("path", Json.Text(if mark < 0 { path } else { path.take(mark) })),
+      ("status", Json.Number(status)),
+      ("elapsed", Json.Number(elapsed)),
+      ("reason", Json.Text(reasonLine(reason))),
+      ("release", Json.Text(App.ASSET_VERSION))
+    ])
+}
+
+/// Reports one failure; a log that cannot be reached is ignored, as the failure is in the platform log too.
+export fn report(sink: &Option[Sink], method: Str, path: Str, status: Int, elapsed: Int, reason: Str) -> () {
+  match sink {
+    case Some(found) => {
+      let _sent = Client.send(&found.http, Request.post(found.url, Content.json(&event(method, path, status, elapsed, reason))))
+    }
+    case None => ()
+  }
+}
+
+/// The reason a response carries, and the response without it.
+export fn takeReason(response: Http.Response) -> (Str, Http.Response) {
+  var reason = ""
+  for header in response.headers {
+    if header[0] == REASON_HEADER { reason = header[1] }
+  }
+  (reason, Http.Response{..response, headers: response.headers.filter(|header: (Str, Str)| header[0] != REASON_HEADER)})
+}

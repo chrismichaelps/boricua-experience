@@ -33,3 +33,7 @@ dist/
 .claude/
 .runtime/
 .vercel
+
+# Cloudflare: local wrangler state and the configuration naming account resources.
+/server/failure-log/.wrangler/
+/server/failure-log/wrangler.jsonc

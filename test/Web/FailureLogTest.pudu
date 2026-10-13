@@ -1,0 +1,33 @@
+/** @Test.Web.FailureLog — failure reasons stay on the server and reports carry no visitor data */
+module Web.FailureLogTest
+
+import Std.Http as Http
+import Std.Io as Io
+import Std.Json as Json
+import Std.Test as Test
+import Domain.Problem as Problem
+import Web.FailureLog as FailureLog
+import Web.Respond as Respond
+
+/// Runs the failure log checks.
+fn main() -> Int {
+  let failed = Respond.problemJson(&Problem.Unavailable("my_achievements: at categories[0].name_es: expected text\nfound nothing"), true)
+  let (reason, cleaned) = FailureLog.takeReason(failed)
+  let refused = Respond.problemJson(&Problem.Refused("event_full"), true)
+  let (none, _kept) = FailureLog.takeReason(refused)
+  let event = Json.encode(&FailureLog.event("GET", "/search?q=ana@example.com&near=1", 503, 812, reason))
+  let checks = Test.suite("FailureLog", &[
+      Test.that("an unavailable dependency's reason reaches the access log", reason.startsWith("my_achievements: at categories[0].name_es")),
+      Test.that("the reason is one line", !reason.contains("\n")),
+      Test.that("the reason never leaves the server", cleaned.headers.filter(|header: (Str, Str)| header[0] == FailureLog.REASON_HEADER).isEmpty()),
+      Test.equals("a refusal carries no reason", &none, &""),
+      Test.that("a report never carries the query string", event.contains("\"path\":\"/search\"") && !event.contains("ana@example.com")),
+      Test.that("a report names its status and release", event.contains("\"status\":503") && event.contains("\"release\"")),
+      Test.equals("long reasons are cut", &FailureLog.reasonLine("x".repeat(1000)).length(), &380),
+      Test.that("an unconfigured log is off", match FailureLog.create("") { case Ok(None) => true case _ => false }),
+      Test.that("a plain-text address is refused", match FailureLog.create("http://example.test") { case Err(_) => true case _ => false })
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}
