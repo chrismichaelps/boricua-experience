@@ -26,6 +26,27 @@ export function clean(input) {
   };
 }
 
+/** The body as text, read as a stream and abandoned past `limit` bytes, or null when too large. */
+export async function bounded(request, limit) {
+  const declared = request.headers.get('content-length');
+  if (declared !== null && Number(declared) > limit) return null;
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) { await reader.cancel(); return null; }
+    chunks.push(value);
+  }
+  const joined = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { joined.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(joined);
+}
+
 function admitted(now) {
   if (now - windowStart > 60000) { windowStart = now; windowCount = 0; }
   windowCount += 1;
@@ -36,10 +57,9 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method !== 'POST' || url.pathname !== '/failures') return new Response('Not found', { status: 404 });
-    const length = Number(request.headers.get('content-length') || 0);
-    if (length > LIMITS.body) return new Response('Too large', { status: 413 });
-    const text = await request.text();
-    if (text.length > LIMITS.body) return new Response('Too large', { status: 413 });
+    if (!(request.headers.get('content-type') || '').startsWith('application/json')) return new Response('Unsupported', { status: 415 });
+    const text = await bounded(request, LIMITS.body);
+    if (text === null) return new Response('Too large', { status: 413 });
     let event;
     try { event = clean(JSON.parse(text)); } catch { event = null; }
     if (!event) return new Response('Invalid', { status: 400 });
