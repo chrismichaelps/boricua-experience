@@ -99,3 +99,6 @@ Resolved: source-provided current covers must not be described as category illus
 
 ## Home-only assistant Grill Log · #86
 Resolved: Assert assistant presence only in the root Explore shell, including Spanish/English guests and signed-in rendering; absence on search, category/town, auth/account, detail, publishing, map and root error shell.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Assert map lacks accessibility launcher but other sections retain it; map expansion/status labels and home skeleton/shared nearby enhancement render correctly in both locales.

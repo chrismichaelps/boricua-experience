@@ -119,3 +119,15 @@
   .calendar-grid { row-gap: 6px; }
   .calendar-day { height: 44px; }
 }
+
+.search-pill:has(.picker-trigger[aria-expanded="true"]) { background: #ededed; }
+.search-pill .pill-field:has(.picker-trigger[aria-expanded="true"]) { background: white; box-shadow: 0 3px 16px rgb(0 0 0 / 12%); }
+.search-pill .pill-field label { color: #25343b; font-weight: 700; }
+.search-pill .pill-field input:focus-visible { outline: none; box-shadow: none; }
+.picker-options { gap: 4px; }
+.picker-option { background: white; color: #25343b; border-radius: 12px; }
+.picker-option:hover { background: #f4f4f4; }
+.picker-option[aria-pressed="true"] { background: #f7f7f7; color: #182c36; border-color: #53666d; }
+.picker-check { color: #25343b; }
+.near-form .picker-trigger { width: auto; min-height: 44px; padding: 10px 16px; border: 1px solid #c6cdd1; border-radius: 14px; background: white; color: #182c36; font-size: 14px; }
+.near-form .picker-trigger .picker-value { max-width: 160px; }

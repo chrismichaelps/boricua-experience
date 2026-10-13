@@ -315,3 +315,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/DateCalendar]] — exact date-range picker.
 - [[src/Test/DateCalendar]] — calendar draft/keyboard regressions.
+
+- [[src/Public/MapSurface]]
+- [[src/Public/HomeReadiness]]
+
+- [[src/Test/DiscoverySurfaces]]

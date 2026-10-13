@@ -24,6 +24,7 @@ import View.Seo as Seo
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discovery.Home) -> Html.Html {
   let meta = Seo.Meta{..Seo.meta(Frame.t(frame, "home.title"), Frame.t(frame, "home.description"), Routes.HOME, true), structured: [Seo.website(frame.siteUrl)]}
   Layout.page(frame, &meta, Layout.Explore, H.div().class("home").holding([
+        skeleton(),
         H.section().class("hero").holding([
             Hero.render(frame, catalog)
           ]),
@@ -53,7 +54,7 @@ fn nearTile(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
         ]),
       H.div().class("promo-actions").holding([
           H.a().class("button button-light").href(Routes.MAP + "?near=1").holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "home.near_action"))]),
-          H.form().class("near-form").action(Routes.SEARCH).method("get").holding([
+          H.form().class("near-form").data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).action(Routes.SEARCH).method("get").holding([
               H.labelFor().class("sr-only").at("for", "near-town").says(Frame.t(frame, "search.near")),
               towns,
               H.labelFor().class("sr-only").at("for", "near-radius").says(Frame.t(frame, "search.radius")),
@@ -116,4 +117,14 @@ fn townBrowser(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
 fn regionInput(region: Str, first: Str) -> H.Node {
   let input = H.input().kind("radio").class("region-input").name("region").id("region-" + region).value(region)
   if region == first { input.flag("checked") } else { input }
+}
+
+/// Decorative placeholders while the first home resources are pending.
+fn skeleton() -> H.Node {
+  H.div().class("home-skeleton").at("aria-hidden", "true").holding([
+      H.div().class("skeleton-hero").holding([H.div().class("skeleton-pill")]),
+      H.div().class("skeleton-filters").holding([H.span(), H.span(), H.span(), H.span()]),
+      H.div().class("skeleton-heading"),
+      H.div().class("skeleton-cards").holding([H.div(), H.div(), H.div(), H.div()])
+    ])
 }

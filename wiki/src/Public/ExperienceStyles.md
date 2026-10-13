@@ -92,3 +92,6 @@ Resolved: desktop sheet begins16px below map top instead of84px; explicit auto-s
 Track refinement: explicit child grid-row placement keeps the scrolling list in the final minmax track even when the desktop handle or empty limit notice is hidden. Hidden rows collapse without assigning spare height to count/filters. Resolved.
 
 Short-phone refinement: mobile filters use one horizontally scrollable44px row instead of stacking; a shared bounded sheet footprint reserves at least260px where space allows and leaves112px of map. Zoom controls use the same footprint for collapsed/expanded states. Desktop retains paired controls. Verify short phone and keyboard/no-script fallback. Resolved.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Map expansion uses an8px inset rounded container like the home hero. Hide only the existing sheet in expanded mode; restore previous state on close/Escape, keep zoom controls clear. Three-dot loader reflects real map/data work and respects reduced motion.

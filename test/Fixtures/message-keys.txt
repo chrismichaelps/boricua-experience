@@ -622,12 +622,15 @@ manage.stat_waitlist
 manage.summary
 manage.title
 map.cluster
+map.collapse
 map.count
 map.count_one
 map.description
+map.expand
 map.label
 map.limited
 map.list
+map.loading
 map.location_help
 map.near_me
 map.share_live

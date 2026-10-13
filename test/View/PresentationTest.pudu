@@ -181,6 +181,12 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let checks = Test.suite("Presentation", &[
+      Test.equals("map omits accessibility launcher", &map.contains("a11y-launch"), &false),
+      Test.equals("other pages retain accessibility launcher", &results.contains("a11y-launch"), &true),
+      Test.equals("map expansion is named", &map.contains("Expand map"), &true),
+      Test.equals("map loading is named", &map.contains("Loading activities"), &true),
+      Test.equals("home has decorative loading skeleton", &homePage.contains("home-skeleton"), &true),
+      Test.equals("home nearby uses shared picker", &homePage.contains("class=\"near-form\" data-feature=\"search-pickers\""), &true),
       Test.that("menu renders distinct unknown, free and paid facts", menuReader.contains("Ask for price") && menuReader.contains("Free") && menuReader.contains("$12.50")),
       Test.that("menu unavailable and declared allergens are readable", menuReader.contains("Currently unavailable") && menuReader.contains("Declared allergens: milk")),
       Test.that("menu labels respect Spanish interface language", spanishMenu.contains("Precio por confirmar") && spanishMenu.contains("No disponible actualmente")),

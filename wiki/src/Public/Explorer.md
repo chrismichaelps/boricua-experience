@@ -108,3 +108,6 @@ Reference boundary: preserve existing cards, markers and mobile sheet. No Airbnb
 Independent review refinement: preserve intended follow zoom while easing is in flight, including duplicated locate/share delivery. Defer coarse follow framing until its first fit settles; a precise reading can refine once. A gesture during initial acquisition cancels pending recenter and marks locate detached. Deferred normal-motion tests exercise these cases. Resolved.
 
 Explicit exploration refinement: list focus that moves the camera and activated clusters detach location following, including pending initial framing. Hover and price-pin selection retain existing highlighting/scroll behavior and do not introduce popups. Resolved.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Visible loading state follows the current request ticket, cached/error/no-area branches and pagehide. MapSurface owns expansion; expanded camera coverage is zero, resizing updates bounds without event refit or GPS recenter.

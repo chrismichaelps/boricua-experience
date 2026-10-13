@@ -32,7 +32,7 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           Footer.render(frame),
           tabBar(frame, &section),
           if frame.path == Routes.HOME && section == Explore { Assistant.render(frame) } else { H.nothing() },
-          A11y.render(frame),
+          if section == MapView { H.nothing() } else { A11y.render(frame) },
           achievementToasts(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
@@ -86,6 +86,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/achievements.css" + version),
     H.link().rel("stylesheet").href("/assets/css/badges.css" + version),
     H.script().src("/assets/js/a11y-boot.js" + version),
+    if frame.path == Routes.HOME { H.script().src("/assets/js/home-readiness.js" + version) } else { H.nothing() },
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }

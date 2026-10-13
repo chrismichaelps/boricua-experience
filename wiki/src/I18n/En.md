@@ -101,3 +101,6 @@ Resolved: Add complete owner editor field/action/conflict labels and unknown dec
 
 ## Date-range calendar Grill Log · #88
 Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject malformed, impossible, reversed and over366-day spans. Inclusive end converts to following Puerto Rico midnight in existing from/to database arguments, without changing expiration or inventing availability. Preserve presets and canonical when URL across map/list/saved searches. Exact-date dialog uses semantic day buttons, roving keyboard focus, localized two-month desktop/one-month phone calendar, draft selection and explicit apply/clear. Escape cancels draft; existing select fallback remains functional. No Airbnb assets, popups or booking semantics.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Add translated map expand/close/loading labels; no behavioral or catalog values.

@@ -108,3 +108,6 @@ Resolved: Load versioned menu.css after existing styles; no script or private ca
 
 ## Home-only assistant Grill Log · #86
 Resolved: Render the assistant only when frame.path is the root homepage and section is Explore. Exclude search, category/town, account, auth, map, publishing, detail and root error shells at server rendering, rather than hiding their launcher with CSS.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Omit the accessibility panel/launcher in MapView at server rendering, while the accessibility boot still applies stored page adjustments. A home-only external readiness script renders no secrets and clears on readiness, failure, focus or lifecycle exit.

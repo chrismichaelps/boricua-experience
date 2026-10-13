@@ -1,3 +1,4 @@
+import { mapSurface } from './mapSurface.js?v=63';
 import { clusterPins } from './mapClusters.js?v=59';
 import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=59';
 import { message } from '../constants/messages.js?v=59';
@@ -36,7 +37,12 @@ export async function explorer(page) {
   let limited = page.dataset.limited === '1';
   const limitNotice = $('#map-limit', page);
   let pins = JSON.parse($('#map-pins', page)?.textContent || '[]');
-  const { map, maplibregl } = await createMap(canvas, { rotatable: true });
+  const surface = mapSurface(page, list);
+  surface.busy(true);
+  let loaded;
+  try { loaded = await createMap(canvas, { rotatable: true }); }
+  catch (error) { surface.busy(false); throw error; }
+  const { map, maplibregl } = loaded;
   const toggle3d = $('[data-feature="map-3d"]', page);
   if (toggle3d) buildings3d(map, toggle3d, $('.map-turn', page));
   let markers = new Map();
@@ -54,7 +60,7 @@ export async function explorer(page) {
   const sheet = $('.map-sheet', page);
   const visible = () => {
     const rect = canvas.getBoundingClientRect();
-    const covered = matchMedia('(min-width: 960px)').matches ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
+    const covered = (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
     return visiblePins(pins, (point) => map.project(point), rect.width, rect.height, covered);
   };
 
@@ -128,10 +134,10 @@ export async function explorer(page) {
   const refreshViewport = async (ticket) => {
     const query = new URLSearchParams(location.search);
     const rect = canvas.getBoundingClientRect();
-    const covered = matchMedia('(min-width: 960px)').matches ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
+    const covered = (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
     const area = viewportBounds(map, rect.width, rect.height, covered);
     // Before layout the canvas has no area; the next resize or move reads the camera again.
-    if (!area) { if (ticket === queryTicket) list.setAttribute('aria-busy', 'false'); return; }
+    if (!area) { if (ticket === queryTicket) surface.busy(false); return; }
     // Grid-aligned areas let moving visitors reuse cached answers instead of reading the database.
     for (const [name, value] of Object.entries(snapArea(area, map.getZoom()))) query.set(name, value);
     // The language is part of the address, so a shared cache never serves one language to another.
@@ -145,13 +151,13 @@ export async function explorer(page) {
       if (ticket !== queryTicket) return;
       pins = cached.pins;
       limited = cached.limited;
-      list.setAttribute('aria-busy', 'false');
+      surface.busy(false);
       render();
       return;
     }
     requestController = new AbortController();
     const controller = requestController;
-    list.setAttribute('aria-busy', 'true');
+    surface.busy(true);
     try {
       const found = await getJson(`${ENDPOINTS.map}?${query}`, { signal: controller.signal });
       if (ticket !== queryTicket) return;
@@ -164,7 +170,7 @@ export async function explorer(page) {
     } catch {
       if (ticket === queryTicket) toast(message('mapRefreshFailed'));
     } finally {
-      if (ticket === queryTicket) list.setAttribute('aria-busy', 'false');
+      if (ticket === queryTicket) surface.busy(false);
     }
   };
 
@@ -187,7 +193,7 @@ export async function explorer(page) {
   let warnedCoarse = false;
   let lastMe = null;
   const COARSE_M = 500;
-  const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: matchMedia('(min-width: 960px)').matches ? 24 : sheet.getBoundingClientRect().height + 24 });
+  const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 24 : sheet.getBoundingClientRect().height + 24 });
   const motionMs = (ms) => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms);
 
   const frameReading = (reading, first) => {
@@ -263,13 +269,15 @@ export async function explorer(page) {
     }
   };
 
+  map.on('error', () => { if (!ready) surface.busy(false); });
   map.on('load', () => { ready = true; fit(); if (pendingReading) { showMe(pendingReading); pendingReading = null; } schedule(); });
   map.on('click', () => select(''));
   const resizeViewport = () => {
     if (!ready) return;
-    map.setPadding({ top: 80, right: 40, left: 40, bottom: matchMedia('(min-width: 960px)').matches ? 40 : sheet.getBoundingClientRect().height + 24 });
+    map.setPadding({ top: 80, right: 40, left: 40, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 40 : sheet.getBoundingClientRect().height + 24 });
     schedule();
   };
+  surface.connect(map, resizeViewport);
   map.on('resize', resizeViewport);
   sheet.addEventListener('transitionend', (event) => {
     if (event.target === sheet && ['height', 'max-height'].includes(event.propertyName)) resizeViewport();
@@ -373,6 +381,7 @@ export async function explorer(page) {
   let stopStatus = live.onStatus(reflectStatus);
   if (live.isSharing()) stopShareReading = live.onReading(reading => showMe(reading));
   window.addEventListener('pagehide', () => {
+    surface.busy(false);
     clearTimeout(queryTimer);
     queryTicket++;
     requestController?.abort();

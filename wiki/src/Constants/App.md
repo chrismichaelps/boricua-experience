@@ -117,3 +117,6 @@ Resolved: document asset revision61 and worker61 load Explorer61; unchanged shar
 
 ## Calendar and sheet cache Grill Log · #88
 Resolved: asset/worker62 load SearchPickers62 and DateCalendar62; Explorer61 and shared dependencies retain their existing identities. CSS62 includes compact sheet tracks and localized calendar. No private data enters precache.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Advance asset version63 for shared discovery surfaces.
