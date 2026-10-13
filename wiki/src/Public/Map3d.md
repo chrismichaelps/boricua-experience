@@ -29,5 +29,8 @@ On: show the layer, tilt to `MAP.pitch3d`, and zoom to at least `MAP.buildingsZo
 ## Grill Log
 See [[decisions/ADR-0011-moving-nearby-and-3d-map]].
 
+## Free rotation
+In 3D the camera turns freely: right-drag or ctrl-drag turns and tilts, a two-finger twist turns, a two-finger slide tilts, and shift with the arrow keys turns from the keyboard. Turn buttons step 30° left or right and a compass faces north again; its needle follows the bearing. 2D locks every rotation and restores north-up. A visible turn (15° or more) is reported as a `bx:action` `map_rotate` event for features that count exploration.
+
 ## Referenced by
 [[src/_MOC]] · [[src/Public/Explorer]]

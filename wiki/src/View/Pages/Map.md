@@ -52,6 +52,9 @@ MEDIUM.
 - **Q:** Templates or values?
   **A:** Values: a page is an `Html` tree, so escaping cannot be forgotten and pages are testable with fixtures.
 
+## Location text
+The visible location explanation was removed to keep the map clean. The live status and the location help remain as visually hidden text so screen readers still hear status changes and the buttons keep their description. The 3D turn group is rendered hidden and shown by the map script while 3D is on.
+
 ## Referenced by
 
 [[src/_MOC]]

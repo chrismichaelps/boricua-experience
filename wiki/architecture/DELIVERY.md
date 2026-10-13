@@ -17,6 +17,9 @@ tags: [architecture, delivery]
   https origin: the same-origin guard compares every post with it. The build refuses any other
   value, so a shell that loaded the development `.env` cannot ship `http://localhost`.
 
+## HTML under assets
+Static HTML documents under `/assets/` (photography credits) are served `max-age=0, must-revalidate` instead of immutable: their address is linked with the asset version, but a visitor who cached an unversioned copy would otherwise never see new styles.
+
 ## Referenced by
 
 [[architecture/_MOC]]

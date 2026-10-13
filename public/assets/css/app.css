@@ -451,8 +451,6 @@ ul { padding: 0; list-style: none; }
 .sheet-list { overflow-y: auto; display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 14px; padding: 4px 16px 16px; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; }
 .sheet-item { scroll-snap-align: start; }
 .sheet-item.is-active .card-media { outline: 3px solid var(--color-ocean); outline-offset: 2px; }
-.map-privacy { position: absolute; right: 12px; bottom: calc(46% + 8px); z-index: 5; display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .92); color: var(--color-graphite); }
-.map-privacy .icon { width: 14px; height: 14px; }
 
 .price-marker { padding: 5px 10px; border-radius: var(--radius-pill); background: var(--color-white); color: var(--color-ink); font: 800 13px/18px var(--font); box-shadow: 0 1px 4px rgba(60, 64, 67, .35); white-space: nowrap; cursor: pointer; border: 0; transition: scale .12s ease; }
 .price-marker:hover { scale: 1.06; }
@@ -523,7 +521,6 @@ ul { padding: 0; list-style: none; }
   .sheet-title { padding: 16px 16px 8px; }
   .sheet-list { grid-auto-flow: row; grid-auto-columns: auto; scroll-snap-type: none; }
   .map-controls { left: 432px; }
-  .map-privacy { bottom: 16px; }
   .footer { padding-bottom: 32px; }
   .metrics { grid-template-columns: repeat(4, 1fr); }
 }

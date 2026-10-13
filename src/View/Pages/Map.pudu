@@ -38,6 +38,15 @@ export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json
 /// The pins as JSON text safe inside a script element.
 fn pinsJson(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Str { Json.encode(&pinsValue(frame, cards)).replace("</", "<\\/") }
 
+/// The 3D camera turns: left, back to north, and right; shown by the map script while 3D is on.
+fn turnControls(frame: &Frame.Frame) -> H.Node {
+  H.div().class("map-turn").role("group").label(Frame.t(frame, "map.turn_group")).at("hidden", "hidden").holding([
+      H.button().kind("button").class("map-turn-button").data("turn", "-1").label(Frame.t(frame, "map.turn_left")).holding([Icons.sized("chevron-left", 20)]),
+      H.button().kind("button").class("map-turn-button map-compass").data("turn", "north").label(Frame.t(frame, "map.turn_north")).at("aria-pressed", "true").holding([H.span().class("map-compass-needle").at("aria-hidden", "true")]),
+      H.button().kind("button").class("map-turn-button").data("turn", "1").label(Frame.t(frame, "map.turn_right")).holding([Icons.sized("chevron-right", 20)])
+    ])
+}
+
 /// The map page: the map, the live-location switch, and a sheet listing the pins.
 export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, startNear: Bool) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "map.title"), Frame.t(frame, "map.description"), Routes.MAP, true)
@@ -46,6 +55,7 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
         H.script().kind("application/json").id("map-pins").raw(pinsJson(frame, cards)),
         H.div().class("map-controls").holding([
             H.button().kind("button").class("map-button").data("feature", "map-3d").at("aria-pressed", "false").label(Frame.t(frame, "map.view_3d_label")).holding([H.span().class("map-3d-mark").at("aria-hidden", "true").says("3D"), H.span().class("map-3d-text").says(Frame.t(frame, "map.view_3d"))]),
+            turnControls(frame),
             H.button().kind("button").class("map-button").data("feature", "locate").at("aria-describedby", "map-location-help").at("aria-pressed", "false").holding([Icons.sized("crosshair", 20), H.span().says(Frame.t(frame, "map.near_me"))]),
             if Frame.signedIn(frame) {
               H.button().kind("button").class("map-button").data("feature", "live").at("aria-describedby", "map-location-help").at("aria-pressed", "false").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "map.share_live"))])
@@ -59,6 +69,7 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
             H.p().class("map-limit" + (if limited { "" } else { " is-hidden" })).id("map-limit").role("status").says(Frame.t(frame, "map.limited")),
             H.div().class("sheet-list").id("map-list").holding(cards.map(|card: Event.Card| H.div().class("sheet-item").data("slug", card.slug).holding([EventCard.card(frame, &card)])))
           ]),
-        H.div().class("map-privacy small").holding([H.p().id("map-location-status").role("status").at("aria-live", "polite"), H.details().holding([H.summary().says(Frame.t(frame, "map.location_controls")), H.p().id("map-location-help").says(Frame.t(frame, "map.location_help"))])])
+        H.p().class("sr-only").id("map-location-status").role("status").at("aria-live", "polite"),
+        H.p().class("sr-only").id("map-location-help").says(Frame.t(frame, "map.location_help"))
       ]))
 }

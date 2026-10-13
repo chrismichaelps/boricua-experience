@@ -495,13 +495,16 @@ map.description
 map.label
 map.limited
 map.list
-map.location_controls
 map.location_help
 map.near_me
 map.share_live
 map.sheet_toggle
 map.sign_in_live
 map.title
+map.turn_group
+map.turn_left
+map.turn_north
+map.turn_right
 map.view_3d
 map.view_3d_label
 media.add_cover

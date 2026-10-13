@@ -83,21 +83,17 @@
 .map-button .live-dot { background: #7b8994; box-shadow: none; }
 .map-button[aria-pressed="true"] .live-dot { background: white; animation: none; }
 .price-marker.is-active { background: var(--color-ocean); color: white; }
-.map-privacy { font-size: 11px; }
 @media (min-width: 960px) {
   .map-sheet { width: 360px; top: 84px; bottom: 24px; border-radius: 22px; }
   .map-controls { left: 16px; }
   .map-sheet .sheet-handle { display: none; }
   .sheet-list { gap: 6px; padding: 0 10px 14px; }
-  .map-privacy { bottom: 12px; left: 408px; right: auto; }
 }
 @media (max-width: 959px) {
   .map-sheet { max-height: 36%; }
   .map-sheet.is-expanded { max-height: 76%; }
   .sheet-title { padding-top: 0; }
   .sheet-list { grid-auto-columns: 88%; }
-  .map-privacy { bottom: calc(36% + 12px); }
-  .map-sheet.is-expanded ~ .map-privacy { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .map-sheet, .price-marker { transition: none; }
@@ -139,7 +135,6 @@
   .map-sheet.is-expanded { height: 76%; }
   .map-page .maplibregl-ctrl-bottom-right { bottom: calc(36% + 12px); }
   .map-page.is-sheet-expanded .maplibregl-ctrl-bottom-right { bottom: calc(76% + 12px); }
-  .map-privacy { left: 12px; right: 64px; bottom: calc(36% + 52px); width: fit-content; max-width: calc(100% - 84px); }
 }
 
 @media (max-width: 959px) {
@@ -193,10 +188,6 @@ button[disabled] { cursor: wait; }
   @keyframes toast-rise { 0% { opacity: 0; transform: translate(-50%, 8px); } 8%, 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 8px); pointer-events: none; } }
 }
 
-.map-privacy { display: block; max-width: min(360px, calc(100% - 84px)); border-radius: 14px; font-size: 12px; line-height: 1.45; }
-.map-privacy p { margin: 0; }
-.map-privacy summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
-.map-privacy details[open] p { padding: 4px 0 8px; }
 #map-location-status:empty { display: none; }
 
 /* About keeps its reading measure beneath an independent photographic header. */
@@ -234,3 +225,10 @@ button[disabled] { cursor: wait; }
 @media (prefers-reduced-motion: reduce) { .button[aria-busy="true"]::before, .pill-submit[aria-busy="true"]::before, button.is-submitting::before { animation: none; } }
 .map-3d-mark { font-weight: 800; letter-spacing: -.2px; }
 @media (max-width: 480px) { .map-3d-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }
+.map-turn { display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: var(--radius-pill); background: var(--color-white); border: 1px solid #e1e6ea; box-shadow: 0 2px 8px rgb(28 43 55 / 10%); }
+.map-turn[hidden] { display: none; }
+.map-turn-button { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: none; color: var(--color-ocean-deep); cursor: pointer; }
+.map-turn-button:hover { background: #f0f6ff; }
+.map-turn-button:focus-visible { outline: 2px solid var(--color-ocean); outline-offset: 2px; }
+.map-compass-needle { width: 10px; height: 26px; display: block; background: linear-gradient(#d33b3b 50%, #9aa7b2 50%); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); transition: transform .2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .map-compass-needle { transition: none; } }

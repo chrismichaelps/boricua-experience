@@ -38,7 +38,7 @@ export fn render(frame: &Frame.Frame) -> H.Node {
               H.p().class("footer-note").says(Frame.tf(frame, "footer.copyright", &[("year", show(Time.local(&StdTime.instantOf(frame.nowMillis)).year))])),
               H.div().class("footer-links").holding([
                   H.a().class("footer-preferences").href(Routes.COOKIES).says(Frame.t(frame, "footer.preferences")),
-                  H.a().class("footer-credits").href("/assets/img/credits.html").says(Frame.t(frame, "footer.photography"))
+                  H.a().class("footer-credits").href("/assets/img/credits.html?v=" + App.ASSET_VERSION).says(Frame.t(frame, "footer.photography"))
                 ])
             ])
         ])

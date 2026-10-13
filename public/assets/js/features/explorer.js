@@ -1,15 +1,15 @@
-import { clusterPins } from './mapClusters.js?v=57';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=57';
-import { message } from '../constants/messages.js?v=57';
-import { getJson } from '../net/http.js?v=57';
-import { $, $$, create } from '../utils/dom.js?v=57';
-import { snapArea, speedBetween, speedZoom, visiblePins, viewportBounds } from './mapViewport.js?v=57';
-import { toast } from './toast.js?v=57';
-import { createMap } from './mapLoader.js?v=57';
-import { buildings3d } from './map3d.js?v=57';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=57';
-import * as live from './live.js?v=57';
-import { localizeMoment } from './localTime.js?v=57';
+import { clusterPins } from './mapClusters.js?v=59';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=59';
+import { message } from '../constants/messages.js?v=59';
+import { getJson } from '../net/http.js?v=59';
+import { $, $$, create } from '../utils/dom.js?v=59';
+import { snapArea, speedBetween, speedZoom, visiblePins, viewportBounds } from './mapViewport.js?v=59';
+import { toast } from './toast.js?v=59';
+import { createMap } from './mapLoader.js?v=59';
+import { buildings3d } from './map3d.js?v=59';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=59';
+import * as live from './live.js?v=59';
+import { localizeMoment } from './localTime.js?v=59';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -38,9 +38,9 @@ export async function explorer(page) {
   let widening = false;
   const limitNotice = $('#map-limit', page);
   let pins = JSON.parse($('#map-pins', page)?.textContent || '[]');
-  const { map, maplibregl } = await createMap(canvas);
+  const { map, maplibregl } = await createMap(canvas, { rotatable: true });
   const toggle3d = $('[data-feature="map-3d"]', page);
-  if (toggle3d) buildings3d(map, toggle3d);
+  if (toggle3d) buildings3d(map, toggle3d, $('.map-turn', page));
   let markers = new Map();
   let selectedSlug = '';
   let restoringFocus = false;
