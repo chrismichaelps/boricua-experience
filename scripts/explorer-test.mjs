@@ -19,12 +19,12 @@ const page={classList:{toggle:()=>{}},dataset:{clusterLabel:'See :count activiti
 let offset=0,zoom=14,sharing=false,watches=0,stops=0;
 const lifecycle={};
 const events={},readings=new Set(),statuses=new Set(),requests=[],timers=new Map();let tid=0;
-const me=new Node();let mePosition=null;const eases=[];
-const map={setPadding:()=>{},setMaxBounds:()=>{},on:(name,fn)=>events[name]=fn,project:([x,y])=>({x:x-offset,y}),getZoom:()=>zoom,isStyleLoaded:()=>true,fitBounds:()=>{},easeTo:o=>{eases.push(o);},getSource:()=>null,addSource:()=>{},addLayer:()=>{},getCenter:()=>({lng:-66.1+offset/10000,lat:18.4}),getBounds:()=>({}),};
+const me=new Node();let mePosition=null;const eases=[],fits=[];let clusterAction=null;
+const map={setPadding:()=>{},setMaxBounds:()=>{},on:(name,fn)=>events[name]=fn,project:([x,y])=>({x:x-offset,y}),getZoom:()=>zoom,isStyleLoaded:()=>true,fitBounds:(_bounds,options)=>{fits.push(options);zoom=10;},easeTo:o=>{eases.push(o);},getSource:()=>null,addSource:()=>{},addLayer:()=>{},getCenter:()=>({lng:-66.1+offset/10000,lat:18.4}),getBounds:()=>({}),};
 class Bounds {extend(){return this;}}
 const makeMarker=(element)=>({element,marker:{addTo(){return this;},remove(){}}});
 const live={onReading:fn=>{readings.add(fn);return()=>readings.delete(fn);},onStatus:fn=>{statuses.add(fn);return()=>statuses.delete(fn);},startWatching:()=>{watches++;for(const fn of statuses)fn('waiting');},stopWatching:()=>{stops++;for(const fn of statuses)fn('stopped');},isSharing:()=>sharing,startSharing:()=>{sharing=true;live.startWatching();},stopSharing:async()=>{sharing=false;live.stopWatching();}};
-const scope={console,URLSearchParams,AbortController,location:{search:'?category=cultura&when=weekend&free=1'},document:{activeElement:null,hidden:false,documentElement:{lang:'es-PR'},addEventListener:(name,fn)=>lifecycle['document:'+name]=fn},window:{addEventListener:(name,fn)=>lifecycle[name]=fn},matchMedia:()=>({matches:true}),MAP:{clusterMaxZoom:13,clusterRadius:56,viewportDelayMs:300,viewportCacheMs:30000,viewportCacheSize:8,focusZoom:11,selfZoom:15,searchBounds:[[-67.5,17.5],[-65.1,18.7]]},ENDPOINTS:{map:'/api/map'},LIVE:{},message:k=>k,toast:()=>{},live,create:(tag,attrs,text)=>new Node(attrs,text),localizeMoment:()=>{},$:s=>nodes[s],$$:(s,root)=>root===list?list.children.filter(n=>n.className==='sheet-item'):[],createMap:async()=>({map,maplibregl:{LngLatBounds:Bounds}}),clusterPins:ps=>ps.map(p=>[p]),priceMarker:()=>makeMarker(new Node()),clusterMarker:()=>makeMarker(new Node()),meMarker:()=>({setLngLat(p){mePosition=p;return this;},addTo(){return this;},getElement:()=>me}),accuracyCircle:()=>({}),visiblePins:(ps,project,width,height)=>ps.filter(p=>{const point=project([p.lng,p.lat]);return point.x>=0&&point.x<=width&&point.y>=0&&point.y<=height;}),snapArea:(area)=>area,speedZoom:(_speed,current)=>current,speedBetween:()=>NaN,buildings3d:()=>{},viewportBounds:()=>({west:-66.3+offset/10000,east:-65.9+offset/10000,north:18.5,south:18.2}),getJson:(url,options)=>new Promise(resolve=>requests.push({url,resolve,signal:options.signal})),setTimeout:fn=>{timers.set(++tid,fn);return tid;},clearTimeout:id=>timers.delete(id)};
+const scope={console,URLSearchParams,AbortController,location:{search:'?category=cultura&when=weekend&free=1'},document:{activeElement:null,hidden:false,documentElement:{lang:'es-PR'},addEventListener:(name,fn)=>lifecycle['document:'+name]=fn},window:{addEventListener:(name,fn)=>lifecycle[name]=fn},matchMedia:()=>({matches:true}),MAP:{clusterMaxZoom:13,clusterRadius:56,viewportDelayMs:300,viewportCacheMs:30000,viewportCacheSize:8,focusZoom:11,selfZoom:15,searchBounds:[[-67.5,17.5],[-65.1,18.7]]},ENDPOINTS:{map:'/api/map'},LIVE:{},message:k=>k,toast:()=>{},live,create:(tag,attrs,text)=>new Node(attrs,text),localizeMoment:()=>{},$:s=>nodes[s],$$:(s,root)=>root===list?list.children.filter(n=>n.className==='sheet-item'):[],createMap:async()=>({map,maplibregl:{LngLatBounds:Bounds}}),clusterPins:ps=>ps.map(p=>[p]),priceMarker:()=>makeMarker(new Node()),clusterMarker:(_library,_group,_label,expand)=>{clusterAction=expand;return makeMarker(new Node());},meMarker:()=>({setLngLat(p){mePosition=p;return this;},addTo(){return this;},getElement:()=>me}),accuracyCircle:reading=>({geometry:{coordinates:[[[reading.lng,reading.lat],[reading.lng+.01,reading.lat+.01]]]}}),visiblePins:(ps,project,width,height)=>ps.filter(p=>{const point=project([p.lng,p.lat]);return point.x>=0&&point.x<=width&&point.y>=0&&point.y<=height;}),snapArea:(area)=>area,speedZoom:(_speed,current)=>current,speedBetween:()=>NaN,buildings3d:()=>{},viewportBounds:()=>({west:-66.3+offset/10000,east:-65.9+offset/10000,north:18.5,south:18.2}),getJson:(url,options)=>new Promise(resolve=>requests.push({url,resolve,signal:options.signal})),setTimeout:fn=>{timers.set(++tid,fn);return tid;},clearTimeout:id=>timers.delete(id)};
 const source=readFileSync(new URL('../public/assets/js/features/explorer.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
 vm.runInNewContext(source+'\nthis.run=explorer;this.renderItem=sheetItem;',scope);
 await scope.run(page);
@@ -74,8 +74,8 @@ lifecycle.pageshow({persisted:true});assert.equal(readings.size,1);assert.equal(
 for(const fn of readings)fn({lat:18.42,lng:-66.12,accuracy:8});assert.equal(mePosition[0],-66.12,'restored sharing updates the map');
 console.log('PASS: pending map location, marker/center, viewport movement, retained filters, stale responses, error/retry and off');
 
-async function emptyLocatedView() {
-  readings.clear(); statuses.clear(); timers.clear(); requests.length=0; eases.length=0;
+async function emptyLocatedView(accuracy=12) {
+  readings.clear(); statuses.clear(); timers.clear(); requests.length=0; eases.length=0;fits.length=0;
   for (const key of Object.keys(events)) delete events[key];
   zoom=15; offset=0; sharing=false;
   nodes['#map-pins'].textContent='[]';
@@ -83,8 +83,8 @@ async function emptyLocatedView() {
   scope.viewportBounds=()=>({west:-66.3-zoom/1000+offset/10000,east:-65.9+zoom/1000+offset/10000,north:18.5,south:18.2});
   await scope.run(page);
   events.load(); locate.handlers.click();
-  for (const fn of readings) fn({lat:18.4,lng:-66.1,accuracy:12});
-  assert.equal(zoom,15,'a first precise fix starts at street level');
+  if(accuracy!==null) for (const fn of readings) fn({lat:18.4,lng:-66.1,accuracy});
+  if(accuracy!==null && accuracy<=500) assert.equal(zoom,15,'a first precise fix starts at street level');
 }
 function settleCamera() {
   events.moveend();
@@ -97,27 +97,69 @@ async function respond(items) {
 }
 await emptyLocatedView();
 settleCamera(); await respond([]);
-assert.equal(zoom,13,'an empty located view steps out two levels');
-settleCamera(); await respond([]);
-assert.equal(zoom,11,'empty results widen only as far as the regional floor');
-const floorEases=eases.length;
-settleCamera(); await respond([]);
-assert.equal(eases.length,floorEases,'the regional floor ends automatic widening');
-
+assert.equal(zoom,15,'empty results never change the camera zoom');
+for (const fn of readings) fn({lat:18.40001,lng:-66.10001,accuracy:30});
+assert.equal(zoom,15,'GPS jitter preserves the selected zoom');
+for (const fn of readings) fn({lat:18.40002,lng:-66.10002,accuracy:900});
+assert.equal(zoom,15,'degrading accuracy cannot refit a precise camera');
+for (const fn of readings) fn({lat:18.402,lng:-66.102,accuracy:8});
+assert.equal(zoom,15,'recovering accuracy cannot cause a second zoom change');
+zoom=12;events.zoomstart({originalEvent:{}});
+for (const fn of readings) fn({lat:18.43,lng:-66.14,accuracy:8});
+assert.equal(zoom,12,'movement leaves a user-selected camera alone');
+offset=1;settleCamera();await respond([]);
+assert.equal(zoom,12,'a later empty response cannot undo a manual zoom');
+locate.handlers.click();
+assert.equal(zoom,15,'explicit recenter may restore the location scale');
+share.handlers.click();locate.handlers.click();
+const stoppedEases=eases.length;
+for (const fn of readings) fn({lat:18.44,lng:-66.15,accuracy:8});
+assert.equal(eases.length,stoppedEases,'locate off stops following while independent sharing continues');
+await emptyLocatedView(2500);
+assert.equal(fits.length,1,'initial coarse location frames its uncertainty once');
+assert.equal(zoom,10);
+for(const fn of readings)fn({lat:18.401,lng:-66.101,accuracy:1200});
+assert.equal(fits.length,1,'changing coarse accuracy cannot repeatedly fit bounds');
+assert.equal(zoom,10);
+for(const fn of readings)fn({lat:18.402,lng:-66.102,accuracy:25});
+assert.equal(zoom,15,'first precise location may refine the initial coarse view once');
+for(const fn of readings)fn({lat:18.403,lng:-66.103,accuracy:2600});
+assert.equal(fits.length,1,'later coarse readings retain the established camera');
+assert.equal(zoom,15);
+// Normal-motion camera transitions report an intermediate zoom until moveend.
 await emptyLocatedView();
-settleCamera(); await respond([pins[0]]);
-assert.equal(zoom,15,'nonempty results retain street zoom');
-const foundEases=eases.length;
-const foundRequests=requests.length;
-offset=1;settleCamera();
-assert.equal(requests.length,foundRequests+1,'a later camera view must send a fresh request');
-await respond([]);
-assert.equal(eases.length,foundEases,'later empty views do not restart completed widening');
-
+scope.matchMedia=query=>({matches:query.includes('min-width')});
+map.easeTo=options=>eases.push(options);
+zoom=11;
+share.handlers.click();
+for(const fn of readings)fn({lat:18.405,lng:-66.105,accuracy:20});
+assert.equal(eases.at(-1).zoom,15,'duplicate locate/share callbacks retain the intended in-flight zoom');
+assert(eases.at(-1).duration>0,'regression models normal animated motion');
+for(const fn of readings)fn({lat:18.406,lng:-66.106,accuracy:20});
+assert.equal(eases.at(-1).zoom,15,'a later fix cannot target the intermediate animation scale');
+await emptyLocatedView(null);
+const beforeFirst=eases.length;
+events.dragstart({originalEvent:{}});
+for(const fn of readings)fn({lat:18.45,lng:-66.16,accuracy:8});
+assert.equal(eases.length,beforeFirst,'panning during acquisition cancels the pending first recenter');
+assert(locate.classList.contains('is-detached'));
+locate.handlers.click();
+assert.equal(eases.length,beforeFirst+1,'explicit recenter still works after acquisition was detached');
 await emptyLocatedView();
-settleCamera();events.dragstart({originalEvent:{}});await respond([]);
-assert.equal(zoom,15,'a visitor pan cancels widening even with a pending empty response');
-console.log('PASS: empty located view widens to regional floor, stops on results and respects visitor movement');
+settleCamera();await respond([{...pins[0],title:'Explore'}]);
+list.children[0].handlers.focusin();
+const listEases=eases.length;
+for(const fn of readings)fn({lat:18.46,lng:-66.17,accuracy:8});
+assert.equal(eases.length,listEases,'list focus exploration is not undone by location');
+locate.handlers.click();
+scope.clusterPins=ps=>[ps];zoom=12;
+settleCamera();await respond([{...pins[0]},{...pins[0],slug:'c'}]);
+clusterAction();
+const clusterEases=eases.length,clusterFits=fits.length;
+for(const fn of readings)fn({lat:18.47,lng:-66.18,accuracy:8});
+assert.equal(eases.length,clusterEases,'cluster exploration is not undone by location');
+assert.equal(fits.length,clusterFits);
+console.log('PASS: empty results, GPS noise and accuracy degradation retain zoom; gestures detach; explicit recenter; independent sharing');
 
 const rendered=scope.renderItem({...pins[0],when:'Dom 18 oct · 6:00 PM',starts:'2026-10-18T22:00:00Z',ends:'2026-10-19T00:00:00Z'});
 const dateLine=rendered.children[0].children[0].children[1].children[0];

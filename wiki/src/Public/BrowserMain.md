@@ -108,3 +108,6 @@ Resolved: Main58 loads the corrected assistant58; unchanged modules retain57 ide
 
 ## Pending release cache Grill Log · #88
 Resolved: advance document entry/styles/branding to60 and changed join-panel module import to60. Unchanged modules retain their current single identities; no private HTML enters the worker cache.
+
+## Stable map cache Grill Log · #88
+Resolved: document asset revision61 and worker61 load Explorer61; unchanged shared modules retain their existing identities. Preserve private HTML network-only and the existing map card/sheet presentation.

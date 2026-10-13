@@ -187,3 +187,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - 2026-10-13 · #89 · redact private calendar/digest URL capabilities in platform and remote access logs, including repeated-slash/encoded variants; source release remains gated by the full published-contract audit.
 
 2026-10-13 · #89 — Guard optional digest delivery with current consent generation, record digest preference changes, retain idempotent service-only unsubscribe and canonical no-login confirmation routes with private/no-store/no-referrer. Additive suppression migration applied and rollback-verified in both databases; no optional production scheduling enabled.17suites/541assertions plus browser harnesses pass.
+
+2026-10-13 · #88 — Stop location camera oscillation: no empty-result widening or speed-driven zoom, initial coarse fit/precise refinement once, retained intended animated zoom and explicit exploration detach. Preserve existing map cards/mobile sheet; no hover popup. Normal-motion/deferred location regressions and independent review pass; asset revision61. Physical iPhone verification and production app rollout remain pending.
