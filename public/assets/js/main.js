@@ -24,7 +24,7 @@ for (const handle of $$('.sheet-handle')) sheetGestures(handle);
 const FEATURES = {
   'account-menu': accountMenu,
   bell,
-  assistant: (node) => import('./features/assistant.js?v=57').then(module => module.assistant(node)).catch(() => {}),
+  assistant: (node) => import('./features/assistant.js?v=58').then(module => module.assistant(node)).catch(() => {}),
   'privacy-controls': privacyControls,
   'hero-carousel': heroCarousel,
   suggest,

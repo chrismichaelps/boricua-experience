@@ -105,3 +105,6 @@ Existing script initializes optional password/submit feedback; document semantic
 
 ## Menu reader Grill Log · #69
 Resolved: Load versioned menu.css after existing styles; no script or private cache change.
+
+## Home-only assistant Grill Log · #86
+Resolved: Render the assistant only when frame.path is the root homepage and section is Explore. Exclude search, category/town, account, auth, map, publishing, detail and root error shells at server rendering, rather than hiding their launcher with CSS.

@@ -95,3 +95,6 @@ Resolved: Include menu.css in the versioned static graph; advance the complete g
 
 ## Release0.5.0 Grill Log
 Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.
+
+## Home-only assistant Grill Log · #86
+Resolved: Worker revision58 precaches new document styles/branding/main and assistant58; unchanged shared dependencies retain57. Personalized HTML remains network-only.

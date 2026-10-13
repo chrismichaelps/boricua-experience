@@ -105,3 +105,6 @@ Resolved: The menu stylesheet joins the current versioned shell; advance the com
 
 ## Release0.5.0 Grill Log
 Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.
+
+## Home-only assistant Grill Log · #86
+Resolved: Advance document asset version to58. Changed main and assistant module identities are58; unchanged dependencies retain57 so shared state remains a single module instance. No policy version changes.

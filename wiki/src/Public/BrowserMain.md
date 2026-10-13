@@ -102,3 +102,6 @@ Resolved: first-party import identities and worker cache advance together to46 f
 
 ## Release0.5.0 Grill Log
 Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.
+
+## Home-only assistant Grill Log · #86
+Resolved: Main58 loads the corrected assistant58; unchanged modules retain57 identities. This focused cache invalidation avoids duplicate live-location state.

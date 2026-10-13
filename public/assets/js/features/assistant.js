@@ -45,26 +45,43 @@ export function assistant(root) {
   const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
   let controller, active = false, recording, history = [], ticket = 0, returnFocus, listening = false, frame;
   const announce = (key = '') => { status.textContent = root.dataset[key] || ''; status.hidden = !key; };
-  let speakingButton = null, speakingUtterance = null;
-  const stopAudio = () => { const previous = speakingButton; speakingButton = null; speakingUtterance = null; window.speechSynthesis?.cancel(); if(previous) { previous.textContent=root.dataset.listen;previous.setAttribute('aria-pressed','false'); } };
   const stopVoice = () => { listening = false; const previous = recording; recording = null; previous?.abort(); voice?.setAttribute('aria-pressed', 'false'); voice?.setAttribute('aria-label', root.dataset.voice); };
   const submit = form?.querySelector('[type="submit"]');
   const ready = () => { active = false; if (submit) { submit.disabled = false; submit.textContent = '↑'; submit.setAttribute('aria-label', root.dataset.send); submit.classList.remove('is-streaming'); } };
-  const close = () => {
-    ticket++; controller?.abort(); stopVoice(); stopAudio(); cancelAnimationFrame(frame); frame = null;
+  let pagePosition;
+  const lockPage = () => {
+    if (pagePosition) return;
+    const body = document.body;
+    pagePosition = { x: window.scrollX, y: window.scrollY, top: body.style.top, left: body.style.left };
+    body.style.top = -pagePosition.y + 'px'; body.style.left = -pagePosition.x + 'px';
+    document.documentElement.classList.add('assistant-open');
+  };
+  const unlockPage = () => {
+    if (!pagePosition) return;
+    const previous = pagePosition; pagePosition = null;
+    document.documentElement.classList.remove('assistant-open');
+    document.body.style.top = previous.top; document.body.style.left = previous.left;
+    window.scrollTo({ left: previous.x, top: previous.y, behavior: 'instant' });
+  };
+  const cleanup = () => {
+    ticket++; controller?.abort(); stopVoice(); cancelAnimationFrame(frame); frame = null;
     ready(); announce();
-    dialog.close(); returnFocus?.focus({ preventScroll: true });
+    unlockPage();
+  };
+  const close = () => {
+    cleanup(); dialog.close(); returnFocus?.focus({ preventScroll: true });
   };
   const fit = () => { if (dialog.open) dialog.style.height = Math.min(innerWidth < 700 ? Infinity : 860, (window.visualViewport?.height || innerHeight) - (innerWidth < 700 ? 12 : 64)) + 'px'; };
   window.visualViewport?.addEventListener('resize', fit);
   launch.hidden = false;
   launch.addEventListener('click', () => {
     returnFocus = document.activeElement;
-    dialog.showModal(); fit();
+    dialog.showModal(); lockPage(); fit();
     document.dispatchEvent(new CustomEvent('bx:assistant-open', { detail: { dialog } }));
     (input || root.querySelector('.assistant-controls a'))?.focus({ preventScroll: true });
   });
   root.querySelector('[data-assistant="close"]').addEventListener('click', close);
+  dialog.addEventListener('close', () => { if (!dialog.open) cleanup(); });
   dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
   dialog.addEventListener('click', event => { if (event.target === dialog) { const box = dialog.getBoundingClientRect(); if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) close(); } });
   addEventListener('pagehide', close);
@@ -74,7 +91,7 @@ export function assistant(root) {
   voice.addEventListener('click', () => {
     if (listening) { recording?.stop(); return; }
     if (!Speech) { announce('unsupported'); return; }
-    stopAudio();
+
     const recognition = new Speech(); recording = recognition; recognition.lang = document.documentElement.lang.startsWith('en') ? 'en-US' : 'es-PR'; recognition.interimResults = true;
     const prefix = input.value.trim();
     recognition.onresult = event => {
@@ -89,7 +106,7 @@ export function assistant(root) {
     } catch { stopVoice(); announce('voiceError'); }
   });
   root.querySelector('[data-assistant="reset"]').addEventListener('click', () => {
-    ticket++; controller?.abort(); stopVoice(); stopAudio(); cancelAnimationFrame(frame); frame = null; history = []; thread.replaceChildren(intro.cloneNode(true)); input.value = ''; announce(); ready(); input.focus();
+    ticket++; controller?.abort(); stopVoice(); cancelAnimationFrame(frame); frame = null; history = []; thread.replaceChildren(intro.cloneNode(true)); input.value = ''; announce(); ready(); input.focus();
   });
   input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); form.requestSubmit(); } });
   const stopResponse = () => { ticket++; controller?.abort(); cancelAnimationFrame(frame); frame = null; announce(); ready(); };
@@ -100,7 +117,7 @@ export function assistant(root) {
     if (active) { stopResponse(); return; }
     const message = input.value.trim();
     if (!message || message.length > 1200) return;
-    stopVoice(); stopAudio();
+    stopVoice();
     const current = ++ticket; controller?.abort(); controller = new AbortController();
     const requestController = controller;
     const timer = setTimeout(() => requestController.abort(), 95000);
@@ -142,19 +159,7 @@ export function assistant(root) {
       cancelAnimationFrame(frame); paint();
       history.push({ role: 'user', content: message }, { role: 'assistant', content: answer.slice(0, 1200) }); history = history.slice(-6);
       input.value = ''; announce();
-      if (window.speechSynthesis && window.SpeechSynthesisUtterance) {
-        const listen = document.createElement('button'); listen.type = 'button'; listen.className = 'assistant-listen'; listen.textContent = root.dataset.listen;
-        listen.setAttribute('aria-pressed','false');
-        listen.addEventListener('click', () => {
-          if(speakingButton===listen) { stopAudio();return; }
-          stopVoice();stopAudio();const speech=new SpeechSynthesisUtterance(answer.replace(/[*#`]/g,''));speech.lang=document.documentElement.lang.startsWith('en')?'en-US':'es-PR';
-          speakingButton=listen;speakingUtterance=speech;listen.textContent=root.dataset.stopAudio;listen.setAttribute('aria-pressed','true');
-          const finish=()=>{if(speakingUtterance===speech) {speakingButton=null;speakingUtterance=null;listen.textContent=root.dataset.listen;listen.setAttribute('aria-pressed','false');}};
-          speech.onend=finish;speech.onerror=()=>{if(speakingUtterance!==speech)return;finish();announce('audioError');};
-          try {window.speechSynthesis.speak(speech);}catch{finish();announce('audioError');}
-        });
-        thread.append(listen);
-      }
+
     } catch (error) {
       if (current === ticket) { if (!answer) reply.remove(); else { cancelAnimationFrame(frame); paint(); } announce(error.message === 'assistant_limit' ? 'limit' : 'error'); }
     } finally { clearTimeout(timer); if (current === ticket) ready(); }

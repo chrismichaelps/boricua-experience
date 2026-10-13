@@ -20,8 +20,9 @@ form.querySelector=()=>submit;
 const nodes={'dialog':dialog,'.assistant-launch':launch,'form':form,'textarea':input,'.assistant-thread':thread,'.assistant-status':status,'[data-assistant="voice"]':voice,'[data-assistant="close"]':close,'[data-assistant="reset"]':reset};
 const root={dataset:{send:'Enviar',stop:'Detener',busy:'Buscando',thinking:'Pensando'},querySelector:s=>nodes[s],querySelectorAll:()=>[]};
 let raf=0;const paints=new Map(),signals=[];
+const locks=new Set(), pageEvents=new Map(), offsets={top:"7px",left:"2px"}, restored=[];
 const recordings=[];class Speech {constructor(){recordings.push(this);}start(){}stop(){}abort(){this.aborted=true;}}
-const scope={root,console,URL,ReadableStream,TextDecoder,AbortController,setTimeout,clearTimeout,innerWidth:390,innerHeight:844,location:{origin:'http://localhost:8080'},CustomEvent:class{},addEventListener(){},requestAnimationFrame:fn=>{paints.set(++raf,fn);return raf;},cancelAnimationFrame:id=>paints.delete(id),renderMarkdown(){},window:{SpeechRecognition:Speech},document:{activeElement:new Element(),hidden:false,documentElement:{lang:'es'},addEventListener(){},dispatchEvent(){},createElement:()=>new Element(),querySelector:()=>({content:'csrf'})},fetch:async(_,init)=>{
+const scope={root,console,URL,ReadableStream,TextDecoder,AbortController,setTimeout,clearTimeout,innerWidth:390,innerHeight:844,location:{origin:'http://localhost:8080'},CustomEvent:class{},addEventListener:(name,fn)=>pageEvents.set(name,fn),requestAnimationFrame:fn=>{paints.set(++raf,fn);return raf;},cancelAnimationFrame:id=>paints.delete(id),renderMarkdown(){},window:{SpeechRecognition:Speech,scrollX:0,scrollY:480,scrollTo:position=>restored.push(position)},document:{activeElement:new Element(),hidden:false,body:{style:offsets},documentElement:{lang:'es',classList:{add:name=>locks.add(name),remove:name=>locks.delete(name)}},addEventListener(){},dispatchEvent(){},createElement:()=>new Element(),querySelector:()=>({content:'csrf'})},fetch:async(_,init)=>{
   signals.push(init.signal);
   const body=new ReadableStream({start(controller){controller.enqueue(new TextEncoder().encode('event: delta\ndata: {"text":"Texto"}\n\n'));init.signal.addEventListener('abort',()=>controller.error(new DOMException('Aborted','AbortError')),{once:true});}});
   return {ok:true,body};
@@ -29,9 +30,9 @@ const scope={root,console,URL,ReadableStream,TextDecoder,AbortController,setTime
 let source=readFileSync('public/assets/js/features/assistant.js','utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
 vm.runInNewContext(source+'\nassistant(root);',scope);
 const flush=()=>new Promise(setImmediate);
-launch.emit('click');input.value='Pregunta';const first=form.emit('submit',{preventDefault(){}});await flush();
+launch.emit('click');assert.ok(locks.has('assistant-open'));assert.equal(offsets.top,'-480px');input.value='Pregunta';const first=form.emit('submit',{preventDefault(){}});await flush();
 assert.equal(paints.size,1,'stream delta queues a paint');
-close.emit('click');assert.equal(paints.size,0);assert.ok(signals[0].aborted);assert.equal(status.hidden,true);
+close.emit('click');assert.equal(locks.size,0);assert.deepEqual(offsets,{top:'7px',left:'2px'});assert.equal(restored.at(-1).top,480);assert.equal(paints.size,0);assert.ok(signals[0].aborted);assert.equal(status.hidden,true);
 launch.emit('click');input.value='Otra pregunta';const second=form.emit('submit',{preventDefault(){}});await flush();
 assert.equal(paints.size,1,'reopen schedules fresh paint despite canceled old frame');
 input.value='';let prevented=false;submit.emit('click',{preventDefault(){prevented=true;}});
@@ -50,10 +51,16 @@ close.emit('click');assert.equal(firstVoice.aborted,true);launch.emit('click');s
 secondVoice.onresult({results:[[{transcript:'x'.repeat(1300)}]]});assert.equal(input.value.length,1200);secondVoice.onerror();assert.equal(secondVoice.aborted,true);assert.equal(voice['aria-pressed'],'false');
 console.log('PASS: bilingual dictation, transcript bounds, close cancellation, denied voice cleanup and stale-session isolation');
 
-root.dataset.listen='Listen';root.dataset.stopAudio='Stop audio';let spoken=[],canceled=0;
-scope.SpeechSynthesisUtterance=class {constructor(text){this.text=text;}};scope.window.SpeechSynthesisUtterance=scope.SpeechSynthesisUtterance;scope.window.speechSynthesis={speak:speech=>spoken.push(speech),cancel:()=>canceled++};
+let spoken=0;
+scope.window.SpeechSynthesisUtterance=class {};
+scope.window.speechSynthesis={speak:()=>spoken++,cancel:()=>{}};
 scope.fetch=async()=>({ok:true,body:new ReadableStream({start(controller){controller.enqueue(new TextEncoder().encode('event: delta\ndata: {"text":"**Hello**"}\n\nevent: done\ndata: {}\n\n'));controller.close();}})});
-input.value='Read this';await form.emit('submit',{preventDefault(){}});const listen=thread.children.find(n=>n.className==='assistant-listen');assert.ok(listen);
-voice.emit('click');const playingVoice=recordings.at(-1);listen.emit('click');assert.equal(playingVoice.aborted,true);assert.equal(spoken.at(-1).lang,'en-US');assert.equal(listen['aria-pressed'],'true');listen.emit('click');assert.equal(listen['aria-pressed'],'false');assert.equal(listen.textContent,'Listen');
-listen.emit('click');const oldSpeech=spoken.at(-1);listen.emit('click');listen.emit('click');oldSpeech.onend();oldSpeech.onerror();assert.equal(listen['aria-pressed'],'true','old speech end preserves the new playback');spoken.at(-1).onend();assert.equal(listen['aria-pressed'],'false');
-console.log('PASS: spoken reply start/stop, language, completion and stale-utterance isolation');
+input.value='Reply';await form.emit('submit',{preventDefault(){}});
+assert.equal(thread.children.some(n=>n.className==='assistant-listen'),false,'completed replies have no playback control');
+assert.equal(spoken,0,'reply completion never invokes speech synthesis');
+let canceled=false;dialog.emit('cancel',{preventDefault(){canceled=true;}});assert.ok(canceled);assert.equal(locks.size,0,'Escape unlocks document');
+launch.emit('click');dialog.open=false;dialog.emit('close');assert.equal(locks.size,0,'external dialog dismissal unlocks document');
+launch.emit('click');dialog.emit('close');assert.ok(locks.has('assistant-open'),'late close event cannot unlock a reopened dialog');
+pageEvents.get('pagehide')();assert.equal(locks.size,0,'navigation releases scroll lock');
+assert.deepEqual(offsets,{top:'7px',left:'2px'});assert.equal(restored.at(-1).top,480);
+console.log('PASS: no reply playback; scroll lock/position restoration on close, Escape, external close, pagehide and reopen');

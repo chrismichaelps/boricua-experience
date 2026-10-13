@@ -96,3 +96,6 @@ Resolved: Render dedicated menus and parent-page links from fictional fixtures; 
 Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
 
 Resolved: source-provided current covers must not be described as category illustrations.
+
+## Home-only assistant Grill Log · #86
+Resolved: Assert assistant presence only in the root Explore shell, including Spanish/English guests and signed-in rendering; absence on search, category/town, auth/account, detail, publishing, map and root error shell.

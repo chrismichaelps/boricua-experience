@@ -97,14 +97,12 @@ admin.review_reports_open
 admin.reviews_week
 admin.title
 admin.views_week
-assistant.audio_error
 assistant.busy
 assistant.close
 assistant.error
 assistant.intro
 assistant.launch
 assistant.limit
-assistant.listen
 assistant.listening
 assistant.new
 assistant.placeholder
@@ -119,7 +117,6 @@ assistant.send
 assistant.signin
 assistant.sources
 assistant.stop
-assistant.stop_audio
 assistant.stop_voice
 assistant.thinking
 assistant.title

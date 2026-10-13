@@ -85,7 +85,7 @@ fn main() -> Int {
   let results = Html.render(&Layout.page(&visitor(Locale.En, "/search"), &meta, Layout.Explore, H.div().says("Results")))
   let town = Catalog.Municipality{name: "Ponce", slug: "ponce", region: "sur", lat: 18.011, lng: -66.614}
   let narrowed = Search.Filters{..Search.everything(), municipality: "ponce", category: "musica", query: "salsa", freeOnly: true, window: Search.Weekend}
-  let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}, &[]))
+  let listing = Html.render(&SearchPage.render(&visitor(Locale.En, "/pueblo/ponce"), &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}, &[]))
   let openSearch = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
   let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
@@ -319,6 +319,12 @@ fn main() -> Int {
       Test.equals("hero uses a real Luquillo photograph", &hero.contains("luquillo-photo.webp"), &true),
       Test.equals("footer has cookie preferences", &home.contains("Cookie preferences"), &true),
       Test.equals("obsolete AI notice is removed", &home.contains("AI-generated images"), &false),
+      Test.equals("home exposes assistant", &home.contains("data-feature=\"assistant\""), &true),
+      Test.equals("search omits assistant", &results.contains("data-feature=\"assistant\""), &false),
+      Test.equals("root failure omits assistant", &failure.contains("data-feature=\"assistant\""), &false),
+      Test.equals("town landing omits assistant", &listing.contains("data-feature=\"assistant\""), &false),
+      Test.equals("login omits assistant", &login.contains("data-feature=\"assistant\""), &false),
+      Test.equals("signup omits assistant", &signup.contains("data-feature=\"assistant\""), &false),
       Test.equals("map omits the assistant", &map.contains("data-feature=\"assistant\""), &false),
       Test.equals("map explains private location", &map.contains("Near me centers the map privately"), &true),
       Test.equals("map sheet has a named keyboard button", &map.contains("Expand or collapse the activity list"), &true),
