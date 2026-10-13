@@ -91,7 +91,6 @@ export function assistant(root) {
   voice.addEventListener('click', () => {
     if (listening) { recording?.stop(); return; }
     if (!Speech) { announce('unsupported'); return; }
-
     const recognition = new Speech(); recording = recognition; recognition.lang = document.documentElement.lang.startsWith('en') ? 'en-US' : 'es-PR'; recognition.interimResults = true;
     const prefix = input.value.trim();
     recognition.onresult = event => {
@@ -159,7 +158,6 @@ export function assistant(root) {
       cancelAnimationFrame(frame); paint();
       history.push({ role: 'user', content: message }, { role: 'assistant', content: answer.slice(0, 1200) }); history = history.slice(-6);
       input.value = ''; announce();
-
     } catch (error) {
       if (current === ticket) { if (!answer) reply.remove(); else { cancelAnimationFrame(frame); paint(); } announce(error.message === 'assistant_limit' ? 'limit' : 'error'); }
     } finally { clearTimeout(timer); if (current === ticket) ready(); }

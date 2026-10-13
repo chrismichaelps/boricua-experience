@@ -1,4 +1,4 @@
-html.assistant-open { overflow:hidden; }
+html.assistant-open { overflow:hidden;scrollbar-gutter:stable; }
 html.assistant-open body { position:fixed;width:100%;overflow:hidden; }
 .assistant-launch { position:fixed;right:24px;bottom:24px;z-index:42;display:flex;align-items:center;gap:9px;min-height:48px;padding:12px 18px;border:1px solid #dbe2e8;border-radius:28px;background:#fff;color:#172f45;box-shadow:0 4px 20px #152a4518;font:inherit;font-weight:700;cursor:pointer; }
 .assistant-launch[hidden] { display:none; }
