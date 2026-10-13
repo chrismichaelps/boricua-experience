@@ -5,6 +5,7 @@ import Std.Json as Json
 import Std.Option as Option
 import Domain.Catalog as Catalog
 import Domain.Event as Event
+import Utils.Time as Time
 
 /** @Domain.Search.Pins — bounded camera results with explicit truncation */
 export type Pins = { items: Array[Event.Card], limited: Bool } derives Json.Decode
@@ -12,8 +13,8 @@ export type Pins = { items: Array[Event.Card], limited: Bool } derives Json.Deco
 /** @Domain.Search.Sort — the order of a listing */
 export type Sort = Soon | Near | Relevant | Top
 
-/** @Domain.Search.When — a date window chosen from presets */
-export type When = Anytime | Today | Tomorrow | Weekend | Week | Month
+/** @Domain.Search.When — a preset or inclusive calendar range */
+export type When = Anytime | Today | Tomorrow | Weekend | Week | Month | Dates(Str, Str)
 
 /** @Domain.Search.Viewport — the camera rectangle in decimal degrees */
 export type Viewport = { south: Float64, west: Float64, north: Float64, east: Float64 }
@@ -90,11 +91,22 @@ export fn windowName(window: &When) -> Str {
     case Weekend => "weekend"
     case Week => "week"
     case Month => "month"
+    case Dates(first, last) => first + ".." + last
   }
 }
 
 /// The window a wire name selects; any time for anything else.
 export fn windowFrom(name: Str) -> When {
+  let parts = name.split("..")
+  if parts.length() == 2 {
+    match (dateDay(parts[0]), dateDay(parts[1])) {
+      case (Some(first), Some(last)) => {
+        if last >= first && last - first < MAX_DATE_DAYS { return Dates(parts[0], parts[1]) }
+      }
+      case _ => {}
+    }
+    return Anytime
+  }
   match name {
     case "today" => Today
     case "tomorrow" => Tomorrow
@@ -103,6 +115,17 @@ export fn windowFrom(name: Str) -> When {
     case "month" => Month
     case _ => Anytime
   }
+}
+
+/// Maximum number of calendar days in an exact search range.
+export const MAX_DATE_DAYS: Int = 366
+
+/// A real ISO calendar date as its Puerto Rico day number.
+export fn dateDay(written: Str) -> Option[Int] {
+  if written.length() != 10 { return None }
+  let parsed = Time.parseLocalInput(written + "T00:00") ?
+  if Time.localInput(&parsed).take(10) != written { return None }
+  Some(Time.dayNumber(&parsed))
 }
 
 /// Every preset window, in the order the filters list them.

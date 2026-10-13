@@ -3,6 +3,16 @@ module I18n.Es
 
 /// Spanish interface messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("calendar.dates", "Fechas"),
+    ("calendar.flexible", "Flexible"),
+    ("calendar.start", "Desde"),
+    ("calendar.end", "Hasta"),
+    ("calendar.clear", "Borrar fechas"),
+    ("calendar.apply", "Aplicar fechas"),
+    ("calendar.prev", "Mes anterior"),
+    ("calendar.next", "Mes siguiente"),
+    ("calendar.hint", "Fechas en hora de Puerto Rico. Elige un día o un rango de hasta 366 días."),
+
     ("profile.admin", "Administrador"),
     ("event.published_by", "Publicado por"),
     ("event.official_source", "Fuente oficial"),

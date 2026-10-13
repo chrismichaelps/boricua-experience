@@ -3,17 +3,28 @@ module View.Components.Search
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
+import Std.Json as Json
 import Constants.App as App
 import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Locale as Locale
 import Domain.Search as Search
+import I18n.Dates as Dates
 import View.Components.Icons as Icons
 import View.Frame as Frame
 
+/// Translated labels consumed by the progressive calendar.
+fn calendarLabels(frame: &Frame.Frame) -> Str {
+  Json.encode(&Json.object(&["dates", "flexible", "start", "end", "clear", "apply", "prev", "next", "hint"].map(|key: Str| (key, Json.Text(Frame.t(frame, "calendar." + key))))))
+}
+
 /// The label of a date window.
 export fn windowLabel(frame: &Frame.Frame, window: &Search.When) -> Str {
+  match window {
+    case Search.Dates(first, last) => { return Dates.fullDate(&frame.locale, first) + (if first == last { "" } else { " – " + Dates.fullDate(&frame.locale, last) }) }
+    case _ => {}
+  }
   Frame.t(frame, "when." + (if *window == Search.Anytime { "anytime" } else { Search.windowName(window) }))
 }
 
@@ -63,6 +74,10 @@ fn nearSelect(frame: &Frame.Frame, catalog: &Catalog.Catalog, chosen: Str, id: S
 /// A select of date windows.
 fn windowSelect(frame: &Frame.Frame, chosen: &Search.When, id: Str) -> H.Node {
   var select = H.select().name("when").id(id)
+  match chosen {
+    case Search.Dates(_, _) => { select = select.holding([H.option().value(Search.windowName(chosen)).flag("selected").says(windowLabel(frame, chosen))]) }
+    case _ => {}
+  }
   for window in Search.WINDOWS {
     var item = H.option().value(Search.windowName(&window)).says(windowLabel(frame, &window))
     if window == *chosen { item = item.flag("selected") }
@@ -73,7 +88,7 @@ fn windowSelect(frame: &Frame.Frame, chosen: &Search.When, id: Str) -> H.Node {
 
 /// The white search pill: what, where, when, and the round blue submit.
 export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters) -> H.Node {
-  H.form().class("search-pill").action(Routes.SEARCH).method("get").role("search").label(Frame.t(frame, "search.label")).data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).holding([
+  H.form().class("search-pill").action(Routes.SEARCH).method("get").role("search").label(Frame.t(frame, "search.label")).data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).data("calendar", calendarLabels(frame)).holding([
       H.input().kind("hidden").name("category").value(filters.category),
       H.input().kind("hidden").name("free").value(if filters.freeOnly { "1" } else { "" }),
       H.input().kind("hidden").name("sort").value(if filters.sort == Search.Soon { "" } else { Search.sortName(&filters.sort) }),
@@ -123,7 +138,7 @@ export fn filterBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Se
   }
   var free = H.input().kind("checkbox").name("free").id("filter-free").value("1")
   if filters.freeOnly { free = free.checked() }
-  H.form().class("filter-bar").action(Routes.SEARCH).method("get").data("feature", "filters").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).holding([
+  H.form().class("filter-bar").action(Routes.SEARCH).method("get").data("feature", "filters").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).data("calendar", calendarLabels(frame)).holding([
       H.input().kind("hidden").name("q").value(filters.query),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-when").class("sr-only").says(Frame.t(frame, "search.when")), windowSelect(frame, &filters.window, "filter-when")]),
       H.div().class("filter").holding([H.labelFor().at("for", "filter-category").class("sr-only").says(Frame.t(frame, "search.category")), categorySelect]),
@@ -156,7 +171,7 @@ export fn mapBar(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
   var free = H.input().kind("checkbox").name("free").id("map-filter-free").value("1")
   if filters.freeOnly { free = free.checked() }
   let kept = [("q", filters.query), ("pueblo", filters.municipality), ("cerca", filters.near), ("radio", if filters.near.isEmpty() { "" } else { show(Search.radiusKm(filters)) })]
-  H.form().class("map-filters").action(Routes.MAP).method("get").data("feature", "filters").holding(kept.filter(|pair: (Str, Str)| !pair[1].isEmpty()).map(|pair: (Str, Str)| H.input().kind("hidden").name(pair[0]).value(pair[1])).concat([
+  H.form().class("map-filters").action(Routes.MAP).method("get").data("feature", "filters").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-empty", Frame.t(frame, "search.no_towns")).data("calendar", calendarLabels(frame)).holding(kept.filter(|pair: (Str, Str)| !pair[1].isEmpty()).map(|pair: (Str, Str)| H.input().kind("hidden").name(pair[0]).value(pair[1])).concat([
         H.div().class("filter").holding([H.labelFor().at("for", "map-filter-when").class("sr-only").says(Frame.t(frame, "search.when")), windowSelect(frame, &filters.window, "map-filter-when")]),
         H.div().class("filter").holding([H.labelFor().at("for", "map-filter-category").class("sr-only").says(Frame.t(frame, "search.category")), categorySelect]),
         H.labelFor().class("filter filter-toggle").at("for", "map-filter-free").holding([free, H.span().says(Frame.t(frame, "search.free_only"))]),

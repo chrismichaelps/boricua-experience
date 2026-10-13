@@ -38,8 +38,8 @@ MEDIUM: bounded select enhancement, independent of server filter semantics.
 
 - **Q:** Why retain the original select?
   **A:** It remains the canonical value and GET field, with native fallback when enhancement cannot run.
-- **Q:** Why not copy the reference calendar?
-  **A:** The application filters by existing date windows; the panel presents those working choices rather than offering unsupported exact dates.
+- **Q:** How are reference calendar interactions supported?
+  **A:** Exact ranges now map to the existing server from/to query; presets remain available. Calendar drafts never submit until Apply, and no booking availability is implied.
 - **Q:** How does a dialog work inside a clipping hero?
   **A:** showModal promotes it to the browser top layer while retaining DOM ancestry for form and carousel focus behavior.
 
@@ -50,3 +50,6 @@ MEDIUM: bounded select enhancement, independent of server filter semantics.
 Independent review resolutions: Enter inside municipality search selects the first visible choice and never implicitly submits the surrounding form; empty results remain open. Default Soon is omitted to preserve server relevance for text searches. Keyboard-visible focus restores the segment outline.
 
 Browser verification: first Escape closes the dialog even from a search input. Positioned field wrappers contain hidden select/label boxes so they cannot widen the mobile document.
+
+## Date-range calendar Grill Log · #88
+Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject malformed, impossible, reversed and over366-day spans. Inclusive end converts to following Puerto Rico midnight in existing from/to database arguments, without changing expiration or inventing availability. Preserve presets and canonical when URL across map/list/saved searches. Exact-date dialog uses semantic day buttons, roving keyboard focus, localized two-month desktop/one-month phone calendar, draft selection and explicit apply/clear. Escape cancels draft; existing select fallback remains functional. No Airbnb assets, popups or booking semantics.

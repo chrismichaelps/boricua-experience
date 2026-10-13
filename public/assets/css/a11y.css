@@ -93,7 +93,7 @@
 .a11y-foot a:hover { text-decoration: underline; }
 /* The full-screen map keeps its sheet and controls clear: the launcher sits at the top right. */
 .app-full .a11y-launch { left: auto; right: 16px; top: 94px; bottom: auto; }
-@media (max-width: 959px) { .app-full .a11y-launch { top: 85px; right: 12px; bottom: auto; } .a11y-launch { bottom: calc(80px + env(safe-area-inset-bottom)); width: 52px; height: 52px; } .a11y-figure { width: 30px; height: 30px; } }
+@media (max-width: 959px) { .app-full .a11y-launch { top: 10px; right: 88px; bottom: auto; width: 44px; height: 44px; } .app-full .a11y-figure { width: 26px; height: 26px; } .app-full .a11y.is-tucked .a11y-launch { right: 88px; } .a11y-launch { bottom: calc(80px + env(safe-area-inset-bottom)); width: 52px; height: 52px; } .a11y-figure { width: 30px; height: 30px; } }
 @media (max-width: 560px) {
   .a11y-panel { inset: 0; width: 100vw; max-height: 100dvh; border-radius: 0; }
   .a11y-actions { grid-template-columns: 1fr; }

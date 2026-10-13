@@ -61,8 +61,8 @@
 }
 @media(min-width:1040px) { .activity .card-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:28px; } }
 
-.map-sheet { border: 1px solid #e1e6ea; box-shadow: 0 3px 18px rgb(28 43 55 / 10%); overflow: hidden; }
-.sheet-title { font-size: 15px; padding: 14px 16px 10px; }
+.map-sheet { grid-template-rows: auto auto auto auto minmax(0,1fr); border: 1px solid #e1e6ea; box-shadow: 0 3px 18px rgb(28 43 55 / 10%); overflow: hidden; }
+.sheet-title { font-size: 15px; margin: 0; padding: 8px 16px 10px; }
 .sheet-handle { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 32px; height: auto; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
 .sheet-handle span { width: 36px; height: 4px; border-radius: 4px; background: #ccd5dd; }
 .sheet-list { align-content: start; }
@@ -84,7 +84,7 @@
 .map-button[aria-pressed="true"] .live-dot { background: white; animation: none; }
 .price-marker.is-active { background: var(--color-ocean); color: white; }
 @media (min-width: 960px) {
-  .map-sheet { width: 360px; top: 84px; bottom: 24px; border-radius: 22px; }
+  .map-sheet { width: 360px; top: 16px; bottom: 16px; grid-template-rows: auto auto auto auto minmax(0,1fr); border-radius: 22px; }
   .map-controls { left: 16px; }
   .map-sheet .sheet-handle { display: none; }
   .sheet-list { gap: 6px; padding: 0 10px 14px; }
@@ -252,10 +252,19 @@ button[disabled] { cursor: wait; }
 .saved-search-link .icon { color: var(--color-ocean); flex: none; }
 .saved-search form { margin: 0; }
 
-/* The map sheet's filters: one wrapping row above the count, matching the listing's filter bar. */
-.map-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 12px 8px; }
-.map-filters .filter select { min-height: 40px; }
-.map-list-link { margin-left: auto; }
+/* Map filters use paired desktop controls and one scrolling row on phones. */
+.map-filters { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; align-items: center; padding: 12px 12px 8px; }
+.map-filters .filter { min-width: 0; margin: 0; }
+.map-filters .filter select, .map-filters .picker-trigger { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; font-size: 14px; }
+.map-filters .picker-trigger:hover { background: #f5f6f7; }
+.map-filters .filter-toggle { min-height: 44px; gap: 8px; padding: 10px 12px; border-radius: 14px; font-size: 14px; }
+.map-filters .filter-toggle input { width: 18px; height: 18px; flex: none; accent-color: var(--color-ocean); }
+.map-list-link { margin: 0; width: 100%; justify-content: center; min-height: 44px; padding: 10px 8px; border-radius: 14px; font-size: 13px; }
+.map-sheet .sheet-handle { grid-row: 1; }
+.map-sheet .map-filters { grid-row: 2; }
+.map-sheet .sheet-title { grid-row: 3; }
+.map-sheet .map-limit { grid-row: 4; }
+.map-sheet .sheet-list { grid-row: 5; min-height: 0; }
 
 /* Calendar and share menus beside the reactions: small disclosures listing their destinations. */
 .reaction-group { display: inline-flex; flex-wrap: wrap; gap: 8px; }
@@ -281,3 +290,15 @@ button[disabled] { cursor: wait; }
 .funnel-table th, .funnel-table td { padding: 8px 10px; border-bottom: 1px solid var(--color-divider); text-align: right; }
 .funnel-table th:first-child, .funnel-table tbody th { text-align: left; font-weight: 600; }
 .funnel-table thead th { color: var(--color-graphite); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+
+@media(max-width:959px) {
+  .map-page { --sheet-footprint: min(max(36%,260px),calc(100% - 112px)); }
+  .map-page.is-sheet-expanded { --sheet-footprint: min(76%,calc(100% - 112px)); }
+  .map-sheet, .map-sheet.is-expanded { height: var(--sheet-footprint); max-height: calc(100% - 112px); }
+  .map-page .maplibregl-ctrl-bottom-right, .map-page.is-sheet-expanded .maplibregl-ctrl-bottom-right { bottom: calc(var(--sheet-footprint) + 12px); }
+  .map-filters { display: flex; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; padding-block: 6px; }
+  .map-filters::-webkit-scrollbar { display: none; }
+  .map-filters > * { flex: none; }
+  .map-filters .picker-trigger, .map-filters .filter select { width: auto; max-width: 180px; }
+  .map-list-link { width: auto; padding-inline: 12px; }
+}

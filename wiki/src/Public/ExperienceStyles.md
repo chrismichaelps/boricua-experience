@@ -85,3 +85,10 @@ Resolved: search segments own one neutral2px inset focus indication; nested inpu
 
 ## Resolved feedback Grill Log · #45
 Password visibility targets44px; guidance meter neutral/ocean palette. Busy submitters preserve labels, show inline spinner and reduced-motion static state; no layout shift. Resolved.
+
+## Compact map sheet Grill Log · #88
+Resolved: desktop sheet begins16px below map top instead of84px; explicit auto-sized handle/filter/count/notice tracks and one minmax scrolling list track eliminate expanding heading gaps. Phone retains swipe/two snap states. Desktop date/category use paired44px bordered controls with free/list actions below; phone uses one horizontally scrolling44px control row. All controls use consistent14px corners. Preserve cards and map viewport reservation; verify scaled desktop and narrow phone.
+
+Track refinement: explicit child grid-row placement keeps the scrolling list in the final minmax track even when the desktop handle or empty limit notice is hidden. Hidden rows collapse without assigning spare height to count/filters. Resolved.
+
+Short-phone refinement: mobile filters use one horizontally scrollable44px row instead of stacking; a shared bounded sheet footprint reserves at least260px where space allows and leaves112px of map. Zoom controls use the same footprint for collapsed/expanded states. Desktop retains paired controls. Verify short phone and keyboard/no-script fallback. Resolved.

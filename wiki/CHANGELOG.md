@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-13 · [[src/Public/DateCalendar]] · localized accessible date ranges with inclusive Puerto Rico server filtering; compact map list tracks and phone filter row remove wasted space · issue #88.
+
 - 2026-10-13 · [[seams/FailureLog]] · server failures with their reason reported to a free Cloudflare Worker and kept 30 days in D1.
 
 - 2026-10-13 · [[src/Database/NotificationDigest]] · low-cost notifications: optional weekly email summary only when there is something to say, batched daily within the free mail allowance, one-click stop.

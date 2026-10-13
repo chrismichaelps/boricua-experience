@@ -1,3 +1,5 @@
+import { dateCalendar } from './dateCalendar.js?v=62';
+
 const fold = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
 
 function node(tag, className, text) {
@@ -63,7 +65,7 @@ export function searchPickers(form) {
     const empty = node('p', 'picker-empty', form.dataset.pickerEmpty);
     empty.setAttribute('role', 'status');
     empty.hidden = true;
-    const rows = Array.from(select.options, (option) => {
+    const rows = Array.from(select.options).filter(option => select.name !== 'when' || !option.value.includes('..')).map((option) => {
       const button = node('button', 'picker-option');
       button.type = 'button';
       const name = node('span', 'picker-option-name', option.textContent);
@@ -87,6 +89,15 @@ export function searchPickers(form) {
       trigger.setAttribute('aria-label', `${title.textContent}: ${value.textContent}`);
       rows.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === select.value)));
     };
+    const commit = chosen => {
+      select.value = chosen;
+      sync();
+      closePicker();
+      trigger.focus();
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const calendar = select.name === 'when' && form.dataset.calendar
+      ? dateCalendar(dialog, select, choices, JSON.parse(form.dataset.calendar), commit) : null;
     const filter = () => {
       const query = fold(search?.value.trim() || '');
       rows.forEach((button) => { button.hidden = !fold(button.textContent).includes(query); });
@@ -101,23 +112,26 @@ export function searchPickers(form) {
         return;
       }
       const rect = trigger.getBoundingClientRect();
-      const width = Math.min(select.name === 'when' ? 440 : 400, innerWidth - 32);
-      const top = Math.min(rect.bottom + 16, Math.max(16, innerHeight - 340));
+      const width = Math.min(calendar ? 720 : 400, innerWidth - 32);
+      const top = Math.min(rect.bottom + 16, Math.max(16, innerHeight - (calendar ? 720 : 340)));
       dialog.style.width = `${width}px`;
       dialog.style.left = `${Math.max(16, Math.min(rect.left - 20, innerWidth - width - 16))}px`;
       dialog.style.top = `${top}px`;
-      dialog.style.maxHeight = `${Math.min(560, innerHeight - top - 16)}px`;
+      dialog.style.maxHeight = `${Math.min(calendar ? 720 : 560, innerHeight - top - 16)}px`;
     };
     trigger.addEventListener('click', () => {
       if (search) search.value = '';
       filter();
       sync();
+      calendar?.open();
       position();
       dialog.showModal();
       dialog.dispatchEvent(new CustomEvent('bx:picker-open', { bubbles: true, detail: { dialog } }));
       document.documentElement.classList.add('picker-open');
       trigger.setAttribute('aria-expanded', 'true');
-      if (search) search.focus();
+      if (calendar && !choices.hidden) (rows.find(button => button.dataset.value === select.value) || close).focus();
+      else if (calendar) calendar.focus();
+      else if (search) search.focus();
       else (rows.find((button) => button.dataset.value === select.value) || close).focus();
     });
     close.addEventListener('click', closePicker);
@@ -137,6 +151,7 @@ export function searchPickers(form) {
         closePicker();
         return;
       }
+      if (event.target.dataset.date || choices.hidden) return;
       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) || event.target === search) return;
       const visible = rows.filter((button) => !button.hidden);
       if (!visible.length) return;
