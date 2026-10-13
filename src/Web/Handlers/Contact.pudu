@@ -21,9 +21,15 @@ import Web.Serve as Serve
 export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   let held = *app
   [
-    Route.get(Routes.CONTACT, Serve.page(app, |visitor: Context.Visitor| show(&held, &visitor, &ContactPage.Writing(Contact.empty(), None), 200))),
+    Route.get(Routes.CONTACT, Serve.page(app, |visitor: Context.Visitor| show(&held, &visitor, &ContactPage.Writing(chosen(&visitor), None), 200))),
     Route.post(Routes.CONTACT, Serve.action(app, |visitor: Context.Visitor| send(&held, &visitor)))
   ]
+}
+
+/// An empty form with the topic a link chose, when it is one of the offered topics.
+fn chosen(visitor: &Context.Visitor) -> Contact.Form {
+  let topic = Serve.query(visitor, "topic")
+  if Contact.TOPICS.contains(topic) { Contact.Form{..Contact.empty(), topic: topic} } else { Contact.empty() }
 }
 
 /// The page in a state, with a fresh stamp; the thank-you is the address with `?sent=1`.

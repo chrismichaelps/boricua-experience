@@ -9,17 +9,12 @@ import Constants.Routes as Routes
 import Domain.Contact as Contact
 import Domain.Problem as Problem
 import View.Components.Form as Form
-import View.Components.Icons as Icons
-import View.Components.Story as Story
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
 
 /** @View.Pages.Contact.State — the form with its values and refusal, or the thank-you after sending */
 export type State = Writing(Contact.Form, Option[Problem.Problem]) | Sent
-
-/// The side notes that answer common questions without writing: icon and key stem.
-const SIDE: Array[(Str, Str)] = [("shield", "side_safety"), ("ticket", "side_organizers"), ("key", "side_privacy")]
 
 /// The trap field a person never sees or reaches; automated senders fill it in.
 fn trap(frame: &Frame.Frame) -> H.Node {
@@ -29,62 +24,48 @@ fn trap(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
-/// The form card: topic, name, email, message, the hidden stamp and trap, and the send button.
+/// The form: topic, then the sender, then the message, with the hidden stamp and trap.
 fn form(frame: &Frame.Frame, values: &Contact.Form, problem: &Option[Problem.Problem], stamp: Str) -> H.Node {
   let errors = match problem { case Some(found) => Problem.fieldErrors(&found) case None => [] }
   let topics = Contact.TOPICS.map(|topic: Str| (topic, Frame.t(frame, "contact.topic." + topic)))
   let name = Form.Field{..Form.field("name", Frame.t(frame, "contact.name"), values.name), required: true}
   let email = Form.Field{..Form.field("email", Frame.t(frame, "contact.email"), values.email), kind: "email", hint: Frame.t(frame, "contact.email_hint"), required: true}
   let body = Form.Field{..Form.field("body", Frame.t(frame, "contact.body"), values.body), hint: Frame.t(frame, "contact.body_hint"), required: true}
-  H.form().class("contact-form").action(Routes.CONTACT).method("post").at("novalidate", "novalidate").holding([
-      H.div().class("contact-form-head").holding([Story.illustration("envelope", 72), H.h2().says(Frame.t(frame, "contact.form_title"))]),
+  H.form().class("stack-form").action(Routes.CONTACT).method("post").at("novalidate", "novalidate").holding([
       Form.problemBanner(frame, problem),
       Form.token(frame),
       H.input().kind("hidden").name("stamp").value(stamp),
-      Form.select(frame, &Form.Field{..Form.field("topic", Frame.t(frame, "contact.topic"), values.topic), required: true}, &topics, &errors),
-      Form.input(frame, &name, &errors, |control: H.Node| control.at("autocomplete", "name").at("maxlength", show(Limits.CONTACT_NAME_MAX))),
-      Form.input(frame, &email, &errors, |control: H.Node| control.at("autocomplete", "email").at("maxlength", show(Limits.EMAIL_MAX)).at("inputmode", "email")),
-      Form.area(frame, &body, 7, &errors),
+      H.section().class("form-section").holding([
+          H.h2().class("section-title").says(Frame.t(frame, "contact.form_title")),
+          Form.select(frame, &Form.Field{..Form.field("topic", Frame.t(frame, "contact.topic"), values.topic), required: true}, &topics, &errors),
+          Form.input(frame, &name, &errors, |control: H.Node| control.at("autocomplete", "name").at("maxlength", show(Limits.CONTACT_NAME_MAX))),
+          Form.input(frame, &email, &errors, |control: H.Node| control.at("autocomplete", "email").at("maxlength", show(Limits.EMAIL_MAX)).at("inputmode", "email")),
+          Form.area(frame, &body, 7, &errors)
+        ]),
       trap(frame),
-      H.button().submit().class("button button-block").says(Frame.t(frame, "contact.send")),
-      H.p().class("contact-privacy small").holding([H.span().says(Frame.t(frame, "contact.privacy") + " "), H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy"))])
+      H.p().class("muted small").holding([H.span().says(Frame.t(frame, "contact.privacy") + " "), H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy"))]),
+      H.button().submit().class("button button-block").says(Frame.t(frame, "contact.send"))
     ])
 }
 
-/// The thank-you card shown after a message is accepted.
+/// The confirmation shown after a message is accepted.
 fn sent(frame: &Frame.Frame) -> H.Node {
-  H.div().class("contact-form contact-sent").role("status").holding([
-      H.span().class("contact-sent-icon").holding([Icons.sized("check", 28)]),
-      H.h2().says(Frame.t(frame, "contact.sent_title")),
+  H.div().class("form-section").role("status").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "contact.sent_title")),
       H.p().says(Frame.t(frame, "contact.sent_body")),
       H.a().class("button button-ghost").href(Routes.CONTACT).says(Frame.t(frame, "contact.another"))
     ])
 }
 
-/// The contact page: a heading with answers that need no message, beside the form or its thank-you.
+/// The contact page in the app's form layout.
 export fn render(frame: &Frame.Frame, state: &State, stamp: Str) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "contact.title"), Frame.t(frame, "contact.description"), Routes.CONTACT, true)
-  var notes: Array[H.Node] = []
-  for index in 0..SIDE.length() {
-    let (art, stem) = SIDE[index]
-    notes = notes.push(Story.reveal(H.li().class("contact-note").holding([
-            H.span().class("contact-note-art").holding([Story.illustration(art, 56)]),
-            H.div().holding([H.h3().says(Frame.t(frame, "contact." + stem + "_title")), H.p().says(Frame.t(frame, "contact." + stem + "_body"))])
-          ]), index + 1))
-  }
-  let card = match state {
-    case Writing(values, problem) => form(frame, &values, &problem, stamp)
-    case Sent => sent(frame)
-  }
-  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("story contact-page").data("feature", "reveal").holding([
-        H.section().class("contact-layout").holding([
-            H.div().class("contact-intro").holding([
-                Story.eyebrow(Frame.t(frame, "contact.eyebrow")),
-                H.h1().class("st-headline st-headline-single").holding([Story.accented(Frame.t(frame, "contact.headline"))]),
-                H.p().class("st-lead").says(Frame.t(frame, "contact.lead")),
-                H.ul().class("contact-notes").holding(notes)
-              ]),
-            H.div().class("contact-card").holding([card])
-          ])
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("narrow").holding([
+        H.h1().class("page-title").says(Frame.t(frame, "contact.title")),
+        H.p().class("lead").says(Frame.t(frame, "contact.lead")),
+        match state {
+          case Writing(values, problem) => form(frame, &values, &problem, stamp)
+          case Sent => sent(frame)
+        }
       ]))
 }

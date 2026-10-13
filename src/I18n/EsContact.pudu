@@ -1,0 +1,36 @@
+/** @I18n.EsContact.Catalog — Spanish text of the contact page */
+module I18n.EsContact
+
+/// Spanish contact messages by key.
+export const MESSAGES: Map[Str, Str] = mapOf([
+    ("contact.title", "Contacto"),
+    ("contact.description", "Escríbele al equipo de Boricua Experience: preguntas, seguridad, organizadores, prensa, privacidad o accesibilidad."),
+    ("contact.lead", "Cuéntanos qué necesitas y te contestamos al correo que nos dejes, normalmente en uno o dos días laborables."),
+    ("contact.form_title", "Envíanos un mensaje"),
+    ("contact.topic", "Tema"),
+    ("contact.topic.general", "Pregunta general"),
+    ("contact.topic.safety", "Seguridad o una actividad reportada"),
+    ("contact.topic.organizers", "Organizadores y alianzas"),
+    ("contact.topic.press", "Prensa"),
+    ("contact.topic.privacy", "Privacidad y mis datos"),
+    ("contact.topic.accessibility", "Accesibilidad"),
+    ("contact.name", "Tu nombre"),
+    ("contact.email", "Tu correo electrónico"),
+    ("contact.email_hint", "Solo lo usamos para contestarte."),
+    ("contact.body", "Mensaje"),
+    ("contact.body_hint", "Entre 20 y 3000 caracteres. No incluyas contraseñas ni datos de tarjetas."),
+    ("contact.trap", "Deja este campo vacío"),
+    ("contact.send", "Enviar mensaje"),
+    ("contact.sent_title", "¡Mensaje recibido!"),
+    ("contact.sent_body", "Gracias por escribirnos. Te contestaremos al correo que nos diste."),
+    ("contact.another", "Enviar otro mensaje"),
+    ("contact.privacy", "Guardamos tu mensaje solo para contestarlo."),
+    ("form.contact_topic", "Escoge un tema."),
+    ("form.contact_name", "Escribe tu nombre (2 a 80 caracteres)."),
+    ("form.contact_body", "Escribe un mensaje de 20 a 3000 caracteres."),
+    ("problem.contact_too_fast", "Eso fue muy rápido. Revisa tu mensaje y envíalo otra vez."),
+    ("problem.contact_expired", "El formulario caducó. Revisa tu mensaje y envíalo otra vez."),
+    ("problem.contact_limit", "Recibimos varios mensajes tuyos hace poco. Intenta de nuevo en una hora."),
+    ("problem.contact_busy", "Estamos recibiendo muchos mensajes. Intenta de nuevo mañana."),
+    ("footer.contact", "Contacto")
+  ])

@@ -1,0 +1,36 @@
+/** @I18n.EnContact.Catalog — English text of the contact page */
+module I18n.EnContact
+
+/// English contact messages by key.
+export const MESSAGES: Map[Str, Str] = mapOf([
+    ("contact.title", "Contact"),
+    ("contact.description", "Write to the Boricua Experience team: questions, safety, organizers, press, privacy or accessibility."),
+    ("contact.lead", "Tell us what you need and we will reply to the email you leave, usually within one or two business days."),
+    ("contact.form_title", "Send us a message"),
+    ("contact.topic", "Topic"),
+    ("contact.topic.general", "General question"),
+    ("contact.topic.safety", "Safety or a reported activity"),
+    ("contact.topic.organizers", "Organizers and partnerships"),
+    ("contact.topic.press", "Press"),
+    ("contact.topic.privacy", "Privacy and my data"),
+    ("contact.topic.accessibility", "Accessibility"),
+    ("contact.name", "Your name"),
+    ("contact.email", "Your email"),
+    ("contact.email_hint", "We only use it to reply."),
+    ("contact.body", "Message"),
+    ("contact.body_hint", "Between 20 and 3000 characters. Never include passwords or card details."),
+    ("contact.trap", "Leave this field empty"),
+    ("contact.send", "Send message"),
+    ("contact.sent_title", "Message received!"),
+    ("contact.sent_body", "Thanks for writing. We will reply to the email you gave us."),
+    ("contact.another", "Send another message"),
+    ("contact.privacy", "We keep your message only to answer it."),
+    ("form.contact_topic", "Choose a topic."),
+    ("form.contact_name", "Enter your name (2 to 80 characters)."),
+    ("form.contact_body", "Write a message of 20 to 3000 characters."),
+    ("problem.contact_too_fast", "That was very fast. Review your message and send it again."),
+    ("problem.contact_expired", "The form expired. Review your message and send it again."),
+    ("problem.contact_limit", "We received several messages from you recently. Try again in an hour."),
+    ("problem.contact_busy", "We are receiving many messages. Try again tomorrow."),
+    ("footer.contact", "Contact")
+  ])
