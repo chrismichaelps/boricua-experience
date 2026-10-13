@@ -63,6 +63,7 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
                 Form.toggle("notifyNewRequests", Frame.t(frame, "account.notify_requests"), Frame.t(frame, "account.notify_requests_body"), me.notifyNewRequests),
                 Form.toggle("notifyReminders", Frame.t(frame, "account.notify_reminders"), Frame.t(frame, "account.notify_reminders_body"), me.notifyReminders),
                 Form.toggle("notifyEventChanges", Frame.t(frame, "account.notify_changes"), Frame.t(frame, "account.notify_changes_body"), me.notifyEventChanges),
+                Form.toggle("emailDigest", Frame.t(frame, "account.email_digest"), Frame.t(frame, "account.email_digest_body"), me.emailDigest),
                 Form.toggle("marketingOptIn", Frame.t(frame, "account.marketing"), Frame.t(frame, "account.marketing_body"), me.marketingOptIn),
                 H.h3().says(Frame.t(frame, "account.privacy")),
                 Form.toggle("showInAttendeeLists", Frame.t(frame, "account.attendee_lists"), Frame.t(frame, "account.attendee_lists_body"), me.showInAttendeeLists),

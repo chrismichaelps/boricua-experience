@@ -67,7 +67,8 @@ cat > "$output/config.json" <<'JSON'
     { "src": "/(.*)", "dest": "/app" }
   ],
   "crons": [
-    { "path": "/internal/media-sweep", "schedule": "17 8 * * *" }
+    { "path": "/internal/media-sweep", "schedule": "17 8 * * *" },
+    { "path": "/internal/digest", "schedule": "5 13 * * *" }
   ]
 }
 JSON

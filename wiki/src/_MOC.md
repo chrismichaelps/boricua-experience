@@ -298,3 +298,4 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Database/Community]] — waitlist, organizer tools, review holds and the private calendar feed.
 - [[src/Database/Achievements]] · [[src/View/Pages/Achievements]] — achievements as data, their unlock mechanism, board and badges.
 - [[src/Database/DiscoveryFunnel]] — discovery-to-request counts by channel.
+- [[src/Database/NotificationDigest]] — the optional weekly email summary.

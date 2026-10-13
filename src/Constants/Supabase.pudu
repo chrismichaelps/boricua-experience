@@ -117,6 +117,9 @@ export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000
 
 /// Achievements: the board, browser signals, and public badges.
 export const MY_ACHIEVEMENTS: Str = "my_achievements"
+/// Weekly email summaries: the members due one, and stopping them from a letter.
+export const DIGEST_BATCH: Str = "digest_batch"
+export const STOP_DIGEST: Str = "stop_digest"
 export const RECORD_ACHIEVEMENT_SIGNALS: Str = "record_achievement_signals"
 export const PUBLIC_ACHIEVEMENTS: Str = "public_achievements"
 

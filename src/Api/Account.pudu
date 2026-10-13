@@ -73,6 +73,7 @@ export fn updatePreferences(gateway: &Gateway.Gateway, chosen: &Profile.Preferen
       ("p_notify_reminders", Gateway.truth(chosen.notifyReminders)),
       ("p_notify_event_changes", Gateway.truth(chosen.notifyEventChanges)),
       ("p_marketing_opt_in", Gateway.truth(chosen.marketingOptIn)),
+      ("p_email_digest", Gateway.truth(chosen.emailDigest)),
       ("p_location_visibility", Gateway.text(chosen.locationVisibility)),
       ("p_show_in_attendee_lists", Gateway.truth(chosen.showInAttendeeLists))
     ], Some(token), Gateway.Write) ?

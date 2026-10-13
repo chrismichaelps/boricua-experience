@@ -57,6 +57,9 @@ export const PLACE_MEDIA_FINISH: Str = "/lugar/:slug/media/:id/finish"
 export const PLACE_MEDIA_REMOVE: Str = "/lugar/:slug/media/:id/remove"
 /// The scheduled media cleanup, answered only to the platform scheduler's secret.
 export const MEDIA_SWEEP: Str = "/internal/media-sweep"
+/// The weekly email summaries, sent by the platform scheduler once a day; and a summary's own stop link.
+export const DIGEST_RUN: Str = "/internal/digest"
+export const DIGEST_STOP: Str = "/digest/stop/:user/:token"
 export const PLACE_EDIT: Str = "/lugar/:slug/edit"
 export const PLACE_STATUS: Str = "/lugar/:slug/status"
 export const PLACE_REVIEW: Str = "/lugar/:slug/review"

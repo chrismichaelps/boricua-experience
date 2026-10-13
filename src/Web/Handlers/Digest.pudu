@@ -1,0 +1,69 @@
+/** @Web.Handlers.Digest.Routes — the daily run of weekly summaries, and their one-click stop */
+module Web.Handlers.Digest
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Json as Json
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import Domain.Problem as Problem
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
+import Services.Digest as DigestService
+import Utils.Time as Time
+import View.Pages.Digest as DigestPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The digest routes. The stop link is authorised by its signature, so its post needs no form token;
+/// mail clients send it as a one-click unsubscribe.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.DIGEST_RUN, |request: Route.Request| runAnswer(&held, &request)),
+    Route.get(Routes.DIGEST_STOP, Serve.page(app, |visitor: Context.Visitor| confirm(&held, &visitor))),
+    Route.post(Routes.DIGEST_STOP, Serve.api(app, |visitor: Context.Visitor| stop(&held, &visitor)))
+  ]
+}
+
+/// Sends today's summaries for the platform scheduler; anyone else is answered as missing.
+fn runAnswer(app: &Assembly.App, request: &Route.Request) -> Http.Response {
+  let secret = app.runtime.cronSecret
+  let given = Option.unwrapOr(Route.header(request, "authorization"), "")
+  let answer = if secret.isEmpty() || !Crypto.bytesMatch(&Bytes.fromText("Bearer " + secret), &Bytes.fromText(given)) {
+    Respond.json(404, &Json.object(&[("error", Json.Text("not_found"))]))
+  } else {
+    match DigestService.run(&app.runtime, Time.now().millis) {
+      case Ok(done) => {
+        if done.failed > 0 { app.logs.requests.warning("Weekly summaries: \{Failed\} of \{Due\} could not be sent", [Value.int(done.failed), Value.int(done.due)]) }
+        Respond.json(200, &Json.object(&[("due", Json.Number(done.due)), ("sent", Json.Number(done.sent)), ("failed", Json.Number(done.failed))]))
+      }
+      case Err(problem) => {
+        app.logs.requests.error("Weekly summaries did not run: \{Reason\}", [Value.text(Problem.code(&problem))])
+        Respond.json(503, &Json.object(&[("error", Json.Text(Problem.code(&problem)))]))
+      }
+    }
+  }
+  Http.Response{..answer, headers: answer.headers.concat(HttpConstants.SECURITY_HEADERS).push(("cache-control", HttpConstants.CACHE_PRIVATE))}
+}
+
+/// The stop link's page: a button that stops the summaries, or missing for a forged link.
+fn confirm(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  if !DigestService.stopValid(&app.runtime, Serve.param(visitor, "user"), Serve.param(visitor, "token")) { return Respond.problem(app, visitor, &Problem.Missing) }
+  Respond.page(200, &DigestPage.render(&Context.frame(app, visitor), visitor.request.path, false))
+}
+
+/// Stops the summaries; a mail client's one-click post gets an empty answer, a browser a page.
+fn stop(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match DigestService.stop(&app.runtime, Serve.param(visitor, "user"), Serve.param(visitor, "token")) {
+    case Ok(_) => if Option.unwrapOr(Route.header(&visitor.request, "accept"), "").contains("text/html") {
+      Respond.page(200, &DigestPage.render(&Context.frame(app, &Context.resolve(app, &visitor.request, true)), visitor.request.path, true))
+    } else { Respond.json(200, &Json.object(&[("stopped", Json.Boolean(true))])) }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

@@ -31,5 +31,19 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("achievements.showcase_count.one", "1 badge unlocked"),
     ("achievements.showcase_count.other", ":count badges unlocked"),
     ("achievements.season_ended", "This edition has ended"),
-    ("achievements.editions", "Earned in :years")
+    ("achievements.editions", "Earned in :years"),
+    ("account.email_digest", "Weekly email summary"),
+    ("account.email_digest_body", "One email a week at most, only when you have unread notifications or activities coming up. Everything else stays in the app."),
+    ("digest.subject", "Your week on Boricua Experience"),
+    ("digest.greeting", "Hi :name,"),
+    ("digest.unread.one", "You have 1 unread notification."),
+    ("digest.unread.other", "You have :count unread notifications."),
+    ("digest.upcoming", "Coming up in the next seven days:"),
+    ("digest.footer", "Change your email choices:"),
+    ("digest.stop", "Stop these summaries with one click:"),
+    ("digest.stop_title", "Weekly email summary"),
+    ("digest.stop_body", "Stop receiving the weekly email summary? Notifications stay in the app."),
+    ("digest.stop_confirm", "Stop the summaries"),
+    ("digest.stopped", "Done. We will not send you the weekly summary any more."),
+    ("digest.manage", "Manage notifications")
   ])

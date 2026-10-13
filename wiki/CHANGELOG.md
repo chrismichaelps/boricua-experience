@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-13 · [[src/Database/NotificationDigest]] · low-cost notifications: optional weekly email summary only when there is something to say, batched daily within the free mail allowance, one-click stop.
+
 - 2026-10-13 · [[src/Database/DiscoveryFunnel]] · discovery-to-request conversion by channel (referrer or tagged assistant, share and notification links), aggregate counts only, in the administrator dashboard.
 
 - 2026-10-13 · [[src/Database/Achievements]] · data-driven achievements: 81 seeded across discovery, participation, hosting, social, profile, Puerto Rico and seasonal categories; one unlock mechanism over existing actions and browser signals; animated rarity badges; board, detail dialog, unlock toasts with chime; public badge showcase; backfill for existing members.

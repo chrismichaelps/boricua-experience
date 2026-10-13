@@ -114,7 +114,8 @@ fn savePreferences(app: &Assembly.App, visitor: &Context.Visitor, session: &Sess
     notifyEventChanges: Form.flag(&fields, "notifyEventChanges"),
     marketingOptIn: Form.flag(&fields, "marketingOptIn"),
     locationVisibility: Form.text(&fields, "locationVisibility"),
-    showInAttendeeLists: Form.flag(&fields, "showInAttendeeLists")
+    showInAttendeeLists: Form.flag(&fields, "showInAttendeeLists"),
+    emailDigest: Form.flag(&fields, "emailDigest")
   }
   match Serve.ask(app, &app.kinds.updatePreferences, Serve.signed(session, chosen)) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT + "#preferences"), "flash.saved_settings")

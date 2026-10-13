@@ -73,5 +73,8 @@ export const CONTACT_BODY_MIN: Int = 20
 export const CONTACT_BODY_MAX: Int = 3000
 export const CONTACT_MIN_SECONDS: Int = 4
 export const CONTACT_MAX_SECONDS: Int = 7200
+/// Summaries sent in one daily run, under the mail provider's free allowance of one hundred a day.
+export const DIGEST_BATCH: Int = 80
+
 /// Web addresses a contact message may carry; more reads as link spam.
 export const CONTACT_LINKS_MAX: Int = 3

@@ -1,0 +1,20 @@
+/** @Domain.Digest.Summary — what one weekly email summary tells a member */
+module Domain.Digest
+
+import Std.Json as Json
+
+/** @Domain.Digest.Upcoming — an approved activity in the next seven days */
+export type Upcoming = { title: Str, slug: Str, @json("starts_at") startsAt: Str, town: Str } derives Json.Decode
+
+/** @Domain.Digest.Due — a member due a summary, with what it says */
+export type Due = {
+  @json("user_id") userId: Str,
+  email: Str,
+  name: Str,
+  locale: Str,
+  unread: Int,
+  upcoming: Array[Upcoming]
+} derives Json.Decode
+
+/** @Domain.Digest.Run — how one daily run went */
+export type Run = { due: Int, sent: Int, failed: Int }

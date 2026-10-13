@@ -1,0 +1,62 @@
+/** @Test.Digest.Suite — the weekly email summary's letter, stop link, and safe run */
+module Services.DigestTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Test as Test
+import Api.Mail as Mail
+import Api.Supabase.Gateway as Gateway
+import Domain.Digest as Digest
+import Domain.Problem as Problem
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response as Response
+import Services.Digest as DigestService
+import Services.Runtime as Runtime
+
+/// A Tuesday in 2026, in milliseconds.
+const NOW: Int = 1792000000000
+
+/// A member due a summary.
+fn due(locale: Str, unread: Int, upcoming: Array[Digest.Upcoming]) -> Digest.Due {
+  Digest.Due{userId: "user-1", email: "ana@example.com", name: "Ana", locale: locale, unread: unread, upcoming: upcoming}
+}
+
+/// Runs the digest checks.
+fn main() -> Int {
+  let calls: Sync.Cell[Int] = Sync.cell(0)
+  let gateway = Gateway.over(fn(_request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      let _counted = Sync.set(&calls, Result.unwrapOr(Sync.get(&calls), 0) + 1)
+      Err(HttpClient.Rejected("unexpected database call"))
+    }, "https://example.test", "fixture")
+  let runtime = Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://boricuaexperience.com")
+  let event = Digest.Upcoming{title: "Bomba en Loíza", slug: "bomba-en-loiza-abc123", startsAt: "2026-10-17T23:00:00+00:00", town: "Loíza"}
+  let spanish = DigestService.letter(&runtime, &due("es", 2, [event]), NOW)
+  let english = DigestService.letter(&runtime, &due("en", 1, []), NOW)
+  let nextWeek = DigestService.letter(&runtime, &due("es", 2, [event]), NOW + 7 * 86400000)
+  let token = DigestService.stopToken(&runtime, "user-1")
+  let mailer = Mail.over(Client.create(fn(_request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] { Err(HttpClient.Rejected("offline")) }), "Boricua Experience <hola@boricuaexperience.com>")
+  let body = Json.encode(&Mail.body(&mailer, &spanish))
+  let unconfigured = DigestService.run(&runtime, NOW)
+  let checks = Test.suite("Digest", &[
+      Test.equals("the subject is in the member's language", &spanish.subject, &"Tu semana en Boricua Experience"),
+      Test.equals("an English member reads English", &english.subject, &"Your week on Boricua Experience"),
+      Test.that("the letter greets the member by name", spanish.text.startsWith("Hola, Ana:")),
+      Test.that("the letter counts unread notifications", spanish.text.contains("Tienes 2 notificaciones sin leer.") && english.text.contains("You have 1 unread notification.")),
+      Test.that("each upcoming activity links to its page as a notification visit", spanish.text.contains("Bomba en Loíza") && spanish.text.contains("https://boricuaexperience.com/e/bomba-en-loiza-abc123?from=notifications")),
+      Test.that("a letter without activities leaves the section out", !english.text.contains("Coming up")),
+      Test.that("the letter carries its one-click stop link", spanish.text.contains("https://boricuaexperience.com/digest/stop/user-1/" + token)),
+      Test.that("mail clients get list unsubscribe headers", body.contains("List-Unsubscribe") && body.contains("List-Unsubscribe=One-Click")),
+      Test.that("one summary a week per member, even if a run repeats", spanish.idempotencyKey == DigestService.letter(&runtime, &due("es", 2, [event]), NOW + 3600000).idempotencyKey && spanish.idempotencyKey != nextWeek.idempotencyKey),
+      Test.that("the stop link's signature is checked", DigestService.stopValid(&runtime, "user-1", token) && !DigestService.stopValid(&runtime, "user-2", token) && !DigestService.stopValid(&runtime, "", "")),
+      Test.that("without a mail key no member is claimed", match unconfigured { case Err(Problem.Unavailable(reason)) => reason == "mail_not_configured" case _ => false } && Result.unwrapOr(Sync.get(&calls), 0) == 0)
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

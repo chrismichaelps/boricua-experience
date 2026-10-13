@@ -17,7 +17,7 @@ import PuduLangHttpClient.Response as Response
 export type Mailer = { http: Client.Client, key: Str, from: Str }
 
 /** @Api.Mail.Letter — one plain-text message to one recipient */
-export type Letter = { to: Str, replyTo: Str, subject: Str, text: Str, idempotencyKey: Str }
+export type Letter = { to: Str, replyTo: Str, subject: Str, text: Str, idempotencyKey: Str, headers: Array[(Str, Str)] }
 
 /// The provider's API origin.
 const BASE: Str = "https://api.resend.com/"
@@ -52,6 +52,7 @@ export fn body(mailer: &Mailer, letter: &Letter) -> Json.Json {
     ("text", Json.Text(letter.text))
   ]
   if !letter.replyTo.isEmpty() { fields = fields.push(("reply_to", Json.Text(single(letter.replyTo)))) }
+  if !letter.headers.isEmpty() { fields = fields.push(("headers", Json.object(&letter.headers.map(|header: (Str, Str)| (single(header[0]), Json.Text(single(header[1]))))))) }
   Json.object(&fields)
 }
 

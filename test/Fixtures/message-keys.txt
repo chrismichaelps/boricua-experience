@@ -26,6 +26,8 @@ account.delete_recent
 account.delete_yes
 account.discovery
 account.discovery_body
+account.email_digest
+account.email_digest_body
 account.export
 account.field_bio
 account.field_language
@@ -256,6 +258,13 @@ date.happening_now
 date.today
 date.tomorrow
 date.until
+digest.manage
+digest.stop_body
+digest.stop_confirm
+digest.stop_title
+digest.stopped
+digest.unread.one
+digest.unread.other
 error.missing_body
 error.missing_title
 error.offline_body

@@ -60,7 +60,8 @@ export fn letter(runtime: &Runtime.Runtime, form: &Contact.Form, locale: Str, id
     replyTo: email,
     subject: "Boricua Experience · " + form.topic + " · " + name,
     text: "Tema / Topic: " + form.topic + "\nNombre / Name: " + name + "\nCorreo / Email: " + email + "\nIdioma / Language: " + locale + "\nMensaje #" + show(id) + "\n\n" + form.body.trim() + "\n",
-    idempotencyKey: "contact-" + show(id)
+    idempotencyKey: "contact-" + show(id),
+    headers: []
   }
 }
 
