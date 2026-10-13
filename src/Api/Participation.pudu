@@ -80,3 +80,18 @@ export fn deleteSearch(gateway: &Gateway.Gateway, id: Str, token: Str) -> Result
 export fn savedSearches(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Search.SavedSearch], Problem.Problem] {
   Gateway.query(gateway, Supabase.MY_SAVED_SEARCHES, &[], Some(token), Gateway.Read)
 }
+
+/// The organizer's numbers for one activity.
+export fn insights(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[Participation.Insights, Problem.Problem] {
+  Gateway.query(gateway, Supabase.EVENT_INSIGHTS, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Read)
+}
+
+/// Approves every pending request that fits, oldest first.
+export fn approvePending(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[Participation.Bulk, Problem.Problem] {
+  Gateway.query(gateway, Supabase.APPROVE_PENDING, &[("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write)
+}
+
+/// A member's private calendar entries, read with the service key after the feed address is checked.
+export fn calendarFeed(gateway: &Gateway.Gateway, userId: Str) -> Result[Array[Event.CalendarEntry], Problem.Problem] {
+  Gateway.queryAsService(gateway, Supabase.CALENDAR_FEED, &[("p_user_id", Gateway.text(userId))])
+}

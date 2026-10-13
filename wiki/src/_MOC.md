@@ -295,3 +295,4 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Database/MediaConfirmation]] — Activity cover integration.
 
 - [[src/Test/MediaService]] — Verification and cleanup transport regressions.
+- [[src/Database/Community]] — waitlist, organizer tools, review holds and the private calendar feed.

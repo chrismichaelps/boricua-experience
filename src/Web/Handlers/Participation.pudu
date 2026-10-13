@@ -7,12 +7,15 @@ import Std.Json as Json
 import Std.Option as Option
 import App.Assembly as Assembly
 import App.Messages as Messages
+import Constants.Http as HttpConstants
 import Constants.Routes as Routes
+import Domain.Participation as Participation
 import Domain.Problem as Problem
 import Domain.Session as Session
 import Utils.Form as Form
 import Validation.Participation as ParticipationRules
 import View.Pages.Activity as ActivityPage
+import View.Calendar as Calendar
 import View.Pages.Manage as ManagePage
 import Web.Context as Context
 import Web.Handlers.Events as Events
@@ -29,6 +32,9 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.post(Routes.EVENT_REACT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| react(&held, &visitor, &session))),
     Route.post(Routes.EVENT_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| report(&held, &visitor, &session))),
     Route.get(Routes.EVENT_MANAGE, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| queue(&held, &visitor, &session, None))),
+    Route.post(Routes.EVENT_APPROVE_ALL, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| approveAll(&held, &visitor, &session))),
+    Route.get(Routes.EVENT_GUESTS_CSV, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| guestsCsv(&held, &visitor, &session))),
+    Route.get(Routes.CALENDAR_FEED, Serve.api(app, |visitor: Context.Visitor| calendarFeed(&held, &visitor))),
     Route.post(Routes.REQUEST_DECIDE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| decide(&held, &visitor, &session))),
     Route.get(Routes.ACTIVITY, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| activity(&held, &visitor, &session)))
   ]
@@ -54,7 +60,7 @@ fn join(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
   match Serve.ask(app, &app.kinds.join, Serve.signed(session, Messages.Joining{eventId: event.card.id, message: Form.paragraph(&Serve.fields(visitor), "message")})) {
-    case Ok(status) => Respond.withFlash(app, Respond.redirect(eventPath(visitor)), if status == "approved" { "flash.joined" } else { "flash.requested" })
+    case Ok(status) => Respond.withFlash(app, Respond.redirect(eventPath(visitor)), if status == "approved" { "flash.joined" } else if status == "waitlisted" { "flash.waitlisted" } else { "flash.requested" })
     case Err(problem) => refusedOnEvent(app, visitor, &problem)
   }
 }
@@ -134,6 +140,52 @@ fn decide(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
 fn activity(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   match Serve.ask(app, &app.kinds.activity, Serve.signed(session, ())) {
     case Ok(found) => Respond.page(200, &ActivityPage.render(&Context.frame(app, visitor), &found))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Approves every pending request that fits, then returns to the queue.
+fn approveAll(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let back = Routes.EVENT_PREFIX + Serve.param(visitor, "slug") + "/requests"
+  match Serve.ask(app, &app.kinds.approveAll, Serve.signed(session, Serve.param(visitor, "slug"))) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(back), "flash.approved_all")
+    case Err(Problem.Refused(reason)) => Respond.withFlash(app, Respond.redirect(back), "problem." + reason)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A value as one spreadsheet cell: quoted, inner quotes doubled, and text that a spreadsheet would
+/// run as a formula made literal.
+export fn cell(value: Str) -> Str {
+  let flat = value.replace("\r", " ").replace("\n", " ")
+  let safe = if flat.startsWith("=") || flat.startsWith("+") || flat.startsWith("-") || flat.startsWith("@") || flat.startsWith("\t") { "'" + flat } else { flat }
+  "\"" + safe.replace("\"", "\"\"") + "\""
+}
+
+/// The organizer's guest list as a spreadsheet file: name, status, date, and message.
+fn guestsCsv(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.queue, Serve.signed(session, Serve.param(visitor, "slug"))) {
+    case Ok(found) => {
+      let header = [cell("name"), cell("status"), cell("requested_at"), cell("message")].join(",")
+      let rows = found.requests.map(|request: Participation.IncomingRequest| [cell(request.requester.displayName), cell(request.status), cell(request.createdAt), cell(request.message)].join(","))
+      Http.Response{..Respond.document("text/csv; charset=utf-8", "\u{FEFF}" + [header].concat(rows).join("\r\n") + "\r\n"), headers: [
+          ("content-type", "text/csv; charset=utf-8"),
+          ("content-disposition", "attachment; filename=\"" + found.event.card.slug + "-guests.csv\""),
+          ("cache-control", HttpConstants.CACHE_PRIVATE)
+        ]}
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A member's private calendar feed; a wrong signature answers as a missing page.
+fn calendarFeed(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.calendarFeed, (Serve.param(visitor, "user"), Serve.param(visitor, "token"))) {
+    case Ok(entries) => Http.Response{..Respond.document(HttpConstants.CALENDAR, Calendar.feed(app.runtime.siteUrl, "Boricua Experience", &entries)), headers: [
+        ("content-type", HttpConstants.CALENDAR),
+        ("cache-control", HttpConstants.CACHE_PRIVATE),
+        ("x-robots-tag", "noindex")
+      ]}
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

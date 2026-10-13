@@ -2,7 +2,9 @@
 module View.Calendar
 
 import Constants.App as App
+import Constants.Routes as Routes
 import Domain.Event as Event
+import Utils.Query as Query
 
 /// A timestamp as an iCalendar UTC date-time, `YYYYMMDDTHHMMSSZ`.
 fn stamp(timestamp: Str) -> Str { timestamp.take(19).replace("-", "").replace(":", "") + "Z" }
@@ -32,4 +34,63 @@ export fn ics(siteUrl: Str, card: &Event.Card, path: Str) -> Str {
     "END:VCALENDAR",
     ""
   ].filter(|line: Str| !line.isEmpty()).join("\r\n") + "\r\n"
+}
+
+/// The place line of an activity in calendars.
+fn placeOf(card: &Event.Card) -> Str { card.venueName + ", " + card.municipality.name + ", Puerto Rico" }
+
+/// An address that opens a new Google Calendar event filled with the activity.
+export fn googleUrl(siteUrl: Str, card: &Event.Card, path: Str) -> Str {
+  let start = stamp(card.startsAt)
+  let end = match card.endsAt { case Some(at) => stamp(at) case None => start }
+  "https://calendar.google.com/calendar/render" + Query.render(&[
+      ("action", "TEMPLATE"),
+      ("text", card.title),
+      ("dates", start + "/" + end),
+      ("details", card.summary + "\n" + siteUrl + path),
+      ("location", placeOf(card))
+    ])
+}
+
+/// An address that opens a new Outlook calendar event filled with the activity.
+export fn outlookUrl(siteUrl: Str, card: &Event.Card, path: Str) -> Str {
+  "https://outlook.live.com/calendar/0/deeplink/compose" + Query.render(&[
+      ("path", "/calendar/action/compose"),
+      ("rru", "addevent"),
+      ("subject", card.title),
+      ("startdt", card.startsAt.take(19) + "Z"),
+      ("enddt", match card.endsAt { case Some(at) => at.take(19) + "Z" case None => card.startsAt.take(19) + "Z" }),
+      ("body", card.summary + "\n" + siteUrl + path),
+      ("location", placeOf(card))
+    ])
+}
+
+/// The place line of a feed entry: venue, address and town, each kept only once when the address
+/// already names the others.
+export fn feedPlace(entry: &Event.CalendarEntry) -> Str {
+  let line = match entry.addressLine { case Some(found) => found.trim() case None => "" }
+  let withVenue = if line.isEmpty() { entry.venueName } else if line.contains(entry.venueName) { line } else { entry.venueName + ", " + line }
+  if withVenue.contains(entry.municipality) { withVenue } else { withVenue + ", " + entry.municipality }
+}
+
+/// A member's private feed: every approved or organized activity as one calendar to subscribe to.
+export fn feed(siteUrl: Str, name: Str, entries: &Array[Event.CalendarEntry]) -> Str {
+  let host = siteUrl.replace("https://", "").replace("http://", "")
+  var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//" + App.SITE_NAME + "//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + escaped(name), "REFRESH-INTERVAL;VALUE=DURATION:PT6H"]
+  for entry in *entries {
+    let place = feedPlace(&entry)
+    lines = lines.concat([
+        "BEGIN:VEVENT",
+        "UID:" + entry.slug + "@" + host,
+        "DTSTAMP:" + stamp(entry.updatedAt),
+        "DTSTART:" + stamp(entry.startsAt),
+        match entry.endsAt { case Some(end) => "DTEND:" + stamp(end) case None => "" },
+        "SUMMARY:" + escaped(entry.title),
+        "LOCATION:" + escaped(place),
+        "URL:" + siteUrl + Routes.EVENT_PREFIX + entry.slug,
+        if entry.status == "cancelled" { "STATUS:CANCELLED" } else { "STATUS:CONFIRMED" },
+        "END:VEVENT"
+      ])
+  }
+  lines.push("END:VCALENDAR").filter(|line: Str| !line.isEmpty()).join("\r\n") + "\r\n"
 }

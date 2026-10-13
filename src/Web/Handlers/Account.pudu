@@ -21,6 +21,7 @@ import View.Pages.Account as AccountPage
 import View.Pages.Auth as AuthPage
 import View.Pages.Notifications as NotificationsPage
 import View.Pages.Profile as ProfilePage
+import Services.Participation as ParticipationService
 import Web.Context as Context
 import Web.Respond as Respond
 import Web.Serve as Serve
@@ -58,7 +59,8 @@ export fn accountPage(app: &Assembly.App, visitor: &Context.Visitor, session: &S
         case Some(found) => Problem.status(&found)
         case None => 200
       }
-      Respond.page(status, &AccountPage.render(&Context.frame(app, visitor), &me, &catalog, session.email, Session.usesPassword(session), &problem))
+      let feed = app.runtime.siteUrl + Routes.CALENDAR_FEED.replace(":user", me.id).replace(":token", ParticipationService.calendarToken(&app.runtime, me.id))
+      Respond.page(status, &AccountPage.render(&Context.frame(app, visitor), &me, &catalog, session.email, Session.usesPassword(session), &problem, feed))
     }
     case Err(found) => Respond.problem(app, visitor, &found)
   }

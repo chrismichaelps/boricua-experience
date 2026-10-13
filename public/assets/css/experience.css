@@ -256,3 +256,21 @@ button[disabled] { cursor: wait; }
 .map-filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 4px 12px 8px; }
 .map-filters .filter select { min-height: 40px; }
 .map-list-link { margin-left: auto; }
+
+/* Calendar and share menus beside the reactions: small disclosures listing their destinations. */
+.reaction-group { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.menu-disclosure { position: relative; }
+.menu-disclosure > summary { list-style: none; cursor: pointer; }
+.menu-disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure-list { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; min-width: 220px; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--color-divider); border-radius: 14px; background: var(--color-white); box-shadow: 0 10px 30px rgb(0 0 0 / 12%); }
+.disclosure-list a, .disclosure-list .text-button { display: flex; align-items: center; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: none; color: var(--color-ink); font: inherit; font-size: 15px; text-align: left; text-decoration: none; cursor: pointer; }
+.disclosure-list a:hover, .disclosure-list .text-button:hover { background: var(--color-cloud); }
+
+/* Organizer overview on the requests page. */
+.insights { margin: 8px 0 16px; }
+.stats { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.stat { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--color-divider); border-radius: 14px; }
+.stat strong { font-size: 22px; font-weight: 800; }
+.stat span { color: var(--color-graphite); font-size: 13px; }
+.manage-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.manage-actions form { margin: 0; }

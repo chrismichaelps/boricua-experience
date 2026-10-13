@@ -114,6 +114,11 @@ export const CALL_TIMEOUT_MILLIS: Int = 8000
 /// Milliseconds one attempt may take.
 export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000
 
+/// Organizer tools and the private calendar feed.
+export const EVENT_INSIGHTS: Str = "event_insights"
+export const APPROVE_PENDING: Str = "approve_pending"
+export const CALENDAR_FEED: Str = "calendar_feed"
+
 /// A member's saved searches.
 export const SAVE_SEARCH: Str = "save_search"
 export const DELETE_SAVED_SEARCH: Str = "delete_saved_search"

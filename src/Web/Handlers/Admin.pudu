@@ -32,11 +32,14 @@ fn dashboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Se
   }
 }
 
-/// Dismisses a report or acts on it.
+/// The database decision each button names.
+const DECISIONS: Map[Str, Str] = mapOf([("dismiss", "dismissed"), ("act", "actioned"), ("restore", "restore"), ("hold", "hold")])
+
+/// Applies the administrator's decision on a report.
 fn resolve(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let id = Option.unwrapOr(Serve.param(visitor, "id").toInt(), 0)
-  let act = Form.text(&Serve.fields(visitor), "decision") == "act"
-  match Serve.ask(app, &app.kinds.resolve, Serve.signed(session, Messages.Resolution{reportId: id, act: act})) {
+  let action = Option.unwrapOr(DECISIONS.get(Form.text(&Serve.fields(visitor), "decision")), "")
+  match Serve.ask(app, &app.kinds.resolve, Serve.signed(session, Messages.Resolution{reportId: id, action: action})) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ADMIN), "flash.report_resolved")
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }

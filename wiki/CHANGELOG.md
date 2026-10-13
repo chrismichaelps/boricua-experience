@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-13 · [[src/Database/Community]] · waitlist with automatic promotion, organizer overview with views-to-requests conversion, approve-all and guest spreadsheet, review holds after repeated reports with administrator restore, Google/Outlook/file calendar links, share menu and a private subscribable calendar feed.
+
 - 2026-10-12 · [[src/Database/EventCovers]] · organizer-managed activity covers across categories; trusted server confirmation, shared reservation quota and pending-only cleanup; development verification passes, production cutover pending · issue #82.
 
 - 2026-10-12 · release 0.4.0 · owner menu editor, place photos and menu files, save/like fix, moving nearby and 3D map; asset version 56 · issues #69 #76 #78.

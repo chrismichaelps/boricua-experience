@@ -41,6 +41,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("invalid_response", "review.response_length"),
     ("external_booking", "problem.external_booking"),
     ("event_full", "problem.event_full"),
+    ("event_held", "problem.event_held"),
     ("event_cancelled", "problem.event_cancelled"),
     ("event_ended", "problem.event_ended"),
     ("own_event", "problem.own_event"),

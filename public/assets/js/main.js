@@ -11,7 +11,7 @@ import { localizeMoments } from './features/localTime.js?v=59';
 import { $$ } from './utils/dom.js?v=59';
 import { back, joinPanel, registerServiceWorker, retry } from './features/app.js?v=59';
 import { filters, loadMore } from './features/listing.js?v=59';
-import { share } from './features/share.js?v=59';
+import { disclosures, share } from './features/share.js?v=59';
 import { suggest } from './features/suggest.js?v=59';
 import { reactToggle, saveToggle } from './features/toggle.js?v=59';
 
@@ -19,6 +19,7 @@ passwordControls();
 submitFeedback();
 interactionFeedback();
 localizeMoments();
+disclosures();
 for (const handle of $$('.sheet-handle')) sheetGestures(handle);
 
 const FEATURES = {

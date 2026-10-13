@@ -1,7 +1,9 @@
 /** @Services.Participation.Joining — requests, decisions, saves, reactions, and reports */
 module Services.Participation
 
+import Std.Bytes as Bytes
 import Std.Concurrent as Concurrent
+import Std.Crypto as Crypto
 import Std.Result as Result
 import Std.Sync as Sync
 import Api.Events as EventsApi
@@ -18,7 +20,7 @@ import Validation.Participation as Rules
 export type Activity = { requests: Array[Participation.MyRequest], saved: Array[Event.Card], organizing: Array[Event.Card], searches: Array[Search.SavedSearch] }
 
 /** @Services.Participation.Queue — an event and the requests waiting on its organizer */
-export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest] }
+export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest], insights: Option[Participation.Insights] }
 
 /// Asks to join with an optional message; answers `approved` or `pending`.
 export fn join(runtime: &Runtime.Runtime, eventId: Str, message: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
@@ -44,7 +46,31 @@ export fn queue(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session)
   let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
   if !found.viewer.isOrganizer { return Err(Problem.Forbidden) }
   let requests = ParticipationApi.incoming(&runtime.gateway, found.card.id, session.accessToken) ?
-  Ok(Queue{event: found, requests: requests})
+  // The numbers are a convenience: the queue still opens when they cannot be read.
+  let insights = match ParticipationApi.insights(&runtime.gateway, found.card.id, session.accessToken) {
+    case Ok(found) => Some(found)
+    case Err(_) => None
+  }
+  Ok(Queue{event: found, requests: requests, insights: insights})
+}
+
+/// Approves every pending request that fits; answers how many were approved.
+export fn approveAll(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session) -> Result[Int, Problem.Problem] {
+  let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
+  if !found.viewer.isOrganizer { return Err(Problem.Forbidden) }
+  let bulk = ParticipationApi.approvePending(&runtime.gateway, found.card.id, session.accessToken) ?
+  Ok(bulk.approved)
+}
+
+/// The signature that makes a member's calendar feed address unguessable.
+export fn calendarToken(runtime: &Runtime.Runtime, userId: Str) -> Str {
+  Bytes.encodeBase64Url(&Crypto.hmacSha256(&runtime.sessionKey, &Bytes.fromText("calendar-feed|" + userId))).take(32)
+}
+
+/// A member's calendar entries when the feed's signature matches, and nothing otherwise.
+export fn calendarFeed(runtime: &Runtime.Runtime, userId: Str, token: Str) -> Result[Array[Event.CalendarEntry], Problem.Problem] {
+  if !Crypto.bytesMatch(&Bytes.fromText(calendarToken(runtime, userId)), &Bytes.fromText(token)) { return Err(Problem.Missing) }
+  ParticipationApi.calendarFeed(&runtime.gateway, userId)
 }
 
 /// Saves or unsaves an event; answers whether it is now saved.

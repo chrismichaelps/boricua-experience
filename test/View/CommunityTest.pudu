@@ -1,0 +1,72 @@
+/** @Test.View.Community — calendar feed, guest spreadsheet cells and calendar links */
+module View.CommunityTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Io as Io
+import Std.Test as Test
+import Api.Supabase.Gateway as Gateway
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import Domain.Event as Event
+import Services.Participation as ParticipationService
+import Services.Runtime as Runtime
+import View.Calendar as Calendar
+import Web.Handlers.Participation as ParticipationHandlers
+
+/// One feed entry at a venue, with the given address line.
+fn entry(address: Option[Str], status: Str) -> Event.CalendarEntry {
+  Event.CalendarEntry{
+    slug: "bomba-en-loiza-abc123",
+    title: "Bomba, plena; y más",
+    startsAt: "2026-12-05T23:00:00+00:00",
+    endsAt: Some("2026-12-06T01:00:00+00:00"),
+    venueName: "Plaza de Recreo",
+    addressLine: address,
+    municipality: "Loíza",
+    status: status,
+    updatedAt: "2026-10-12T20:35:00+00:00"
+  }
+}
+
+/// A gateway that refuses every call: these checks never reach the database.
+fn offline() -> Gateway.Gateway {
+  Gateway.over(|_request: Request.Request, _cancel: Cancel.Token| Err(HttpClient.Rejected("unexpected database call")), "https://example.test", "fixture")
+}
+
+/// Runs the community checks.
+fn main() -> Int {
+  let full = entry(Some("Plaza de Recreo, Calle Espíritu Santo, Loíza"), "published")
+  let bare = entry(None, "cancelled")
+  let street = entry(Some("Calle 1"), "published")
+  let feed = Calendar.feed("https://boricuaexperience.com", "Boricua Experience", &[full, bare])
+  let runtime = Runtime.over(offline(), Bytes.fromText("01234567890123456789012345678901"), "https://example.test")
+  let other = Runtime.over(offline(), Bytes.fromText("abcdefghijabcdefghijabcdefghij12"), "https://example.test")
+  let token = ParticipationService.calendarToken(&runtime, "user-1")
+  let checks = Test.suite("Community", &[
+      Test.equals("an address naming the venue and town is kept once", &Calendar.feedPlace(&full), &"Plaza de Recreo, Calle Espíritu Santo, Loíza"),
+      Test.equals("a missing address falls back to venue and town", &Calendar.feedPlace(&bare), &"Plaza de Recreo, Loíza"),
+      Test.equals("a street address is joined to venue and town", &Calendar.feedPlace(&street), &"Plaza de Recreo, Calle 1, Loíza"),
+      Test.that("feed is one calendar with lines ending in CRLF", feed.startsWith("BEGIN:VCALENDAR\r\n") && feed.endsWith("END:VCALENDAR\r\n")),
+      Test.that("feed carries one event per entry", feed.split("BEGIN:VEVENT").length() == 3),
+      Test.that("feed escapes commas and semicolons in text", feed.contains("SUMMARY:Bomba\\, plena\\; y más")),
+      Test.that("feed marks cancelled activities", feed.contains("STATUS:CANCELLED") && feed.contains("STATUS:CONFIRMED")),
+      Test.that("feed leaves out an end only when missing", feed.contains("DTEND:20261206T010000Z")),
+      Test.that("feed names each event by a stable host-scoped id", feed.contains("UID:bomba-en-loiza-abc123@boricuaexperience.com")),
+      Test.that("feed asks calendars to refresh", feed.contains("REFRESH-INTERVAL;VALUE=DURATION:PT6H")),
+      Test.equals("feed signature is stable for the same account", &ParticipationService.calendarToken(&runtime, "user-1"), &token),
+      Test.that("feed signature differs per account", ParticipationService.calendarToken(&runtime, "user-2") != token),
+      Test.that("feed signature depends on the server key", ParticipationService.calendarToken(&other, "user-1") != token),
+      Test.equals("feed signature is 32 characters", &token.length(), &32),
+      Test.equals("a plain cell is quoted", &ParticipationHandlers.cell("Ana Rivera"), &"\"Ana Rivera\""),
+      Test.equals("inner quotes are doubled", &ParticipationHandlers.cell("say \"hi\""), &"\"say \"\"hi\"\"\""),
+      Test.equals("a formula is made literal", &ParticipationHandlers.cell("=HYPERLINK(\"x\")"), &"\"'=HYPERLINK(\"\"x\"\")\""),
+      Test.equals("a leading plus is made literal", &ParticipationHandlers.cell("+1"), &"\"'+1\""),
+      Test.equals("a leading minus is made literal", &ParticipationHandlers.cell("-2"), &"\"'-2\""),
+      Test.equals("a leading at sign is made literal", &ParticipationHandlers.cell("@cmd"), &"\"'@cmd\""),
+      Test.equals("line breaks stay inside one row", &ParticipationHandlers.cell("one\r\ntwo"), &"\"one  two\"")
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

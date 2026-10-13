@@ -18,6 +18,8 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.decide, |asked: Messages.Signed[Messages.Decision], _context: Context.Context| Messaging.lift(Participation.decide(&held, asked.input.requestId, asked.input.approve, asked.input.note, &asked.session))),
     Registration.handler(&kinds.queue, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.queue(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.save, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.toggleSaved(&held, asked.input, &asked.session))),
+    Registration.handler(&kinds.approveAll, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.approveAll(&held, asked.input, &asked.session))),
+    Registration.handler(&kinds.calendarFeed, |asked: (Str, Str), _context: Context.Context| Messaging.lift(Participation.calendarFeed(&held, asked[0], asked[1]))),
     Registration.handler(&kinds.saveSearch, |asked: Messages.Signed[Search.Saving], _context: Context.Context| Messaging.lift(Participation.saveSearch(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.deleteSearch, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.deleteSearch(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.react, |asked: Messages.Signed[Messages.Reacting], _context: Context.Context| Messaging.lift(Participation.react(&held, asked.input.eventId, asked.input.value, &asked.session))),

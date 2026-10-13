@@ -20,7 +20,12 @@ export fn dashboard(runtime: &Runtime.Runtime, session: &Session.Session) -> Res
   Ok(Dashboard{overview: overview, reports: reports, reviews: reviews})
 }
 
-/// Dismisses a report, or acts on it, which cancels the event.
-export fn resolve(runtime: &Runtime.Runtime, reportId: Int, act: Bool, session: &Session.Session) -> Result[(), Problem.Problem] {
-  AdminApi.resolve(&runtime.gateway, reportId, if act { "actioned" } else { "dismissed" }, session.accessToken)
+/// Decisions an administrator may take on a report: dismiss it, cancel the activity, restore a held
+/// activity, or hold it while reviewing.
+const ACTIONS: Set[Str] = setOf(["dismissed", "actioned", "restore", "hold"])
+
+/// Applies one decision on a report; anything outside the known decisions is refused before the call.
+export fn resolve(runtime: &Runtime.Runtime, reportId: Int, action: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  if !ACTIONS.contains(action) { return Err(Problem.Refused("invalid_action")) }
+  AdminApi.resolve(&runtime.gateway, reportId, action, session.accessToken)
 }

@@ -104,7 +104,7 @@ export type Onboard = { form: Credentials.Onboarding, locale: Str }
 export type CookieChoice = { subject: Str, choice: Consent.Choice }
 
 /** @App.Messages.Resolution — an administrator's decision on a report */
-export type Resolution = { reportId: Int, act: Bool }
+export type Resolution = { reportId: Int, action: Str }
 
 /** @App.Messages.Kinds — every kind of request, made once and shared by the mediator and the routes */
 export type Kinds = {
@@ -149,6 +149,8 @@ export type Kinds = {
   decide: Request.Kind[Signed[Decision], Str, Problem.Problem],
   queue: Request.Kind[Signed[Str], Participation.Queue, Problem.Problem],
   save: Request.Kind[Signed[Str], Bool, Problem.Problem],
+  approveAll: Request.Kind[Signed[Str], Int, Problem.Problem],
+  calendarFeed: Request.Kind[(Str, Str), Array[Event.CalendarEntry], Problem.Problem],
   saveSearch: Request.Kind[Signed[Search.Saving], (), Problem.Problem],
   deleteSearch: Request.Kind[Signed[Str], (), Problem.Problem],
   react: Request.Kind[Signed[Reacting], Participation.ReactionState, Problem.Problem],
@@ -238,6 +240,8 @@ export fn kinds() -> Kinds {
     decide: kind("participation.decide", COMMAND),
     queue: kind("participation.queue", READ),
     save: kind("participation.save", COMMAND),
+    approveAll: kind("participation.approve_all", COMMAND),
+    calendarFeed: kind("participation.calendar_feed", READ),
     saveSearch: kind("participation.save_search", COMMAND),
     deleteSearch: kind("participation.delete_search", COMMAND),
     react: kind("participation.react", COMMAND),

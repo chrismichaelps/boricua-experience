@@ -24,7 +24,9 @@ const KIND_ICONS: Map[Str, Str] = mapOf([
     ("request_rejected", "x"),
     ("event_reminder", "clock"),
     ("event_changed", "edit"),
-    ("event_cancelled", "x")
+    ("event_cancelled", "x"),
+    ("waitlist_promoted", "check"),
+    ("event_held", "flag-report")
   ])
 
 /// Where a notification leads: the request queue for organizers, otherwise the activity.

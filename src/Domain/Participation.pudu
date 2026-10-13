@@ -17,6 +17,27 @@ export type MyRequest = {
   event: Event.Card
 } derives Json.Decode
 
+/** @Domain.Participation.Insights — an organizer's numbers for one activity */
+export type Insights = {
+  approved: Int,
+  pending: Int,
+  waitlisted: Int,
+  capacity: Option[Int],
+  saves: Int,
+  likes: Int,
+  @json("views_7d") views7d: Int,
+  @json("views_30d") views30d: Int,
+  @json("requests_30d") requests30d: Int,
+  conversion: Option[Float64],
+  held: Bool
+} derives Json.Decode
+
+/** @Domain.Participation.Bulk — how many requests one bulk decision approved */
+export type Bulk = { approved: Int } derives Json.Decode
+
+/// Status of a member waiting for a place.
+export const WAITLISTED: Str = "waitlisted"
+
 /** @Domain.Participation.IncomingRequest — a request in an organizer's queue */
 export type IncomingRequest = {
   @json("request_id") requestId: Str,

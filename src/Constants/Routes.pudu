@@ -19,6 +19,11 @@ export const EVENT_COVER: Str = "/e/:slug/cover"
 export const EVENT_COVER_FINISH: Str = "/e/:slug/cover/:id/finish"
 export const EVENT_COVER_REMOVE: Str = "/e/:slug/cover/:id/remove"
 export const EVENT_MANAGE: Str = "/e/:slug/requests"
+/// Approving every pending request that fits, and the guest list as a spreadsheet file.
+export const EVENT_APPROVE_ALL: Str = "/e/:slug/requests/approve-all"
+export const EVENT_GUESTS_CSV: Str = "/e/:slug/guests.csv"
+/// A member's private calendar feed, addressed by account and signature.
+export const CALENDAR_FEED: Str = "/calendar/:user/:token"
 export const EVENT_JOIN: Str = "/e/:slug/join"
 export const EVENT_WITHDRAW: Str = "/e/:slug/withdraw"
 export const EVENT_SAVE: Str = "/e/:slug/save"
