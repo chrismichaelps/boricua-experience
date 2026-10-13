@@ -299,3 +299,8 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Database/Achievements]] · [[src/View/Pages/Achievements]] — achievements as data, their unlock mechanism, board and badges.
 - [[src/Database/DiscoveryFunnel]] — discovery-to-request counts by channel.
 - [[src/Database/NotificationDigest]] — the optional weekly email summary.
+
+- [[src/Server/FailureLogWorker]] · [[src/Server/FailureLogSchema]] — transactional bounded operational logging.
+- [[src/Public/App]] — navigation and fixed join-panel footer reservation.
+
+- [[src/Test/FailureLogIngestion]] · [[src/Test/JoinPanel]] — operational quota and footer lifecycle regressions.

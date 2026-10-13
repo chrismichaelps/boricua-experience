@@ -11,10 +11,15 @@ Every server failure (status 500–599) is reported to a Cloudflare Worker, `bor
 - Source: `server/failure-log/` (worker and schema). Copy `wrangler.example.jsonc` to `wrangler.jsonc`, which stays out of the repository, fill in the database id, then run `wrangler deploy`.
 ## Negative Logic
 - Paths never carry query strings, and nothing identifies a visitor.
-- The Worker refuses malformed events and bodies over 2 KB, and keeps at most 120 rows a minute per isolate, so a flood cannot exhaust the free daily writes.
+- The Worker refuses malformed events and bodies over 2 KB, and has a supplementary120-per-minute isolate guard plus a transactional shared5000-report UTC-day cap. Indexed quota admission bounds storage writes; index maintenance and retention also count toward Free-tier writes.
 - A daily cron trigger deletes rows older than thirty days.
 - A report that cannot be sent never changes the response; reports time out after 1.5 s.
 ## Investigating
 `wrangler d1 execute boricua-failures --remote --command "select path, status, reason, count(*) from failures group by 1, 2, 3 order by 4 desc limit 20"`
 ## Referenced by
 [[seams/_MOC]] · [[architecture/DELIVERY]]
+
+## Grill Log · #88
+Resolved: counter and report insert commit together through a SQLite trigger. Rejected reports create no row; insertion failures roll back admission. Timestamp and UTC-day bucket share one captured value. Keep the Free plan and existing operational resources.
+
+[[src/Server/FailureLogWorker]] · [[src/Server/FailureLogSchema]]
