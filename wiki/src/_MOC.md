@@ -304,3 +304,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Public/App]] — navigation and fixed join-panel footer reservation.
 
 - [[src/Test/FailureLogIngestion]] · [[src/Test/JoinPanel]] — operational quota and footer lifecycle regressions.
+
+- [[src/Test/Community]] — pure calendar, referral and spreadsheet safety regressions.

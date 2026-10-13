@@ -65,7 +65,7 @@ fn showcase(frame: &Frame.Frame, badges: &Achievement.Showcase) -> H.Node {
       H.h2().class("section-title").says(Frame.t(frame, "achievements.showcase")),
       H.p().class("muted small").says(Translate.count(&frame.locale, "achievements.showcase_count", badges.total)),
       H.ul().class("ach-strip").holding(badges.items.map(|found: Achievement.Badge| H.li().class("rarity-" + found.rarity).holding([
-            H.img().src(Achievement.badgePath(found.badge) + "?v=" + App.ASSET_VERSION).alt(found.title).at("title", found.title).at("width", "56").at("height", "56").at("loading", "lazy")
-          ])))
+              H.img().src(Achievement.badgePath(found.badge) + "?v=" + App.ASSET_VERSION).alt(found.title).at("title", found.title).at("width", "56").at("height", "56").at("loading", "lazy")
+            ])))
     ])
 }

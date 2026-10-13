@@ -31,3 +31,6 @@ export routes
 ## Referenced by
 
 [[src/_MOC]]
+
+## Formatting baseline Grill Log · #88
+Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.

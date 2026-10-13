@@ -65,3 +65,6 @@ MEDIUM.
   **A:** Opening the inbox marks read everything it shows, as native inboxes do; the button, its route, and its message kind were removed with it. Resolved.
 - **Q:** What does onboarding do with a minor's date of birth?
   **A:** It deletes the account Google just created and refuses; see [[src/Validation/Account]]. Resolved.
+
+## Formatting baseline Grill Log · #88
+Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.

@@ -15,13 +15,13 @@ import I18n.Translate as Translate
 import Utils.Query as Query
 import Utils.Text as Text
 import Utils.Time as Time
+import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.Moment as Moment
 import View.Components.People as People
 import View.Frame as Frame
-import View.Calendar as Calendar
 import View.Layout as Layout
 import View.Seo as Seo
 
@@ -311,9 +311,9 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
         ])
       case Some("waitlisted") => H.div().class("join-state join-pending").holding([
           H.p().class("state-line").holding([Icons.sized("users", 20), H.strong().says(match detail.viewer.waitlistPosition {
-                case Some(position) => Frame.tf(frame, "event.waitlist_position", &[("position", show(position))])
-                case None => Frame.t(frame, "event.waitlisted")
-              })]),
+                  case Some(position) => Frame.tf(frame, "event.waitlist_position", &[("position", show(position))])
+                  case None => Frame.t(frame, "event.waitlisted")
+                })]),
           H.p().class("muted small").says(Frame.t(frame, "event.waitlist_body")),
           withdrawForm(frame, base)
         ])

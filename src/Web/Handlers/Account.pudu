@@ -9,12 +9,13 @@ import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Cookies as Cookies
 import Constants.Routes as Routes
+import Domain.Achievement as Achievement
 import Domain.Credentials as Credentials
 import Domain.Locale as Locale
-import Domain.Achievement as Achievement
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
+import Services.Participation as ParticipationService
 import Utils.Form as Form
 import Utils.Wire as Wire
 import Validation.Account as AccountRules
@@ -22,7 +23,6 @@ import View.Pages.Account as AccountPage
 import View.Pages.Auth as AuthPage
 import View.Pages.Notifications as NotificationsPage
 import View.Pages.Profile as ProfilePage
-import Services.Participation as ParticipationService
 import Web.Context as Context
 import Web.Respond as Respond
 import Web.Serve as Serve

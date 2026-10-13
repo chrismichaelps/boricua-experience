@@ -2,8 +2,6 @@
 module Web.Handlers.Contact
 
 import Std.Http as Http
-import PuduLangLog.Logger as Logger
-import PuduLangLog.Value as Value
 import Std.Http.Server.Route as Route
 import Std.Option as Option
 import App.Assembly as Assembly
@@ -11,6 +9,8 @@ import Constants.Routes as Routes
 import Domain.Contact as Contact
 import Domain.Locale as Locale
 import Domain.Problem as Problem
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
 import Services.Contact as ContactService
 import Utils.Form as Form
 import Utils.Time as Time

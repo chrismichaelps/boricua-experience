@@ -6,9 +6,9 @@ import Std.Concurrent.Cancel as Cancel
 import Std.Io as Io
 import Std.Test as Test
 import Api.Supabase.Gateway as Gateway
+import Domain.Event as Event
 import PuduLangHttpClient as HttpClient
 import PuduLangHttpClient.Request as Request
-import Domain.Event as Event
 import Services.Participation as ParticipationService
 import Services.Runtime as Runtime
 import View.Calendar as Calendar
@@ -17,7 +17,7 @@ import Web.Handlers.Participation as ParticipationHandlers
 
 /// One feed entry at a venue, with the given address line.
 fn entry(address: Option[Str], status: Str) -> Event.CalendarEntry {
-  Event.CalendarEntry{
+  Event.CalendarEntry {
     slug: "bomba-en-loiza-abc123",
     title: "Bomba, plena; y más",
     startsAt: "2026-12-05T23:00:00+00:00",

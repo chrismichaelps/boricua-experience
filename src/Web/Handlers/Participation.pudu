@@ -14,8 +14,8 @@ import Domain.Problem as Problem
 import Domain.Session as Session
 import Utils.Form as Form
 import Validation.Participation as ParticipationRules
-import View.Pages.Activity as ActivityPage
 import View.Calendar as Calendar
+import View.Pages.Activity as ActivityPage
 import View.Pages.Manage as ManagePage
 import Web.Channel as Channel
 import Web.Context as Context
@@ -173,7 +173,7 @@ fn guestsCsv(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Se
           ("content-type", "text/csv; charset=utf-8"),
           ("content-disposition", "attachment; filename=\"" + found.event.card.slug + "-guests.csv\""),
           ("cache-control", HttpConstants.CACHE_PRIVATE)
-        ]}
+        ] }
     }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
@@ -186,7 +186,7 @@ fn calendarFeed(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response 
         ("content-type", HttpConstants.CALENDAR),
         ("cache-control", HttpConstants.CACHE_PRIVATE),
         ("x-robots-tag", "noindex")
-      ]}
+      ] }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

@@ -8,12 +8,12 @@ import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Admin as Admin
 import Domain.Review as Review
+import I18n.Translate as Translate
 import Services.Admin as AdminService
 import View.Components.Form as Form
 import View.Components.Notice as Notice
 import View.Frame as Frame
 import View.Layout as Layout
-import I18n.Translate as Translate
 import View.Seo as Seo
 
 /// One labelled count.
@@ -27,17 +27,17 @@ fn funnel(frame: &Frame.Frame, channels: &Array[Admin.Channel]) -> H.Node {
       if channels.isEmpty() { H.p().class("muted").says(Frame.t(frame, "admin.funnel_empty")) } else {
         H.table().class("funnel-table").holding([
             H.thead().holding([H.tr().holding([
-                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_channel")),
-                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_views")),
-                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_joins")),
-                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_rate"))
-                ])]),
+                    H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_channel")),
+                    H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_views")),
+                    H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_joins")),
+                    H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_rate"))
+                  ])]),
             H.tbody().holding(channels.map(|row: Admin.Channel| H.tr().holding([
-                  H.th().at("scope", "row").says(Frame.t(frame, "admin.channel." + row.channel)),
-                  H.td().says(show(row.views)),
-                  H.td().says(show(row.joins)),
-                  H.td().says(match row.rate { case Some(rate) => show(rate) + "%" case None => "—" })
-                ])))
+                    H.th().at("scope", "row").says(Frame.t(frame, "admin.channel." + row.channel)),
+                    H.td().says(show(row.views)),
+                    H.td().says(show(row.joins)),
+                    H.td().says(match row.rate { case Some(rate) => show(rate) + "%" case None => "—" })
+                  ])))
           ])
       }
     ])
