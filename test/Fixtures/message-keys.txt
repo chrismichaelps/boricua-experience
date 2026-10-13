@@ -370,6 +370,7 @@ form.birth_date_invalid
 form.capacity_invalid
 form.category_required
 form.contact_body
+form.contact_links
 form.contact_name
 form.contact_topic
 form.description_length

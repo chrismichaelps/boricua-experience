@@ -11,6 +11,7 @@ const TOPIC: Str = "form.contact_topic"
 const NAME: Str = "form.contact_name"
 const EMAIL: Str = "form.email_invalid"
 const BODY: Str = "form.contact_body"
+const LINKS: Str = "form.contact_links"
 
 /// Whether text is a plausible single mailbox: one `@`, a dotted domain, no spaces or line breaks,
 /// and no characters that only appear in injected header or markup text.
@@ -30,6 +31,12 @@ export fn mailbox(text: Str) -> Bool {
   labels[labels.length() - 1].length() >= 2
 }
 
+/// How many web addresses a text carries.
+export fn links(text: Str) -> Int {
+  let lowered = text.toLower()
+  (lowered.split("http://").length() - 1) + (lowered.split("https://").length() - 1) + (lowered.split("www.").length() - 1)
+}
+
 /// A name with no line breaks.
 fn singleLine(text: Str) -> Bool { !text.contains("\n") && !text.contains("\r") }
 
@@ -39,6 +46,7 @@ export fn form(given: &Contact.Form) -> Result[Contact.Form, Problem.Problem] {
         Check.rule("topic", |f: Contact.Form| f.topic, |v: Str| Contact.TOPICS.contains(v), TOPIC),
         Check.rule("name", |f: Contact.Form| f.name, |v: Str| Check.lengthWithin(v, Limits.CONTACT_NAME_MIN, Limits.CONTACT_NAME_MAX) && singleLine(v), NAME),
         Check.rule("email", |f: Contact.Form| f.email, |v: Str| mailbox(v), EMAIL),
-        Check.rule("body", |f: Contact.Form| f.body, |v: Str| Check.lengthWithin(v, Limits.CONTACT_BODY_MIN, Limits.CONTACT_BODY_MAX), BODY)
+        Check.rule("body", |f: Contact.Form| f.body, |v: Str| Check.lengthWithin(v, Limits.CONTACT_BODY_MIN, Limits.CONTACT_BODY_MAX), BODY),
+        Check.rule("body", |f: Contact.Form| f.body, |v: Str| links(v) <= Limits.CONTACT_LINKS_MAX, LINKS)
       ]), *given)
 }

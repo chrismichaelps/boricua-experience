@@ -28,6 +28,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("form.contact_topic", "Escoge un tema."),
     ("form.contact_name", "Escribe tu nombre (2 a 80 caracteres)."),
     ("form.contact_body", "Escribe un mensaje de 20 a 3000 caracteres."),
+    ("form.contact_links", "Incluye como máximo 3 enlaces en tu mensaje."),
     ("problem.contact_too_fast", "Eso fue muy rápido. Revisa tu mensaje y envíalo otra vez."),
     ("problem.contact_expired", "El formulario caducó. Revisa tu mensaje y envíalo otra vez."),
     ("problem.contact_limit", "Recibimos varios mensajes tuyos hace poco. Intenta de nuevo en una hora."),

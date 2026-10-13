@@ -73,3 +73,5 @@ export const CONTACT_BODY_MIN: Int = 20
 export const CONTACT_BODY_MAX: Int = 3000
 export const CONTACT_MIN_SECONDS: Int = 4
 export const CONTACT_MAX_SECONDS: Int = 7200
+/// Web addresses a contact message may carry; more reads as link spam.
+export const CONTACT_LINKS_MAX: Int = 3

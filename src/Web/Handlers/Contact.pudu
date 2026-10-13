@@ -2,6 +2,8 @@
 module Web.Handlers.Contact
 
 import Std.Http as Http
+import PuduLangLog.Logger as Logger
+import PuduLangLog.Value as Value
 import Std.Http.Server.Route as Route
 import Std.Option as Option
 import App.Assembly as Assembly
@@ -63,6 +65,11 @@ fn send(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
     nowMillis: Time.now().millis
   }
   match Serve.ask(app, &app.kinds.contact, sending) {
+    case Ok(ContactService.Accepted(false)) => {
+      // Recorded but not relayed: the team must hear about it, so the failure is logged.
+      app.logs.requests.warning("Contact message stored but not relayed by email: \{Reason\}", [Value.text(if app.runtime.mailer == None { "mail key not configured" } else if app.runtime.contactTo.isEmpty() { "recipient not configured" } else { "provider refused the send" })])
+      Respond.redirect(Routes.CONTACT + "?sent=1")
+    }
     case Ok(_) => Respond.redirect(Routes.CONTACT + "?sent=1")
     case Err(Problem.Invalid(errors)) => show(app, visitor, &ContactPage.Writing(given, Some(Problem.Invalid(errors))), 422)
     case Err(Problem.Refused(reason)) => show(app, visitor, &ContactPage.Writing(given, Some(Problem.Refused(reason))), if reason == "contact_limit" || reason == "contact_busy" { 429 } else { 409 })
