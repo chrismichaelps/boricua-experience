@@ -32,7 +32,7 @@ const KIND_ICONS: Map[Str, Str] = mapOf([
 /// Where a notification leads: the request queue for organizers, otherwise the activity.
 fn target(note: &Notification.Notification) -> Str {
   match note.event {
-    case Some(event) => if note.kind == "request_received" { Routes.EVENT_PREFIX + event.slug + "/requests" } else { Routes.EVENT_PREFIX + event.slug }
+    case Some(event) => if note.kind == "request_received" { Routes.EVENT_PREFIX + event.slug + "/requests" } else { Routes.EVENT_PREFIX + event.slug + "?from=notifications" }
     case None => Routes.ACTIVITY
   }
 }

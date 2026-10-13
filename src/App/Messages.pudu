@@ -81,7 +81,7 @@ export type ReviewReporting = { reviewId: Str, reason: Str, detail: Str }
 export type ReviewDecision = { reviewId: Str, keep: Bool }
 
 /** @App.Messages.Joining — a join request with its message */
-export type Joining = { eventId: Str, message: Str }
+export type Joining = { eventId: Str, message: Str, channel: Str }
 
 /** @App.Messages.Reacting — a reaction to an event */
 export type Reacting = { eventId: Str, value: Int }
@@ -117,6 +117,7 @@ export type Kinds = {
   pins: Request.Kind[Search.Filters, Search.Pins, Problem.Problem],
   catalog: Request.Kind[(), Catalog.Catalog, Problem.Problem],
   event: Request.Kind[Visit[Str], Event.Detail, Problem.Problem],
+  eventPage: Request.Kind[Visit[(Str, Str)], Event.Detail, Problem.Problem],
   attendees: Request.Kind[Visit[Str], Event.Attendees, Problem.Problem],
   publish: Request.Kind[Signed[Draft.Draft], Draft.Published, Problem.Problem],
   editable: Request.Kind[Signed[Str], (Event.Detail, Draft.Draft), Problem.Problem],
@@ -211,6 +212,7 @@ export fn kinds() -> Kinds {
     pins: kind("discover.pins", READ),
     catalog: kind("discover.catalog", READ),
     event: kind("events.detail", READ),
+    eventPage: kind("events.page", READ),
     attendees: kind("events.attendees", READ),
     publish: kind("events.publish", COMMAND),
     editable: kind("events.editable", READ),

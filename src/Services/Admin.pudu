@@ -10,14 +10,19 @@ import Domain.Session as Session
 import Services.Runtime as Runtime
 
 /** @Services.Admin.Dashboard — counts and open reports together */
-export type Dashboard = { overview: Admin.Overview, reports: Array[Admin.Report], reviews: Array[Review.ReportedReview] }
+export type Dashboard = { overview: Admin.Overview, reports: Array[Admin.Report], reviews: Array[Review.ReportedReview], funnel: Array[Admin.Channel] }
 
 /// The dashboard; the database refuses anyone who is not an administrator.
 export fn dashboard(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Dashboard, Problem.Problem] {
   let overview = AdminApi.overview(&runtime.gateway, session.accessToken) ?
   let reports = AdminApi.reports(&runtime.gateway, session.accessToken) ?
   let reviews = ReviewsApi.queue(&runtime.gateway, session.accessToken) ?
-  Ok(Dashboard{overview: overview, reports: reports, reviews: reviews})
+  // The funnel is a convenience: the dashboard still opens when it cannot be read.
+  let funnel = match AdminApi.funnel(&runtime.gateway, session.accessToken) {
+    case Ok(found) => found
+    case Err(_) => []
+  }
+  Ok(Dashboard{overview: overview, reports: reports, reviews: reviews, funnel: funnel})
 }
 
 /// Decisions an administrator may take on a report: dismiss it, cancel the activity, restore a held

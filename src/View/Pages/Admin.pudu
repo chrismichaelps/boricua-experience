@@ -19,6 +19,30 @@ import View.Seo as Seo
 /// One labelled count.
 fn tile(label: Str, count: Int) -> H.Node { H.div().class("metric").holding([H.strong().says(show(count)), H.span().says(label)]) }
 
+/// Views of activity pages and join requests by channel over thirty days, with the rate between them.
+fn funnel(frame: &Frame.Frame, channels: &Array[Admin.Channel]) -> H.Node {
+  H.section().class("panel admin-funnel").label(Frame.t(frame, "admin.funnel")).holding([
+      H.h2().class("section-title").says(Frame.t(frame, "admin.funnel")),
+      H.p().class("muted small").says(Frame.t(frame, "admin.funnel_hint")),
+      if channels.isEmpty() { H.p().class("muted").says(Frame.t(frame, "admin.funnel_empty")) } else {
+        H.table().class("funnel-table").holding([
+            H.thead().holding([H.tr().holding([
+                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_channel")),
+                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_views")),
+                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_joins")),
+                  H.th().at("scope", "col").says(Frame.t(frame, "admin.funnel_rate"))
+                ])]),
+            H.tbody().holding(channels.map(|row: Admin.Channel| H.tr().holding([
+                  H.th().at("scope", "row").says(Frame.t(frame, "admin.channel." + row.channel)),
+                  H.td().says(show(row.views)),
+                  H.td().says(show(row.joins)),
+                  H.td().says(match row.rate { case Some(rate) => show(rate) + "%" case None => "—" })
+                ])))
+          ])
+      }
+    ])
+}
+
 /// The dashboard page.
 export fn render(frame: &Frame.Frame, dashboard: &AdminService.Dashboard) -> Html.Html {
   let o = dashboard.overview
@@ -41,6 +65,7 @@ export fn render(frame: &Frame.Frame, dashboard: &AdminService.Dashboard) -> Htm
             tile(Frame.t(frame, "admin.reviews_week"), o.reviews7d),
             tile(Frame.t(frame, "admin.review_reports_open"), o.reviewReportsOpen)
           ]),
+        funnel(frame, &dashboard.funnel),
         H.h2().class("section-title").says(Frame.t(frame, "admin.review_queue")),
         if dashboard.reviews.isEmpty() { Notice.empty("check", Frame.t(frame, "admin.no_review_reports"), "", H.nothing()) } else {
           H.ul().class("requests").holding(dashboard.reviews.map(|review: Review.ReportedReview| H.li().class("request").holding([

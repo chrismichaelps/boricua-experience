@@ -12,6 +12,11 @@ export fn overview(gateway: &Gateway.Gateway, token: Str) -> Result[Admin.Overvi
   Gateway.query(gateway, Supabase.ADMIN_OVERVIEW, &[], Some(token), Gateway.Read)
 }
 
+/// Views and join requests by the channel that led to them, over the last thirty days.
+export fn funnel(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Admin.Channel], Problem.Problem] {
+  Gateway.query(gateway, Supabase.ADMIN_DISCOVERY_FUNNEL, &[("p_days", Json.Number(30))], Some(token), Gateway.Read)
+}
+
 /// Open reports, oldest first.
 export fn reports(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Admin.Report], Problem.Problem] {
   Gateway.query(gateway, Supabase.ADMIN_REPORTS, &[], Some(token), Gateway.Read)

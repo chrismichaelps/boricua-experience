@@ -145,7 +145,7 @@ export function assistant(root) {
           const grid = document.createElement('div'); grid.className = 'assistant-result-grid';
           for (const source of data.items.slice(0, 12)) {
             if (!/^\/e\/[a-z0-9-]+$/.test(source.href)) continue;
-            const link = document.createElement('a'); link.href = source.href;
+            const link = document.createElement('a'); link.href = `${source.href}?from=assistant`;
             const image = sourceImage(source.image, location.origin);
             if (image) { const img = document.createElement('img'); img.src = image; img.alt = ''; img.loading = 'lazy'; img.addEventListener('error', () => img.remove()); link.append(img); }
             const body = document.createElement('div'), title = document.createElement('strong'); title.textContent = source.title;

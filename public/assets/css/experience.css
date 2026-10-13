@@ -274,3 +274,10 @@ button[disabled] { cursor: wait; }
 .stat span { color: var(--color-graphite); font-size: 13px; }
 .manage-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
 .manage-actions form { margin: 0; }
+
+/* The administrator's discovery funnel. */
+.admin-funnel { overflow-x: auto; }
+.funnel-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.funnel-table th, .funnel-table td { padding: 8px 10px; border-bottom: 1px solid var(--color-divider); text-align: right; }
+.funnel-table th:first-child, .funnel-table tbody th { text-align: left; font-weight: 600; }
+.funnel-table thead th { color: var(--color-graphite); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }

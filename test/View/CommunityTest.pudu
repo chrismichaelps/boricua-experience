@@ -12,6 +12,7 @@ import Domain.Event as Event
 import Services.Participation as ParticipationService
 import Services.Runtime as Runtime
 import View.Calendar as Calendar
+import Web.Channel as Channel
 import Web.Handlers.Participation as ParticipationHandlers
 
 /// One feed entry at a venue, with the given address line.
@@ -58,6 +59,18 @@ fn main() -> Int {
       Test.that("feed signature differs per account", ParticipationService.calendarToken(&runtime, "user-2") != token),
       Test.that("feed signature depends on the server key", ParticipationService.calendarToken(&other, "user-1") != token),
       Test.equals("feed signature is 32 characters", &token.length(), &32),
+      Test.equals("a visit from home is home", &Channel.of("https://boricuaexperience.com/", "https://boricuaexperience.com", "/e/a", ""), &"home"),
+      Test.equals("a visit from a search keeps the search channel despite its query", &Channel.of("https://boricuaexperience.com/search?q=bomba", "https://boricuaexperience.com", "/e/a", ""), &"search"),
+      Test.equals("a visit from a town page is a town", &Channel.of("https://boricuaexperience.com/pueblo/loiza", "https://boricuaexperience.com", "/e/a", ""), &"town"),
+      Test.equals("a visit from another activity is an activity", &Channel.of("https://boricuaexperience.com/e/b", "https://boricuaexperience.com", "/e/a", ""), &"event"),
+      Test.equals("a reload of the same page is not counted", &Channel.of("https://boricuaexperience.com/e/a", "https://boricuaexperience.com", "/e/a", ""), &""),
+      Test.equals("another site is external", &Channel.of("https://www.facebook.com/", "https://boricuaexperience.com", "/e/a", ""), &"external"),
+      Test.equals("a lookalike domain is external", &Channel.of("https://boricuaexperience.com.evil.test/", "https://boricuaexperience.com", "/e/a", ""), &"external"),
+      Test.equals("no referrer is a direct visit", &Channel.of("", "https://boricuaexperience.com", "/e/a", ""), &"direct"),
+      Test.equals("a link may name the assistant", &Channel.of("https://boricuaexperience.com/", "https://boricuaexperience.com", "/e/a", "assistant"), &"assistant"),
+      Test.equals("a link cannot name an unknown channel", &Channel.of("", "https://boricuaexperience.com", "/e/a", "<script>"), &"direct"),
+      Test.equals("a posted unknown channel is dropped", &Channel.known("hacked"), &""),
+      Test.equals("a posted known channel is kept", &Channel.known("map"), &"map"),
       Test.equals("a plain cell is quoted", &ParticipationHandlers.cell("Ana Rivera"), &"\"Ana Rivera\""),
       Test.equals("inner quotes are doubled", &ParticipationHandlers.cell("say \"hi\""), &"\"say \"\"hi\"\"\""),
       Test.equals("a formula is made literal", &ParticipationHandlers.cell("=HYPERLINK(\"x\")"), &"\"'=HYPERLINK(\"\"x\"\")\""),

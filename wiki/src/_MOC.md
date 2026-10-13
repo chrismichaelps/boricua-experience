@@ -297,3 +297,4 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/MediaService]] — Verification and cleanup transport regressions.
 - [[src/Database/Community]] — waitlist, organizer tools, review holds and the private calendar feed.
 - [[src/Database/Achievements]] · [[src/View/Pages/Achievements]] — achievements as data, their unlock mechanism, board and badges.
+- [[src/Database/DiscoveryFunnel]] — discovery-to-request counts by channel.

@@ -7,7 +7,7 @@ out="$root/test/Fixtures/message-keys.txt"
 {
   grep -rhoE '"(achievements|assistant|nav|footer|home|search|when|sort|date|event|visibility|status|report|publish|manage|map|location|activity|notifications|notification|profile|account|auth|cookies|admin|error|form|flash|problem|legal|about|place|review)\.[a-z0-9_.]+"' "$root/src/View" "$root/src/Web" "$root/src/I18n/Dates.pudu" "$root/src/I18n/Format.pudu" "$root/src/Validation" "$root/src/Constants/Codes.pudu" "$root/src/App/Pipeline.pudu" | tr -d '"'
   sed -nE 's/.*\("((assistant|menu|media)\.[a-z0-9_.-]+)",.*/\1/p' "$root/src/I18n/Es.pudu" "$root/src/I18n/EsMenu.pudu"
-  for family in achievements.rarity.common achievements.rarity.rare achievements.rarity.epic achievements.rarity.legendary status.pending status.approved status.rejected status.withdrawn status.waitlisted \
+  for family in admin.channel.home admin.channel.search admin.channel.map admin.channel.town admin.channel.category admin.channel.profile admin.channel.event admin.channel.assistant admin.channel.activity admin.channel.notifications admin.channel.share admin.channel.external admin.channel.direct admin.channel.other achievements.rarity.common achievements.rarity.rare achievements.rarity.epic achievements.rarity.legendary status.pending status.approved status.rejected status.withdrawn status.waitlisted \
     when.anytime when.today when.tomorrow when.weekend when.week when.month \
     sort.soon sort.near sort.relevant sort.top publish.kind_place publish.kind_activity review.reason_spam review.reason_fake review.reason_offensive review.reason_conflict review.reason_other \
     report.spam report.scam report.unsafe report.minors report.offensive report.other \
@@ -23,5 +23,5 @@ out="$root/test/Fixtures/message-keys.txt"
   for section in commitment standard tools compatibility limitations feedback; do echo "legal.accessibility.$section.title"; echo "legal.accessibility.$section.body"; done
   for doc in legal.terms legal.privacy legal.cookies legal.accessibility about; do echo "$doc.title"; echo "$doc.description"; echo "$doc.intro"; done
   for doc in legal.terms legal.privacy legal.cookies legal.accessibility; do echo "$doc.summary"; done
-} | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|legal\.accessibility|achievements\.showcase_count|achievements\.rarity\.|admin\.open_reports|event\.waitlist_ahead|event\.going|event\.more_dates|place\.reviews|publish\.kind_|review\.reason_|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
+} | grep -vE '^(legal\.terms|legal\.privacy|legal\.cookies|legal\.accessibility|achievements\.showcase_count|achievements\.rarity\.|admin\.channel\.|admin\.open_reports|event\.waitlist_ahead|event\.going|event\.more_dates|place\.reviews|publish\.kind_|review\.reason_|event\.spots_left|event\.going_title|event\.more_people|event\.manage_requests|profile\.events_hosted|profile\.guests_hosted|profile\.upcoming|profile\.likes)$' | sort -u > "$out"
 echo "$(wc -l < "$out" | tr -d ' ') keys written to $out"

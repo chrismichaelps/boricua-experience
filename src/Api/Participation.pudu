@@ -10,8 +10,8 @@ import Domain.Problem as Problem
 import Domain.Search as Search
 
 /// Asks to join an event; answers the status reached.
-export fn requestJoin(gateway: &Gateway.Gateway, eventId: Str, message: Str, token: Str) -> Result[Participation.JoinOutcome, Problem.Problem] {
-  Gateway.query(gateway, Supabase.REQUEST_JOIN, &[("p_event_id", Gateway.text(eventId)), ("p_message", Gateway.text(message))], Some(token), Gateway.Write)
+export fn requestJoin(gateway: &Gateway.Gateway, eventId: Str, message: Str, channel: Str, token: Str) -> Result[Participation.JoinOutcome, Problem.Problem] {
+  Gateway.query(gateway, Supabase.REQUEST_JOIN, &[("p_event_id", Gateway.text(eventId)), ("p_message", Gateway.text(message)), ("p_channel", Gateway.textOrNull(channel))], Some(token), Gateway.Write)
 }
 
 /// Withdraws the member's pending or approved request.

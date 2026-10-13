@@ -23,9 +23,9 @@ export type Activity = { requests: Array[Participation.MyRequest], saved: Array[
 export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest], insights: Option[Participation.Insights] }
 
 /// Asks to join with an optional message; answers `approved` or `pending`.
-export fn join(runtime: &Runtime.Runtime, eventId: Str, message: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
+export fn join(runtime: &Runtime.Runtime, eventId: Str, message: Str, channel: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
   let valid = Rules.message(message) ?
-  let outcome = ParticipationApi.requestJoin(&runtime.gateway, eventId, valid.trim(), session.accessToken) ?
+  let outcome = ParticipationApi.requestJoin(&runtime.gateway, eventId, valid.trim(), channel, session.accessToken) ?
   Ok(outcome.status)
 }
 

@@ -13,7 +13,7 @@ import Services.Runtime as Runtime
 export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
   let held = *runtime
   [
-    Registration.handler(&kinds.join, |asked: Messages.Signed[Messages.Joining], _context: Context.Context| Messaging.lift(Participation.join(&held, asked.input.eventId, asked.input.message, &asked.session))),
+    Registration.handler(&kinds.join, |asked: Messages.Signed[Messages.Joining], _context: Context.Context| Messaging.lift(Participation.join(&held, asked.input.eventId, asked.input.message, asked.input.channel, &asked.session))),
     Registration.handler(&kinds.withdraw, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.withdraw(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.decide, |asked: Messages.Signed[Messages.Decision], _context: Context.Context| Messaging.lift(Participation.decide(&held, asked.input.requestId, asked.input.approve, asked.input.note, &asked.session))),
     Registration.handler(&kinds.queue, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.queue(&held, asked.input, &asked.session))),

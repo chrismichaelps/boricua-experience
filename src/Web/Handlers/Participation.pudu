@@ -17,6 +17,7 @@ import Validation.Participation as ParticipationRules
 import View.Pages.Activity as ActivityPage
 import View.Calendar as Calendar
 import View.Pages.Manage as ManagePage
+import Web.Channel as Channel
 import Web.Context as Context
 import Web.Handlers.Events as Events
 import Web.Respond as Respond
@@ -59,7 +60,7 @@ fn join(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
-  match Serve.ask(app, &app.kinds.join, Serve.signed(session, Messages.Joining{eventId: event.card.id, message: Form.paragraph(&Serve.fields(visitor), "message")})) {
+  match Serve.ask(app, &app.kinds.join, Serve.signed(session, Messages.Joining{eventId: event.card.id, message: Form.paragraph(&Serve.fields(visitor), "message"), channel: Channel.known(Form.text(&Serve.fields(visitor), "from"))})) {
     case Ok(status) => Respond.withFlash(app, Respond.redirect(eventPath(visitor)), if status == "approved" { "flash.joined" } else if status == "waitlisted" { "flash.waitlisted" } else { "flash.requested" })
     case Err(problem) => refusedOnEvent(app, visitor, &problem)
   }

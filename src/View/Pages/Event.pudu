@@ -26,7 +26,11 @@ import View.Layout as Layout
 import View.Seo as Seo
 
 /// The event page; `problem` is the refusal of the last action on it, shown in the join panel.
-export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> Html.Html {
+export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> Html.Html { renderFrom(frame, detail, problem, "") }
+
+/// The activity page for a visit from a channel, which its join form carries so the request is
+/// counted with it.
+export fn renderFrom(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem], channel: Str) -> Html.Html {
   let card = detail.card
   let path = Routes.EVENT_PREFIX + card.slug
   // Only a public activity that is still on is offered to search engines; ended and cancelled pages stay reachable by link.
@@ -51,7 +55,7 @@ export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Pr
                 participants(frame, detail),
                 report(frame, detail)
               ]),
-            H.aside().class("event-side").holding([joinPanel(frame, detail, problem)])
+            H.aside().class("event-side").holding([joinPanel(frame, detail, problem, channel)])
           ])
       ]))
 }
@@ -111,7 +115,8 @@ fn calendarMenu(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 /// Ways to share an activity's page: the device's own sheet, messaging, social and email.
 fn shareMenu(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let card = detail.card
-  let url = frame.siteUrl + Routes.EVENT_PREFIX + card.slug
+  // Shared links name their channel so the visits they bring are counted as shares.
+  let url = frame.siteUrl + Routes.EVENT_PREFIX + card.slug + "?from=share"
   let text = card.title + " · " + url
   H.details().class("menu-disclosure").holding([
       H.summary().class("reaction").holding([Icons.sized("share", 18), H.span().says(Frame.t(frame, "event.share"))]),
@@ -251,7 +256,8 @@ fn report(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 }
 
 /// What the viewer can do now: sign in, join, wait, attend, manage, or nothing.
-fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> H.Node {
+fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem], channel: Str) -> H.Node {
+  let from = if channel.isEmpty() { H.nothing() } else { H.input().kind("hidden").name("from").value(channel) }
   let card = detail.card
   let base = Routes.EVENT_PREFIX + card.slug
   let ended = Event.hasEnded(&card, frame.nowMillis)
@@ -321,6 +327,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
       case _ => if detail.isFull {
         H.form().action(base + "/join").method("post").class("join-form").holding([
             Form.token(frame),
+            from,
             H.p().class("banner").says(Frame.t(frame, "event.full_notice")),
             H.button().submit().class("button button-block button-ghost").says(Frame.t(frame, "event.join_waitlist")),
             H.p().class("muted small").says(if detail.waitlistCount > 0 { Translate.count(&frame.locale, "event.waitlist_ahead", detail.waitlistCount) } else { Frame.t(frame, "event.waitlist_note") })
@@ -328,6 +335,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
       } else {
         H.form().action(base + "/join").method("post").class("join-form").holding([
             Form.token(frame),
+            from,
             if Event.needsApproval(&card) { Form.area(frame, &Form.Field{..Form.field("message", Frame.t(frame, "event.message_label"), ""), hint: Frame.t(frame, "event.message_hint")}, 3, &[]) } else { H.nothing() },
             H.button().submit().class("button button-block").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_to_join" } else { "event.join_now" })),
             H.p().class("muted small").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_note" } else { "event.join_note" }))

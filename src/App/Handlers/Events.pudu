@@ -14,6 +14,7 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
   let held = *runtime
   [
     Registration.handler(&kinds.event, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Events.detail(&held, asked.input, asked.session))),
+    Registration.handler(&kinds.eventPage, |asked: Messages.Visit[(Str, Str)], _context: Context.Context| Messaging.lift(Events.detailVia(&held, asked.input[0], asked.input[1], asked.session))),
     Registration.handler(&kinds.attendees, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Events.attendees(&held, asked.input, asked.session))),
     Registration.handler(&kinds.publish, |asked: Messages.Signed[Draft.Draft], _context: Context.Context| Messaging.lift(Events.publish(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.editable, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Events.editable(&held, asked.input, &asked.session))),
