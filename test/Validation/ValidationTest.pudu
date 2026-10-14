@@ -13,8 +13,8 @@ import Domain.Credentials as Credentials
 import Domain.Draft as Draft
 import Domain.Location as Location
 import Domain.Place as Place
-import Domain.Profile as Profile
 import Domain.Problem as Problem
+import Domain.Profile as Profile
 import Domain.Review as Review
 import Support.Fixtures as Fixtures
 import Utils.Time as Time
@@ -108,6 +108,12 @@ fn main() -> Int {
       Test.equals("a place outside the island is refused", &placeRefusals(&Place.Draft{..goodPlace(), lat: "40.7", lng: "-74.0"}), &["location"]),
       Test.equals("a beach number and toggle convert, a bad number is refused", &(placeRefusals(&Place.Draft{..goodPlace(), category: "playa", facts: mapOf([("d.water", "calm"), ("d.blue_flag", "1")])}), placeRefusals(&Place.Draft{..goodPlace(), category: "hospedaje", facts: mapOf([("d.lodging_type", "hotel"), ("d.price_from", "-5")])}), placeRefusals(&Place.Draft{..goodPlace(), category: "hospedaje", facts: mapOf([("d.lodging_type", "hotel"), ("d.price_from", "129.50")])})), &([], ["d.price_from"], [])),
       Test.that("phone and web address rules", PlaceForm.phoneOk("+1 787-555-0100") && !PlaceForm.phoneOk("555") && PlaceForm.urlOk("https://a.example/menu?x=1") && !PlaceForm.urlOk("https://bad host.example") && !PlaceForm.urlOk("javascript:alert(1)")),
+      Test.equals("unknown activity age remains unknown", &Result.map(EventForm.check(&goodDraft()), |r| (r.minAge, r.accessible)), &Ok((None, false))),
+      Test.equals("stated all-ages and access are explicit", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), minAge: "0", accessible: true}), |r| (r.minAge, r.accessible)), &Ok((Some(0), true))),
+      Test.equals("maximum age floor is accepted", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), minAge: "21"}), |r| r.minAge), &Ok(Some(21))),
+      Test.equals("out-of-bound age is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), minAge: "22"})), &["minAge"]),
+      Test.equals("fractional age is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), minAge: "12.5"})), &["minAge"]),
+      Test.equals("negative age is refused", &refused(&EventForm.check(&Draft.Draft{..goodDraft(), minAge: "-1"})), &["minAge"]),
       Test.succeeded("a complete draft is ready", &ready),
       Test.equals("unknown price and end stay unknown", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), endsAt: "", price: ""}), |r| (r.endsAt, r.priceCents)), &Ok((None, None))),
       Test.equals("explicit zero is free", &Result.map(EventForm.check(&Draft.Draft{..goodDraft(), price: "0"}), |r| r.priceCents), &Ok(Some(0))),

@@ -61,3 +61,6 @@ Resolved: missing price is null/None and never free; explicit zero is free. Miss
 
 ## Start and end pickers
 Both date-time fields declare `data-date-min="today"`: new activities cannot start in the past, and an edited one keeps its stored date reachable.
+
+## Quick-filter continuation Grill Log
+Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.

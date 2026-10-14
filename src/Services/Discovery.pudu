@@ -70,6 +70,7 @@ export fn argumentsFor(filters: &Search.Filters, limit: Int, now: &StdTime.Insta
     from: from,
     to: to,
     maxPriceCents: if filters.freeOnly { Some(0) } else { filters.maxPriceCents },
+    traits: filters.traits,
     lat: filters.lat,
     lng: filters.lng,
     radiusM: match filters.radiusM {

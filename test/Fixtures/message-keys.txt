@@ -293,6 +293,8 @@ error.retry
 error.title
 event.about
 event.add_calendar
+event.age_floor
+event.all_ages
 event.approval_short
 event.archived
 event.attendance
@@ -305,6 +307,8 @@ event.cancelled
 event.cancelled_notice
 event.capacity_of
 event.curated_source
+event.declared_access
+event.declared_age
 event.deleted_organizer
 event.details
 event.directions
@@ -373,6 +377,7 @@ event.source_action
 event.source_unavailable
 event.spots_left.one
 event.spots_left.other
+event.step_free
 event.unsave
 event.visibility
 event.waitlist_ahead.one
@@ -466,6 +471,7 @@ form.hours_invalid
 form.instructions_length
 form.location_required
 form.message_length
+form.min_age_invalid
 form.municipality_required
 form.name_length
 form.password_length
@@ -978,6 +984,8 @@ profile.no_upcoming
 profile.upcoming.one
 profile.upcoming.other
 profile.upcoming_title
+publish.accessible
+publish.accessible_hint
 publish.adults_note
 publish.basics
 publish.choose
@@ -1014,6 +1022,8 @@ publish.kind_place
 publish.latitude
 publish.lead
 publish.longitude
+publish.min_age
+publish.min_age_hint
 publish.save
 publish.submit
 publish.title
@@ -1024,6 +1034,15 @@ publish.visibility_unlisted
 publish.when
 publish.where
 publish.who
+quick.accessible
+quick.family
+quick.free
+quick.label
+quick.near
+quick.night
+quick.outdoor
+quick.today
+quick.weekend
 region.centro
 region.este
 region.islas

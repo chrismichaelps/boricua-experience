@@ -17,6 +17,7 @@ export type SearchArgs = {
   from: Str,
   to: Str,
   maxPriceCents: Option[Int],
+  traits: Array[Str],
   lat: Option[Float64],
   lng: Option[Float64],
   radiusM: Option[Int],
@@ -48,7 +49,8 @@ export fn search(gateway: &Gateway.Gateway, args: &SearchArgs, token: Option[Str
       ("p_radius_m", Gateway.whole(args.radiusM)),
       ("p_sort", Gateway.text(args.sort)),
       ("p_limit", Json.Number(args.limit)),
-      ("p_after", Gateway.textOrNull(args.after))
+      ("p_after", Gateway.textOrNull(args.after)),
+      ("p_traits", traitsArgument(&args.traits))
     ], token, Gateway.Read)
 }
 
@@ -60,9 +62,13 @@ export fn inView(gateway: &Gateway.Gateway, args: &SearchArgs, box: &Search.View
       ("p_query", Gateway.textOrNull(args.query)), ("p_category", Gateway.textOrNull(args.category)),
       ("p_municipality", Gateway.textOrNull(args.municipality)), ("p_from", Gateway.textOrNull(args.from)),
       ("p_to", Gateway.textOrNull(args.to)), ("p_max_price_cents", Gateway.whole(args.maxPriceCents)),
-      ("p_limit", Json.Number(args.limit))
+      ("p_limit", Json.Number(args.limit)),
+      ("p_traits", traitsArgument(&args.traits))
     ], None, Gateway.Read)
 }
+
+/// The quick traits as the database reads them; none is null.
+fn traitsArgument(traits: &Array[Str]) -> Json.Json { if traits.isEmpty() { Json.Null } else { Json.list(&traits.map(|name: Str| Json.Text(name))) } }
 
 /// Recommendations for the viewer, nearer ones first when a position is known.
 export fn recommended(gateway: &Gateway.Gateway, lat: Option[Float64], lng: Option[Float64], limit: Int, token: Option[Str]) -> Result[Array[Event.Card], Problem.Problem] {
@@ -121,7 +127,8 @@ fn draftArguments(ready: &Draft.Ready) -> Array[(Str, Json.Json)] {
     ("p_visibility", Gateway.text(ready.visibility)),
     ("p_join_policy", Gateway.text(ready.joinPolicy)),
     ("p_capacity", Gateway.whole(ready.capacity)),
-    ("p_price_cents", Gateway.whole(ready.priceCents))
+    ("p_price_cents", Gateway.whole(ready.priceCents)),
+    ("p_facts", Json.object(&[("min_age", Gateway.whole(ready.minAge)), ("accessible", Gateway.truth(ready.accessible))]))
   ]
 }
 

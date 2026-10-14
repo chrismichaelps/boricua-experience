@@ -78,3 +78,6 @@ export const DIGEST_BATCH: Int = 80
 
 /// Web addresses a contact message may carry; more reads as link spam.
 export const CONTACT_LINKS_MAX: Int = 3
+
+/// Highest stated activity age floor.
+export const ACTIVITY_MIN_AGE_MAX: Int = 21

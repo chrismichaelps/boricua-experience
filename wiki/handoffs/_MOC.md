@@ -16,3 +16,5 @@ tags: [moc, handoff]
 - [[handoffs/product-strategy]] — complete product backlog, menu/media continuation and verification ledger.
 
 - [[handoffs/production-release]] — pending production configuration and feature verification.
+
+- [[handoffs/quick-filters]] — quick traits, organizer facts and explicit search arrival; both database migrations verified.

@@ -54,6 +54,7 @@ export fn filtersFrom(read: fn(Str) -> Str) -> Search.Filters {
     near: near,
     window: Search.windowFrom(read("when")),
     freeOnly: read("free") == "1",
+    traits: Search.traitsFrom(read("t")),
     maxPriceCents: None,
     viewport: None,
     lat: if located { lat } else { None },
