@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 const classes = () => {
   const values = new Set();
-  return { add: value => values.add(value), remove: value => values.delete(value), contains: value => values.has(value), toggle: (value, on) => { (on ?? !values.has(value)) ? values.add(value) : values.delete(value); } };
+  return { add: value => values.add(value), remove: (...names) => names.forEach(value => values.delete(value)), contains: value => values.has(value), toggle: (value, on) => { (on ?? !values.has(value)) ? values.add(value) : values.delete(value); } };
 };
 const control = { dataset: { expandLabel: 'Expand', closeLabel: 'Close' }, hidden: true, attrs: {}, handlers: {}, setAttribute(key, value) { this.attrs[key] = value; }, addEventListener(key, fn) { this.handlers[key] = fn; }, focus() { this.focused = true; } };
 const indicator = { hidden: true }, list = { attrs: {}, setAttribute(key, value) { this.attrs[key] = value; } };
@@ -24,10 +24,10 @@ assert(prevented && control.focused); assert.equal(page.dataset.mapExpanded, '0'
 control.handlers.click(); control.handlers.click(); assert.equal(page.dataset.mapExpanded, '0', 'repeat expansion remains reversible');
 surface.busy(true); winEvents.pagehide(); assert.equal(indicator.hidden, true, 'exit clears loading');
 const bootSource = readFileSync('public/assets/js/home-readiness.js', 'utf8');
-function boot({ path = '/', home = true, decode, font = Promise.resolve() } = {}) {
+function boot({ path = '/', home = true, decode, cached = false, font = Promise.resolve() } = {}) {
   const classList = classes(), events = {}, lifecycle = {}, timers = new Map();
   const root = { classList };
-  const context = { location: { pathname: path }, document: { documentElement: root, fonts: { ready: font }, querySelector: query => query === '.home' ? (home ? {} : null) : (decode ? { decode } : null), addEventListener: (name, fn) => events[name] = fn }, window: { addEventListener: (name, fn) => lifecycle[name] = fn }, setTimeout: fn => { timers.set(1, fn); return 1; }, clearTimeout: id => timers.delete(id), Promise };
+  const context = { location: { pathname: path }, document: { documentElement: root, fonts: { ready: font }, querySelector: query => query === '.home' ? (home ? {} : null) : (decode ? { decode, complete: cached, naturalWidth: cached ? 1600 : 0 } : null), addEventListener: (name, fn) => events[name] = fn }, window: { addEventListener: (name, fn) => lifecycle[name] = fn }, setTimeout: (fn, ms) => { const id = ms; timers.set(id, fn); return id; }, clearTimeout: id => timers.delete(id), Promise };
   vm.runInNewContext(bootSource, context);
   return { classList, events, lifecycle, timers };
 }
@@ -44,6 +44,13 @@ for (const signal of ['focusin', 'pointerdown']) { const current = boot(); curre
 for (const signal of ['wheel', 'touchmove', 'scroll', 'keydown']) { const current = boot(); assert.equal(typeof current.lifecycle[signal], 'function', `${signal} reveals`); current.lifecycle[signal](); assert(!current.classList.contains('home-pending'), `${signal} reveals the rendered page`); }
 const css = readFileSync('public/assets/css/home.css', 'utf8');
 assert(/\.home \.home-skeleton \{[^}]*opacity: 0;[^}]*transition: opacity/.test(css), 'skeleton fades out instead of disappearing');
-const timeout = boot(); timeout.timers.get(1)(); assert(!timeout.classList.contains('home-pending'));
+const timeout = boot(); timeout.timers.get(4000)(); assert(!timeout.classList.contains('home-pending'));
+const slow = boot({ decode: () => new Promise(() => {}) }); slow.events.DOMContentLoaded();
+assert(!slow.classList.contains('home-waiting'), 'a fast page never shows the placeholder');
+slow.timers.get(450)(); assert(slow.classList.contains('home-waiting'), 'a slow page shows the placeholder after the delay');
+slow.lifecycle.scroll(); assert(!slow.classList.contains('home-waiting') && !slow.classList.contains('home-pending'));
+const warm = boot({ decode: () => new Promise(() => {}), cached: true }); warm.events.DOMContentLoaded();
+assert(!warm.classList.contains('home-pending') && warm.timers.size === 0, 'a cached hero photograph reveals at once');
+assert(/\.home-waiting \.home \.home-skeleton \{[^}]*opacity: 1/.test(css), 'only the delayed state shows the skeleton');
 const restored = boot(); restored.lifecycle.pageshow({ persisted: true }); assert(!restored.classList.contains('home-pending'));
-console.log('PASS: map loading/expansion/Escape/focus/dialog precedence/exit; home resource readiness/failure/timeout/interaction/scroll intent/fade/BFCache');
+console.log('PASS: map loading/expansion/Escape/focus/dialog precedence/exit; home resource readiness/failure/timeout/interaction/scroll intent/fade/BFCache; placeholder only when slow');

@@ -1,4 +1,4 @@
-import { MAP } from '../constants/config.js?v=59';
+import { MAP } from '../constants/config.js?v=67';
 
 let loading = null;
 
@@ -39,6 +39,6 @@ export async function createMap(container, options = {}) {
     maxPitch: MAP.maxPitch,
   });
   map.touchZoomRotate.disableRotation();
-  if (options.controls !== false) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+  if (options.controls !== false) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), options.controlsAt ?? 'bottom-right');
   return { map, maplibregl };
 }

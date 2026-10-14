@@ -370,3 +370,30 @@ input[type="radio"]:disabled { opacity: .55; cursor: default; }
   .sheet-map-pill:focus-visible { outline: 3px solid #1875f0; outline-offset: 3px; }
 }
 @media (max-width: 699px) and (prefers-reduced-motion: reduce) { .map-sheet, .map-sheet.is-expanded { transition: none; } }
+
+/* Map zoom buttons sit under the full-screen button as one rounded control, clear of pins and the sheet,
+   and every map button answers a tap at once instead of waiting to see whether it is a double tap. */
+.map-page .maplibregl-ctrl-top-right { top: 62px; right: 6px; }
+.map-page.is-map-expanded .maplibregl-ctrl-top-right { top: 70px; right: 14px; }
+.map-page .maplibregl-ctrl-group { overflow: hidden; border: 1px solid #e1e6ea; border-radius: 22px; background: white; box-shadow: 0 2px 8px rgb(28 43 55 / 10%); }
+.map-page .maplibregl-ctrl-group:not(:empty) { box-shadow: 0 2px 8px rgb(28 43 55 / 10%); }
+.map-page .maplibregl-ctrl-group button + button { border-top: 1px solid #eef1f3; }
+.map-page button:not(.sheet-handle), .map-page .maplibregl-ctrl button, .price-marker, .map-cluster { touch-action: manipulation; }
+@media (max-width: 699px) {
+  .map-page .maplibregl-ctrl-top-right { top: 58px; }
+  .map-page.is-sheet-expanded .maplibregl-ctrl-top-right { visibility: hidden; }
+  /* The loading pill waits at the top of the visible map instead of under the sheet's edge. */
+  .map-page .map-loading { top: 16px; transform: translateX(-50%); padding: 12px 16px; }
+}
+@media (max-width: 699px) {
+  /* Phone filter chips share one height; a chosen toggle fills like the other chosen chips. */
+  .map-filters .picker-trigger, .map-filters .filter select, .map-filters .filter.filter-toggle { min-height: 40px; box-sizing: border-box; }
+  .map-filters .filter.filter-toggle input { width: 16px; height: 16px; }
+  .map-filters .filter.filter-toggle:has(input:checked) { background: #25343b; border-color: #25343b; color: white; }
+  .map-filters .filter.filter-toggle:has(input:checked) input { accent-color: white; }
+}
+@media (max-width: 699px) {
+  .map-sheet [data-sheet-drag] { touch-action: none; }
+}
+/* The map page never rubber-bands as a whole document; only the map and the sheet's list move. */
+html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }

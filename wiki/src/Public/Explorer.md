@@ -23,6 +23,12 @@ Start watches only from an explicit location action. Each control owns a distinc
 
 Explicit locate frames the first reading. A coarse initial reading fits its accuracy circle once; the first precise reading may refine that view to street zoom once. Subsequent readings retain zoom, and empty results never move the camera. User gestures detach following until explicit recenter.
 
+The first precise reading then asks for the nearest activities and, when up to three lie within 25 km, widens the street view to include them, so "near me" never opens on an empty street; with nothing close the street view stays.
+
+## Camera padding
+
+The camera's padding is the visible part of the canvas: on phones the sheet covers the bottom and buttons line both sides, so the base padding is the sheet height plus 16 px at the bottom and 64 px at the sides, and every fit adds only 24 px. A fit that cannot fit the room left zooms in around the group's middle instead of silently doing nothing, which is how cluster taps used to fail on phones. Markers are never scaled with CSS: the map positions them with a transform and a scale multiplies that position.
+
 ## Negative Logic
 
 No public sharing of all users, no watch remaining active after disabling location, no discarded discovery filters.
