@@ -12,6 +12,7 @@ import Domain.Session as Session
 import PuduLangMediator.Mediator as Mediator
 import PuduLangMediator.Request as Request
 import Validation.Account as AccountRules
+import View.Frame as Frame
 import Web.Context as Context
 import Web.Guard as Guard
 import Web.Respond as Respond
@@ -80,7 +81,7 @@ fn gate(app: &Assembly.App, visitor: &Context.Visitor, handle: fn(Context.Visito
     case Some(member) => if !member.onboarded && !OPEN_PATHS.contains(visitor.request.path) {
       Respond.redirect(Routes.ONBOARDING + "?return=" + visitor.request.path)
     } else if AccountRules.owesRenewal(&member) && !OPEN_PATHS.contains(visitor.request.path) {
-      Respond.redirect(Routes.TERMS_ACCEPT + "?return=" + visitor.request.path)
+      Respond.redirect(Routes.TERMS_ACCEPT + "?return=" + Frame.here(&Context.frame(app, visitor)).replace("&", "%26"))
     } else { handle(*visitor) }
     case None => handle(*visitor)
   }

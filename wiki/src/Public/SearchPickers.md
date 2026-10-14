@@ -59,3 +59,6 @@ Resolved: enhance canonical native selects through the shared dialog, retaining 
 
 ## Placement
 On wide screens a list picker opens directly below its trigger, or above it when the space below is shorter than both 360px and the space above; the date calendar keeps its clamp so the whole month stays visible. Phones keep the bottom sheet. The same module now also enhances the time, month and year pickers FormDates builds, the review report reason and the accessibility panel's useful-links menu.
+
+## Review fixes
+List popovers opening below clamp their top to keep at least 240px of height; an invalid select focuses its trigger only when it is the form's first invalid control.

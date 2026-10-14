@@ -114,3 +114,5 @@ Resolved: Visible loading state follows the current request ticket, cached/error
 
 ## Phone sheet behavior
 Below 700px, scrolling the list past 24px raises the sheet and the Map pill lowers it. While raised, viewport refreshes are skipped so the list keeps what it showed; lowering re-reads the visible map.
+
+Programmatic list scrolls (selecting a pin) are ignored for 900ms so they never raise the sheet.

@@ -138,3 +138,4 @@ html.a11y-focus :focus, html.a11y-focus :focus-visible { outline: 4px solid #ff8
 
 /* Phones open the panel from the menu row, so nothing floats over the page or the tab bar. */
 @media (max-width: 699px) { .a11y-launch { display: none; } }
+@media (max-width: 699px) { .a11y-pill[data-a11y="hide"] { display: none; } }

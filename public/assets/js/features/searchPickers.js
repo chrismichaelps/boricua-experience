@@ -115,7 +115,7 @@ export function searchPickers(form) {
       dialog.style.width = `${width}px`;
       dialog.style.left = `${Math.max(16, Math.min(rect.left - 20, innerWidth - width - 16))}px`;
       if (calendar || below >= Math.min(cap, 360) || below >= above) {
-        const top = calendar ? Math.min(rect.bottom + 16, Math.max(16, innerHeight - 720)) : rect.bottom + 12;
+        const top = calendar ? Math.min(rect.bottom + 16, Math.max(16, innerHeight - 720)) : Math.max(16, Math.min(rect.bottom + 12, innerHeight - 240));
         dialog.style.top = `${top}px`;
         dialog.style.maxHeight = `${Math.min(cap, innerHeight - top - 16)}px`;
       } else {
@@ -176,7 +176,7 @@ export function searchPickers(form) {
       }
     });
     select.addEventListener('change', () => { trigger.removeAttribute('aria-invalid'); sync(); });
-    select.addEventListener('invalid', event => { event.preventDefault(); trigger.setAttribute('aria-invalid', 'true'); trigger.focus(); });
+    select.addEventListener('invalid', event => { event.preventDefault(); trigger.setAttribute('aria-invalid', 'true'); const first = select.form?.querySelector?.(':invalid'); if (!first || first === select) trigger.focus(); });
     if (select.required) trigger.setAttribute('aria-required', 'true');
     if (select.getAttribute('aria-invalid')) trigger.setAttribute('aria-invalid', select.getAttribute('aria-invalid'));
     if (select.getAttribute('aria-describedby')) trigger.setAttribute('aria-describedby', select.getAttribute('aria-describedby'));

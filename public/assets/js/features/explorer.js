@@ -64,6 +64,7 @@ export async function explorer(page) {
     return visiblePins(pins, (point) => map.project(point), rect.width, rect.height, covered);
   };
 
+  let quietScrollUntil = 0;
   const select = (slug, fromList = false) => {
     selectedSlug = slug;
     for (const entry of markers.values()) entry.element.classList.toggle('is-active', entry.slugs.includes(slug));
@@ -74,7 +75,10 @@ export async function explorer(page) {
       detachFollow();
       map.easeTo({ center: [pin.lng, pin.lat], zoom: Math.max(map.getZoom(), 13), duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350 });
     }
-    else list.querySelector(`[data-slug="${slug}"]`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'center' });
+    else {
+      quietScrollUntil = performance.now() + 900;
+      list.querySelector(`[data-slug="${slug}"]`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'center' });
+    }
   };
 
   const draw = (shown = visible()) => {
@@ -368,7 +372,7 @@ export async function explorer(page) {
   $('[data-sheet-collapse]', page)?.addEventListener('click', () => { if (sheet.classList.contains('is-expanded')) handle?.click(); });
   const sheetList = $('.sheet-list', page);
   sheetList?.addEventListener('scroll', () => {
-    if (innerWidth < 700 && !sheet.classList.contains('is-expanded') && sheetList.scrollTop > 24) handle?.click();
+    if (innerWidth < 700 && performance.now() > quietScrollUntil && !sheet.classList.contains('is-expanded') && sheetList.scrollTop > 24) handle?.click();
   }, { passive: true });
 
   const feedback = $('#map-location-status', page);

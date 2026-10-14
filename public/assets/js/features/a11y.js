@@ -10,6 +10,8 @@ export function a11y(root, view = window) {
   if (!model) return;
   const doc = view.document;
   const launch = root.querySelector('.a11y-launch') || doc.createElement('button');
+  // Without a launcher (the map) there is nothing to tuck, so the hide action is not offered.
+  if (!launch.isConnected) root.querySelector('[data-a11y="hide"]')?.setAttribute('hidden', '');
   const panel = root.querySelector('.a11y-panel');
   let settings = model.read();
   let overlays = null;

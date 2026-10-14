@@ -38,6 +38,7 @@ const scope={Event,CustomEvent:class extends Event{constructor(name,options){sup
 Object.defineProperty(scope.document,'activeElement',{get:()=>active});
 vm.runInNewContext(source('searchPickers')+'\nthis.start=searchPickers;',scope);scope.start(form);
 assert(select.classList.contains('picker-native'));assert.equal(select.trigger.attrs['aria-required'],'true');
+owner.querySelector=()=>({});active=null;select.handlers.invalid({preventDefault(){}});assert.equal(active,null,'a later invalid control leaves focus on the first one');delete owner.querySelector;
 let prevented=false;select.handlers.invalid({preventDefault(){prevented=true;}});assert(prevented);assert.equal(active,select.trigger);assert.equal(select.trigger.attrs['aria-invalid'],'true');
 const all=node=>[node,...node.children.flatMap(all)];const rows=all(form).filter(node=>node.className==='picker-option');assert.equal(rows[2].disabled,true);
 rows[1].handlers.click();assert.equal(select.value,'music');assert.equal(select.trigger.attrs['aria-invalid'],undefined);

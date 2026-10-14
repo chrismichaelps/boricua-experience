@@ -105,6 +105,11 @@ function monthControls(input, labels, locale, today) {
     year.append(option);
   }
   const [chosenYear, chosenMonth] = input.value.split('-');
+  if (/^\d{4}$/.test(chosenYear || '') && ![...year.options].some(option => option.value === chosenYear)) {
+    const option = element('option', '', chosenYear);
+    option.value = chosenYear;
+    year.append(option);
+  }
   year.value = chosenYear || ''; month.value = chosenMonth || '';
   const write = () => {
     input.value = month.value && year.value ? `${year.value}-${month.value}` : '';
@@ -123,7 +128,8 @@ function hideNative(input, trigger) {
   input.addEventListener('invalid', event => {
     event.preventDefault();
     trigger.setAttribute('aria-invalid', 'true');
-    trigger.focus();
+    const first = input.form?.querySelector?.(':invalid');
+    if (!first || first === input) trigger.focus();
   });
   if (input.required) trigger.setAttribute('aria-required', 'true');
   for (const name of ['aria-invalid', 'aria-describedby']) if (input.getAttribute(name)) trigger.setAttribute(name, input.getAttribute(name));
@@ -147,7 +153,7 @@ function enhanceMonth(input, label, labels, locale, today) {
 }
 
 function enhanceTime(input, locale) {
-  const select = timeSelect(input, input.dataset.formTime, locale, 15);
+  const select = timeSelect(input, input.dataset.formTime, locale, 30);
   const part = pickerField(input, [hiddenLabel(select.id, input.getAttribute('aria-label') || input.dataset.formTime), select]);
   input.before(part);
   part.prepend(input);
