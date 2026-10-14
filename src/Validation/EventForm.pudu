@@ -28,6 +28,8 @@ const VISIBILITY: Str = "form.visibility_invalid"
 const POLICY: Str = "form.private_requires_approval"
 const CAPACITY: Str = "form.capacity_invalid"
 const PRICE: Str = "form.price_invalid"
+/// The optional activity age floor is a whole number in range.
+const AGE: Str = "form.min_age_invalid"
 
 /// Milliseconds in an hour.
 const HOUR_MILLIS: Int = 3600000
@@ -50,7 +52,8 @@ fn validator() -> Validator.Validator[Draft.Draft] {
       Check.rule("visibility", |d: Draft.Draft| d.visibility, |v: Str| Draft.VISIBILITIES.contains(v), VISIBILITY),
       Check.rule("joinPolicy", |d: Draft.Draft| d, |d: Draft.Draft| Draft.JOIN_POLICIES.contains(d.joinPolicy) && (d.visibility != "private" || d.joinPolicy == "approval"), POLICY),
       Check.rule("capacity", |d: Draft.Draft| d.capacity, |v: Str| capacityOk(v), CAPACITY),
-      Check.rule("price", |d: Draft.Draft| d.price, |v: Str| priceOk(v), PRICE)
+      Check.rule("price", |d: Draft.Draft| d.price, |v: Str| priceOk(v), PRICE),
+      Check.rule("minAge", |d: Draft.Draft| d.minAge, |v: Str| ageOk(v), AGE)
     ])
 }
 
@@ -76,7 +79,9 @@ export fn check(draft: &Draft.Draft) -> Result[Draft.Ready, Problem.Problem] {
       visibility: valid.visibility,
       joinPolicy: valid.joinPolicy,
       capacity: valid.capacity.trim().toInt(),
-      priceCents: if valid.price.trim().isEmpty() { None } else { Money.parseCents(valid.price) }
+      priceCents: if valid.price.trim().isEmpty() { None } else { Money.parseCents(valid.price) },
+      minAge: valid.minAge.trim().toInt(),
+      accessible: valid.accessible
     })
 }
 
@@ -121,4 +126,10 @@ fn priceOk(written: Str) -> Bool {
     case Some(cents) => cents >= 0 && cents <= Limits.PRICE_MAX_CENTS
     case None => false
   }
+}
+
+/// Empty means unknown; zero means the organizer explicitly welcomes all ages.
+fn ageOk(value: Str) -> Bool {
+  if value.trim().isEmpty() { return true }
+  match value.trim().toInt() { case Some(age) => age >= 0 && age <= Limits.ACTIVITY_MIN_AGE_MAX case None => false }
 }

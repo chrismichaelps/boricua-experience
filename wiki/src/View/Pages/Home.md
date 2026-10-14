@@ -81,3 +81,6 @@ Real destination assets now use `*-photo.webp`; location and licenses are record
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Render an aria-hidden layout skeleton only for root home; external readiness enhancement enables it while the first hero photo/font is pending, clears without an artificial delay and fails open. Enhance the nearby town/radius form with the same named-select picker as home/search/map.
+
+## Quick-filter continuation Grill Log
+Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.

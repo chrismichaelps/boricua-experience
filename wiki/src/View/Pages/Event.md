@@ -75,3 +75,6 @@ Resolved: integrate all-category organizer covers with existing upload presentat
 
 ## Formatting baseline Grill Log · #88
 Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.
+
+## Declared activity facts Grill Log · #101
+Resolved: detail displays a stated minimum age and confirmed step-free access from the guarded database response; unknown/unchecked facts render no positive claim. Labels attribute these statements to the organizer rather than implying certification. Existing participation eligibility is unchanged.

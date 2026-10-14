@@ -3,6 +3,18 @@ module I18n.EsPlan
 
 /// Spanish plan and interest messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("event.declared_age", "Edades (declaración del organizador)"),
+    ("event.all_ages", "Se aceptan todas las edades"),
+    ("event.age_floor", ":age años en adelante"),
+    ("event.declared_access", "Accesibilidad"),
+    ("event.step_free", "El organizador confirma acceso sin escalones."),
+
+    ("publish.min_age", "Edad mínima (opcional)"),
+    ("publish.min_age_hint", "Déjala en blanco si no se conoce. Usa 0 solo si se aceptan todas las edades."),
+    ("publish.accessible", "Confirmo acceso sin escalones"),
+    ("publish.accessible_hint", "Confirma una entrada y un recorrido sin escalones hasta la actividad. Es tu declaración, no una certificación de accesibilidad."),
+    ("form.min_age_invalid", "Indica una edad mínima entera de 0 a 21, o déjala en blanco."),
+
     ("interest.group", "¿Te interesa esta actividad?"),
     ("interest.interested_label", "Me interesa"),
     ("interest.going_label", "Voy"),
@@ -10,6 +22,15 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("interest.going.other", ":count personas van"),
     ("interest.interested.one", ":count interesada"),
     ("interest.interested.other", ":count interesadas"),
+    ("quick.label", "Filtros rápidos"),
+    ("quick.today", "Hoy"),
+    ("quick.weekend", "Este fin de semana"),
+    ("quick.free", "Gratis"),
+    ("quick.family", "Familiar"),
+    ("quick.night", "Nocturno"),
+    ("quick.outdoor", "Al aire libre"),
+    ("quick.accessible", "Accesible"),
+    ("quick.near", "Cerca de mí"),
     ("plan.title", "Planes cerca de ti"),
     ("plan.description", "Itinerarios listos para hoy o este fin de semana, armados con lo que está pasando cerca de ti en Puerto Rico."),
     ("plan.heading", "¿Qué hacemos hoy cerca de ti?"),

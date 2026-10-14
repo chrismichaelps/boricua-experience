@@ -126,3 +126,6 @@ Resolved: advance asset/worker version to 65 for FormDates, SearchPickers and Da
 
 ## Build check
 `buildCheck()` runs on every page; version 66.
+
+## Search arrival resolved contract
+Explicit discovery actions scroll to the results heading through the progressive listing module; direct entry/history retain their position, cancelled actions are ignored and reduced motion is respected. The entry and changed listing module use asset version71. Resolved.

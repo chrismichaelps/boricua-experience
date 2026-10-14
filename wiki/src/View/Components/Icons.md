@@ -65,3 +65,6 @@ ISC licensed Lucide static geometry, circle/rect/line converted exactly into pat
 
 ## Curated publication Grill Log · #42
 Resolved: Add the pinned Lucide crown geometry to the existing 24px rounded line-icon registry.
+
+## Quick-filter continuation Grill Log
+Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.
