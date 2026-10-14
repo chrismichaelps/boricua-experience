@@ -62,4 +62,3 @@ export fn radius(locale: &Locale.Locale, km: Int) -> Str {
     case _ => show(km) + " km"
   }
 }
-

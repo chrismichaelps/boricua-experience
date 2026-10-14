@@ -37,3 +37,6 @@ plans the weather can spoil; the assistant reads the same document for the activ
 
 ## Referenced by
 [[src/_MOC]] · [[src/View/Pages/Trip]] · [[src/Database/Plans]]
+
+## Reviewed visitor release guards · #107
+Resolved: translated titles from the database are retained in map refreshes, plan/trip labels and assistant sources, with original-language fallback. Multiday spans cannot establish daily opening hours, so timed planning excludes spans24h or longer. Missing precipitation remains unknown. Each actual provider request (live chat or background translation) reserves an atomic shared UTC day/minute budget; dev10/day4/min and prod40/day16/min partition the account free allowance. No prompts/keys are stored in counters, and only the signed member bridge or private job can reserve. Focused ingestion, cancellation, concurrency and rendering regressions precede release.

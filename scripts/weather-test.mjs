@@ -44,3 +44,38 @@ assert.equal(alertsFor(alerting, 'caguas', '2026-10-14T21:30:00Z').length, 0, 'o
 assert.deepEqual(dayRange(doc, 'san-juan', '2026-10-14T21:30:00Z'), { high: 84, low: 81 }, 'the day range comes from that Puerto Rico date');
 assert.deepEqual(hoursAround(doc, 'san-juan', '2026-10-14T22:30:00Z').map((hour) => [hour.temp, hour.start]), [[82, false], [81, true], [84, false]], 'the hours around the start, skipping gaps');
 console.log('PASS: heat levels, alert kinds and timing by town, day range, hours around the start');
+
+const unknownRain = {start: doc.start, towns: {'san-juan': [[82,90,null,2]]}};
+assert.equal(forecastAt(unknownRain,'san-juan',doc.start).rain,null,'unknown precipitation remains unknown');
+assert.equal(weatherFor(unknownRain,{town_slug:'san-juan',starts_at:doc.start}).rain_chance_pct,null);
+assert.ok(!describe(forecastAt(unknownRain,'san-juan',doc.start),key=>key).includes('0%'));
+console.log('PASS: unknown rain remains null in UI and provider projection');
+
+// Repainting the map must not destroy a reader's expanded hours or restart the weather scene.
+class WeatherNode {
+  constructor(tag) { this.tagName = tag; this.childNodes = []; this.dataset = {}; this.hidden = true; this.open = false; }
+  append(...nodes) { this.childNodes.push(...nodes); }
+  replaceChildren(...nodes) { this.childNodes = nodes; }
+  setAttribute() {}
+}
+globalThis.document = { documentElement: { lang: 'en' }, createElement: (tag) => new WeatherNode(tag) };
+const { renderCard } = await import('../public/assets/js/features/weather.js');
+const card = new WeatherNode('section');
+card.dataset = { weatherTown: 'san-juan', weatherName: 'San Juan', weatherAt: doc.start, weatherOutdoor: '1' };
+const labels = { querySelector: () => null };
+const cardWords = (key) => key;
+assert.equal(renderCard(card, doc, labels, cardWords), true);
+const initialChildren = card.childNodes;
+const hourly = initialChildren.find((node) => node.tagName === 'details');
+assert.equal(hourly.open, false, 'hours start secondary');
+hourly.open = true;
+renderCard(card, doc, labels, cardWords);
+assert.equal(card.childNodes, initialChildren, 'same forecast preserves the scene and focus');
+assert.equal(hourly.open, true, 'map repaint keeps the reader’s hours expanded');
+card.dataset.weatherAt = '2026-10-14T22:30:00Z';
+renderCard(card, alerting, labels, cardWords);
+assert.notEqual(card.childNodes, initialChildren, 'a different stop gets its own forecast');
+assert.ok(card.childNodes.some((node) => node.className === 'wx-notes'), 'official alerts remain outside the collapsed hours');
+assert.equal(renderCard(card, null, labels, cardWords), false);
+assert.equal(card.hidden, true, 'unavailable forecasts clear the previous conditions');
+console.log('PASS: weather disclosure survives map repaints, stop changes refresh it, alerts stay visible, missing forecasts clear');

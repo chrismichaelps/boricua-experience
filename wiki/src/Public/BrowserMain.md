@@ -132,3 +132,8 @@ Explicit discovery actions scroll to the results heading through the progressive
 
 ## Grounded chat plans · #103 · Resolved Grill Log
 Provider control tags are quarantined across chunk boundaries and retried within the existing budget, never displayed or executed as prose. Structured allowlisted calls remain authoritative. Public quick traits, places, itineraries and route results use typed database reads. Public map cards show supplied anchors and road geometry, explicitly label estimated travel and missing paths, and release maps on close/reset. No model coordinates, arbitrary SQL, fake data or paid fallback. Town routing is service-only, catalog-bounded, cached by directed town pair and transactionally locked; no per-user position is sent or stored. Every changed schema is verified in both environments.
+
+## Visitor release cache contract · #107
+Resolved Grill Log: entry76 imports Trip76 and Weather76; Trip76 also imports Weather76. Unchanged location and map modules retain their single existing identities. Worker76 and document assets advance together, preserving private HTML network-only.
+
+Resolved final asset contract · #107: compact forecast/disclosure and desktop map accessibility use entry/styles/worker77; changed Weather77 and Trip77 share one import identity. No private test scenario enters the build.

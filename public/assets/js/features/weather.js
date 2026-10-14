@@ -36,7 +36,7 @@ export function forecastAt(doc, town, at) {
   const hour = Array.isArray(hours) && index >= 0 && index < hours.length ? hours[index] : null;
   if (!Array.isArray(hour) || hour.length < 4) return null;
   const [temp, feels, rain, sky] = hour;
-  return { temp, feels, rain, sky };
+  return { temp, feels, rain: typeof rain === "number" && Number.isFinite(rain) && rain >= 0 && rain <= 100 ? rain : null, sky };
 }
 
 /** The heat level a "feels like" temperature reaches, or nothing below caution. */
@@ -127,9 +127,14 @@ function alertName(alert, say) {
   return say('alert-' + String(alert.event || '').toLowerCase().replace(/[^a-z]/g, '')) || alert.event;
 }
 
+const renderedCards = new WeakMap();
+
 /** A forecast card: animated sky, temperature, range, the hours around the start, heat and alerts. */
 export function renderCard(slot, doc, labels, say) {
   const town = slot.dataset.weatherTown, at = slot.dataset.weatherAt;
+  const key = [town, at, slot.dataset.weatherOutdoor, slot.dataset.weatherName].join('|');
+  const previous = renderedCards.get(slot);
+  if (!slot.hidden && previous?.doc === doc && previous.key === key) return true;
   const entry = forecastAt(doc, town, at);
   if (!entry) { slot.hidden = true; slot.replaceChildren(); return false; }
   const outdoor = slot.dataset.weatherOutdoor === '1';
@@ -144,6 +149,8 @@ export function renderCard(slot, doc, labels, say) {
   head.append(element('p', 'wx-place', `${slot.dataset.weatherName || ''} · ${clock(Date.parse(at))}`), element('p', 'wx-temp', `${entry.temp}°`), element('p', 'wx-sky', say('sky-' + sky)));
   const range = dayRange(doc, town, at);
   if (range) head.append(element('p', 'wx-range', fill(say('highlow'), range)));
+  const details = element('details', 'wx-details');
+  details.append(element('summary', '', say('hourly')));
   const strip = element('ol', 'wx-hours');
   for (const hour of hoursAround(doc, town, at)) {
     const item = element('li', hour.start ? 'is-start' : '');
@@ -152,9 +159,10 @@ export function renderCard(slot, doc, labels, say) {
     item.append(element('span', 'wx-hour', hour.start ? say('start') : clock(hour.at, true)));
     if (icon) item.append(icon);
     item.append(element('span', 'wx-hour-temp', `${hour.temp}°`));
-    item.append(element('span', 'wx-hour-rain', hour.rain >= 20 ? `${hour.rain}%` : ''));
+    item.append(element('span', 'wx-hour-rain', hour.rain === null ? "—" : hour.rain >= 20 ? `${hour.rain}%` : ''));
     strip.append(item);
   }
+  details.append(strip);
   const notes = element('div', 'wx-notes');
   for (const alert of alertsFor(doc, town, at)) {
     const box = element('div', `wx-alert wx-alert-${alertKind(alert.event)}`);
@@ -169,8 +177,9 @@ export function renderCard(slot, doc, labels, say) {
   if (shown) notes.append(element('p', `wx-heat wx-heat-${level}`, fill(say('heat-' + level), { feels: entry.feels })));
   else if (outdoor && entry.rain >= RAIN_WARN) notes.append(element('p', 'wx-heat wx-heat-rain', say(entry.sky === 3 ? 'warn-storm' : 'warn-rain')));
   const source = element('p', 'wx-source', say('source'));
-  slot.replaceChildren(scene, head, strip, ...(notes.childNodes.length ? [notes] : []), source);
+  slot.replaceChildren(scene, head, details, ...(notes.childNodes.length ? [notes] : []), source);
   slot.hidden = false;
+  renderedCards.set(slot, { doc, key });
   return true;
 }
 

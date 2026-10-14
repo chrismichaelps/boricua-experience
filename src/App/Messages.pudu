@@ -16,8 +16,8 @@ import Domain.Menu as Menu
 import Domain.MenuDraft as MenuDraft
 import Domain.Notification as Notification
 import Domain.Participation as Marks
-import Domain.Plan as Plan
 import Domain.Place as Listing
+import Domain.Plan as Plan
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Review as Review

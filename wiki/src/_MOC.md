@@ -352,3 +352,10 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Api/AssistantRoutes]] — grounded chat itinerary/routing boundary.
 
 - [[src/Test/AssistantMaps]] — grounded chat itinerary/routing boundary.
+
+- [[src/Database/ProviderBudget]] — atomic shared free-provider request budget.
+
+- [[src/View/Components/Weather]] — localized forecast slots and labels.
+
+- [[src/Web/Handlers/Plans]] — plans, routes, weather and arrival boundaries.
+- [[src/Test/Achievements]] — board and safe-signal regressions.

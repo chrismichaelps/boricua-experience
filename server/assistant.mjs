@@ -12,7 +12,7 @@ export class ChatFailure extends Error {
   constructor(code = 'assistant_unavailable', status = 503) { super(code); this.code = code; this.status = status; }
 }
 
-const SKIES = ['clear', 'cloudy', 'showers', 'thunderstorms', 'haze'];
+const SKIES = ['clear', 'cloudy', 'showers', 'thunderstorms', 'fog or haze'];
 /** The forecast for an activity's town and start from the island document, in the model's words. */
 export function weatherFor(doc, activity) {
   const hours = doc?.towns?.[activity?.town_slug];
@@ -218,7 +218,11 @@ export default async function assistant(req, res) {
     res.setHeader('x-accel-buffering', 'no');
     res.flushHeaders?.();
     await emit('status', { state: 'searching' });
-    await runConversation(context, bridge, config.key, abort.signal, emit, fetch, metadata => console.info('assistant_provider', JSON.stringify(metadata)));
+    await runConversation(context, bridge, config.key, abort.signal, emit, async (...args) => {
+      const permit = await bridge({}, 'provider');
+      if (permit.allowed !== true) throw new ChatFailure('assistant_limit', 429);
+      return fetch(...args);
+    }, metadata => console.info('assistant_provider', JSON.stringify(metadata)));
   } catch (error) {
     const failure = normalized(error);
     if (!res.headersSent) { res.statusCode = failure.status; res.setHeader('content-type', 'application/json'); res.end(JSON.stringify({ error: failure.code })); }

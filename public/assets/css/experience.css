@@ -487,7 +487,7 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .trip-follow { width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0; justify-content: center; color: var(--color-ocean-deep); }
 .trip-follow.is-active { background: var(--color-ocean); color: white; }
 .trip-follow[hidden] { display: none; }
-.trip-panel { display: grid; gap: 10px; max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 16px; background: var(--color-white); border-radius: 22px 22px 0 0; box-shadow: 0 -6px 24px rgb(28 43 55 / 12%); }
+.trip-panel { display: grid; grid-auto-rows: max-content; gap: 10px; max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 16px; background: var(--color-white); border-radius: 22px 22px 0 0; box-shadow: 0 -6px 24px rgb(28 43 55 / 12%); }
 .trip-next { display: grid; gap: 2px; }
 .trip-page.is-done .trip-next-label { display: none; }
 .trip-next-label { margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
@@ -573,7 +573,7 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
    layers moved with transforms and opacity only, so it costs the phone almost nothing, and it rests
    for people who ask for less motion. */
 .wx-slot[hidden] { display: none; }
-.wx { position: relative; isolation: isolate; overflow: hidden; display: grid; gap: 12px; margin: 16px 0; padding: 18px 18px 14px; border-radius: 22px; color: #fff; background: linear-gradient(180deg, #3f87d6, #7ab7ee); box-shadow: 0 8px 24px rgb(20 40 70 / 18%); }
+.wx { position: relative; isolation: isolate; overflow: hidden; display: grid; gap: 8px; margin: 16px 0; padding: 14px 16px 12px; border-radius: 18px; color: #fff; background: linear-gradient(180deg, #3f87d6, #7ab7ee); box-shadow: 0 8px 24px rgb(20 40 70 / 18%); }
 .wx-day.wx-clear { background: linear-gradient(180deg, #2f7fd3 0%, #6fb3ef 100%); }
 .wx-night.wx-clear { background: linear-gradient(180deg, #0b1a35 0%, #233d66 100%); }
 .wx-day.wx-cloudy, .wx-day.wx-fog { background: linear-gradient(180deg, #6f8191 0%, #a6b5c3 100%); }
@@ -583,23 +583,35 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .wx-storm { background: linear-gradient(180deg, #2e3542 0%, #4f5866 100%); }
 .wx-scene { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
 .wx-scene > span { position: absolute; display: block; }
-.wx-glow { top: -60px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgb(255 236 170 / 75%) 0%, rgb(255 214 110 / 25%) 40%, transparent 70%); opacity: 0; animation: wx-glow 7s ease-in-out infinite; }
-.wx-day.wx-clear .wx-glow { opacity: 1; }
-.wx-stars { inset: 0; opacity: 0; background-image: radial-gradient(1.5px 1.5px at 12% 22%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 34% 12%, #fff 50%, transparent 52%), radial-gradient(1.5px 1.5px at 58% 30%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 76% 16%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 88% 40%, #fff 50%, transparent 52%), radial-gradient(1.5px 1.5px at 22% 48%, #fff 50%, transparent 52%); animation: wx-twinkle 4s ease-in-out infinite; }
-.wx-night.wx-clear .wx-stars { opacity: .9; }
-.wx-cloud { top: 10%; left: -40%; width: 70%; height: 46%; border-radius: 50%; background: radial-gradient(ellipse at center, rgb(255 255 255 / 55%) 0%, rgb(255 255 255 / 18%) 45%, transparent 70%); filter: blur(6px); opacity: 0; animation: wx-drift 38s linear infinite; }
-.wx-cloud-2 { top: 34%; width: 90%; animation-duration: 52s; animation-delay: -20s; }
-.wx-cloud-3 { top: 56%; width: 60%; animation-duration: 44s; animation-delay: -34s; }
+.wx-glow { top: -60px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgb(255 236 170 / 75%) 0%, rgb(255 214 110 / 25%) 40%, transparent 70%); opacity: 0; }
+.wx-day.wx-clear .wx-glow { opacity: 1; animation: wx-glow 7s ease-in-out infinite; }
+.wx-stars { inset: 0; opacity: 0; background-image: radial-gradient(1.5px 1.5px at 12% 22%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 34% 12%, #fff 50%, transparent 52%), radial-gradient(1.5px 1.5px at 58% 30%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 76% 16%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 88% 40%, #fff 50%, transparent 52%), radial-gradient(1.5px 1.5px at 22% 48%, #fff 50%, transparent 52%); }
+.wx-night.wx-clear .wx-stars { opacity: .9; animation: wx-twinkle 4s ease-in-out infinite; }
+.wx-cloud { top: 10%; left: -40%; width: 70%; height: 46%; border-radius: 50%; background: radial-gradient(ellipse at center, rgb(255 255 255 / 55%) 0%, rgb(255 255 255 / 18%) 45%, transparent 70%); filter: blur(6px); opacity: 0; }
+.wx-cloud-2 { top: 34%; width: 90%; animation-delay: -20s; }
+.wx-cloud-3 { top: 56%; width: 60%; animation-delay: -34s; }
 .wx-cloudy .wx-cloud, .wx-fog .wx-cloud, .wx-showers .wx-cloud, .wx-storm .wx-cloud { opacity: 1; }
 .wx-day.wx-clear .wx-cloud-2 { opacity: .5; }
+.wx-cloudy .wx-cloud, .wx-fog .wx-cloud, .wx-showers .wx-cloud, .wx-storm .wx-cloud, .wx-day.wx-clear .wx-cloud-2 { animation-name: wx-drift; animation-duration: var(--wx-drift-duration, 38s); animation-timing-function: linear; animation-iteration-count: infinite; }
+.wx-cloud-2 { --wx-drift-duration: 52s; }
+.wx-cloud-3 { --wx-drift-duration: 44s; }
 .wx-night .wx-cloud { background: radial-gradient(ellipse at center, rgb(200 210 225 / 30%) 0%, rgb(200 210 225 / 10%) 45%, transparent 70%); }
-.wx-rain { left: 0; right: 0; top: -100%; height: 200%; opacity: 0; background-image: repeating-linear-gradient(104deg, transparent 0 14px, rgb(255 255 255 / 16%) 14px 15px, transparent 15px 28px); background-size: 40px 26px; animation: wx-rain .6s linear infinite; }
-.wx-showers .wx-rain, .wx-storm .wx-rain { opacity: 1; }
+.wx-rain { left: 0; right: 0; top: -100%; height: 200%; opacity: 0; background-image: repeating-linear-gradient(104deg, transparent 0 14px, rgb(255 255 255 / 16%) 14px 15px, transparent 15px 28px); background-size: 40px 26px; }
+.wx-showers .wx-rain, .wx-storm .wx-rain { opacity: 1; animation: wx-rain .6s linear infinite; }
 .wx-flash { inset: 0; background: rgb(255 255 255 / 70%); opacity: 0; }
 .wx-storm .wx-flash { animation: wx-flash 7s linear infinite; }
-.wx-head { display: grid; gap: 0; }
+.wx-head { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; align-items: center; }
+.wx-place { grid-column: 1 / -1; }
+.wx-temp { grid-column: 1; grid-row: 2 / 4; }
+.wx-sky, .wx-range { grid-column: 2; }
+.wx-details { border-top: 1px solid rgb(255 255 255 / 25%); }
+.wx-details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; list-style: none; font-size: 13px; font-weight: 700; }
+.wx-details summary::-webkit-details-marker { display: none; }
+.wx-details summary::after { content: ""; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); margin-right: 4px; }
+.wx-details[open] summary::after { transform: rotate(225deg); }
+.wx-details summary:focus-visible { outline: 2px solid #fff; outline-offset: -2px; border-radius: 6px; }
 .wx-place { margin: 0; font-size: 14px; font-weight: 700; opacity: .92; }
-.wx-temp { margin: 0; font-size: 64px; font-weight: 300; line-height: 1; letter-spacing: -2px; }
+.wx-temp { margin: 0; font-size: 44px; font-weight: 400; line-height: 1; letter-spacing: -1px; }
 .wx-sky { margin: 2px 0 0; font-size: 17px; font-weight: 600; }
 .wx-range { margin: 0; font-size: 14px; opacity: .9; font-variant-numeric: tabular-nums; }
 .wx-hours { list-style: none; margin: 0; padding: 10px 4px 2px; display: flex; justify-content: space-between; gap: 6px; border-top: 1px solid rgb(255 255 255 / 25%); overflow-x: auto; scrollbar-width: none; }
@@ -619,7 +631,7 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .trip-panel .wx { margin: 0; }
 @keyframes wx-drift { from { transform: translateX(0); } to { transform: translateX(260%); } }
 @keyframes wx-rain { from { transform: translateY(0); } to { transform: translateY(104px); } }
-@keyframes wx-flash { 0%, 90%, 92%, 95%, 100% { opacity: 0; } 91%, 94% { opacity: .55; } }
+@keyframes wx-flash { 0%, 90%, 92%, 95%, 100% { opacity: 0; } 91%, 94% { opacity: .14; } }
 @keyframes wx-glow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes wx-twinkle { 0%, 100% { opacity: .9; } 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { .wx-scene > span { animation: none !important; } .wx-cloud { transform: translateX(60%); } }

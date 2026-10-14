@@ -144,10 +144,10 @@ fn arrive(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
   }
   match Serve.ask(app, &app.kinds.tripArrival, Serve.signed(session, (arrival, Locale.code(&visitor.locale)))) {
     case Ok(answer) => Respond.json(200, &Json.object(&[
-        ("arrived", Json.Boolean(answer.arrived)),
-        ("completed", Json.Boolean(answer.completed)),
-        ("unlocked", Json.list(&answer.unlocked.map(|found: Achievement.Unlocked| found.encode())))
-      ]))
+          ("arrived", Json.Boolean(answer.arrived)),
+          ("completed", Json.Boolean(answer.completed)),
+          ("unlocked", Json.list(&answer.unlocked.map(|found: Achievement.Unlocked| found.encode())))
+        ]))
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

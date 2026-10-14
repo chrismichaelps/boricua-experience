@@ -1024,6 +1024,7 @@ plan.weather_heat_danger
 plan.weather_heat_extreme
 plan.weather_heat_extreme_danger
 plan.weather_high_low
+plan.weather_hourly
 plan.weather_official
 plan.weather_rain
 plan.weather_sky_clear

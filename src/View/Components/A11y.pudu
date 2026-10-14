@@ -158,9 +158,9 @@ export fn render(frame: &Frame.Frame, launcher: Bool) -> H.Node {
   let t = |key: Str| Frame.t(frame, key)
   H.div().class("a11y").data("feature", "a11y").data("open", t("a11y.open")).data("show", t("a11y.show")).data("default", t("a11y.default")).data("saved", t("a11y.saved")).data("landmark", t("a11y.landmark")).holding([
       if launcher { H.button().kind("button").class("a11y-launch").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").label(t("a11y.open")).holding([
-          H.span().class("a11y-figure").raw(glyph("figure", "2.6")),
-          H.span().class("a11y-badge").raw(glyph("check", "3.2"))
-        ]) } else { H.nothing() },
+            H.span().class("a11y-figure").raw(glyph("figure", "2.6")),
+            H.span().class("a11y-badge").raw(glyph("check", "3.2"))
+          ]) } else { H.nothing() },
       H.dialog().class("a11y-panel").id("a11y-panel").at("aria-labelledby", "a11y-title").holding([
           H.header().class("a11y-head").holding([
               H.div().class("a11y-head-top").holding([

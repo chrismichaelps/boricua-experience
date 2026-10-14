@@ -3,7 +3,9 @@ module View.PlanTest
 
 import Std.Html as Html
 import Std.Io as Io
+import Std.Json as Json
 import Std.Test as Test
+import Domain.Assistant as Assistant
 import Domain.Build as Build
 import Domain.Catalog as Catalog
 import Domain.Draft as Draft
@@ -15,6 +17,7 @@ import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
 import View.Calendar as Calendar
 import View.Frame as Frame
+import View.Pages.Map as MapPage
 import View.Pages.Plan as PlanPage
 import View.Pages.Trip as TripPage
 
@@ -42,9 +45,17 @@ fn main() -> Int {
   let ferryPlan = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Shared(Plan.Outings{plans: [Plan.Plan{..first, stops: [first.stops[0], ferryStop]}]})))
   let factsCard = Event.Card{..first.stops[0].card, parking: Some(true), cashOnly: Some(true), outdoor: true, english: Some(Event.CardEnglish{title: Some("Coffee route"), summary: Some("Visit farms.")})}
   let factsTrip = Html.render(&TripPage.render(&visitor(Locale.Es), &Plan.Plan{..first, stops: [Plan.Stop{..first.stops[0], card: factsCard}, first.stops[1]]}))
+  let localizedPlan = Plan.Plan{..first, stops: [Plan.Stop{..first.stops[0], card: factsCard}]}
+  let englishTrip = Html.render(&TripPage.render(&visitor(Locale.En), &localizedPlan))
+  let englishPlan = Html.render(&PlanPage.render(&visitor(Locale.En), &catalog, &choices, &PlanPage.Found(Plan.Outings{plans: [localizedPlan]})))
   let arrival = Plan.Arrival{slug: "a-one", lat: 18.4, lng: -66.1, plan: ["a-one", "b-two"]}
   let ics = Calendar.plan("https://boricuaexperience.com", "Plan", &first.stops.map(|stop: Plan.Stop| (stop.card, stop.arrive, stop.leave)))
   let checks = Test.suite("Plan", &[
+      Test.equals("trip uses database English title", &englishTrip.contains("Coffee route"), &true),
+      Test.equals("plan uses database English title", &englishPlan.contains("Coffee route"), &true),
+      Test.equals("refreshed map pins retain database English title", &Json.encode(&MapPage.pinsValue(&visitor(Locale.En), &[factsCard])).contains("Coffee route"), &true),
+      Test.equals("assistant source retains database English title", &Json.encode(&Assistant.sourceLocalized(&factsCard, "en")).contains("Coffee route"), &true),
+
       Test.equals("styles read their wire names", &Plan.styleName(&Plan.styleFrom("adventure")), &"adventure"),
       Test.equals("an unknown style is mixed", &Plan.styleName(&Plan.styleFrom("<script>")), &"mixed"),
       Test.equals("an unknown window is today", &Plan.windowName(&Plan.windowFrom("someday")), &"today"),

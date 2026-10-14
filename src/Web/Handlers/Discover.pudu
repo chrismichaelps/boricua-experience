@@ -256,7 +256,7 @@ fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 fn suggest(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.suggest, Serve.query(visitor, "q")) {
     case Ok(cards) => Http.Response{..Respond.json(200, &Json.list(&cards.map(|card: Event.Card| Json.object(&[
-                ("title", Json.Text(card.title)),
+                ("title", Json.Text(Event.titleFor(&card, visitor.locale == Locale.En))),
                 ("place", Json.Text(card.municipality.name)),
                 ("href", Json.Text(Routes.EVENT_PREFIX + card.slug))
               ])))), headers: [("content-type", "application/json; charset=utf-8"), ("cache-control", "public, max-age=0, s-maxage=60")] }

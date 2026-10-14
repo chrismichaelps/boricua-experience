@@ -55,8 +55,8 @@ const FEATURES = {
   'media-upload': (node) => import('./features/mediaUpload.js?v=75').then((module) => module.mediaUpload(node)),
   interest: (node) => import('./features/interest.js?v=75').then((module) => module.interest(node)).catch(() => {}),
   plan: (node) => import('./features/plan.js?v=75').then((module) => module.plan(node)).catch(() => {}),
-  weather: (node) => import('./features/weather.js?v=75').then((module) => module.weather(node)).catch(() => {}),
-  trip: (node) => import('./features/trip.js?v=75').then((module) => module.trip(node)).catch(() => {}),
+  weather: (node) => import('./features/weather.js?v=77').then((module) => module.weather(node)).catch(() => {}),
+  trip: (node) => import('./features/trip.js?v=77').then((module) => module.trip(node)).catch(() => {}),
   'pin-picker': (node) => import('./features/eventMaps.js?v=75').then((module) => module.pinPicker(node)),
 };
 

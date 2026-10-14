@@ -10,6 +10,7 @@ import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Event as Event
+import Domain.Locale as Locale
 import Domain.Search as Search
 import I18n.Dates as Dates
 import I18n.Format as Format
@@ -25,7 +26,7 @@ export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json
   let now = StdTime.instantOf(frame.nowMillis)
   Json.list(&cards.map(|card: Event.Card| Json.object(&[
           ("slug", Json.Text(card.slug)),
-          ("title", Json.Text(card.title)),
+          ("title", Json.Text(Event.titleFor(&card, frame.locale == Locale.En))),
           ("when", Json.Text(Dates.when(&frame.locale, card.startsAt, card.endsAt, &now))),
           ("starts", Json.Text(card.startsAt)),
           ("ends", match card.endsAt { case Some(at) => Json.Text(at) case None => Json.Null }),
