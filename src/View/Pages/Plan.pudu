@@ -28,7 +28,7 @@ export type Choices = { lat: Option[Float64], lng: Option[Float64], town: Str, w
 export type Shown = Nothing | Found(Plan.Outings) | Shared(Plan.Outings)
 
 /// The local clock time of a database timestamp, like "3:00 PM".
-fn clock(timestamp: Str) -> Str {
+export fn clock(timestamp: Str) -> Str {
   match Time.parseTimestamp(timestamp) {
     case Some(at) => Time.clock12(&Time.local(&at))
     case None => ""
@@ -44,14 +44,14 @@ fn day(frame: &Frame.Frame, timestamp: Str) -> Str {
 }
 
 /// A drive as minutes, or hours and minutes past the hour.
-fn duration(frame: &Frame.Frame, seconds: Int) -> Str {
+export fn duration(frame: &Frame.Frame, seconds: Int) -> Str {
   let minutes = (seconds + 59) / 60
   if minutes < 60 { return Frame.tf(frame, "plan.minutes", &[("count", show(minutes))]) }
   Frame.tf(frame, "plan.hours", &[("hours", show(minutes / 60)), ("minutes", show(minutes % 60))])
 }
 
 /// Kilometres with one decimal.
-fn kilometres(meters: Int) -> Str { show(meters / 1000) + "." + show((meters % 1000) / 100) }
+export fn kilometres(meters: Int) -> Str { show(meters / 1000) + "." + show((meters % 1000) / 100) }
 
 /// The drive to a stop: measured on roads, or an estimate from the straight line.
 fn legLine(frame: &Frame.Frame, leg: &Option[Plan.Leg], first: Bool) -> H.Node {
@@ -84,13 +84,25 @@ fn stop(frame: &Frame.Frame, item: &Plan.Stop, number: Int) -> H.Node {
 }
 
 /// The pins a plan's map draws, in order.
-fn pins(plan: &Plan.Plan) -> Str {
+export fn pins(plan: &Plan.Plan) -> Str {
   var listed: Array[Json.Json] = []
   for i in 0..plan.stops.length() {
     let item = plan.stops[i]
     listed = listed.push(Json.object(&[("order", Json.Number(i + 1)), ("slug", Json.Text(item.card.slug)), ("title", Json.Text(item.card.title)), ("lat", Json.Fractional(show(item.card.lat))), ("lng", Json.Fractional(show(item.card.lng)))]))
   }
   Json.encode(&Json.list(&listed))
+}
+
+/// The 3D switch and the camera turns over a plan's or a trip's map; the turns show while 3D is on.
+export fn mapTools(frame: &Frame.Frame) -> H.Node {
+  H.div().class("plan-map-tools").holding([
+      H.button().kind("button").class("map-button plan-map-3d").data("map-3d", "1").at("aria-pressed", "false").label(Frame.t(frame, "map.view_3d_label")).holding([H.span().class("map-3d-mark").at("aria-hidden", "true").says("3D")]),
+      H.div().class("map-turn").role("group").label(Frame.t(frame, "map.turn_group")).at("hidden", "hidden").holding([
+          H.button().kind("button").class("map-turn-button").data("turn", "-1").label(Frame.t(frame, "map.turn_left")).holding([Icons.sized("chevron-left", 20)]),
+          H.button().kind("button").class("map-turn-button map-compass").data("turn", "north").label(Frame.t(frame, "map.turn_north")).at("aria-pressed", "true").holding([H.span().class("map-compass-needle").at("aria-hidden", "true")]),
+          H.button().kind("button").class("map-turn-button").data("turn", "1").label(Frame.t(frame, "map.turn_right")).holding([Icons.sized("chevron-right", 20)])
+        ])
+    ])
 }
 
 /// One plan: its summary, map, stops, and the ways to keep or share it.
@@ -110,9 +122,13 @@ fn planCard(frame: &Frame.Frame, plan: &Plan.Plan, number: Int) -> H.Node {
               H.span().class("muted").says(day(frame, plan.starts) + " · " + Frame.tf(frame, "plan.span", &[("start", clock(plan.starts)), ("end", clock(plan.ends))]))
             ])
         ]),
-      H.div().class("plan-map").data("pins", pins(plan)).role("img").label(Frame.tf(frame, "plan.map_label", &[("number", show(number))])),
+      H.div().class("plan-map-wrap").holding([
+          H.div().class("plan-map").data("pins", pins(plan)).role("img").label(Frame.tf(frame, "plan.map_label", &[("number", show(number))])),
+          mapTools(frame)
+        ]),
       H.ol().class("plan-stops").holding(stops),
       H.div().class("plan-actions").holding([
+          H.a().class("button button-small plan-trip").href(Routes.PLAN_TRIP + Query.render(&[("e", slugs)])).holding([Icons.sized("navigation", 16), H.span().says(Frame.t(frame, "plan.trip_start_button"))]),
           H.a().class("button button-small plan-whatsapp").href("https://wa.me/" + Query.render(&[("text", message)])).target("_blank").at("rel", "noopener noreferrer").holding([Icons.sized("share", 16), H.span().says(Frame.t(frame, "plan.whatsapp"))]),
           H.button().kind("button").class("button button-ghost button-small").data("feature", "share").data("title", Frame.t(frame, "plan.title")).data("url", link).holding([Icons.sized("share", 16), H.span().says(Frame.t(frame, "plan.share"))]),
           H.a().class("button button-ghost button-small").href(Routes.PLAN_CALENDAR + Query.render(&[("e", slugs)])).at("download", "plan.ics").holding([Icons.sized("calendar", 16), H.span().says(Frame.t(frame, "plan.calendar"))])

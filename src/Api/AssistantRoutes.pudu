@@ -1,0 +1,11 @@
+/** @Api.AssistantRoutes.Client — bounded town routes using the existing road network */
+module Api.AssistantRoutes
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Domain.Problem as Problem
+
+/// Public catalog endpoints only; the privileged RPC cannot be called by browsers.
+export fn towns(gateway: &Gateway.Gateway, from: Str, to: Str) -> Result[Json.Json, Problem.Problem] {
+  Gateway.call(gateway, "assistant_town_route", &[("p_from", Json.Text(from)), ("p_to", Json.Text(to))], Some(gateway.serviceKey), Gateway.Read)
+}

@@ -1,14 +1,17 @@
 // Plans near the visitor: the location button fills the start and builds the plans, any choice
 // rebuilds them at once with a placeholder while the page loads, and each plan's map draws its
 // numbered stops and the road route between them (a dashed line where no road route is known).
-import { $, $$, create } from '../utils/dom.js?v=68';
-import { requestLocation } from '../utils/locate.js?v=68';
-import { message } from '../constants/messages.js?v=68';
-import { toast } from './toast.js?v=68';
-import { createMap } from './mapLoader.js?v=68';
-import { getJson } from '../net/http.js?v=68';
+import { $, $$, create } from '../utils/dom.js?v=74';
+import { requestLocation } from '../utils/locate.js?v=74';
+import { message } from '../constants/messages.js?v=74';
+import { toast } from './toast.js?v=74';
+import { createMap } from './mapLoader.js?v=74';
+import { getJson } from '../net/http.js?v=74';
+import { buildings3d } from './map3d.js?v=74';
 
 const ROUTE_COLOR = '#1878ec';
+// Room kept clear for the map tools on the right, so the route is never drawn under them.
+const FRAME = { top: 30, right: 64, bottom: 30, left: 30 };
 
 /** Shows a placeholder over the plans while the next page is on its way. */
 function waiting(page) {
@@ -38,14 +41,18 @@ export function legLines(pins, legs) {
 async function drawMap(node) {
   const pins = pinsOf(node);
   if (!pins.length) return;
-  const { map, maplibregl } = await createMap(node, { cooperative: true, controls: false, center: [pins[0].lng, pins[0].lat], zoom: 11 });
+  const { map, maplibregl } = await createMap(node, { cooperative: true, controls: false, rotatable: true, center: [pins[0].lng, pins[0].lat], zoom: 11 });
+  // The 3D switch tilts the camera and raises buildings; while it is on, the camera turns with two
+  // fingers or the turn buttons.
+  const tools = node.parentElement?.querySelector('.plan-map-tools');
+  if (tools) buildings3d(map, tools.querySelector('[data-map-3d]'), tools.querySelector('.map-turn'), { zoomIn: false });
   const bounds = pins.reduce((box, pin) => box.extend([pin.lng, pin.lat]), new maplibregl.LngLatBounds([pins[0].lng, pins[0].lat], [pins[0].lng, pins[0].lat]));
   for (const pin of pins) {
     const element = create('span', { class: 'plan-pin', 'aria-hidden': 'true' }, String(pin.order));
     new maplibregl.Marker({ element }).setLngLat([pin.lng, pin.lat]).addTo(map);
   }
   map.on('load', async () => {
-    map.fitBounds(bounds, { padding: 36, maxZoom: 14, duration: 0 });
+    map.fitBounds(bounds, { padding: FRAME, maxZoom: 14, duration: 0 });
     let legs = [];
     if (pins.length > 1) {
       try { legs = (await getJson(`/api/plan/route?e=${encodeURIComponent(pins.map((pin) => pin.slug).join(','))}`)).legs; }
@@ -58,7 +65,7 @@ async function drawMap(node) {
     map.addLayer({ id: 'plan-road', type: 'line', source: 'plan-road', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ROUTE_COLOR, 'line-width': 4 } });
     map.addLayer({ id: 'plan-straight', type: 'line', source: 'plan-straight', paint: { 'line-color': ROUTE_COLOR, 'line-width': 3, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.7 } });
     const routed = lines.road.geometry.coordinates.flat();
-    if (routed.length) map.fitBounds(routed.reduce((box, point) => box.extend(point), bounds), { padding: 36, maxZoom: 14, duration: 0 });
+    if (routed.length) map.fitBounds(routed.reduce((box, point) => box.extend(point), bounds), { padding: FRAME, maxZoom: 14, duration: 0 });
   });
 }
 
@@ -90,6 +97,10 @@ export function plan(page) {
   town?.addEventListener('change', () => { lat.value = ''; lng.value = ''; if (town.value) submit(); });
   for (const input of $$('input[type="radio"]', form)) input.addEventListener('change', () => { if (lat.value || town.value) submit(); });
   form.addEventListener('submit', () => waiting(page));
+  // Sending a plan to someone is an achievement signal.
+  page.addEventListener('click', (event) => {
+    if (event.target.closest?.('.plan-whatsapp, .plan-actions [data-feature="share"]')) document.dispatchEvent(new CustomEvent('bx:action', { detail: { action: 'plan_share' } }));
+  });
   addEventListener('pageshow', () => { page.removeAttribute('aria-busy'); page.classList.remove('is-planning'); });
 
   // Maps are drawn as they come into view, so a phone loads one map at a time.

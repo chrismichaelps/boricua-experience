@@ -16,6 +16,8 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
   [
     Registration.handler(&kinds.planOutings, |asked: Plan.Request, _context: Context.Context| Messaging.lift(Plans.outings(&held, &asked))),
     Registration.handler(&kinds.planShared, |asked: Array[Str], _context: Context.Context| Messaging.lift(Plans.shared(&held, &asked))),
-    Registration.handler(&kinds.planRoute, |asked: Array[Str], _context: Context.Context| Messaging.lift(Plans.route(&held, &asked)))
+    Registration.handler(&kinds.planRoute, |asked: Array[Str], _context: Context.Context| Messaging.lift(Plans.route(&held, &asked))),
+    Registration.handler(&kinds.planRouteOptions, |asked: Array[Str], _context: Context.Context| Messaging.lift(Plans.routeOptions(&held, &asked))),
+    Registration.handler(&kinds.tripArrival, |asked: Messages.Signed[(Plan.Arrival, Str)], _context: Context.Context| Messaging.lift(Plans.arrive(&held, &asked.input[0], asked.input[1], &asked.session)))
   ]
 }

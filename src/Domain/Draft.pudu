@@ -23,7 +23,9 @@ export type Draft = {
   visibility: Str,
   joinPolicy: Str,
   capacity: Str,
-  price: Str
+  price: Str,
+  minAge: Str,
+  accessible: Bool
 }
 
 /** @Domain.Draft.Ready — a draft validated and converted for the database */
@@ -43,7 +45,9 @@ export type Ready = {
   visibility: Str,
   joinPolicy: Str,
   capacity: Option[Int],
-  priceCents: Option[Int]
+  priceCents: Option[Int],
+  minAge: Option[Int],
+  accessible: Bool
 }
 
 /** @Domain.Draft.Published — the event a publish or edit produced */
@@ -67,7 +71,9 @@ export fn blank() -> Draft {
     visibility: "public",
     joinPolicy: "approval",
     capacity: "",
-    price: ""
+    price: "",
+    minAge: "",
+    accessible: false
   }
 }
 
@@ -105,6 +111,8 @@ export fn fromDetail(detail: &Event.Detail) -> Draft {
       case Some(total) => show(total)
       case None => ""
     },
+    minAge: Option.unwrapOr(Option.map(detail.minAge, |age: Int| show(age)), ""),
+    accessible: detail.accessible,
     price: match card.priceCents {
       case Some(cents) => show(cents / 100) + "." + (if cents % 100 < 10 { "0" } else { "" }) + show(cents % 100)
       case None => ""

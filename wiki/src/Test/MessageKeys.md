@@ -18,3 +18,9 @@ Resolved: include calendar dictionary keys alongside existing runtime families s
 
 ## Build family
 The key scan includes `build.*`.
+
+## Quick-filter continuation Grill Log
+Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.
+
+## Assistant plan labels
+Resolved: runtime assistant dataset labels and new prompt families from EsPlan are included in the fixture scan.

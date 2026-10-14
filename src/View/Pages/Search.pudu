@@ -46,6 +46,7 @@ export fn queryOf(filters: &Search.Filters, landing: &Landing, after: Str) -> St
           case _ => filters.municipality
         }),
       ("free", if filters.freeOnly { "1" } else { "" }),
+      ("t", Search.traitsValue(&filters.traits)),
       ("sort", if filters.sort == Search.Soon { "" } else { Search.sortName(&filters.sort) }),
       ("cerca", filters.near),
       ("radio", if filters.near.isEmpty() && filters.lat == None { "" } else { show(Search.radiusKm(filters)) }),
@@ -73,7 +74,30 @@ export fn label(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search
   }
   if filters.window != Search.Anytime { parts = parts.push(SearchControls.windowLabel(frame, &filters.window)) }
   if filters.freeOnly { parts = parts.push(Frame.t(frame, "footer.free")) }
+  for name in filters.traits { parts = parts.push(Frame.t(frame, "quick." + name)) }
   if parts.isEmpty() { Frame.t(frame, "search.saved_all") } else { parts.join(" · ").take(80) }
+}
+
+/// The quick filters: one tap toggles today, the weekend, free, family, night, outdoors or step-free,
+/// keeping every other choice; "near me" opens the map around the visitor.
+fn quickFilters(frame: &Frame.Frame, filters: &Search.Filters, landing: &Landing, path: Str) -> H.Node {
+  let chip = |key: Str, icon: Str, on: Bool, next: Search.Filters| {
+    let link = H.a().class(if on { "chip quick-chip is-on" } else { "chip quick-chip" }).href(path + queryOf(&Search.Filters{..next, after: ""}, landing, "")).holding([Icons.sized(icon, 16), H.span().says(Frame.t(frame, "quick." + key))])
+    if on { link.at("aria-current", "true") } else { link }
+  }
+  let window = |wanted: Search.When| if filters.window == wanted { Search.Anytime } else { wanted }
+  let nearby = queryOf(filters, &Open, "")
+  let marked = |name: Str| Search.Filters{..*filters, traits: Search.toggled(&filters.traits, name)}
+  H.nav().class("quick-filters").label(Frame.t(frame, "quick.label")).holding([
+      chip("today", "calendar", filters.window == Search.Today, Search.Filters{..*filters, window: window(Search.Today)}),
+      chip("weekend", "calendar", filters.window == Search.Weekend, Search.Filters{..*filters, window: window(Search.Weekend)}),
+      chip("free", "ticket", filters.freeOnly, Search.Filters{..*filters, freeOnly: !filters.freeOnly}),
+      chip("family", "users", filters.traits.contains("family"), marked("family")),
+      chip("night", "moon", filters.traits.contains("night"), marked("night")),
+      chip("outdoor", "mountain", filters.traits.contains("outdoor"), marked("outdoor")),
+      chip("accessible", "accessible", filters.traits.contains("accessible"), marked("accessible")),
+      H.a().class("chip quick-chip").href(Routes.MAP + nearby + (if nearby.isEmpty() { "?" } else { "&" }) + "near=1").holding([Icons.sized("crosshair", 16), H.span().says(Frame.t(frame, "quick.near"))])
+    ])
 }
 
 /// The button that keeps the listing, for members.
@@ -137,13 +161,14 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
             ])
         } else { H.div().class("search-top").holding([SearchControls.pill(frame, catalog, filters)]) },
         SearchControls.chips(frame, catalog, activeCategory),
-        H.div().class("results-head").holding([
+        H.div().id("search-results").class("results-head").holding([
             if photographic { H.h2().class("page-title").says(Frame.t(frame, "search.activities")) } else { H.h1().class("page-title").says(title) },
             H.div().class("results-actions").holding([
                 saveButton(frame, filters),
                 H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, &Open, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
               ])
           ]),
+        quickFilters(frame, filters, landing, path),
         SearchControls.filterBar(frame, catalog, filters),
         match landing {
           case ForTown(town) => neighbors(frame, catalog, &town)

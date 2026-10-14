@@ -1,7 +1,13 @@
 import { createHmac } from 'node:crypto';
 
 const MODEL = 'openrouter/free';
+const TOOL_NAMES = ['search_activities', 'activity_details', 'my_preferences', 'organizer_details', 'browse_catalog', 'search_places', 'build_itinerary', 'route_activities', 'route_towns'];
+const CONTROL_TEXT = /<\s*\/?(?:tool_call|tool_response|function(?:\s|=|>)|parameter(?:\s|=|>)|think(?:\s|>)|analysis(?:\s|>))/i;
 const MAX_BODY = 24000, MAX_ANSWER = 6000, DEADLINE = 90000;
+// Model rounds per question: searching, reading details, a second search, then the answer.
+const ROUNDS = 4, LAST = ROUNDS - 1;
+// When the free model cannot finish an answer after real results came back, the app still shows them.
+const FOUND = { es: 'Esto es lo que encontré con datos actuales; toca una actividad para ver los detalles.', en: 'Here’s what I found with current data; tap an activity for the details.' };
 export class ChatFailure extends Error {
   constructor(code = 'assistant_unavailable', status = 503) { super(code); this.code = code; this.status = status; }
 }
@@ -41,8 +47,15 @@ function normalized(error) {
 export async function runConversation(context, bridge, key, signal, emit, fetcher = fetch, report = () => {}) {
   const messages = [...context.messages], sources = new Map();
   let searched = false;
-  for (let round = 0; round < 3; round++) {
-    const choice = !searched ? 'required' : round === 2 ? 'none' : 'auto';
+  // Verified results are never thrown away because the model stumbled on its last round.
+  const settle = async () => {
+    if (!searched || !sources.size) throw new ChatFailure();
+    await emit('delta', { text: context.locale === 'en' ? FOUND.en : FOUND.es });
+    await emit('sources', { items: [...sources.values()] });
+    await emit('done', {});
+  };
+  for (let round = 0; round < ROUNDS; round++) {
+    const choice = !searched ? 'required' : round === LAST ? 'none' : 'auto';
     await emit('status', { state: 'thinking' });
     const response = await fetcher('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST', signal,
@@ -51,11 +64,11 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
         max_tokens: 1800, reasoning: { effort: 'low', exclude: true }, provider: { require_parameters: true, allow_fallbacks: true } }),
     });
     report({ stage: 'provider_http', round, status: response.status });
-    if ([502, 503].includes(response.status) && round < 2) continue;
+    if ([502, 503].includes(response.status) && round < LAST) continue;
     if (!response.ok) throw new ChatFailure(response.status === 429 ? 'assistant_limit' : 'assistant_unavailable', response.status === 429 ? 429 : 503);
     if (!response.body) throw new ChatFailure();
     const calls = new Map();
-    let content = '', finished = false, model, finishReason;
+    let content = '', emitted = 0, quarantined = false, finished = false, model, finishReason;
     for await (const chunk of sseData(response.body)) {
       if (chunk.error) { report({ stage: 'provider_error', round, code: Number.isSafeInteger(chunk.error.code) ? chunk.error.code : undefined }); throw new ChatFailure(); }
       if (typeof chunk.model === 'string' && /^[a-zA-Z0-9._/-]{1,140}:free$/.test(chunk.model)) model = chunk.model;
@@ -76,22 +89,34 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
         content += delta.content;
         if (content.length > MAX_ANSWER) throw new ChatFailure();
         // Do not display an unsupported answer before a real database search succeeds.
-        if (searched && calls.size === 0) await emit('delta', { text: delta.content });
+        quarantined ||= CONTROL_TEXT.test(content);
+        if (searched && calls.size === 0 && !quarantined) {
+          const angle = content.lastIndexOf('<');
+          const end = Math.min(Math.max(emitted, content.length - 24), angle >= emitted ? angle : content.length);
+          if (end > emitted) { await emit('delta', { text: content.slice(emitted, end) }); emitted = end; }
+        }
       }
     }
     report({ stage: 'provider_finished', round, model, finish: finishReason, characters: content.length, calls: calls.size });
     if (!finished) throw new ChatFailure();
     if (!calls.size) {
-      if (!searched && round < 2) continue;
-      if (!searched || !content.trim()) throw new ChatFailure();
+      if (quarantined) {
+        if (round === LAST) return settle();
+        messages.push({ role: 'system', content: 'The previous completion used invalid textual tool markup. Use only structured tool_calls for tools. Reply to the user with ordinary Markdown, without tool syntax or internal reasoning.' });
+        continue;
+      }
+      if (!searched && round < LAST) continue;
+      if (searched && !content.trim()) return settle();
+      if (!searched) throw new ChatFailure();
+      if (emitted < content.length) await emit('delta', { text: content.slice(emitted) });
       await emit('sources', { items: [...sources.values()] });
       await emit('done', {});
       return;
     }
-    if (round === 2) throw new ChatFailure();
+    if (round === LAST) return settle();
     messages.push({ role: 'assistant', content: content || null, tool_calls: [...calls.values()] });
     for (const call of calls.values()) {
-      if (!['search_activities', 'activity_details', 'my_preferences', 'organizer_details', 'browse_catalog'].includes(call.function.name)) throw new ChatFailure();
+      if (!TOOL_NAMES.includes(call.function.name)) throw new ChatFailure();
       let args;
       try { args = JSON.parse(call.function.arguments); } catch { throw new ChatFailure(); }
       if (!args || Array.isArray(args) || typeof args !== 'object') throw new ChatFailure();
@@ -99,21 +124,27 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
       const result = await bridge({ name: call.function.name, args, known: [...sources.values()].map(source => source.slug), locale: context.locale === 'en' ? 'en' : 'es' }, 'tool');
       if (result.result?.searched === true || result.result?.verified === true) searched = true;
       for (const source of result.sources || []) {
-        if (sources.size < 12 && typeof source.slug === 'string' && source.href === '/e/' + source.slug) sources.set(source.slug, source);
+        if (sources.size < 12 && typeof source.slug === 'string' && (source.href === '/e/' + source.slug || source.href === '/lugar/' + source.slug)) sources.set(source.slug, source);
       }
       await emit('sources', { items: [...sources.values()] });
+      if (Array.isArray(result.visuals)) await emit('visuals', { items: result.visuals.slice(0, 3) });
       const format = new Intl.DateTimeFormat(context.locale === 'en' ? 'en-US' : 'es-PR', { timeZone: 'America/Puerto_Rico', dateStyle: 'full', timeStyle: 'short' });
       const dated = activity => {
         const start = new Date(activity.starts_at), end = activity.ends_at ? new Date(activity.ends_at) : null;
         return Number.isNaN(start.getTime()) ? activity : { ...activity, schedule_pr: format.format(start) + (end && !Number.isNaN(end.getTime()) ? ' – ' + format.format(end) : context.locale === 'en' ? ' · End time not provided' : ' · Hora de fin no informada') + ' AST' };
       };
       const data = { ...result.result };
+      // The same search on the map is for the app to offer, never for the model to write out.
+      if ('explore' in data) {
+        if (typeof data.explore === 'string' && /^\/map(\?[A-Za-z0-9%=&._~,-]{0,600})?$/.test(data.explore)) await emit('explore', { href: data.explore });
+        delete data.explore;
+      }
       if (Array.isArray(data.activities)) data.activities = data.activities.map(dated);
       if (data.activity) data.activity = dated(data.activity);
       messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(data) });
     }
   }
-  throw new ChatFailure();
+  return settle();
 }
 
 export default async function assistant(req, res) {
@@ -162,7 +193,7 @@ export default async function assistant(req, res) {
       }
       if (!response.ok) {
         const detail = await response.json().catch(() => ({}));
-        const code = ['assistant_limit', 'assistant_not_configured', 'assistant_invalid', 'SignedOut', 'Forbidden'].includes(detail.error) ? detail.error : 'assistant_unavailable';
+        const code = ['assistant_limit', 'assistant_member_limit', 'assistant_busy', 'assistant_slow_down', 'assistant_not_configured', 'assistant_invalid', 'SignedOut', 'Forbidden'].includes(detail.error) ? detail.error : 'assistant_unavailable';
         throw new ChatFailure(code, response.status);
       }
       return response.json();

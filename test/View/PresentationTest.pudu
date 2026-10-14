@@ -11,8 +11,8 @@ import Std.List as List
 import Std.Result as Result
 import Std.Test as Test
 import Constants.App as App
-import Domain.Build as Build
 import Domain.Achievement as Achievement
+import Domain.Build as Build
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
@@ -95,6 +95,10 @@ fn main() -> Int {
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let dateField = Html.render(&Form.input(&en, &Form.Field{..Form.field("startsAt", "Starts", "2026-10-20T19:35"), kind: "datetime-local"}, &[], |c: H.Node| c).html())
+  let traitFilters = Search.Filters{..Search.everything(), traits: ["family", "accessible"], category: "cultura", query: "bomba"}
+  let traitControls = Html.render(&Controls.filterBar(&en, &catalog, &traitFilters).html())
+  let traitMap = Html.render(&Controls.mapBar(&en, &catalog, &traitFilters, "/search?t=family,accessible").html())
+  let traitsQuery = SearchPage.queryOf(&traitFilters, &SearchPage.Open, "cursor")
   let signup = Html.render(&Auth.signUp(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
   let renewal = Html.render(&Auth.renewal(&en, "/activity", &None))
   let missing = Html.render(&Errors.missing(&en))
@@ -102,6 +106,7 @@ fn main() -> Int {
   let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(why) => panic("fixture failed: " + Json.explainDecode(&why)) }
   let detail = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(found) => found case Err(_) => panic("fixture failed") }
   let unknownCard = Event.Card{..detail.card, priceCents: None, endsAt: None, discoveryUntil: Some("2026-10-13T02:00:00Z")}
+  let declaredFacts = Html.render(&EventPage.render(&en, &Event.Detail{..detail, minAge: Some(8), accessible: true}, &None))
   let unknownDetail = Event.Detail{..detail, card: unknownCard}
   let unknownSeo = Seo.event(en.siteUrl, &unknownDetail)
   let unknownCalendar = Calendar.ics(en.siteUrl, &unknownCard, "/e/" + unknownCard.slug)
@@ -368,6 +373,12 @@ fn main() -> Int {
       Test.equals("results keep standard navigation", &results.contains("app-home"), &false),
       Test.equals("search submits to the existing endpoint", &english.contains("action=\"/search\""), &true),
       Test.equals("search remains a GET form", &english.contains("method=\"get\""), &true),
+      Test.that("detail attributes known age and access to organizer", declaredFacts.contains("8 years and older") && declaredFacts.contains("Organizer confirms step-free access.")),
+      Test.that("unknown detail makes no access claim", !Html.render(&EventPage.render(&en, &detail, &None)).contains("Organizer confirms step-free access.")),
+      Test.that("home quick filters name actual traits", homePage.contains("?t=family") && homePage.contains("?t=accessible")),
+      Test.that("listing form preserves combined traits", traitControls.contains("name=\"t\" value=\"family,accessible\"")),
+      Test.that("map form preserves combined traits", traitMap.contains("name=\"t\" value=\"family,accessible\"")),
+      Test.that("paging query preserves traits and cursor", traitsQuery.contains("t=family%2Caccessible") && traitsQuery.contains("after=cursor")),
       Test.equals("query retains its field name", &english.contains("name=\"q\""), &true),
       Test.equals("municipality retains its field name", &english.contains("name=\"pueblo\""), &true),
       Test.equals("date retains its field name", &english.contains("name=\"when\""), &true),

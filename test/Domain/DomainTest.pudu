@@ -131,6 +131,13 @@ fn main() -> Int {
       Test.equals("unknown cutoff before boundary stays visible", &Result.map(page, |p| Event.hasEnded(&Event.Card{..p.items[0], status: "published", startsAt: "2026-10-09T23:00:00Z", endsAt: None, discoveryUntil: Some("2026-10-10T23:00:00Z")}, 1791673200000 - 1)), &Ok(false)),
       Test.equals("unknown cutoff at boundary archives", &Result.map(page, |p| Event.hasEnded(&Event.Card{..p.items[0], status: "published", startsAt: "2026-10-09T23:00:00Z", endsAt: None, discoveryUntil: Some("2026-10-10T23:00:00Z")}, 1791673200000)), &Ok(true)),
       Test.equals("unknown edit stays blank", &Result.map(guest, |d| Draft.fromDetail(&Event.Detail{..d, card: Event.Card{..d.card, endsAt: None, priceCents: None}}).price), &Ok("")),
+      Test.equals("quick traits normalize known names once", &Search.traitsFrom(" accessible,family,family,unknown "), &["family", "accessible"]),
+      Test.equals("quick trait toggles retain other choices", &Search.toggled(&["family", "accessible"], "family"), &["accessible"]),
+      Test.equals("unknown traits cannot be toggled in", &Search.toggled(&[], "fake"), &[]),
+      Test.that("trait-only searches are narrowed", Search.isNarrowed(&Search.Filters{..Search.everything(), traits: ["family"]})),
+      Test.equals("edit retains organizer facts", &Result.map(guest, |d| { let draft = Draft.fromDetail(&Event.Detail{..d, minAge: Some(8), accessible: true})
+            (draft.minAge, draft.accessible) }), &Ok(("8", true))),
+      Test.equals("legacy detail facts remain unknown", &Result.map(guest, |d| (d.minAge, d.accessible)), &Ok((None, false))),
       Test.equals("free edit retains explicit zero", &Result.map(guest, |d| Draft.fromDetail(&Event.Detail{..d, card: Event.Card{..d.card, priceCents: Some(0)}}).price), &Ok("0.00")),
       Test.equals("an event is over once its end time passes", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: Some("2026-10-09T20:00:00Z")}, 1791576000000 + 1))), &Ok(Some(true))),
       Test.equals("an event before its end time is not over", &Result.map(page, |p| Option.map(Option.fromArray(&p.items), |card| Event.hasEnded(&Event.Card{..card, status: "published", endsAt: Some("2026-10-09T20:00:00Z")}, 1791576000000 - 1))), &Ok(Some(false))),

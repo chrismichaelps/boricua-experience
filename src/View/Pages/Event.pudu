@@ -214,6 +214,11 @@ fn facts(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
       H.dl().class("facts").holding([
           H.dt().says(Frame.t(frame, "event.when")), H.dd().holding([Moment.schedule(frame, card.startsAt, card.endsAt)]),
           H.dt().says(Frame.t(frame, "event.price")), H.dd().says(Format.price(&frame.locale, card.priceCents)),
+          match detail.minAge {
+            case Some(age) => H.nothing().holding([H.dt().says(Frame.t(frame, "event.declared_age")), H.dd().says(if age == 0 { Frame.t(frame, "event.all_ages") } else { Frame.tf(frame, "event.age_floor", &[("age", show(age))]) })])
+            case None => H.nothing()
+          },
+          if detail.accessible { H.nothing().holding([H.dt().says(Frame.t(frame, "event.declared_access")), H.dd().says(Frame.t(frame, "event.step_free"))]) } else { H.nothing() },
           if detail.source == "curated" { H.nothing() } else { H.dt().says(Frame.t(frame, "event.attendance")) }, if detail.source == "curated" { H.nothing() } else { H.dd().says(capacity) },
           H.dt().says(Frame.t(frame, "event.joining")), H.dd().says(Frame.t(frame, if detail.source == "curated" { "event.external_body" } else if Event.needsApproval(&card) { "event.policy_approval_long" } else { "event.policy_open_long" })),
           H.dt().says(Frame.t(frame, "event.visibility")), H.dd().says(Frame.t(frame, "visibility." + card.visibility))

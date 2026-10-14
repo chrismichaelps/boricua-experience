@@ -74,3 +74,6 @@ Map results preserve the server limited flag and show a bilingual zoom-in notice
 
 ## Moving nearby and 3D Grill Log · #78
 Resolved: the viewport answer is shared only when its `hl` parameter equals the rendered language; otherwise the default private policy applies.
+
+## Quick-filter continuation Grill Log
+Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.

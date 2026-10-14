@@ -6,18 +6,40 @@ import Std.Option as Option
 import Constants.Assistant as Limits
 import Constants.Routes as Routes
 import Domain.Event as Event
+import Domain.Place as Place
 
 /** @Domain.Assistant.Turn — client history cannot supply system instructions or tool output */
 export type Turn = { role: Str, content: Str } derives Json.Decode, Json.Encode
-/** @Domain.Assistant.Input — a question with short conversational context */
-export type Input = { message: Str, @default("[]") history: Array[Turn] } derives Json.Decode
+/** @Domain.Assistant.ChatPosition — where the member is, shared for one question; only its nearest town reaches the model */
+export type ChatPosition = { lat: Float64, lng: Float64 } derives Json.Decode
+
+/** @Domain.Assistant.Input — a question with short conversational context and, when shared, the member's position */
+export type Input = { message: Str, @default("[]") history: Array[Turn], @default("null") near: Option[ChatPosition] } derives Json.Decode
 
 /** @Domain.Assistant.Tool — internal server tool request, never accepted directly from a browser */
 export type Tool = { name: Str, args: Json.Json, known: Array[Str], locale: Str } derives Json.Decode
 
+/** @Domain.Assistant.Allowance — whether an answer may start and, if not, why */
+export type Allowance = { allowed: Bool, @default("null") reason: Option[Str] } derives Json.Decode
+
+/// The error a refused reservation shows: the member's minute, the member's day, the shared minute
+/// ("busy") or the shared day ("limit").
+export fn refusal(reservation: &Allowance) -> Str {
+  match reservation.reason {
+    case Some("member_minute") => "assistant_slow_down"
+    case Some("member_day") => "assistant_member_limit"
+    case Some("busy") => "assistant_busy"
+    case _ => "assistant_limit"
+  }
+}
+
 /// Whether every client field stays within the conversation contract.
 export fn valid(input: &Input) -> Bool {
   if input.message.trim().isEmpty() || input.message.length() > Limits.MESSAGE_MAX || input.history.length() > Limits.HISTORY_MAX { return false }
+  match input.near {
+    case Some(at) => { if at.lat < 17.5 || at.lat > 18.7 || at.lng < -67.5 || at.lng > -65.1 { return false } }
+    case None => {}
+  }
   for turn in input.history {
     if !(turn.role == "user" || turn.role == "assistant") || turn.content.length() > Limits.MESSAGE_MAX { return false }
   }
@@ -40,4 +62,9 @@ export fn sourceLocalized(card: &Event.Card, locale: Str) -> Json.Json {
       ("join_policy", if card.source == "curated" { Json.Null } else { Json.Text(card.joinPolicy) }),
       ("spots_left", if card.source == "curated" { Json.Null } else { match Event.seatsLeft(card) { case Some(n) => Json.Number(n) case None => Json.Null } })
     ])
+}
+
+/// Only published place projections are offered, without owner identity or private contact data.
+export fn placeSource(place: &Place.Listing, locale: Str) -> Json.Json {
+  Json.object(&[("href", Json.Text("/lugar/" + place.slug)), ("slug", Json.Text(place.slug)), ("title", Json.Text(place.name)), ("summary", Json.Text(place.summary.take(600))), ("town", Json.Text(place.municipality.name)), ("category", Json.Text(if locale == "en" { place.category.nameEn } else { place.category.nameEs })), ("image", Json.Text(Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg"))), ("highlights", place.highlights), ("hours", place.hours)])
 }

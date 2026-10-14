@@ -58,5 +58,16 @@ Account deletion erases the member's signals and progress; the data export inclu
 2. Insert the row with an existing metric. Seasonal rows set `season_from`/`season_until`, or `available_from`/`available_until` for a single edition.
 3. Disable it later with `active = false`.
 
+## Plans and trips
+
+Private migration `20261014180100_trip_achievements` adds the category "Planes y viajes" with 13
+achievements: building a plan (first, on 10 days), a surprise plan, sharing a plan, starting a trip,
+reaching stops (1, 10, 30, three night stops), completing trips (1, 5) and reaching stops in 5 and 20
+towns. Building, surprise, sharing and starting are browser signals counted once per Puerto Rico day;
+stops and completed trips are only recorded when the server confirms the arrival
+([[src/Database/Plans]]). The migration only inserts new rows and adds new signal names: no existing
+achievement, progress or unlock changes, and nothing is backfilled. Unlocks returned by a confirmed
+arrival are announced like any other through the `bx:unlocked` page event.
+
 ## Referenced by
 [[src/_MOC]] · [[seams/DatabaseApi]] · [[src/View/Pages/Achievements]]

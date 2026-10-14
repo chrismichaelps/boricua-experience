@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Constants.App as App
+import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Draft as Draft
@@ -65,6 +66,8 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, mode: &Mode, dr
               ]),
             H.section().class("form-section").holding([
                 H.h2().class("section-title").says(Frame.t(frame, "publish.where")),
+                Form.checkbox(frame, "accessible", H.span().says(Frame.t(frame, "publish.accessible")), draft.accessible, &errors),
+                H.p().class("field-hint").says(Frame.t(frame, "publish.accessible_hint")),
                 Form.select(frame, &field("municipality", "publish.field_town", draft.municipality), &towns, &errors),
                 Form.input(frame, &field("venueName", "publish.field_venue", draft.venueName), &errors, |c: H.Node| c.at("maxlength", "120")),
                 Form.input(frame, &Form.Field{..Form.field("addressLine", Frame.t(frame, "publish.field_address"), draft.addressLine), hint: Frame.t(frame, "publish.hint_address")}, &errors, |c: H.Node| c.at("maxlength", "200")),
@@ -84,6 +87,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, mode: &Mode, dr
               ]),
             H.section().class("form-section").holding([
                 H.h2().class("section-title").says(Frame.t(frame, "publish.who")),
+                Form.input(frame, &Form.Field{..field("minAge", "publish.min_age", draft.minAge), kind: "number", required: false, hint: Frame.t(frame, "publish.min_age_hint")}, &errors, |c: H.Node| c.at("min", "0").at("max", show(Limits.ACTIVITY_MIN_AGE_MAX)).at("step", "1")),
                 choices("visibility", Frame.t(frame, "publish.field_visibility"), &[
                     ("public", Frame.t(frame, "visibility.public"), Frame.t(frame, "publish.visibility_public")),
                     ("unlisted", Frame.t(frame, "visibility.unlisted"), Frame.t(frame, "publish.visibility_unlisted")),

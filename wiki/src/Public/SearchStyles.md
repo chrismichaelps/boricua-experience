@@ -69,3 +69,11 @@ Resolved: enhance canonical native selects through the shared dialog, retaining 
 
 ## Form temporal fields
 `.temporal-control` lays a date trigger and an optional `.temporal-part` time picker side by side as bordered field boxes (52px, 14px radius, ink border on hover, red when invalid). `.date-icon` draws the calendar glyph; `.date-trigger.is-empty` greys the "Add date" placeholder. The calendar's month/year jump selects are pill-shaped with a chevron. Review-report and accessibility-links triggers share the bordered field style.
+
+## Quick-filter continuation Grill Log
+Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.
+
+Selected quick chips use a light surface and double ink edge rather than a dark fill: custom accessibility text colors remain readable without overriding the saved preference. Resolved browser contrast review.
+
+## Search arrival resolved contract
+Explicit discovery actions scroll to the results heading through the progressive listing module; direct entry/history retain their position, cancelled actions are ignored and reduced motion is respected. The entry and changed listing module use asset version71. Resolved.

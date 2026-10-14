@@ -13,6 +13,7 @@ import Utils.Wire as Wire
 import View.Calendar as Calendar
 import View.Frame as Frame
 import View.Pages.Plan as PlanPage
+import View.Pages.Trip as TripPage
 
 /// A frame for a guest reading in a language.
 fn visitor(locale: Locale.Locale) -> Frame.Frame {
@@ -33,6 +34,8 @@ fn main() -> Int {
   let empty = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Found(Plan.Outings{plans: []})))
   let first = outings.plans[0]
   let shared = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Shared(Plan.Outings{plans: [first]})))
+  let trip = Html.render(&TripPage.render(&visitor(Locale.Es), &first))
+  let arrival = Plan.Arrival{slug: "a-one", lat: 18.4, lng: -66.1, plan: ["a-one", "b-two"]}
   let ics = Calendar.plan("https://boricuaexperience.com", "Plan", &first.stops.map(|stop: Plan.Stop| (stop.card, stop.arrive, stop.leave)))
   let checks = Test.suite("Plan", &[
       Test.equals("styles read their wire names", &Plan.styleName(&Plan.styleFrom("adventure")), &"adventure"),
@@ -53,7 +56,16 @@ fn main() -> Int {
       Test.that("no plans explains and offers to explore", empty.contains("No encontramos un plan")),
       Test.that("a shared plan says so", shared.contains("Un plan compartido") && shared.split("class=\"plan-card\"").length() == 2),
       Test.that("the plan calendar holds one event per stop", ics.split("BEGIN:VEVENT").length() == 3 && ics.endsWith("END:VCALENDAR\r\n")),
-      Test.that("calendar stops run from arrival to departure", ics.contains("DTSTART:20261018") && ics.contains("DTEND:20261018"))
+      Test.that("calendar stops run from arrival to departure", ics.contains("DTSTART:20261018") && ics.contains("DTEND:20261018")),
+      Test.that("each plan starts its trip", es.contains("/plan/viaje?e=") && es.contains("Empezar viaje")),
+      Test.that("each plan map offers 3D and the camera turns", es.contains("data-map-3d=\"1\"") && es.contains("data-turn=\"north\"")),
+      Test.that("the trip lists every stop with where it is", trip.split("class=\"trip-stop\"").length() == first.stops.length() + 1 && trip.contains("data-stop=\"" + first.stops[0].card.slug + "\"") && trip.contains("data-lat=")),
+      Test.that("the trip carries its messages and says the position stays on the phone", trip.contains("data-say-off-route=") && trip.contains("data-say-done-title=") && trip.contains("solo en este teléfono")),
+      Test.that("the trip is not indexed and leads back to its plan", trip.contains("noindex") && trip.contains("href=\"/plan?e=")),
+      Test.that("a well-formed arrival is accepted", Plan.validArrival(&arrival)),
+      Test.that("an arrival outside Puerto Rico is refused", !Plan.validArrival(&Plan.Arrival{..arrival, lat: 40.7})),
+      Test.that("an arrival with a malformed address is refused", !Plan.validArrival(&Plan.Arrival{..arrival, slug: "../x"}) && !Plan.validArrival(&Plan.Arrival{..arrival, plan: ["a-one", "B"]})),
+      Test.that("an arrival's plan holds at most six stops", !Plan.validArrival(&Plan.Arrival{..arrival, plan: ["aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"]}))
     ])
   let ran = Test.run(&checks)
   for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }

@@ -2,6 +2,7 @@
 module Domain.Plan
 
 import Std.Json as Json
+import Domain.Achievement as Achievement
 import Domain.Event as Event
 
 /** @Domain.Plan.Leg — the drive to a stop: seconds, metres, and whether it was measured on roads */
@@ -21,6 +22,20 @@ export type Plan = {
 
 /** @Domain.Plan.Outings — the plans found, best first */
 export type Outings = { plans: Array[Plan] } derives Json.Decode
+
+/** @Domain.Plan.Arrival — a trip stop the member says they reached, with where they are now */
+export type Arrival = { slug: Str, lat: Float64, lng: Float64, @default("[]") plan: Array[Str] } derives Json.Decode
+
+/** @Domain.Plan.Arrived — whether the stop was confirmed, the trip completed, and what it unlocked */
+export type Arrived = { arrived: Bool, completed: Bool, unlocked: Array[Achievement.Unlocked] } derives Json.Decode
+
+/// Whether an arrival is well formed: an activity address shaped like a shared plan's, a point in
+/// Puerto Rico, and a plan of at most SHARED_MAX such addresses.
+export fn validArrival(arrival: &Arrival) -> Bool {
+  let wellShaped = |slug: Str| sharedSlugs(slug) == [slug]
+  wellShaped(arrival.slug) && arrival.lat >= 17.5 && arrival.lat <= 18.7 && arrival.lng >= -67.5 && arrival.lng <= -65.1
+    && arrival.plan.length() <= SHARED_MAX && arrival.plan.filter(|slug: Str| !wellShaped(slug)).length() == 0
+}
 
 /** @Domain.Plan.Style — the kind of outing a visitor asked for */
 export type Style = Mixed | Free | Family | Adventure | Culture

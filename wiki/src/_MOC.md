@@ -329,3 +329,22 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/FormControls]] — canonical temporal and selector validation regressions.
 
 - [[src/Test/MessageKeys]] — declared dynamic translation families.
+
+- [[src/Database/QuickTraits]] — quick discovery filters and organizer facts.
+
+- [[src/I18n/EnPlan]] · [[src/I18n/EsPlan]] · [[src/Test/Validation]]
+
+- [[src/Public/Listing]] — discovery action arrival and progressive listings.
+- [[src/Test/Listing]] — explicit search arrival regressions.
+
+- [[src/Services/AssistantPlans]] — grounded chat itinerary/routing boundary.
+
+- [[src/Public/AssistantMaps]] — grounded chat itinerary/routing boundary.
+
+- [[src/Public/AssistantNext]] — follow-ups from what an answer found; trips and map links from the chat.
+
+- [[src/View/Pages/Trip]] — a plan followed live: location, route choices, arrivals.
+
+- [[src/Api/AssistantRoutes]] — grounded chat itinerary/routing boundary.
+
+- [[src/Test/AssistantMaps]] — grounded chat itinerary/routing boundary.

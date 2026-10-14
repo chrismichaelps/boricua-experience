@@ -30,6 +30,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
           ]),
         SearchControls.chips(frame, catalog, ""),
         planTile(frame),
+        quickLinks(frame),
         EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, Routes.SEARCH),
         EventCard.rail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
         H.div().class("near-slot").data("feature", "near-rail").data("src", Routes.API_HOME_NEAR),
@@ -40,6 +41,22 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
         createTile(frame),
         directory(frame, catalog)
       ]))
+}
+
+/// One-tap listings for the most asked-for moments and kinds: today, the weekend, free, family, night,
+/// outdoors, step-free, and what is near.
+fn quickLinks(frame: &Frame.Frame) -> H.Node {
+  let link = |key: Str, icon: Str, href: Str| H.a().class("chip quick-chip").href(href).holding([Icons.sized(icon, 16), H.span().says(Frame.t(frame, "quick." + key))])
+  H.nav().class("quick-filters home-quick").label(Frame.t(frame, "quick.label")).holding([
+      link("today", "calendar", Routes.SEARCH + "?when=today"),
+      link("weekend", "calendar", Routes.SEARCH + "?when=weekend"),
+      link("free", "ticket", Routes.SEARCH + "?free=1"),
+      link("family", "users", Routes.SEARCH + "?t=family"),
+      link("night", "moon", Routes.SEARCH + "?t=night"),
+      link("outdoor", "mountain", Routes.SEARCH + "?t=outdoor"),
+      link("accessible", "accessible", Routes.SEARCH + "?t=accessible"),
+      link("near", "crosshair", Routes.MAP + "?near=1")
+    ])
 }
 
 /// The invitation to ready-made plans: "what should we do today near me?" answered in one tap.

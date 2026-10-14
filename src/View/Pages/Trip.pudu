@@ -1,0 +1,90 @@
+/** @View.Pages.Trip.Journey — a plan followed live: the map that follows the visitor, the next stop, every stop */
+module View.Pages.Trip
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Constants.Routes as Routes
+import Domain.Plan as Plan
+import Utils.Query as Query
+import View.Components.EventCard as EventCard
+import View.Components.Icons as Icons
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Pages.Plan as PlanPage
+import View.Seo as Seo
+
+/// The messages the trip script shows as the visitor moves: the data attribute and the message key.
+const SCRIPT_MESSAGES: Array[(Str, Str)] = [("next", "plan.trip_next"), ("distance", "plan.trip_distance"), ("near", "plan.trip_near"), ("arrived", "plan.trip_arrived"), ("done-title", "plan.trip_done_title"), ("done-body", "plan.trip_done_body"), ("locating", "plan.trip_locating"), ("location-off", "plan.trip_location_off"), ("off-route", "plan.trip_off_route"), ("status-done", "plan.trip_status_done"), ("status-next", "plan.trip_status_next"), ("status-skipped", "plan.trip_status_skipped"), ("you", "plan.trip_you"), ("follow", "plan.trip_follow"), ("following", "plan.trip_following"), ("option-fastest", "plan.trip_option_fastest"), ("option-alternate", "plan.trip_option_alternate"), ("option-no-highways", "plan.trip_option_no_highways"), ("option-walk", "plan.trip_option_walk"), ("option-detail", "plan.trip_option_detail"), ("eta", "plan.trip_eta")]
+
+/// One stop: everything the script needs to guide the visitor there, and the activity's link.
+fn stop(frame: &Frame.Frame, item: &Plan.Stop, number: Int) -> H.Node {
+  let card = item.card
+  let (seconds, meters) = match item.leg {
+    case Some(leg) => (leg.seconds, leg.meters)
+    case None => (0, 0)
+  }
+  H.li().class("trip-stop").data("stop", card.slug).data("title", card.title).data("lat", show(card.lat)).data("lng", show(card.lng))
+    .data("place", if card.venueName.isEmpty() { card.municipality.name } else { card.venueName + ", " + card.municipality.name })
+    .data("leg-seconds", show(seconds)).data("leg-meters", show(meters)).holding([
+      H.span().class("trip-stop-number").at("aria-hidden", "true").says(show(number)),
+      H.img().class("trip-stop-cover").src(EventCard.coverOf(&card)).alt("").at("loading", "lazy").at("width", "64").at("height", "48"),
+      H.span().class("trip-stop-body").holding([
+          H.a().class("trip-stop-title").href(Routes.EVENT_PREFIX + card.slug).says(card.title),
+          H.time().class("trip-stop-time").at("datetime", item.arrive).says(Frame.tf(frame, "plan.stay", &[("start", PlanPage.clock(item.arrive)), ("end", PlanPage.clock(item.leave))]) + " · " + card.municipality.name),
+          H.span().class("trip-stop-state").data("trip-state", "1")
+        ])
+    ])
+}
+
+/// The trip page: the map with its tools, the next stop with its actions, and every stop in order.
+export fn render(frame: &Frame.Frame, plan: &Plan.Plan) -> Html.Html {
+  let slugs = Plan.slugsOf(plan).join(",")
+  let meta = Seo.meta(Frame.t(frame, "plan.trip_title"), Frame.t(frame, "plan.trip_description"), Routes.PLAN_TRIP, false)
+  var stops: Array[H.Node] = []
+  for i in 0..plan.stops.length() { stops = stops.push(stop(frame, &plan.stops[i], i + 1)) }
+  var root = H.div().class("trip-page").data("feature", "trip").data("plan", slugs).data("pins", PlanPage.pins(plan))
+    .data("signed-in", if Frame.signedIn(frame) { "1" } else { "0" })
+  for message in SCRIPT_MESSAGES { root = root.data("say-" + message[0], Frame.t(frame, message[1])) }
+  Layout.page(frame, &meta, Layout.Journey, root.holding([
+        H.header().class("trip-head").holding([
+            H.a().class("icon-button trip-back").href(Routes.PLAN + Query.render(&[("e", slugs)])).label(Frame.t(frame, "plan.trip_back")).holding([Icons.sized("chevron-left", 22)]),
+            H.h1().class("trip-title").says(Frame.t(frame, "plan.trip_title")),
+            H.span().class("trip-progress muted").data("trip-progress", "1")
+          ]),
+        H.div().class("trip-stage").holding([
+            H.div().class("trip-map").role("region").label(Frame.t(frame, "plan.trip_map_label")),
+            H.div().class("trip-map-tools").holding([
+                PlanPage.mapTools(frame),
+                H.button().kind("button").class("map-button trip-follow").data("trip-follow", "1").at("aria-pressed", "false").at("hidden", "hidden").label(Frame.t(frame, "plan.trip_follow")).holding([Icons.sized("navigation", 20)])
+              ])
+          ]),
+        H.section().class("trip-panel").at("aria-labelledby", "trip-next-title").holding([
+            H.div().class("trip-next").holding([
+                H.p().class("trip-next-label muted").id("trip-next-title").says(Frame.t(frame, "plan.trip_next")),
+                H.p().class("trip-next-title").data("trip-next", "1").says(firstTitle(plan)),
+                H.p().class("trip-status").data("trip-status", "1").role("status").at("aria-live", "polite").says(Frame.t(frame, "plan.trip_intro"))
+              ]),
+            H.fieldset().class("trip-routes").data("trip-routes", "1").at("hidden", "hidden").holding([
+                H.legend().class("trip-routes-label").says(Frame.t(frame, "plan.trip_route_label")),
+                H.div().class("trip-route-options").data("trip-route-options", "1")
+              ]),
+            H.div().class("trip-actions").holding([
+                H.button().kind("button").class("button trip-begin").data("trip-begin", "1").holding([Icons.sized("navigation", 18), H.span().says(Frame.t(frame, "plan.trip_begin"))]),
+                H.a().class("button button-ghost button-small trip-directions").data("trip-directions", "1").href("#").target("_blank").at("rel", "noopener noreferrer").holding([Icons.sized("car", 16), H.span().says(Frame.t(frame, "plan.trip_directions"))]),
+                H.button().kind("button").class("button button-ghost button-small").data("trip-mark", "1").holding([Icons.sized("check", 16), H.span().says(Frame.t(frame, "plan.trip_mark"))]),
+                H.button().kind("button").class("button button-ghost button-small").data("trip-skip", "1").holding([Icons.sized("chevron-right", 16), H.span().says(Frame.t(frame, "plan.trip_skip"))])
+              ]),
+            H.p().class("trip-privacy muted").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "plan.trip_privacy"))]),
+            if Frame.signedIn(frame) { H.nothing() } else { H.p().class("trip-signin muted").holding([H.a().href(Routes.SIGN_IN + Query.render(&[("return", Routes.PLAN_TRIP + "?e=" + slugs)])).says(Frame.t(frame, "plan.trip_signin"))]) },
+            H.h2().class("trip-stops-title").says(Frame.t(frame, "plan.trip_stops_title")),
+            H.ol().class("trip-stops").holding(stops),
+            H.button().kind("button").class("button button-ghost button-small trip-restart").data("trip-restart", "1").at("hidden", "hidden").says(Frame.t(frame, "plan.trip_restart"))
+          ])
+      ]))
+}
+
+/// The first stop's title, shown before the trip starts.
+fn firstTitle(plan: &Plan.Plan) -> Str {
+  if plan.stops.isEmpty() { "" } else { plan.stops[0].card.title }
+}

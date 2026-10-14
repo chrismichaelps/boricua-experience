@@ -126,3 +126,9 @@ Resolved: advance asset/worker version to 65 for FormDates, SearchPickers and Da
 
 ## Build check
 `buildCheck()` runs on every page; version 66.
+
+## Search arrival resolved contract
+Explicit discovery actions scroll to the results heading through the progressive listing module; direct entry/history retain their position, cancelled actions are ignored and reduced motion is respected. The entry and changed listing module use asset version71. Resolved.
+
+## Grounded chat plans · #103 · Resolved Grill Log
+Provider control tags are quarantined across chunk boundaries and retried within the existing budget, never displayed or executed as prose. Structured allowlisted calls remain authoritative. Public quick traits, places, itineraries and route results use typed database reads. Public map cards show supplied anchors and road geometry, explicitly label estimated travel and missing paths, and release maps on close/reset. No model coordinates, arbitrary SQL, fake data or paid fallback. Town routing is service-only, catalog-bounded, cached by directed town pair and transactionally locked; no per-user position is sent or stored. Every changed schema is verified in both environments.
