@@ -67,3 +67,6 @@ DEEP.
 - **Q:** Where does streaming run? **A:** Node supplies a narrow SSE adapter and calls a body-HMAC protected Pudu bridge for authenticated preparation/tools. Pudu still checks origin, CSRF, active/onboarded member and atomic quota. Only the adapter reads provider credentials; the browser receives public sources and text. Permission policy permits microphone on this origin for explicit editable dictation. Deployment budget120s, adapter total deadline90s and browser95s; cancellation reaches every upstream fetch. Resolved.
 
 Optional BORICUA_OPENROUTER_KEY defaults empty; app remains usable while the assistant reports unconfigured before quota. Secret never reaches rendered settings.
+
+## Build identity
+`BORICUA_BUILD_VERSION`, `BORICUA_BUILD_COMMIT`, `BORICUA_BUILD_HASH`, `BORICUA_BUILD_TIME` (defaults name a development build) — see [[src/Domain/Build]].

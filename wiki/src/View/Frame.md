@@ -55,3 +55,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Build
+Every frame carries the running `build`, so layouts and the footer can name it.

@@ -247,6 +247,8 @@ auth.unavailable_home
 auth.unavailable_title
 auth.welcome_lead
 auth.welcome_title
+build.refresh
+build.update
 calendar.add_date
 calendar.add_time
 calendar.apply
@@ -427,6 +429,7 @@ flash.welcome_back
 flash.withdrawn
 footer.about
 footer.accessibility
+footer.build
 footer.community
 footer.contact
 footer.cookies

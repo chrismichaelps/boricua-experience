@@ -54,3 +54,6 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+## /version
+Answers `Build.json` of the running build, `no-store`, readable by any origin.

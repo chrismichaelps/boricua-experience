@@ -5,7 +5,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 out="$root/test/Fixtures/message-keys.txt"
 {
-  grep -rhoE '"(achievements|digest|assistant|nav|footer|home|search|when|sort|date|event|visibility|status|report|publish|manage|map|location|activity|notifications|notification|profile|account|auth|cookies|admin|error|form|flash|problem|legal|about|place|review)\.[a-z0-9_.]+"' "$root/src/View" "$root/src/Web" "$root/src/I18n/Dates.pudu" "$root/src/I18n/Format.pudu" "$root/src/Validation" "$root/src/Constants/Codes.pudu" "$root/src/App/Pipeline.pudu" | tr -d '"'
+  grep -rhoE '"(achievements|build|digest|assistant|nav|footer|home|search|when|sort|date|event|visibility|status|report|publish|manage|map|location|activity|notifications|notification|profile|account|auth|cookies|admin|error|form|flash|problem|legal|about|place|review)\.[a-z0-9_.]+"' "$root/src/View" "$root/src/Web" "$root/src/I18n/Dates.pudu" "$root/src/I18n/Format.pudu" "$root/src/Validation" "$root/src/Constants/Codes.pudu" "$root/src/App/Pipeline.pudu" | tr -d '"'
   sed -nE 's/.*\("((assistant|menu|media|calendar)\.[a-z0-9_.-]+)",.*/\1/p' "$root/src/I18n/Es.pudu" "$root/src/I18n/EsMenu.pudu"
   for family in admin.channel.home admin.channel.search admin.channel.map admin.channel.town admin.channel.category admin.channel.profile admin.channel.event admin.channel.assistant admin.channel.activity admin.channel.notifications admin.channel.share admin.channel.external admin.channel.direct admin.channel.other achievements.rarity.common achievements.rarity.rare achievements.rarity.epic achievements.rarity.legendary status.pending status.approved status.rejected status.withdrawn status.waitlisted \
     when.anytime when.today when.tomorrow when.weekend when.week when.month \

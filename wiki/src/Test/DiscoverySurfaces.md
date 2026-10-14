@@ -20,3 +20,6 @@ Resolved: test behavior rather than matching source text; synthetic coverage com
 
 ## Referenced by
 [[src/_MOC]] · [[src/Public/MapSurface]] · [[src/Public/HomeReadiness]]
+
+## Scroll intent
+Asserts wheel, touch-move, scroll and key presses reveal the page and that the skeleton fades.

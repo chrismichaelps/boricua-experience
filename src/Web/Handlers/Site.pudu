@@ -7,6 +7,7 @@ import Std.Http.Server.Route as Route
 import App.Assembly as Assembly
 import Constants.Http as HttpConstants
 import Constants.Routes as Routes
+import Domain.Build as Build
 import I18n.Translate as Translate
 import View.Pages.Errors as Errors
 import View.Pages.Legal as Legal
@@ -23,6 +24,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.ROBOTS, Serve.api(app, |_visitor: Context.Visitor| Respond.document(HttpConstants.TEXT, Seo.robots(held.runtime.siteUrl)))),
     Route.get(Routes.MANIFEST, Serve.api(app, |visitor: Context.Visitor| manifest(&visitor))),
     Route.get(Routes.HEALTH, |_request: Route.Request| Http.Response{..Reply.text(200, "ok"), headers: [("cache-control", HttpConstants.CACHE_PRIVATE)]}),
+    Route.get(Routes.VERSION, |_request: Route.Request| version(&held)),
     Route.get(Routes.TERMS, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Terms)))),
     Route.get(Routes.PRIVACY, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Privacy)))),
     Route.get(Routes.COOKIES, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.Cookies)))),
@@ -30,6 +32,13 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.ABOUT, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Legal.render(&Context.frame(&held, &visitor), &Legal.About)))),
     Route.get(Routes.OFFLINE, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &Errors.offline(&Context.frame(&held, &visitor)))))
   ]
+}
+
+/// The running build as JSON: the server's own answer to "which build is live", never cached, readable
+/// by any origin so monitors and other services in the ecosystem can compare it.
+fn version(app: &Assembly.App) -> Http.Response {
+  let answer = Respond.json(200, &Build.json(&app.runtime.build))
+  Http.Response{..answer, headers: answer.headers.concat([("cache-control", "no-store"), ("access-control-allow-origin", "*")])}
 }
 
 /// The sitemap of every indexable address.

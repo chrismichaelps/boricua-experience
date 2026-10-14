@@ -15,6 +15,13 @@ if [[ ! "$site_url" =~ ^https://[a-z0-9.-]+\.[a-z]{2,}$ ]] || [[ "$site_url" == 
   exit 1
 fi
 
+# A release must come from a committed tree, so its fingerprint always maps back to one commit; set
+# BORICUA_ALLOW_DIRTY=1 only for a local trial build.
+if [[ -n "$(git -C "$root" status --porcelain)" && "${BORICUA_ALLOW_DIRTY:-}" != "1" ]]; then
+  echo "Refusing to build a release from uncommitted changes; commit first (or BORICUA_ALLOW_DIRTY=1 for a trial)." >&2
+  exit 1
+fi
+
 [[ -f "$runtime/pudu-musl-lambda-x86_64" ]] || "$root/scripts/fetch-runtime.sh"
 (cd "$root" && "$compiler" install --locked)
 
@@ -29,10 +36,19 @@ for library in ld-musl-x86_64.so.1 libffi.so.8 libz.so.1 libncursesw.so.6 libgmp
 done
 mkdir -p "$output/functions/chat.func"
 cp "$root/server/assistant.mjs" "$output/functions/chat.func/index.mjs"
-cat > "$output/functions/chat.func/.vc-config.json" <<JSON
-{"runtime":"nodejs22.x","handler":"index.mjs","launcherType":"Nodejs","supportsResponseStreaming":true,"maxDuration":120,"environment":{"BORICUA_SITE_URL":"$site_url"}}
-JSON
 chmod 755 "$function_dir/bootstrap" "$function_dir/ld-musl-x86_64.so.1"
+
+# The build's identity: release version, source commit, and a fingerprint of every deployed byte.
+build_version="$(sed -nE 's/^version = "([^"]+)"/\1/p' "$root/pudu.toml" | head -1)"
+build_commit="$(git -C "$root" rev-parse HEAD)"
+build_hash="$("$root/scripts/build-identity.sh" "$output" "$root/.vercel/build-manifest.txt")"
+build_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+cat > "$output/static/build.json" <<JSON
+{"version":"$build_version","commit":"$build_commit","hash":"$build_hash","short":"${build_hash:7:12}","built_at":"$build_time"}
+JSON
+cat > "$output/functions/chat.func/.vc-config.json" <<JSON
+{"runtime":"nodejs22.x","handler":"index.mjs","launcherType":"Nodejs","supportsResponseStreaming":true,"maxDuration":120,"environment":{"BORICUA_SITE_URL":"$site_url","BORICUA_BUILD_HASH":"$build_hash"}}
+JSON
 
 # Settings that are not secret travel with the function; keys are project environment variables.
 cat > "$function_dir/.vc-config.json" <<JSON
@@ -45,7 +61,11 @@ cat > "$function_dir/.vc-config.json" <<JSON
   "environment": {
     "BORICUA_SITE_URL": "$site_url",
     "BORICUA_LOG_FORMAT": "json",
-    "BORICUA_LOG_LEVEL": "information"
+    "BORICUA_LOG_LEVEL": "information",
+    "BORICUA_BUILD_VERSION": "$build_version",
+    "BORICUA_BUILD_COMMIT": "$build_commit",
+    "BORICUA_BUILD_HASH": "$build_hash",
+    "BORICUA_BUILD_TIME": "$build_time"
   }
 }
 JSON
@@ -60,6 +80,7 @@ cat > "$output/config.json" <<'JSON'
   "routes": [
     { "src": "^/assets/(.*)$", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "continue": true },
     { "src": "^/assets/(.*)\\.html$", "headers": { "cache-control": "public, max-age=0, must-revalidate" }, "continue": true },
+    { "src": "^/build\\.json$", "headers": { "cache-control": "no-store", "access-control-allow-origin": "*" }, "continue": true },
     { "src": "^/sw\\.js$", "headers": { "cache-control": "no-cache", "service-worker-allowed": "/" }, "continue": true },
     { "src": "^/favicon\\.ico$", "headers": { "cache-control": "public, max-age=86400" }, "continue": true },
     { "src": "^/api/chat$", "dest": "/chat" },
@@ -73,3 +94,4 @@ cat > "$output/config.json" <<'JSON'
 }
 JSON
 echo "Built $output"
+echo "Build $build_version ${build_commit:0:7} $build_hash"

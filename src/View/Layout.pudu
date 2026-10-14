@@ -6,6 +6,7 @@ import Std.Html.Build as H
 import Std.Html as Html
 import Constants.App as App
 import Constants.Routes as Routes
+import Domain.Build as Build
 import Domain.Locale as Locale
 import Domain.Profile as Profile
 import View.Components.A11y as A11y
@@ -70,6 +71,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.meta().name("mobile-web-app-capable").at("content", "yes"),
     H.meta().name("apple-mobile-web-app-status-bar-style").at("content", "default"),
     H.meta().name("apple-mobile-web-app-title").at("content", App.SHORT_NAME),
+    H.meta().name("build").at("content", frame.build.hash).data("short", Build.short(&frame.build)).data("update", Frame.t(frame, "build.update")).data("refresh", Frame.t(frame, "build.refresh")),
     H.link().rel("icon").href(Routes.FAVICON + version).at("sizes", "48x48"),
     H.link().rel("icon").href("/assets/brand/icon.svg" + version).kind("image/svg+xml"),
     H.link().rel("icon").href("/assets/brand/icon-192.png" + version).kind("image/png").at("sizes", "192x192"),

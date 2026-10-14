@@ -1,12 +1,13 @@
 /** @View.Frame.Context — what every page knows about the visitor */
 module View.Frame
 
+import Domain.Build as Build
 import Domain.Consent as Consent
 import Domain.Locale as Locale
 import Domain.Profile as Profile
 import I18n.Translate as Translate
 
-/** @View.Frame.Frame — locale, address, member, form token, consent, and a one-time message */
+/** @View.Frame.Frame — locale, address, member, form token, consent, a one-time message, and the running build */
 export type Frame = {
   locale: Locale.Locale,
   siteUrl: Str,
@@ -16,7 +17,8 @@ export type Frame = {
   formToken: Str,
   consent: Option[Consent.Choice],
   flash: Str,
-  nowMillis: Int
+  nowMillis: Int,
+  build: Build.Build
 }
 
 /// The text of a key in the frame's language.

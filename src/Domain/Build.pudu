@@ -1,0 +1,55 @@
+/** @Domain.Build.Identity — which build is running: release version, source commit, and content fingerprint */
+module Domain.Build
+
+import Std.Json as Json
+
+/** @Domain.Build.Build — the release, the commit it was built from, the deployed bytes' fingerprint, and when */
+export type Build = { version: Str, commit: Str, hash: Str, builtAt: Str }
+
+/// The fingerprint prefix every release build carries.
+const PREFIX: Str = "sha256:"
+
+/// Characters of the fingerprint shown to people.
+const SHORT_LENGTH: Int = 12
+
+/// The identity of a build that no release script produced: a local or test run.
+export fn development() -> Build { Build{version: "development", commit: "", hash: "development", builtAt: ""} }
+
+/// The identity given by the release environment, or the development identity when it is missing or
+/// malformed, so a page never shows a fingerprint nobody can check.
+export fn of(version: Str, commit: Str, hash: Str, builtAt: Str) -> Build {
+  let digest = hash.trim()
+  if !wellFormed(digest) { return development() }
+  Build{version: version.trim(), commit: commit.trim(), hash: digest, builtAt: builtAt.trim()}
+}
+
+/// Whether a fingerprint is `sha256:` followed by 64 lowercase hexadecimal characters.
+export fn wellFormed(hash: Str) -> Bool {
+  if !hash.startsWith(PREFIX) || hash.length() != PREFIX.length() + 64 { return false }
+  hash.drop(PREFIX.length()).chars().filter(|c: Char| !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))).length() == 0
+}
+
+/// Whether this is a release build with a checkable fingerprint.
+export fn isRelease(build: &Build) -> Bool { wellFormed(build.hash) }
+
+/// The short fingerprint people read and compare: the first twelve hexadecimal characters.
+export fn short(build: &Build) -> Str {
+  if isRelease(build) { build.hash.drop(PREFIX.length()).take(SHORT_LENGTH) } else { build.hash }
+}
+
+/// The short commit, seven characters, or empty.
+export fn shortCommit(build: &Build) -> Str { build.commit.take(7) }
+
+/// What people read in the footer: `v0.6.0 · 1a2b3c4d5e6f` for a release, `development` otherwise.
+export fn label(build: &Build) -> Str { if isRelease(build) { "v" + build.version + " · " + short(build) } else { "development" } }
+
+/// The identity as the JSON every part of the ecosystem reads.
+export fn json(build: &Build) -> Json.Json {
+  Json.object(&[
+      ("version", Json.Text(build.version)),
+      ("commit", Json.Text(build.commit)),
+      ("hash", Json.Text(build.hash)),
+      ("short", Json.Text(short(build))),
+      ("built_at", Json.Text(build.builtAt))
+    ])
+}

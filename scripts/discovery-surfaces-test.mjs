@@ -41,6 +41,9 @@ const failed = boot({ decode: () => Promise.reject(new Error('image unavailable'
 const errorPage = boot({ home: false }); errorPage.events.DOMContentLoaded(); assert(!errorPage.classList.contains('home-pending'));
 const elsewhere = boot({ path: '/map' }); assert(!elsewhere.classList.contains('home-pending')); assert.equal(elsewhere.timers.size, 0);
 for (const signal of ['focusin', 'pointerdown']) { const current = boot(); current.events[signal](); assert(!current.classList.contains('home-pending')); }
+for (const signal of ['wheel', 'touchmove', 'scroll', 'keydown']) { const current = boot(); assert.equal(typeof current.lifecycle[signal], 'function', `${signal} reveals`); current.lifecycle[signal](); assert(!current.classList.contains('home-pending'), `${signal} reveals the rendered page`); }
+const css = readFileSync('public/assets/css/home.css', 'utf8');
+assert(/\.home \.home-skeleton \{[^}]*opacity: 0;[^}]*transition: opacity/.test(css), 'skeleton fades out instead of disappearing');
 const timeout = boot(); timeout.timers.get(1)(); assert(!timeout.classList.contains('home-pending'));
 const restored = boot(); restored.lifecycle.pageshow({ persisted: true }); assert(!restored.classList.contains('home-pending'));
-console.log('PASS: map loading/expansion/Escape/focus/dialog precedence/exit; home resource readiness/failure/timeout/interaction/BFCache');
+console.log('PASS: map loading/expansion/Escape/focus/dialog precedence/exit; home resource readiness/failure/timeout/interaction/scroll intent/fade/BFCache');

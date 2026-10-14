@@ -20,3 +20,6 @@ Resolved: the bounded contracts above preserve server rendering, native forms an
 
 ## Shimmer
 Skeleton blocks use a moving light band (1.3s linear) instead of an opacity pulse; reduced motion shows them static.
+
+## Scroll intent and fade
+Wheel, touch-move, scroll and key presses reveal the page immediately (the content is already rendered; scrolling behind a fixed placeholder landed visitors somewhere unseen). The skeleton stays in the layout but invisible when not pending and fades out over 0.28s instead of disappearing; reduced motion removes the fade.
