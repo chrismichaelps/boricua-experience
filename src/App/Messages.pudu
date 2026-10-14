@@ -16,8 +16,8 @@ import Domain.Menu as Menu
 import Domain.MenuDraft as MenuDraft
 import Domain.Notification as Notification
 import Domain.Participation as Marks
-import Domain.Plan as Plan
 import Domain.Place as Listing
+import Domain.Plan as Plan
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Review as Review
@@ -166,6 +166,7 @@ export type Kinds = {
   planShared: Request.Kind[Array[Str], Plan.Outings, Problem.Problem],
   planRoute: Request.Kind[Array[Str], Json.Json, Problem.Problem],
   planRouteOptions: Request.Kind[Array[Str], Json.Json, Problem.Problem],
+  weather: Request.Kind[(), Json.Json, Problem.Problem],
   tripArrival: Request.Kind[Signed[(Plan.Arrival, Str)], Plan.Arrived, Problem.Problem],
   report: Request.Kind[Signed[Reporting], (), Problem.Problem],
   activity: Request.Kind[Signed[()], Participation.Activity, Problem.Problem],
@@ -268,6 +269,7 @@ export fn kinds() -> Kinds {
     planShared: kind("plans.shared", READ),
     planRoute: kind("plans.route", READ),
     planRouteOptions: kind("plans.route_options", COMMAND),
+    weather: kind("plans.weather", READ),
     tripArrival: kind("plans.arrival", COMMAND),
     report: kind("participation.report", COMMAND),
     activity: kind("participation.activity", READ),

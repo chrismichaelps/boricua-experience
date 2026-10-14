@@ -11,6 +11,7 @@ import Domain.Catalog as Catalog
 import Domain.Locale as Locale
 import Domain.Search as Search
 import I18n.Dates as Dates
+import I18n.Format as Format
 import View.Components.Icons as Icons
 import View.Frame as Frame
 
@@ -52,7 +53,7 @@ fn townSelect(frame: &Frame.Frame, catalog: &Catalog.Catalog, chosen: Str, id: S
 export fn radiusSelect(frame: &Frame.Frame, chosenKm: Int, id: Str) -> H.Node {
   var select = H.select().name("radio").id(id)
   for km in Search.RADII_KM {
-    var item = H.option().value(show(km)).says(Frame.tf(frame, "search.radius_km", &[("km", show(km))]))
+    var item = H.option().value(show(km)).says(Frame.tf(frame, "search.radius_km", &[("distance", Format.radius(&frame.locale, km))]))
     if km == chosenKm { item = item.flag("selected") }
     select = select.holding([item])
   }

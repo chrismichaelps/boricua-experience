@@ -1,0 +1,33 @@
+/** @View.Components.Weather.Forecast — where the island forecast is shown: slots the weather script fills */
+module View.Components.Weather
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// The messages the weather script writes, by data attribute and message key.
+const MESSAGES: Array[(Str, Str)] = [("hourly", "plan.weather_hourly"), ("temp", "plan.weather_temp"), ("feels", "plan.weather_feels"), ("rain", "plan.weather_rain"), ("sky-clear", "plan.weather_sky_clear"), ("sky-cloudy", "plan.weather_sky_cloudy"), ("sky-showers", "plan.weather_sky_showers"), ("sky-storm", "plan.weather_sky_storm"), ("sky-fog", "plan.weather_sky_fog"), ("warn-rain", "plan.weather_warn_rain"), ("warn-storm", "plan.weather_warn_storm"), ("warn-heat", "plan.weather_warn_heat"), ("source", "plan.weather_source"), ("heat-caution", "plan.weather_heat_caution"), ("heat-extreme", "plan.weather_heat_extreme"), ("heat-danger", "plan.weather_heat_danger"), ("heat-extremedanger", "plan.weather_heat_extreme_danger"), ("advice-heat", "plan.weather_advice_heat"), ("advice-flood", "plan.weather_advice_flood"), ("advice-surf", "plan.weather_advice_surf"), ("advice-storm", "plan.weather_advice_storm"), ("advice-other", "plan.weather_advice_other"), ("until", "plan.weather_until"), ("highlow", "plan.weather_high_low"), ("label", "plan.weather_card_label"), ("start", "plan.weather_start"), ("official", "plan.weather_official"), ("alert-heatadvisory", "plan.weather_alert_heat_advisory"), ("alert-excessiveheatwarning", "plan.weather_alert_excessive_heat_warning"), ("alert-excessiveheatwatch", "plan.weather_alert_excessive_heat_watch"), ("alert-extremeheatwarning", "plan.weather_alert_extreme_heat_warning"), ("alert-extremeheatwatch", "plan.weather_alert_extreme_heat_watch"), ("alert-floodwatch", "plan.weather_alert_flood_watch"), ("alert-floodwarning", "plan.weather_alert_flood_warning"), ("alert-floodadvisory", "plan.weather_alert_flood_advisory"), ("alert-flashfloodwatch", "plan.weather_alert_flash_flood_watch"), ("alert-flashfloodwarning", "plan.weather_alert_flash_flood_warning"), ("alert-ripcurrentstatement", "plan.weather_alert_rip_current_statement"), ("alert-highsurfadvisory", "plan.weather_alert_high_surf_advisory"), ("alert-highsurfwarning", "plan.weather_alert_high_surf_warning"), ("alert-coastalfloodadvisory", "plan.weather_alert_coastal_flood_advisory"), ("alert-smallcraftadvisory", "plan.weather_alert_small_craft_advisory"), ("alert-severethunderstormwarning", "plan.weather_alert_severe_thunderstorm_warning"), ("alert-specialweatherstatement", "plan.weather_alert_special_weather_statement"), ("alert-windadvisory", "plan.weather_alert_wind_advisory"), ("alert-tropicalstormwatch", "plan.weather_alert_tropical_storm_watch"), ("alert-tropicalstormwarning", "plan.weather_alert_tropical_storm_warning"), ("alert-hurricanewatch", "plan.weather_alert_hurricane_watch"), ("alert-hurricanewarning", "plan.weather_alert_hurricane_warning")]
+
+/// The icon for each sky the forecast names: clear, cloudy, showers, storms, fog; and clear at night.
+const SKIES: Array[Str] = ["sun", "cloud", "rain", "storm", "cloud", "moon"]
+
+/// Once per page: the weather messages and icons, and the feature that fills every slot.
+export fn labels(frame: &Frame.Frame) -> H.Node {
+  var node = H.span().class("weather-labels").data("feature", "weather").at("hidden", "hidden")
+  for message in MESSAGES { node = node.data("say-" + message[0], Frame.t(frame, message[1])) }
+  var icons: Array[H.Node] = []
+  for i in 0..SKIES.length() { icons = icons.push(H.span().data("weather-icon", show(i)).holding([Icons.sized(SKIES[i], 16)])) }
+  node.holding(icons)
+}
+
+/// A weather card for a town at an instant: the sky moving behind the temperature, the day's range, the
+/// hours around the activity, heat levels and official alerts; hidden when no forecast covers it.
+export fn card(town: Str, townName: Str, at: Str, outdoor: Bool) -> H.Node {
+  H.section().class("wx-slot").data("weather-card", "1").data("weather-town", town).data("weather-name", townName).data("weather-at", at).data("weather-outdoor", if outdoor { "1" } else { "0" }).at("hidden", "hidden")
+}
+
+/// A place for the forecast of a town at an instant; it stays hidden when no forecast covers it.
+export fn slot(town: Str, at: Str, outdoor: Bool) -> H.Node {
+  H.span().class("weather-slot").data("weather-town", town).data("weather-at", at).data("weather-outdoor", if outdoor { "1" } else { "0" }).at("hidden", "hidden")
+}

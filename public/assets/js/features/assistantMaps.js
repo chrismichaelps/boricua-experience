@@ -1,4 +1,5 @@
-import { tripHref } from './assistantNext.js?v=74';
+import { tripHref } from './assistantNext.js?v=75';
+import { distanceText } from '../utils/units.js?v=75';
 const finite = n => typeof n === 'number' && Number.isFinite(n);
 const point = p => Array.isArray(p) && p.length === 2 && finite(p[0]) && finite(p[1]) && p[0] >= -67.6 && p[0] <= -65 && p[1] >= 17.4 && p[1] <= 18.8;
 export function checkedVisual(value) {
@@ -20,7 +21,7 @@ export function assistantMaps(section, raw, labels) {
   const canvas = el('div','assistant-route-map'); canvas.setAttribute('role','img'); canvas.setAttribute('aria-label',names); card.append(canvas);
   const facts = el('p','assistant-route-note',labels.estimated + ' · ' + (value.location_scope === 'town_centers' ? labels.townCenters : labels.approximate));
   if (finite(value.seconds) && value.seconds >= 0) facts.textContent += ` · ${Math.round(value.seconds/60)} min`;
-  if (finite(value.meters) && value.meters >= 0) facts.textContent += ` · ${(value.meters/1000).toFixed(1)} km`;
+  if (finite(value.meters) && value.meters >= 0) facts.textContent += ` · ${distanceText(value.meters)}`;
   if (value.legs.length < value.pins.length - 1) facts.textContent += ' · ' + labels.noRoad;
   card.append(facts);
   const stops = el('ol','assistant-plan-stops');
@@ -54,7 +55,7 @@ export function assistantMaps(section, raw, labels) {
   let closed=false,map,observer;
   const draw=async()=>{
     try {
-      const {createMap}=await import('./mapLoader.js?v=74');
+      const {createMap}=await import('./mapLoader.js?v=75');
       if(closed)return;
       const built=await createMap(canvas,{cooperative:true,controls:false,center:[value.pins[0].lng,value.pins[0].lat],zoom:11});
       map=built.map;

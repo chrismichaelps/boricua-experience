@@ -18,8 +18,8 @@ import Services.Runtime as Runtime
 
 fn text(args: &Json.Json, key: Str) -> Str { Option.unwrapOr(Gateway.textAt(args, key), "") }
 
-fn pin(card: &Event.Card, order: Int) -> Json.Json {
-  Json.object(&[("order", Json.Number(order)), ("slug", Json.Text(card.slug)), ("title", Json.Text(card.title)), ("href", Json.Text("/e/" + card.slug)), ("lat", Gateway.fraction(Some(card.lat))), ("lng", Gateway.fraction(Some(card.lng)))])
+fn pin(card: &Event.Card, order: Int, locale: Str) -> Json.Json {
+  Json.object(&[("order", Json.Number(order)), ("slug", Json.Text(card.slug)), ("title", Json.Text(Event.titleFor(card, locale == "en"))), ("href", Json.Text("/e/" + card.slug)), ("lat", Gateway.fraction(Some(card.lat))), ("lng", Gateway.fraction(Some(card.lng)))])
 }
 
 fn response(result: Json.Json, cards: &Array[Event.Card], visuals: &Array[Json.Json], locale: Str) -> Json.Json {
@@ -46,7 +46,7 @@ export fn execute(runtime: &Runtime.Runtime, name: Str, args: &Json.Json, known:
       let detail = Events.detail(&runtime.gateway, slug, None) ?
       if detail.card.visibility != "public" { return Err(Problem.Forbidden) }
       cards = cards.push(detail.card)
-      pins = pins.push(pin(&detail.card, pins.length() + 1))
+      pins = pins.push(pin(&detail.card, pins.length() + 1, locale))
     }
     let route = Plans.route(runtime, &slugs) ?
     let visual = Json.object(&[("kind", Json.Text("route")), ("pins", Json.list(&pins)), ("legs", Option.unwrapOr(Json.field(&route, "legs"), Json.list(&[]))), ("href", Json.Text("/plan?e=" + slugs.join(","))), ("location_scope", Json.Text("public_approximate"))])
@@ -71,7 +71,7 @@ export fn execute(runtime: &Runtime.Runtime, name: Str, args: &Json.Json, known:
     var stops: Array[Json.Json] = []
     for stop in plan.stops {
       cards = cards.push(stop.card)
-      pins = pins.push(pin(&stop.card, pins.length() + 1))
+      pins = pins.push(pin(&stop.card, pins.length() + 1, locale))
       stops = stops.push(Json.object(&[("activity", Conversation.sourceLocalized(&stop.card, locale)), ("arrive", Json.Text(stop.arrive)), ("leave", Json.Text(stop.leave)), ("duration_assumed", Json.Boolean(stop.card.endsAt == None))]))
     }
     visuals = visuals.push(Json.object(&[("kind", Json.Text("itinerary")), ("title", Json.Text(town.name)), ("pins", Json.list(&pins)), ("stops", Json.list(&stops)), ("legs", Option.unwrapOr(Json.field(&route, "legs"), Json.list(&[]))), ("seconds", Json.Number(plan.travelSeconds)), ("meters", Json.Number(plan.travelMeters)), ("href", Json.Text("/plan?e=" + slugs.join(","))), ("location_scope", Json.Text("public_approximate"))]))

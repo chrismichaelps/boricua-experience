@@ -12,16 +12,16 @@ import Api.Supabase.Gateway as Gateway
 import Domain.Assistant as Conversation
 import Domain.Catalog as Reference
 import Domain.Event as Event
-import Domain.Problem as Problem
 import Domain.Place as Place
 import Domain.Plan as Plan
-import Services.AssistantPlans as AssistantPlans
+import Domain.Problem as Problem
 import Domain.Session as Session
 import PuduLangHttpClient as HttpClient
 import PuduLangHttpClient.Request as Request
 import PuduLangHttpClient.Response {Answering}
 import PuduLangHttpClient.Response as Response
 import Services.Assistant as Assistant
+import Services.AssistantPlans as AssistantPlans
 import Services.Runtime as Runtime
 import Support.Fixtures as Fixtures
 import Utils.Time as Time
@@ -41,7 +41,7 @@ fn main() -> Int {
       Reference.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.4655, lng: -66.1057},
       Reference.Municipality{slug: "caguas", name: "Caguas", region: "centro", lat: 18.2341, lng: -66.0485},
       Reference.Municipality{slug: "ponce", name: "Ponce", region: "sur", lat: 18.0111, lng: -66.6141}
-    ]}
+    ] }
   let gateway = Gateway.over(|_request: Request.Request, _cancel: Cancel.Token| Err(HttpClient.Rejected("unexpected database call")), "https://example.test", "fixture")
   let key = Bytes.fromText("01234567890123456789012345678901")
   let runtime = Runtime.over(gateway, key, "https://example.test")

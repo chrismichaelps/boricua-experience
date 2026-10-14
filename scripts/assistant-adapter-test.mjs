@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import { EventEmitter } from 'node:events';
-import assistant from '../server/assistant.mjs';
+import assistant, {signature} from '../server/assistant.mjs';
 const originalFetch = globalThis.fetch, originalTimer = globalThis.setTimeout, originalClear = globalThis.clearTimeout;
 const originalEnv = { ...process.env };
 Object.assign(process.env, { BORICUA_OPENROUTER_KEY: 'fixture', BORICUA_SESSION_KEY: 'ab'.repeat(32), BORICUA_SITE_URL: 'http://localhost:8080', BORICUA_ASSISTANT_BRIDGE_URL: 'http://localhost:8082' });
@@ -23,6 +23,26 @@ try {
   globalThis.fetch = async (url,init) => { assert.equal(init.headers['x-csrf-token'],'csrf'); return new globalThis.Response('{"error":"private dependency detail"}',{status:503}); };
   res = new Response(); await assistant(request(),res);
   assert.equal(res.output,'{"error":"assistant_unavailable"}');
+  for (const allowed of [false,true]) {
+    let reservations=0, generations=0;
+    const sse = value => new globalThis.Response(`data: ${JSON.stringify(value)}\n\ndata: [DONE]\n\n`);
+    globalThis.fetch = async (url,init) => {
+      if (url.endsWith('/api/weather')) return new globalThis.Response('{}');
+      if (url.endsWith('/api/assistant')) {
+        const operation=init.headers['x-assistant-operation'];
+        assert.equal(init.headers['x-assistant-signature'],signature('ab'.repeat(32),init.body,operation));
+        if (operation==='provider') {reservations++;return new globalThis.Response(JSON.stringify({allowed}));}
+        if (operation==='tool') return new globalThis.Response('{"result":{"verified":true},"sources":[]}');
+        return new globalThis.Response('{"messages":[],"tools":[]}');
+      }
+      generations++;
+      return generations===1 ? sse({choices:[{delta:{tool_calls:[{index:0,id:'one',function:{name:'browse_catalog',arguments:'{"scope":"categories"}'}}]},finish_reason:'tool_calls'}]}) : sse({choices:[{delta:{content:'Current database results.'},finish_reason:'stop'}]});
+    };
+    res=new Response(); await assistant(request(),res);
+    assert.equal(generations,allowed?2:0,'each provider request needs an atomic permit');
+    assert.equal(reservations,allowed?2:1);
+    assert.ok(res.output.includes(allowed?'event: done':'assistant_limit'));
+  }
   for (const cancel of ['deadline','disconnect']) {
     let deadline, observedAbort = false;
     globalThis.setTimeout = (fn,ms) => { assert.equal(ms,90000); deadline = fn; return 1; };

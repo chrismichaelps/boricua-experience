@@ -128,8 +128,16 @@ fn draftArguments(ready: &Draft.Ready) -> Array[(Str, Json.Json)] {
     ("p_join_policy", Gateway.text(ready.joinPolicy)),
     ("p_capacity", Gateway.whole(ready.capacity)),
     ("p_price_cents", Gateway.whole(ready.priceCents)),
-    ("p_facts", Json.object(&[("min_age", Gateway.whole(ready.minAge)), ("accessible", Gateway.truth(ready.accessible))]))
+    ("p_facts", Json.object(&[("min_age", Gateway.whole(ready.minAge)), ("accessible", Gateway.truth(ready.accessible)), ("parking", fact(ready.parking)), ("cash_only", fact(ready.cashOnly))]))
   ]
+}
+
+/// A yes/no fact, or null when not said.
+fn fact(answer: Option[Bool]) -> Json.Json {
+  match answer {
+    case Some(value) => Json.Boolean(value)
+    case None => Json.Null
+  }
 }
 
 /// Publishes an event organized by the member.

@@ -2,13 +2,15 @@
 // as they move (turning with their heading in 3D), says how far the next stop is, and notices when they
 // reach a stop. The position stays in this browser: only when a signed-in member reaches a stop is it
 // sent, once, so the server can confirm the arrival; the server compares it and keeps nothing.
-import { create } from '../utils/dom.js?v=74';
-import { createMap } from './mapLoader.js?v=74';
-import { buildings3d } from './map3d.js?v=74';
-import { getJson, postJson } from '../net/http.js?v=74';
-import { legLines, pinsOf } from './plan.js?v=74';
-import { haptic } from './haptics.js?v=74';
-import { toast } from './toast.js?v=74';
+import { create } from '../utils/dom.js?v=75';
+import { createMap } from './mapLoader.js?v=75';
+import { buildings3d } from './map3d.js?v=75';
+import { getJson, postJson } from '../net/http.js?v=75';
+import { legLines, pinsOf } from './plan.js?v=75';
+import { haptic } from './haptics.js?v=75';
+import { toast } from './toast.js?v=75';
+import { refreshSlot } from './weather.js?v=77';
+import { distanceText } from '../utils/units.js?v=75';
 
 // Public activity points are snapped to a grid of about 550 m, so a stop counts as reached within
 // ARRIVE_M of its public point; the server then checks the exact place.
@@ -147,6 +149,7 @@ export function stopsOf(page) {
     node, order: index + 1, slug: node.dataset.stop, title: node.dataset.title, place: node.dataset.place,
     lat: Number(node.dataset.lat), lng: Number(node.dataset.lng),
     legSeconds: Number(node.dataset.legSeconds) || 0, legMeters: Number(node.dataset.legMeters) || 0,
+    ferry: node.dataset.ferry === '1', town: node.dataset.town || '', townName: node.dataset.townName || '', arrive: node.dataset.arrive || '', outdoor: node.dataset.outdoor === '1',
   })).filter((stop) => Number.isFinite(stop.lat) && Number.isFinite(stop.lng));
 }
 
@@ -167,6 +170,16 @@ export function trip(page) {
   const follow = page.querySelector('[data-trip-follow]');
   const restart = page.querySelector('[data-trip-restart]');
   const routeBox = page.querySelector('[data-trip-routes]');
+  const weatherCard = page.querySelector('.trip-panel [data-weather-card]');
+  // The forecast card follows the next stop: its town at the time the plan reaches it.
+  const showWeather = (stop) => {
+    if (!weatherCard) return;
+    if (!stop) { weatherCard.hidden = true; return; }
+    if (weatherCard.dataset.weatherTown === stop.town && weatherCard.dataset.weatherAt === stop.arrive) return;
+    Object.assign(weatherCard.dataset, { weatherTown: stop.town, weatherName: stop.townName, weatherAt: stop.arrive, weatherOutdoor: stop.outdoor ? '1' : '0' });
+    refreshSlot(weatherCard);
+  };
+  document.addEventListener('bx:weather-ready', () => { if (weatherCard) { weatherCard.dataset.weatherTown = ''; showWeather(next()); } });
   const routeChoices = page.querySelector('[data-trip-route-options]');
   // Each leg's ways to get there by its order (the leg from stop n to stop n + 1 has order n).
   let legOptions = new Map();
@@ -198,6 +211,7 @@ export function trip(page) {
       const detail = create('span', { class: 'trip-route-detail' }, figuresText(option));
       details.set(option, detail);
       label.append(input, create('span', { class: 'trip-route-name' }, text('option-' + option.kind.replace('_', '-'))), detail);
+      if (option.highways) label.append(create('span', { class: 'trip-route-toll' }, text('toll')));
       return label;
     }));
     refreshFigures();
@@ -207,7 +221,7 @@ export function trip(page) {
   const figuresOf = (option) => (here ? liveFigures(option, here, paceSamples >= 6 ? measuredPace : 0) : option);
   const figuresText = (option) => {
     const figures = figuresOf(option);
-    return say(text('option-detail'), { minutes: String(Math.max(1, Math.round(figures.seconds / 60))), km: (figures.meters / 1000).toFixed(1) });
+    return say(text('option-detail'), { minutes: String(Math.max(1, Math.round(figures.seconds / 60))), distance: distanceText(figures.meters) });
   };
   const refreshFigures = () => {
     for (const [option, node] of details) {
@@ -254,6 +268,7 @@ export function trip(page) {
     if (progressLabel) progressLabel.textContent = `${progress.done.length}/${stops.length}`;
     page.classList.toggle('is-done', !upcoming);
     paintRoutes();
+    showWeather(upcoming);
     if (upcoming) {
       nextTitle.textContent = upcoming.title;
       directions.href = directionsUrl(upcoming, undefined, wayTo(upcoming)?.kind === 'walk');
@@ -297,6 +312,8 @@ export function trip(page) {
     const upcoming = next();
     if (!upcoming || !here) return;
     refreshFigures();
+    // To or from Vieques and Culebra the way is a ferry from Ceiba, never a drive estimate.
+    if (upcoming.ferry) { setStatus(text('ferry')); return; }
     const metres = distance(here, upcoming);
     if (metres <= NEAR_M) { setStatus(text('near')); return; }
     // Along the chosen road route when there is one, else from the straight line at the island's pace.
@@ -304,7 +321,7 @@ export function trip(page) {
     const live = way ? figuresOf(way) : { meters: metres * DETOUR, seconds: minutesFor(metres, upcoming) * 60 };
     const minutes = Math.max(1, Math.round(live.seconds / 60));
     const arrival = new Intl.DateTimeFormat(document.documentElement.lang.startsWith('en') ? 'en-US' : 'es-PR', { timeZone: 'America/Puerto_Rico', hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + live.seconds * 1000));
-    let message = say(text('distance'), { km: ((way ? live.meters : metres) / 1000).toFixed(1), minutes: String(minutes) }) + ' · ' + say(text('eta'), { time: arrival });
+    let message = say(text('distance'), { distance: distanceText(way ? live.meters : metres), minutes: String(minutes) }) + ' · ' + say(text('eta'), { time: arrival }) + (way?.highways ? ' · ' + text('tolls') : '');
     // The route starts at the first stop, so being away from it only matters once the trip is under way.
     const underway = progress.done.length + progress.skipped.length > 0;
     if (underway && routeLines.length && distanceToLines(here, routeLines) > OFF_ROUTE_M) message += ' ' + text('off-route');

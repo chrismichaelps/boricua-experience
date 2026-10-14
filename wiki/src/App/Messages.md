@@ -86,3 +86,6 @@ Resolved: integrate all-category organizer covers with existing upload presentat
 
 ## renewConsent
 `renewConsent: Kind[Signed[Credentials.Renewal], (), Problem]` registered as `account.renew_consent` (command).
+
+## Release formatter normalization · #107
+Resolved Grill Log: pinned0.1.3 formatter normalizes existing whitespace/import order only; behavior and contracts remain unchanged. Full tests and formatter gate verify the release.
