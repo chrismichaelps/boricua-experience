@@ -31,6 +31,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.post(Routes.EVENT_WITHDRAW, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| withdraw(&held, &visitor, &session))),
     Route.post(Routes.EVENT_SAVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| save(&held, &visitor, &session))),
     Route.post(Routes.EVENT_REACT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| react(&held, &visitor, &session))),
+    Route.post(Routes.EVENT_INTEREST, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| interest(&held, &visitor, &session))),
     Route.post(Routes.EVENT_REPORT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| report(&held, &visitor, &session))),
     Route.get(Routes.EVENT_MANAGE, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| queue(&held, &visitor, &session, None))),
     Route.post(Routes.EVENT_APPROVE_ALL, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| approveAll(&held, &visitor, &session))),
@@ -99,6 +100,21 @@ fn react(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessio
   let value = Option.unwrapOr(Form.whole(&Serve.fields(visitor), "value"), 0)
   match Serve.ask(app, &app.kinds.react, Serve.signed(session, Messages.Reacting{eventId: event.card.id, value: value})) {
     case Ok(state) => if Context.wantsJson(visitor) { Respond.json(200, &Json.object(&[("reaction", Json.Number(state.reaction)), ("likeCount", Json.Number(state.likeCount))])) } else { Respond.redirect(eventPath(visitor)) }
+    case Err(problem) => refusedOnEvent(app, visitor, &problem)
+  }
+}
+
+/// Sets or clears the member's interested or going mark; scripts get the mark and counts as JSON.
+fn interest(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let event = match Events.eventOf(app, visitor) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let kind = Form.text(&Serve.fields(visitor), "kind")
+  match Serve.ask(app, &app.kinds.interest, Serve.signed(session, Messages.Marking{eventId: event.card.id, kind: kind})) {
+    case Ok(state) => if Context.wantsJson(visitor) {
+      Respond.json(200, &Json.object(&[("kind", match state.kind { case Some(found) => Json.Text(found) case None => Json.Null }), ("interested", Json.Number(state.interested)), ("going", Json.Number(state.going))]))
+    } else { Respond.redirect(eventPath(visitor)) }
     case Err(problem) => refusedOnEvent(app, visitor, &problem)
   }
 }

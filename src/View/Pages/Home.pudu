@@ -29,6 +29,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
             Hero.render(frame, catalog)
           ]),
         SearchControls.chips(frame, catalog, ""),
+        planTile(frame),
         EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, Routes.SEARCH),
         EventCard.rail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
         H.div().class("near-slot").data("feature", "near-rail").data("src", Routes.API_HOME_NEAR),
@@ -39,6 +40,15 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
         createTile(frame),
         directory(frame, catalog)
       ]))
+}
+
+/// The invitation to ready-made plans: "what should we do today near me?" answered in one tap.
+fn planTile(frame: &Frame.Frame) -> H.Node {
+  H.a().class("plan-tile").href(Routes.PLAN).holding([
+      H.span().class("plan-tile-icon").at("aria-hidden", "true").holding([Icons.sized("map", 22)]),
+      H.span().class("plan-tile-copy").holding([H.strong().says(Frame.t(frame, "plan.cta")), H.span().says(Frame.t(frame, "plan.cta_body"))]),
+      Icons.sized("chevron-right", 20)
+    ])
 }
 
 /// The blue promotional tile inviting the visitor to see what is near: by device location, or by

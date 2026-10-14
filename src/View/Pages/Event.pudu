@@ -45,6 +45,7 @@ export fn renderFrom(frame: &Frame.Frame, detail: &Event.Detail, problem: &Optio
         H.div().class("event-layout").holding([
             H.div().class("event-main").holding([
                 heading(frame, detail),
+                interest(frame, detail),
                 reactions(frame, detail),
                 about(frame, detail),
                 facts(frame, detail),
@@ -161,6 +162,34 @@ fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
           H.button().submit().class(if reaction == -1 { "reaction is-on" } else { "reaction" }).at("aria-pressed", if reaction == -1 { "true" } else { "false" }).holding([Icons.sized("thumb-down", 18), H.span().says(Frame.t(frame, "event.not_interested"))])
         ]),
       calendar
+    ])
+}
+
+/// "Interested" and "Going": a member's light mark on an upcoming activity with its public counts. Guests
+/// are invited to sign in; organizers and finished activities only show how many marked it.
+fn interest(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  let base = Routes.EVENT_PREFIX + card.slug
+  // Everyone confirmed to attend counts as going, alongside those who simply said they will.
+  let summary = H.p().class("interest-count").data("interest-summary", "1").data("approved", show(card.approvedCount)).data("going-one", Translate.text(&frame.locale, "interest.going.one")).data("going-other", Translate.text(&frame.locale, "interest.going.other")).data("interested-one", Translate.text(&frame.locale, "interest.interested.one")).data("interested-other", Translate.text(&frame.locale, "interest.interested.other")).says(Translate.count(&frame.locale, "interest.going", card.goingCount + card.approvedCount) + " · " + Translate.count(&frame.locale, "interest.interested", card.interestedCount))
+  let open = card.status == "published" && !Event.hasEnded(&card, frame.nowMillis) && card.visibility == "public"
+  if !open || detail.viewer.isOrganizer { return H.div().class("interest").holding([summary]) }
+  let mine = Option.unwrapOr(detail.viewer.interest, "")
+  let mark = |kind: Str, icon: Str, label: Str| {
+    let on = mine == kind
+    if !detail.viewer.signedIn {
+      H.a().class("interest-button").href(Routes.SIGN_IN + "?return=" + base).holding([Icons.sized(icon, 18), H.span().says(label)])
+    } else {
+      H.form().action(base + "/interest").method("post").data("feature", "interest").holding([
+          Form.token(frame),
+          H.input().kind("hidden").name("kind").value(if on { "" } else { kind }),
+          H.button().submit().class(if on { "interest-button is-on" } else { "interest-button" }).data("kind", kind).at("aria-pressed", if on { "true" } else { "false" }).holding([Icons.sized(icon, 18), H.span().says(label)])
+        ])
+    }
+  }
+  H.div().class("interest").role("group").label(Frame.t(frame, "interest.group")).holding([
+      H.div().class("interest-buttons").holding([mark("interested", "star", Frame.t(frame, "interest.interested_label")), mark("going", "check", Frame.t(frame, "interest.going_label"))]),
+      summary
     ])
 }
 

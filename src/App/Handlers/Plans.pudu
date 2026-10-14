@@ -1,0 +1,21 @@
+/** @App.Handlers.Plans.Registrations — plans near a visitor, shared plans, and routes */
+module App.Handlers.Plans
+
+import Std.Json as Json
+import App.Messages as Messages
+import Domain.Plan as Plan
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
+import Services.Plans as Plans
+import Services.Runtime as Runtime
+
+/// The handlers of plans.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.planOutings, |asked: Plan.Request, _context: Context.Context| Messaging.lift(Plans.outings(&held, &asked))),
+    Registration.handler(&kinds.planShared, |asked: Array[Str], _context: Context.Context| Messaging.lift(Plans.shared(&held, &asked))),
+    Registration.handler(&kinds.planRoute, |asked: Array[Str], _context: Context.Context| Messaging.lift(Plans.route(&held, &asked)))
+  ]
+}

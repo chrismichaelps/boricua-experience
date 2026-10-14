@@ -1,9 +1,9 @@
-import { message } from '../constants/messages.js?v=68';
-import { toast } from './toast.js?v=68';
+import { message } from '../constants/messages.js?v=69';
+import { toast } from './toast.js?v=69';
 
 export function share(button) {
   button.addEventListener('click', async () => {
-    const data = { title: button.dataset.title || document.title, url: location.href };
+    const data = { title: button.dataset.title || document.title, url: button.dataset.url || location.href };
     shared('share');
     if (navigator.share && button.dataset.mode !== 'copy') {
       try { await navigator.share(data); } catch { /* the visitor closed the sheet */ }

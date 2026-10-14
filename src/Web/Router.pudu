@@ -21,6 +21,7 @@ import Web.Handlers.Media as Media
 import Web.Handlers.Menus as Menus
 import Web.Handlers.Participation as Participation
 import Web.Handlers.Places as Places
+import Web.Handlers.Plans as Plans
 import Web.Handlers.Privacy as Privacy
 import Web.Handlers.Site as Site
 import Web.Respond as Respond
@@ -32,6 +33,7 @@ export fn routes(app: &Assembly.App) -> Route.Router {
     .concat(Assistant.routes(app))
     .concat(Events.routes(app))
     .concat(Places.routes(app))
+    .concat(Plans.routes(app))
     .concat(Menus.routes(app))
     .concat(Media.routes(app))
     .concat(EventCover.routes(app))

@@ -1,0 +1,115 @@
+/** @Web.Handlers.Plans.Routes — plans near the visitor, a plan's calendar file, and its road route */
+module Web.Handlers.Plans
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import App.Assembly as Assembly
+import Constants.Cookies as Cookies
+import Constants.Http as HttpConstants
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Plan as Plan
+import Domain.Problem as Problem
+import Domain.Search as Search
+import Utils.Geo as Geo
+import Utils.Time as Time
+import View.Calendar as Calendar
+import View.Frame as Frame
+import View.Pages.Plan as PlanPage
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// The plan routes.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Routes.PLAN, Serve.page(app, |visitor: Context.Visitor| page(&held, &visitor))),
+    Route.get(Routes.PLAN_CALENDAR, Serve.page(app, |visitor: Context.Visitor| calendar(&held, &visitor))),
+    Route.get(Routes.API_PLAN_ROUTE, Serve.api(app, |visitor: Context.Visitor| route(&held, &visitor)))
+  ]
+}
+
+/// The visitor's mode: the one just chosen, else the remembered one, else local.
+fn modeOf(visitor: &Context.Visitor) -> Plan.Mode {
+  let chosen = Serve.query(visitor, "mode")
+  Plan.modeFrom(if chosen.isEmpty() { Option.unwrapOr(visitor.cookies.get(Cookies.MODE), "") } else { chosen })
+}
+
+/// Where the plan starts: the device's position, else a chosen town, else the remembered nearby town.
+fn originOf(visitor: &Context.Visitor, catalog: &Catalog.Catalog) -> (Option[Float64], Option[Float64], Str) {
+  match (Geo.parseDegrees(Serve.query(visitor, "lat")), Geo.parseDegrees(Serve.query(visitor, "lng"))) {
+    case (Some(lat), Some(lng)) => { return (Some(lat), Some(lng), "") }
+    case _ => {}
+  }
+  let chosen = Serve.query(visitor, "town")
+  let town = if chosen.isEmpty() {
+    match Option.andThen(visitor.cookies.get(Cookies.NEAR), |value: Str| Search.rememberedNear(value)) {
+      case Some((slug, _meters)) => slug
+      case None => ""
+    }
+  } else { chosen }
+  match Catalog.municipality(catalog, town) {
+    case Some(found) => (Some(found.lat), Some(found.lng), found.slug)
+    case None => (None, None, "")
+  }
+}
+
+/// The plans page: a shared plan, the plans for the chosen start, or the choices alone.
+fn page(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let mode = modeOf(visitor)
+  let (lat, lng, town) = originOf(visitor, &catalog)
+  let choices = PlanPage.Choices{lat: lat, lng: lng, town: town, window: Plan.windowFrom(Serve.query(visitor, "when")), style: Plan.styleFrom(Serve.query(visitor, "style")), stops: Plan.stopsFrom(Serve.query(visitor, "stops")), mode: mode}
+  let shared = Plan.sharedSlugs(Serve.query(visitor, "e"))
+  let shown = if !shared.isEmpty() {
+    match Serve.ask(app, &app.kinds.planShared, shared) {
+      case Ok(found) => PlanPage.Shared(found)
+      case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+    }
+  } else {
+    match (lat, lng) {
+      case (Some(atLat), Some(atLng)) => {
+        // "Surprise me" asks for a fresh mix every time; other plans are stable for the same choices.
+        let seed = if Serve.query(visitor, "surprise") == "1" { Time.nowSeconds() % 99991 + 1 } else { 0 }
+        let request = Plan.Request{lat: atLat, lng: atLng, window: choices.window, style: choices.style, stops: choices.stops, mode: mode, radiusM: Plan.RADIUS_M, seed: seed}
+        match Serve.ask(app, &app.kinds.planOutings, request) {
+          case Ok(found) => PlanPage.Found(found)
+          case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+        }
+      }
+      case _ => PlanPage.Nothing
+    }
+  }
+  let response = Respond.page(200, &PlanPage.render(&Context.frame(app, visitor), &catalog, &choices, &shown))
+  let chosen = Serve.query(visitor, "mode")
+  if chosen.isEmpty() || visitor.cookies.get(Cookies.MODE) == Some(Plan.modeName(&mode)) { response } else { Respond.withPreference(app, response, Cookies.MODE, Plan.modeName(&mode)) }
+}
+
+/// A plan as a calendar file: each stop at the time the plan reaches it.
+fn calendar(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let slugs = Plan.sharedSlugs(Serve.query(visitor, "e"))
+  match Serve.ask(app, &app.kinds.planShared, slugs) {
+    case Ok(found) => match Option.fromArray(&found.plans) {
+      case Some(plan) => Http.Response{..Respond.document(HttpConstants.CALENDAR, Calendar.plan(app.runtime.siteUrl, Frame.t(&Context.frame(app, visitor), "plan.calendar_name"), &plan.stops.map(|stop: Plan.Stop| (stop.card, stop.arrive, stop.leave)))), headers: [
+          ("content-type", HttpConstants.CALENDAR),
+          ("content-disposition", "attachment; filename=\"plan.ics\""),
+          ("cache-control", HttpConstants.CACHE_PRIVATE)
+        ] }
+      case None => Respond.problem(app, visitor, &Problem.Missing)
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The road route between the activities in order, for the plan's map.
+fn route(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.planRoute, Plan.sharedSlugs(Serve.query(visitor, "e"))) {
+    case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_SHARED_PINS))}
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

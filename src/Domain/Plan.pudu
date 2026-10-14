@@ -1,0 +1,123 @@
+/** @Domain.Plan.Outings — ready-made plans of nearby activities, chained by road time */
+module Domain.Plan
+
+import Std.Json as Json
+import Domain.Event as Event
+
+/** @Domain.Plan.Leg — the drive to a stop: seconds, metres, and whether it was measured on roads */
+export type Leg = { seconds: Int, meters: Int, road: Bool } derives Json.Decode
+
+/** @Domain.Plan.Stop — one activity in a plan, with when to arrive and leave and the drive to it */
+export type Stop = { card: Event.Card, arrive: Str, leave: Str, leg: Option[Leg] } derives Json.Decode
+
+/** @Domain.Plan.Plan — stops in order with the total drive */
+export type Plan = {
+  stops: Array[Stop],
+  @json("travel_seconds") travelSeconds: Int,
+  @json("travel_meters") travelMeters: Int,
+  starts: Str,
+  ends: Str
+} derives Json.Decode
+
+/** @Domain.Plan.Outings — the plans found, best first */
+export type Outings = { plans: Array[Plan] } derives Json.Decode
+
+/** @Domain.Plan.Style — the kind of outing a visitor asked for */
+export type Style = Mixed | Free | Family | Adventure | Culture
+
+/** @Domain.Plan.Window — when the plan happens */
+export type Window = Today | Tomorrow | Weekend
+
+/** @Domain.Plan.Mode — whether the visitor explores as a local or as a visitor */
+export type Mode = Local | Visitor
+
+/** @Domain.Plan.Request — everything a plan search reads */
+export type Request = { lat: Float64, lng: Float64, window: Window, style: Style, stops: Int, mode: Mode, radiusM: Int, seed: Int }
+
+/// Every style, in the order the page offers them.
+export const STYLES: Array[Style] = [Mixed, Free, Family, Adventure, Culture]
+
+/// Every window, in the order the page offers them.
+export const WINDOWS: Array[Window] = [Today, Tomorrow, Weekend]
+
+/// The stop counts a visitor may ask for.
+export const STOP_CHOICES: Array[Int] = [2, 3, 4]
+
+/// How far around the starting point a plan looks, in metres.
+export const RADIUS_M: Int = 30000
+
+/// The most stops a shared plan may carry.
+export const SHARED_MAX: Int = 6
+
+/// The style's wire name.
+export fn styleName(style: &Style) -> Str {
+  match style {
+    case Mixed => "mixed"
+    case Free => "free"
+    case Family => "family"
+    case Adventure => "adventure"
+    case Culture => "culture"
+  }
+}
+
+/// The style a wire name selects; mixed for anything else.
+export fn styleFrom(name: Str) -> Style {
+  match name {
+    case "free" => Free
+    case "family" => Family
+    case "adventure" => Adventure
+    case "culture" => Culture
+    case _ => Mixed
+  }
+}
+
+/// The window's wire name.
+export fn windowName(window: &Window) -> Str {
+  match window {
+    case Today => "today"
+    case Tomorrow => "tomorrow"
+    case Weekend => "weekend"
+  }
+}
+
+/// The window a wire name selects; today for anything else.
+export fn windowFrom(name: Str) -> Window {
+  match name {
+    case "tomorrow" => Tomorrow
+    case "weekend" => Weekend
+    case _ => Today
+  }
+}
+
+/// The mode's wire name.
+export fn modeName(mode: &Mode) -> Str {
+  match mode {
+    case Local => "local"
+    case Visitor => "visitor"
+  }
+}
+
+/// The mode a wire name selects; local for anything else.
+export fn modeFrom(name: Str) -> Mode { if name == "visitor" { Visitor } else { Local } }
+
+/// The stop count asked for, kept within the offered choices.
+export fn stopsFrom(written: Str) -> Int {
+  match written.trim().toInt() {
+    case Some(count) => if count < 2 { 2 } else if count > 4 { 4 } else { count }
+    case None => 3
+  }
+}
+
+/// The activity slugs of a shared plan, in order: well formed, without repeats, at most six.
+export fn sharedSlugs(written: Str) -> Array[Str] {
+  var kept: Array[Str] = []
+  for part in written.split(",") {
+    let slug = part.trim()
+    let shaped = slug.length() >= 3 && slug.length() <= 80 && slug.chars().filter(|c: Char| !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-')).length() == 0
+    if shaped && !kept.contains(slug) && kept.length() < SHARED_MAX { kept = kept.push(slug) }
+  }
+  kept
+}
+
+/// The slugs of a plan's stops, in order.
+export fn slugsOf(plan: &Plan) -> Array[Str] { plan.stops.map(|stop: Stop| stop.card.slug) }
