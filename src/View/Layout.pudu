@@ -89,7 +89,9 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/achievements.css" + version),
     H.link().rel("stylesheet").href("/assets/css/badges.css" + version),
     H.script().src("/assets/js/a11y-boot.js" + version),
-    if frame.path == Routes.HOME { H.script().src("/assets/js/home-readiness.js" + version) } else { H.nothing() },
+    // Initial skeleton app loading is disabled: the home placeholder stays hidden
+    // (see home.css `.home .home-skeleton`) and no readiness script is loaded.
+    H.nothing(),
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }

@@ -25,7 +25,6 @@ import View.Seo as Seo
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discovery.Home) -> Html.Html {
   let meta = Seo.Meta{..Seo.meta(Frame.t(frame, "home.title"), Frame.t(frame, "home.description"), Routes.HOME, true), structured: [Seo.website(frame.siteUrl)]}
   Layout.page(frame, &meta, Layout.Explore, H.div().class("home").holding([
-        skeleton(),
         H.section().class("hero").holding([
             Hero.render(frame, catalog)
           ]),
@@ -147,12 +146,7 @@ fn regionInput(region: Str, first: Str) -> H.Node {
   if region == first { input.flag("checked") } else { input }
 }
 
-/// Decorative placeholders while the first home resources are pending.
+/// Initial skeleton app loading is disabled: no placeholder is rendered.
 fn skeleton() -> H.Node {
-  H.div().class("home-skeleton").at("aria-hidden", "true").holding([
-      H.div().class("skeleton-hero").holding([H.div().class("skeleton-pill")]),
-      H.div().class("skeleton-filters").holding([H.span(), H.span(), H.span(), H.span()]),
-      H.div().class("skeleton-heading"),
-      H.div().class("skeleton-cards").holding([H.div(), H.div(), H.div(), H.div()])
-    ])
+  H.nothing()
 }
