@@ -135,3 +135,6 @@ html.a11y-focus :focus, html.a11y-focus :focus-visible { outline: 4px solid #ff8
 .a11y-overlays.has-guide .a11y-guide-bar { display: block; top: calc(var(--a11y-y) - 6px); height: 12px; background: #1559c7; border-block: 3px solid #ffe34d; border-radius: 6px; opacity: .85; }
 .a11y-overlays.has-mask .a11y-mask-top { display: block; top: 0; height: max(0px, calc(var(--a11y-y) - 70px)); background: rgb(0 0 0 / 62%); }
 .a11y-overlays.has-mask .a11y-mask-bottom { display: block; top: calc(var(--a11y-y) + 70px); bottom: 0; background: rgb(0 0 0 / 62%); }
+
+/* Phones open the panel from the menu row, so nothing floats over the page or the tab bar. */
+@media (max-width: 699px) { .a11y-launch { display: none; } }

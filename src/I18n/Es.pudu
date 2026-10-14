@@ -74,6 +74,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("nav.account_settings", "Cuenta y configuración"),
     ("nav.language_row", "Idioma"),
     ("nav.language_current", "Español"),
+    ("nav.language_other", "English"),
     ("nav.create_account", "Crear cuenta"),
     ("footer.navigation", "Explora Boricua Experience"),
     ("footer.discover", "Descubre la isla"),

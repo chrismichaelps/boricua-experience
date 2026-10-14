@@ -141,25 +141,26 @@ fn card(title: Str, children: Array[H.Node]) -> H.Node {
   H.section().class("a11y-card").holding([H.h3().says(title)].concat(children))
 }
 
-/// The language switch in the panel header, naming the current language.
+/// The language switch in the panel header, naming the language it switches to, like the top bar.
 fn language(frame: &Frame.Frame) -> H.Node {
   let other = if frame.locale == Locale.Es { "en" } else { "es" }
   H.form().action(Routes.LANGUAGE).method("post").class("a11y-language").holding([
       Form.token(frame),
       H.input().kind("hidden").name("lang").value(other),
       H.input().kind("hidden").name("return").value(Frame.here(frame)),
-      H.button().submit().label(Frame.t(frame, "nav.language")).holding([Icons.sized("globe", 18), H.span().says(Frame.t(frame, "nav.language_current").toUpper())])
+      H.button().submit().label(Frame.t(frame, "nav.language")).holding([Icons.sized("globe", 18), H.span().at("lang", other).says(Frame.t(frame, "nav.language_other").toUpper())])
     ])
 }
 
-/// The launcher and its panel. Settings are kept in this browser and applied before the page paints.
-export fn render(frame: &Frame.Frame) -> H.Node {
+/// The panel, with the floating launcher when `launcher` is set. Without it (the map) the panel opens
+/// from the menu row or Alt+A. Settings are kept in this browser and applied before the page paints.
+export fn render(frame: &Frame.Frame, launcher: Bool) -> H.Node {
   let t = |key: Str| Frame.t(frame, key)
   H.div().class("a11y").data("feature", "a11y").data("open", t("a11y.open")).data("show", t("a11y.show")).data("default", t("a11y.default")).data("saved", t("a11y.saved")).data("landmark", t("a11y.landmark")).holding([
-      H.button().kind("button").class("a11y-launch").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").label(t("a11y.open")).holding([
+      if launcher { H.button().kind("button").class("a11y-launch").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").label(t("a11y.open")).holding([
           H.span().class("a11y-figure").raw(glyph("figure", "2.6")),
           H.span().class("a11y-badge").raw(glyph("check", "3.2"))
-        ]),
+        ]) } else { H.nothing() },
       H.dialog().class("a11y-panel").id("a11y-panel").at("aria-labelledby", "a11y-title").holding([
           H.header().class("a11y-head").holding([
               H.div().class("a11y-head-top").holding([

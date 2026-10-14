@@ -32,7 +32,7 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           Footer.render(frame),
           tabBar(frame, &section),
           if frame.path == Routes.HOME && section == Explore { Assistant.render(frame) } else { H.nothing() },
-          if section == MapView { H.nothing() } else { A11y.render(frame) },
+          A11y.render(frame, section != MapView),
           achievementToasts(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
@@ -159,6 +159,15 @@ fn languageRow(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
+/// The menu row that opens the accessibility panel; on phones it replaces the floating launcher.
+fn accessibilityRow(frame: &Frame.Frame) -> H.Node {
+  H.button().kind("button").class("menu-row").role("menuitem").data("a11y-open", "").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").holding([
+      Icons.sized("eye", 20),
+      H.span().says(Frame.t(frame, "a11y.title")),
+      Icons.sized("chevron-right", 16)
+    ])
+}
+
 /// The account menu: a disclosure that is a popover on wide screens and a full sheet on phones.
 fn accountMenu(frame: &Frame.Frame) -> H.Node {
   let legal = H.div().class("menu-foot").holding([
@@ -182,7 +191,8 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
           ]),
         H.div().class("menu-group").holding([
             menuLink(Routes.ACCOUNT, "settings", Frame.t(frame, "nav.account_settings"), H.nothing()),
-            languageRow(frame)
+            languageRow(frame),
+            accessibilityRow(frame)
           ]),
         H.div().class("menu-group").holding([
             H.form().action(Routes.SIGN_OUT).method("post").class("menu-form").holding([Form.token(frame), H.button().submit().class("menu-row").role("menuitem").holding([Icons.sized("logout", 20), H.span().says(Frame.t(frame, "nav.sign_out"))])])
@@ -198,7 +208,8 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
           ]),
         H.div().class("menu-group").holding([
             menuLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), H.nothing()),
-            languageRow(frame)
+            languageRow(frame),
+            accessibilityRow(frame)
           ]),
         legal
       ])

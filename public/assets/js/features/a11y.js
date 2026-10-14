@@ -9,7 +9,7 @@ export function a11y(root, view = window) {
   const model = view.bxA11y;
   if (!model) return;
   const doc = view.document;
-  const launch = root.querySelector('.a11y-launch');
+  const launch = root.querySelector('.a11y-launch') || doc.createElement('button');
   const panel = root.querySelector('.a11y-panel');
   let settings = model.read();
   let overlays = null;
@@ -163,6 +163,18 @@ export function a11y(root, view = window) {
       item.append(link);
       list.append(item);
     });
+  });
+
+  // Menu rows open the panel too: on phones they replace the floating launcher, and the map has no launcher.
+  doc.addEventListener('click', (event) => {
+    const row = event.target.closest?.('[data-a11y-open]');
+    if (!row) return;
+    event.preventDefault();
+    const menu = row.closest('details');
+    if (menu) menu.open = false;
+    if (root.classList.contains('is-tucked')) tuck(false);
+    open();
+    if (menu) returnFocus = menu.querySelector('summary');
   });
 
   // Alt+A opens and closes the toolbar from anywhere, without a mouse.

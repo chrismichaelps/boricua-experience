@@ -185,7 +185,10 @@ fn main() -> Int {
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let checks = Test.suite("Presentation", &[
       Test.equals("map omits accessibility launcher", &map.contains("a11y-launch"), &false),
+      Test.that("map keeps the accessibility panel for the menu row", map.contains("id=\"a11y-panel\"") && map.contains("data-a11y-open")),
+      Test.that("every page menu offers the accessibility panel", results.contains("data-a11y-open")),
       Test.equals("other pages retain accessibility launcher", &results.contains("a11y-launch"), &true),
+      Test.that("accessibility language switch names the language it switches to", results.contains("<span lang=\"es\">ESPAÑOL</span>") && !results.contains(">ENGLISH<")),
       Test.equals("map expansion is named", &map.contains("Expand map"), &true),
       Test.equals("map loading is named", &map.contains("Loading activities"), &true),
       Test.equals("home has decorative loading skeleton", &homePage.contains("home-skeleton"), &true),

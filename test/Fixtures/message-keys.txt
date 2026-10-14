@@ -781,6 +781,7 @@ nav.create_activity
 nav.explore
 nav.language
 nav.language_current
+nav.language_other
 nav.language_row
 nav.main
 nav.map
