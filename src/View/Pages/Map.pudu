@@ -71,7 +71,7 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
         H.section().class("map-sheet").label(Frame.t(frame, "map.list")).holding([
             H.button().kind("button").class("sheet-handle").label(Frame.t(frame, "map.sheet_toggle")).at("aria-expanded", "false").at("aria-controls", "map-list").holding([H.span().at("aria-hidden", "true")]),
             SearchControls.mapBar(frame, catalog, filters, listHref),
-            H.p().class("sheet-title").id("map-count").says(Frame.tf(frame, "map.count", &[("count", show(cards.length()))])),
+            H.p().class("sheet-title").id("map-count").data("sheet-drag", "1").says(Frame.tf(frame, "map.count", &[("count", show(cards.length()))])),
             H.p().class("map-limit" + (if limited { "" } else { " is-hidden" })).id("map-limit").role("status").says(Frame.t(frame, "map.limited")),
             H.div().class("sheet-list").id("map-list").holding(cards.map(|card: Event.Card| H.div().class("sheet-item").data("slug", card.slug).holding([EventCard.card(frame, &card)])))
           ]),

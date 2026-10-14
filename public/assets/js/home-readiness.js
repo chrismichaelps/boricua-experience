@@ -2,12 +2,17 @@
   if (location.pathname !== '/') return;
   const root = document.documentElement;
   root.classList.add('home-pending');
-  const clear = () => root.classList.remove('home-pending');
+  // The placeholder only appears when the page is genuinely slow: on a fast connection the hero is
+  // ready before this delay and the visitor never sees a flash of grey shapes.
+  const reveal = setTimeout(() => root.classList.add('home-waiting'), 450);
+  const clear = () => { clearTimeout(reveal); root.classList.remove('home-pending', 'home-waiting'); };
   const deadline = setTimeout(clear, 4000);
   const ready = () => {
     if (!document.querySelector('.home')) { clear(); return; }
     const hero = document.querySelector('.hero-slide.is-current');
-    const photo = hero?.decode ? hero.decode().catch(() => {}) : Promise.resolve();
+    // A photograph already in the cache needs no wait at all.
+    if (!hero || (hero.complete && hero.naturalWidth > 0)) { clearTimeout(deadline); clear(); return; }
+    const photo = hero.decode ? hero.decode().catch(() => {}) : Promise.resolve();
     Promise.all([photo, document.fonts?.ready || Promise.resolve()]).finally(() => { clearTimeout(deadline); clear(); });
   };
   document.addEventListener('DOMContentLoaded', ready, { once: true });
