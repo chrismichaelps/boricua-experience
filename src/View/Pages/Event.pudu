@@ -12,8 +12,10 @@ import Domain.Problem as Problem
 import I18n.Dates as Dates
 import I18n.Format as Format
 import I18n.Translate as Translate
+import Utils.Query as Query
 import Utils.Text as Text
 import Utils.Time as Time
+import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Form as Form
 import View.Components.Icons as Icons
@@ -24,7 +26,11 @@ import View.Layout as Layout
 import View.Seo as Seo
 
 /// The event page; `problem` is the refusal of the last action on it, shown in the join panel.
-export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> Html.Html {
+export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> Html.Html { renderFrom(frame, detail, problem, "") }
+
+/// The activity page for a visit from a channel, which its join form carries so the request is
+/// counted with it.
+export fn renderFrom(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem], channel: Str) -> Html.Html {
   let card = detail.card
   let path = Routes.EVENT_PREFIX + card.slug
   // Only a public activity that is still on is offered to search engines; ended and cancelled pages stay reachable by link.
@@ -49,7 +55,7 @@ export fn render(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Pr
                 participants(frame, detail),
                 report(frame, detail)
               ]),
-            H.aside().class("event-side").holding([joinPanel(frame, detail, problem)])
+            H.aside().class("event-side").holding([joinPanel(frame, detail, problem, channel)])
           ])
       ]))
 }
@@ -92,12 +98,44 @@ fn heading(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
     ])
 }
 
+/// The calendars an activity can be added to: Google, Outlook, and a file for Apple and others.
+fn calendarMenu(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  let path = Routes.EVENT_PREFIX + card.slug
+  H.details().class("menu-disclosure").holding([
+      H.summary().class("reaction").holding([Icons.sized("calendar", 18), H.span().says(Frame.t(frame, "event.add_calendar"))]),
+      H.ul().class("disclosure-list").holding([
+          H.li().holding([H.a().href(Calendar.googleUrl(frame.siteUrl, &card, path)).target("_blank").at("rel", "noopener noreferrer").says("Google Calendar")]),
+          H.li().holding([H.a().href(Calendar.outlookUrl(frame.siteUrl, &card, path)).target("_blank").at("rel", "noopener noreferrer").says("Outlook")]),
+          H.li().holding([H.a().href(path + "/calendar.ics").says(Frame.t(frame, "event.calendar_file"))])
+        ])
+    ])
+}
+
+/// Ways to share an activity's page: the device's own sheet, messaging, social and email.
+fn shareMenu(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  // Shared links name their channel so the visits they bring are counted as shares.
+  let url = frame.siteUrl + Routes.EVENT_PREFIX + card.slug + "?from=share"
+  let text = card.title + " · " + url
+  H.details().class("menu-disclosure").holding([
+      H.summary().class("reaction").holding([Icons.sized("share", 18), H.span().says(Frame.t(frame, "event.share"))]),
+      H.ul().class("disclosure-list").holding([
+          H.li().holding([H.a().href("https://wa.me/" + Query.render(&[("text", text)])).target("_blank").at("rel", "noopener noreferrer").says("WhatsApp")]),
+          H.li().holding([H.a().href("https://www.facebook.com/sharer/sharer.php" + Query.render(&[("u", url)])).target("_blank").at("rel", "noopener noreferrer").says("Facebook")]),
+          H.li().holding([H.a().href("https://x.com/intent/post" + Query.render(&[("text", card.title), ("url", url)])).target("_blank").at("rel", "noopener noreferrer").says("X")]),
+          H.li().holding([H.a().href("mailto:" + Query.render(&[("subject", card.title), ("body", text)])).says(Frame.t(frame, "event.share_email"))]),
+          H.li().holding([H.button().kind("button").class("text-button").data("feature", "share").data("mode", "copy").data("title", card.title).says(Frame.t(frame, "event.share_copy"))])
+        ])
+    ])
+}
+
 /// Like, not interested, add to calendar.
 fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let card = detail.card
   let base = Routes.EVENT_PREFIX + card.slug
   let reaction = detail.viewer.reaction
-  let calendar = H.a().class("reaction").href(base + "/calendar.ics").holding([Icons.sized("calendar", 18), H.span().says(Frame.t(frame, "event.add_calendar"))])
+  let calendar = H.div().class("reaction-group").holding([calendarMenu(frame, detail), shareMenu(frame, detail)])
   // Guests are invited to sign in to like; organizers see the count but cannot like their own activity.
   if !detail.viewer.signedIn {
     return H.div().class("reactions").holding([
@@ -218,7 +256,8 @@ fn report(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 }
 
 /// What the viewer can do now: sign in, join, wait, attend, manage, or nothing.
-fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem]) -> H.Node {
+fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Problem.Problem], channel: Str) -> H.Node {
+  let from = if channel.isEmpty() { H.nothing() } else { H.input().kind("hidden").name("from").value(channel) }
   let card = detail.card
   let base = Routes.EVENT_PREFIX + card.slug
   let ended = Event.hasEnded(&card, frame.nowMillis)
@@ -227,8 +266,11 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
     case Some(found) => H.p().class("field-error").role("alert").says(Frame.t(frame, Problem.messageKey(&found)))
     case None => H.nothing()
   }
+  let held = if detail.held { H.p().class("banner").role("status").says(Frame.t(frame, if detail.viewer.isOrganizer { "event.held_owner" } else { "event.held_notice" })) } else { H.nothing() }
   let body = if Event.isCancelled(&card) {
     H.p().class("banner banner-error").says(Frame.t(frame, "event.cancelled_notice"))
+  } else if detail.held && !detail.viewer.isOrganizer && detail.viewer.requestStatus == None {
+    H.nothing()
   } else if ended && detail.source == "curated" {
     H.p().class("muted").says(Frame.t(frame, if card.endsAt == None { "event.archived" } else { "event.ended" }))
   } else if detail.source == "curated" {
@@ -267,6 +309,14 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
           H.p().class("muted small").says(Frame.t(frame, "event.request_pending_body")),
           withdrawForm(frame, base)
         ])
+      case Some("waitlisted") => H.div().class("join-state join-pending").holding([
+          H.p().class("state-line").holding([Icons.sized("users", 20), H.strong().says(match detail.viewer.waitlistPosition {
+                  case Some(position) => Frame.tf(frame, "event.waitlist_position", &[("position", show(position))])
+                  case None => Frame.t(frame, "event.waitlisted")
+                })]),
+          H.p().class("muted small").says(Frame.t(frame, "event.waitlist_body")),
+          withdrawForm(frame, base)
+        ])
       case Some("rejected") => H.div().class("join-state join-rejected").holding([
           H.p().class("state-line").holding([Icons.sized("x", 20), H.strong().says(Frame.t(frame, "event.request_rejected"))]),
           match detail.viewer.decisionNote {
@@ -275,10 +325,17 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
           }
         ])
       case _ => if detail.isFull {
-        H.p().class("banner").says(Frame.t(frame, "event.full_notice"))
+        H.form().action(base + "/join").method("post").class("join-form").holding([
+            Form.token(frame),
+            from,
+            H.p().class("banner").says(Frame.t(frame, "event.full_notice")),
+            H.button().submit().class("button button-block button-ghost").says(Frame.t(frame, "event.join_waitlist")),
+            H.p().class("muted small").says(if detail.waitlistCount > 0 { Translate.count(&frame.locale, "event.waitlist_ahead", detail.waitlistCount) } else { Frame.t(frame, "event.waitlist_note") })
+          ])
       } else {
         H.form().action(base + "/join").method("post").class("join-form").holding([
             Form.token(frame),
+            from,
             if Event.needsApproval(&card) { Form.area(frame, &Form.Field{..Form.field("message", Frame.t(frame, "event.message_label"), ""), hint: Frame.t(frame, "event.message_hint")}, 3, &[]) } else { H.nothing() },
             H.button().submit().class("button button-block").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_to_join" } else { "event.join_now" })),
             H.p().class("muted small").says(Frame.t(frame, if Event.needsApproval(&card) { "event.request_note" } else { "event.join_note" }))
@@ -286,7 +343,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
       }
     }
   }
-  H.div().class("join-panel").data("feature", "join-panel").holding([price, refusal, body])
+  H.div().class("join-panel").data("feature", "join-panel").holding([price, held, refusal, body])
 }
 
 /// A collapsed form withdrawing the viewer's request.

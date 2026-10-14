@@ -143,7 +143,7 @@ fn item(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, review: &Rev
         if review.reported { H.p().class("muted small").says(Frame.t(frame, "review.reported")) } else {
           H.details().class("review-report").holding([
               H.summary().class("small").says(Frame.t(frame, "review.report")),
-              H.form().class("stack-form").action(reviewBase + "/report").method("post").holding([
+              H.form().class("stack-form").data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).action(reviewBase + "/report").method("post").holding([
                   Form.token(frame),
                   H.labelFor().class("sr-only").at("for", "reason-" + review.id).says(Frame.t(frame, "review.report_reason")),
                   H.select().name("reason").id("reason-" + review.id).holding(Review.REASONS.map(|reason: Str| H.option().value(reason).says(Frame.t(frame, "review.reason_" + reason)))),

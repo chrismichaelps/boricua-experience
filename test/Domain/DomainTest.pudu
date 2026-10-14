@@ -56,6 +56,7 @@ fn main() -> Int {
   let fonda = match Place.decodeDetail(&Fixtures.json("place-detail.json")) { case Ok(found) => found case Err(why) => panic("place fixture: " + Json.explainDecode(&why)) }
   let at = |weekday: Int, hour: Int, minute: Int| Place.openAt(&fonda.card.hours, &Time.Local{year: 2026, month: 10, day: 12, weekday: weekday, hour: hour, minute: minute})
   let refilled = Place.fromDetail(&fonda)
+  let dateNow = Option.unwrapOr(Time.parseTimestamp("2026-10-18T20:00:00Z"), Time.now())
   let checks = Test.suite("Domain", &[
       Test.equals("a place answer decodes with its facts and owner relation", &(fonda.card.name, fonda.viewer.isOwner, Json.asText(&Option.unwrapOr(Json.field(&fonda.details, "cuisine"), Json.Null))), &("La Fonda", true, Some("criolla"))),
       Test.equals("open inside a range, closed outside it and on a day without hours", &(at(1, 12, 0), at(1, 22, 0), at(1, 10, 59), at(2, 12, 0)), &(Some(true), Some(false), Some(false), Some(false))),
@@ -107,6 +108,11 @@ fn main() -> Int {
       Test.equals("a consent choice round-trips", &Consent.decode(Consent.encode(&Consent.Choice{analytics: true, marketing: false, version: "1"}), "1"), &Some(Consent.Choice{analytics: true, marketing: false, version: "1"})),
       Test.equals("a consent of an older version is asked again", &Consent.decode("v0:necessary", "1"), &None),
       Test.equals("sorts round-trip by name", &Search.sortFrom(Search.sortName(&Search.Near)), &Search.Near),
+      Test.equals("calendar ranges round-trip", &Search.windowFrom(Search.windowName(&Search.Dates("2026-10-16", "2026-10-18"))), &Search.Dates("2026-10-16", "2026-10-18")),
+      Test.equals("bad ranges are refused", &(["2026-02-30..2026-03-01", "2026-10-18..2026-10-16", "2026-01-01..2028-01-01", "2026-1-01..2026-01-02", "bad..date"].map(|value: Str| Search.windowFrom(value))), &[Search.Anytime, Search.Anytime, Search.Anytime, Search.Anytime, Search.Anytime]),
+      Test.equals("leap day is real", &Search.windowFrom("2028-02-29..2028-02-29"), &Search.Dates("2028-02-29", "2028-02-29")),
+      Test.equals("exact dates use inclusive Puerto Rico days without clamping", &Discovery.bounds(&Search.Dates("2026-10-16", "2026-10-18"), &dateNow), &("2026-10-16T04:00:00Z", "2026-10-19T04:00:00Z")),
+      Test.equals("single day includes the whole day", &Discovery.bounds(&Search.Dates("2026-10-18", "2026-10-18"), &dateNow), &("2026-10-18T04:00:00Z", "2026-10-19T04:00:00Z")),
       Test.equals("windows round-trip by name", &Search.windowFrom(Search.windowName(&Search.Weekend)), &Search.Weekend),
       Test.equals("no filter is not narrowed", &Search.isNarrowed(&Search.everything()), &false),
       Test.equals("unknown price is not free", &Result.map(page, |p| Event.isFree(&Event.Card{..p.items[0], priceCents: None})), &Ok(false)),

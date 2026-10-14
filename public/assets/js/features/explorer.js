@@ -1,15 +1,16 @@
-import { clusterPins } from './mapClusters.js?v=57';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=57';
-import { message } from '../constants/messages.js?v=57';
-import { getJson } from '../net/http.js?v=57';
-import { $, $$, create } from '../utils/dom.js?v=57';
-import { snapArea, speedBetween, speedZoom, visiblePins, viewportBounds } from './mapViewport.js?v=57';
-import { toast } from './toast.js?v=57';
-import { createMap } from './mapLoader.js?v=57';
-import { buildings3d } from './map3d.js?v=57';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=57';
-import * as live from './live.js?v=57';
-import { localizeMoment } from './localTime.js?v=57';
+import { mapSurface } from './mapSurface.js?v=63';
+import { clusterPins } from './mapClusters.js?v=59';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=59';
+import { message } from '../constants/messages.js?v=59';
+import { getJson } from '../net/http.js?v=59';
+import { $, $$, create } from '../utils/dom.js?v=59';
+import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=59';
+import { toast } from './toast.js?v=59';
+import { createMap } from './mapLoader.js?v=59';
+import { buildings3d } from './map3d.js?v=59';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=59';
+import * as live from './live.js?v=59';
+import { localizeMoment } from './localTime.js?v=59';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -34,13 +35,16 @@ export async function explorer(page) {
   const list = $('#map-list', page);
   const count = $('#map-count', page);
   let limited = page.dataset.limited === '1';
-  // After locating, an empty street-level view steps out until it shows activities, as native map apps do.
-  let widening = false;
   const limitNotice = $('#map-limit', page);
   let pins = JSON.parse($('#map-pins', page)?.textContent || '[]');
-  const { map, maplibregl } = await createMap(canvas);
+  const surface = mapSurface(page, list);
+  surface.busy(true);
+  let loaded;
+  try { loaded = await createMap(canvas, { rotatable: true }); }
+  catch (error) { surface.busy(false); throw error; }
+  const { map, maplibregl } = loaded;
   const toggle3d = $('[data-feature="map-3d"]', page);
-  if (toggle3d) buildings3d(map, toggle3d);
+  if (toggle3d) buildings3d(map, toggle3d, $('.map-turn', page));
   let markers = new Map();
   let selectedSlug = '';
   let restoringFocus = false;
@@ -56,18 +60,25 @@ export async function explorer(page) {
   const sheet = $('.map-sheet', page);
   const visible = () => {
     const rect = canvas.getBoundingClientRect();
-    const covered = matchMedia('(min-width: 960px)').matches ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
+    const covered = (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
     return visiblePins(pins, (point) => map.project(point), rect.width, rect.height, covered);
   };
 
+  let quietScrollUntil = 0;
   const select = (slug, fromList = false) => {
     selectedSlug = slug;
     for (const entry of markers.values()) entry.element.classList.toggle('is-active', entry.slugs.includes(slug));
     for (const item of $$('.sheet-item', list)) item.classList.toggle('is-active', item.dataset.slug === slug);
     const pin = pins.find((candidate) => candidate.slug === slug);
     if (!pin) return;
-    if (fromList && !restoringFocus) map.easeTo({ center: [pin.lng, pin.lat], zoom: Math.max(map.getZoom(), 13), duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350 });
-    else list.querySelector(`[data-slug="${slug}"]`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'center' });
+    if (fromList && !restoringFocus) {
+      detachFollow();
+      map.easeTo({ center: [pin.lng, pin.lat], zoom: Math.max(map.getZoom(), 13), duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350 });
+    }
+    else {
+      quietScrollUntil = performance.now() + 900;
+      list.querySelector(`[data-slug="${slug}"]`)?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'nearest', inline: 'center' });
+    }
   };
 
   const draw = (shown = visible()) => {
@@ -78,6 +89,7 @@ export async function explorer(page) {
       const pin = group[0];
       const label = group.length === 1 ? `${pin.title}, ${pin.price}` : page.dataset.clusterLabel.replace(':count', String(group.length));
       const expand = () => {
+        detachFollow();
         const bounds = new maplibregl.LngLatBounds();
         for (const member of group) bounds.extend([member.lng, member.lat]);
         map.fitBounds(bounds, { padding: 64, maxZoom: Math.min(map.getZoom() + 2, MAP.clusterMaxZoom), duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350 });
@@ -123,20 +135,13 @@ export async function explorer(page) {
     }
   };
 
-  function widenIfEmpty() {
-    if (!widening) return;
-    if (pins.length || map.getZoom() <= MAP.focusZoom + 0.01) { widening = false; return; }
-    const center = lastMe ? [lastMe.lng, lastMe.lat] : map.getCenter();
-    map.easeTo({ center, zoom: Math.max(MAP.focusZoom, map.getZoom() - 2), padding: sheetPadding(), duration: motionMs(350) });
-  }
-
   const refreshViewport = async (ticket) => {
     const query = new URLSearchParams(location.search);
     const rect = canvas.getBoundingClientRect();
-    const covered = matchMedia('(min-width: 960px)').matches ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
+    const covered = (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
     const area = viewportBounds(map, rect.width, rect.height, covered);
     // Before layout the canvas has no area; the next resize or move reads the camera again.
-    if (!area) { if (ticket === queryTicket) list.setAttribute('aria-busy', 'false'); return; }
+    if (!area) { if (ticket === queryTicket) surface.busy(false); return; }
     // Grid-aligned areas let moving visitors reuse cached answers instead of reading the database.
     for (const [name, value] of Object.entries(snapArea(area, map.getZoom()))) query.set(name, value);
     // The language is part of the address, so a shared cache never serves one language to another.
@@ -150,14 +155,13 @@ export async function explorer(page) {
       if (ticket !== queryTicket) return;
       pins = cached.pins;
       limited = cached.limited;
-      list.setAttribute('aria-busy', 'false');
+      surface.busy(false);
       render();
-      widenIfEmpty();
       return;
     }
     requestController = new AbortController();
     const controller = requestController;
-    list.setAttribute('aria-busy', 'true');
+    surface.busy(true);
     try {
       const found = await getJson(`${ENDPOINTS.map}?${query}`, { signal: controller.signal });
       if (ticket !== queryTicket) return;
@@ -167,11 +171,10 @@ export async function explorer(page) {
       queryCache.set(key, { pins: found.items, limited: found.limited, at: Date.now() });
       if (queryCache.size > MAP.viewportCacheSize) queryCache.delete(queryCache.keys().next().value);
       render();
-      widenIfEmpty();
     } catch {
       if (ticket === queryTicket) toast(message('mapRefreshFailed'));
     } finally {
-      if (ticket === queryTicket) list.setAttribute('aria-busy', 'false');
+      if (ticket === queryTicket) surface.busy(false);
     }
   };
 
@@ -189,25 +192,30 @@ export async function explorer(page) {
 
   let follow = false;
   let precise = false;
+  let followZoom = null;
+  let fittingAccuracy = false;
   let warnedCoarse = false;
   let lastMe = null;
-  let speedAnchor = null;
-  let speedMs = NaN;
   const COARSE_M = 500;
-  const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: matchMedia('(min-width: 960px)').matches ? 24 : sheet.getBoundingClientRect().height + 24 });
+  const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 24 : sheet.getBoundingClientRect().height + 24 });
   const motionMs = (ms) => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms);
 
   const frameReading = (reading, first) => {
     const accuracy = Math.max(reading.accuracy || 0, 10);
-    if (accuracy > COARSE_M) {
+    if (first && accuracy > COARSE_M) {
+      fittingAccuracy = true;
+      followZoom = null;
       const circle = accuracyCircle(reading, accuracy).geometry.coordinates[0];
       const bounds = circle.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(circle[0], circle[0]));
       map.fitBounds(bounds, { padding: sheetPadding(), maxZoom: MAP.selfZoom, duration: motionMs(first ? 450 : 300) });
       return;
     }
-    const zoom = !precise ? MAP.selfZoom : speedZoom(speedMs, Math.max(map.getZoom(), 12));
-    if (!precise) widening = true;
-    precise = true;
+    if (fittingAccuracy && accuracy > COARSE_M) return;
+    fittingAccuracy = false;
+    const refine = !precise && accuracy <= COARSE_M;
+    const zoom = refine ? MAP.selfZoom : (followZoom ?? map.getZoom());
+    followZoom = zoom;
+    if (refine) precise = true;
     map.easeTo({ center: [reading.lng, reading.lat], zoom, padding: sheetPadding(), duration: motionMs(first ? 450 : 300) });
   };
 
@@ -216,10 +224,6 @@ export async function explorer(page) {
     me ??= meMarker(maplibregl, message('you')).setLngLat([reading.lng, reading.lat]).addTo(map);
     me.setLngLat([reading.lng, reading.lat]);
     lastMe = reading;
-    const timed = { ...reading, at: Date.now() };
-    const measured = speedBetween(speedAnchor, timed);
-    if (Number.isFinite(measured)) speedMs = measured;
-    if (!speedAnchor || timed.at - speedAnchor.at >= MAP.speedMinSeconds * 1000) speedAnchor = timed;
     const accuracy = Math.max(reading.accuracy || 0, 10);
     const coarse = accuracy > COARSE_M;
     me.getElement().classList.toggle('is-coarse', coarse);
@@ -249,14 +253,17 @@ export async function explorer(page) {
     if (follow) frameReading(reading, first);
   };
 
-  // A pan or zoom by the visitor ends following, as in native map apps; the locate button resumes it.
+  const detachFollow = () => {
+    if (!follow && !centerRequested) return;
+    follow = false;
+    centerRequested = false;
+    fittingAccuracy = false;
+    followZoom = null;
+    $('[data-feature="locate"]', page)?.classList.add('is-detached');
+  };
+  // Only visitor gestures detach; location easing must not cancel its own follow mode.
   for (const type of ['dragstart', 'zoomstart', 'rotatestart']) {
-    map.on(type, (event) => {
-      if (event.originalEvent) widening = false;
-      if (!event.originalEvent || !follow) return;
-      follow = false;
-      $('[data-feature="locate"]', page)?.classList.add('is-detached');
-    });
+    map.on(type, (event) => { if (event.originalEvent) detachFollow(); });
   }
 
   const bindList = () => {
@@ -266,18 +273,28 @@ export async function explorer(page) {
     }
   };
 
+  map.on('error', () => { if (!ready) surface.busy(false); });
   map.on('load', () => { ready = true; fit(); if (pendingReading) { showMe(pendingReading); pendingReading = null; } schedule(); });
   map.on('click', () => select(''));
   const resizeViewport = () => {
     if (!ready) return;
-    map.setPadding({ top: 80, right: 40, left: 40, bottom: matchMedia('(min-width: 960px)').matches ? 40 : sheet.getBoundingClientRect().height + 24 });
+    // A phone sheet raised over the map keeps the list it showed; lowering it re-reads the visible map.
+    if (innerWidth < 700 && sheet.classList.contains('is-expanded')) return;
+    map.setPadding({ top: 80, right: 40, left: 40, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 40 : sheet.getBoundingClientRect().height + 24 });
     schedule();
   };
+  surface.connect(map, resizeViewport);
   map.on('resize', resizeViewport);
   sheet.addEventListener('transitionend', (event) => {
     if (event.target === sheet && ['height', 'max-height'].includes(event.propertyName)) resizeViewport();
   });
-  map.on('moveend', schedule);
+  map.on('moveend', () => {
+    if (fittingAccuracy) {
+      fittingAccuracy = false;
+      followZoom = map.getZoom();
+    }
+    schedule();
+  });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden || !staleWhileHidden) return;
     staleWhileHidden = false;
@@ -292,6 +309,8 @@ export async function explorer(page) {
     if (following && !follow && locate.classList.contains('is-detached')) {
       follow = true;
       precise = false;
+      followZoom = null;
+      fittingAccuracy = false;
       locate.classList.remove('is-detached');
       if (lastMe) frameReading(lastMe, true);
       return;
@@ -300,6 +319,8 @@ export async function explorer(page) {
     locate.classList.remove('is-detached');
     locate.setAttribute('aria-pressed', String(following));
     if (!following) {
+      follow = false;
+      centerRequested = false;
       stopLocateReading?.();
       stopLocateReading = null;
       if (!live.isSharing()) live.stopWatching();
@@ -307,6 +328,8 @@ export async function explorer(page) {
     }
     centerRequested = true;
     precise = false;
+    followZoom = null;
+    fittingAccuracy = false;
     warnedCoarse = false;
     stopLocateReading?.();
     stopLocateReading = live.onReading(reading => showMe(reading));
@@ -345,6 +368,12 @@ export async function explorer(page) {
     page.classList.toggle('is-sheet-expanded', expanded);
     resizeViewport();
   });
+  // Phones: the floating Map pill lowers a raised list, and scrolling the list raises it, like a native sheet.
+  $('[data-sheet-collapse]', page)?.addEventListener('click', () => { if (sheet.classList.contains('is-expanded')) handle?.click(); });
+  const sheetList = $('.sheet-list', page);
+  sheetList?.addEventListener('scroll', () => {
+    if (innerWidth < 700 && performance.now() > quietScrollUntil && !sheet.classList.contains('is-expanded') && sheetList.scrollTop > 24) handle?.click();
+  }, { passive: true });
 
   const feedback = $('#map-location-status', page);
   const reflectStatus = (state) => {
@@ -364,6 +393,7 @@ export async function explorer(page) {
   let stopStatus = live.onStatus(reflectStatus);
   if (live.isSharing()) stopShareReading = live.onReading(reading => showMe(reading));
   window.addEventListener('pagehide', () => {
+    surface.busy(false);
     clearTimeout(queryTimer);
     queryTicket++;
     requestController?.abort();

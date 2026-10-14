@@ -306,7 +306,7 @@ ul { padding: 0; list-style: none; }
 .join-pending .state-line { color: var(--color-amber); }
 .join-rejected .state-line { color: var(--color-coral); }
 .join-state blockquote, .request blockquote { padding: 8px 12px; border-left: 3px solid var(--color-divider); color: var(--color-graphite); font-size: 14px; }
-.event { padding-bottom: 150px; }
+.event { padding-bottom: 0; }
 
 /* Avatars */
 .avatar { display: inline-flex; align-items: center; justify-content: center; flex: none; border-radius: 50%; color: var(--color-white); font-weight: 800; letter-spacing: .3px; }
@@ -451,8 +451,6 @@ ul { padding: 0; list-style: none; }
 .sheet-list { overflow-y: auto; display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 14px; padding: 4px 16px 16px; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; }
 .sheet-item { scroll-snap-align: start; }
 .sheet-item.is-active .card-media { outline: 3px solid var(--color-ocean); outline-offset: 2px; }
-.map-privacy { position: absolute; right: 12px; bottom: calc(46% + 8px); z-index: 5; display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .92); color: var(--color-graphite); }
-.map-privacy .icon { width: 14px; height: 14px; }
 
 .price-marker { padding: 5px 10px; border-radius: var(--radius-pill); background: var(--color-white); color: var(--color-ink); font: 800 13px/18px var(--font); box-shadow: 0 1px 4px rgba(60, 64, 67, .35); white-space: nowrap; cursor: pointer; border: 0; transition: scale .12s ease; }
 .price-marker:hover { scale: 1.06; }
@@ -499,7 +497,7 @@ ul { padding: 0; list-style: none; }
   :root { --tabbar: 0px; }
   .tabbar { display: none; }
   .topnav { display: flex; }
-  .shell { padding: 24px 24px 64px; }
+  .shell { padding: 24px 24px 40px; }
   .hero-frame { min-height: 480px; padding: 48px; }
   .search-pill { grid-template-columns: 1.5fr 1fr 1fr; border-radius: var(--radius-pill); padding: 8px; }
   .pill-what { grid-column: auto; border-bottom: 0; border-right: 1px solid var(--color-mist); border-radius: var(--radius-pill); }
@@ -523,7 +521,6 @@ ul { padding: 0; list-style: none; }
   .sheet-title { padding: 16px 16px 8px; }
   .sheet-list { grid-auto-flow: row; grid-auto-columns: auto; scroll-snap-type: none; }
   .map-controls { left: 432px; }
-  .map-privacy { bottom: 16px; }
   .footer { padding-bottom: 32px; }
   .metrics { grid-template-columns: repeat(4, 1fr); }
 }
@@ -684,3 +681,14 @@ ul { padding: 0; list-style: none; }
 .review-answer summary, .review-report summary { cursor: pointer; color: var(--color-ocean); font-weight: 600; }
 .review-answer textarea, .review-report textarea, .review-report select { width: 100%; }
 @media (max-width: 599px) { .review-summary { grid-template-columns: 1fr; } }
+
+/* The footer follows every page but the full-screen map and already reserves the tab bar, so the page
+   body needs only ordinary space before it. On phones an activity's join panel is fixed over the
+   page's end; the footer reserves its height too, measured by the page script. */
+.app:not(.app-full) .shell { padding-bottom: 32px; }
+@media (max-width: 959px) {
+  .app:has(.join-panel) .footer { padding-bottom: calc(var(--tabbar) + 32px + var(--safe-bottom) + var(--join-panel, 150px)); }
+}
+@media (min-width: 960px) {
+  .app:not(.app-full) .shell { padding-bottom: 40px; }
+}

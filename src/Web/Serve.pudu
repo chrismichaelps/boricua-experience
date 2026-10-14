@@ -11,6 +11,8 @@ import Domain.Problem as Problem
 import Domain.Session as Session
 import PuduLangMediator.Mediator as Mediator
 import PuduLangMediator.Request as Request
+import Validation.Account as AccountRules
+import View.Frame as Frame
 import Web.Context as Context
 import Web.Guard as Guard
 import Web.Respond as Respond
@@ -72,18 +74,21 @@ export fn api(app: &Assembly.App, handle: fn(Context.Visitor) -> Http.Response) 
   }
 }
 
-/// Sends an account that still owes its confirmations to onboarding before any other page.
+/// Sends an account that still owes its confirmations to onboarding, and one that accepted older
+/// Terms of Use or Privacy Policy to accept the current ones, before any other page.
 fn gate(app: &Assembly.App, visitor: &Context.Visitor, handle: fn(Context.Visitor) -> Http.Response) -> Http.Response {
   match visitor.member {
     case Some(member) => if !member.onboarded && !OPEN_PATHS.contains(visitor.request.path) {
       Respond.redirect(Routes.ONBOARDING + "?return=" + visitor.request.path)
+    } else if AccountRules.owesRenewal(&member) && !OPEN_PATHS.contains(visitor.request.path) {
+      Respond.redirect(Routes.TERMS_ACCEPT + "?return=" + Frame.here(&Context.frame(app, visitor)).replace("&", "%26"))
     } else { handle(*visitor) }
     case None => handle(*visitor)
   }
 }
 
-/// Pages an account that has not finished onboarding may still read.
-const OPEN_PATHS: Set[Str] = setOf([Routes.ONBOARDING, Routes.TERMS, Routes.PRIVACY, Routes.COOKIES, Routes.ABOUT, Routes.OFFLINE])
+/// Pages an account that owes onboarding or a consent renewal may still read.
+const OPEN_PATHS: Set[Str] = setOf([Routes.ONBOARDING, Routes.TERMS_ACCEPT, Routes.TERMS, Routes.PRIVACY, Routes.COOKIES, Routes.ACCESSIBILITY, Routes.ABOUT, Routes.CONTACT, Routes.OFFLINE])
 
 /// The value a member route reads from the request: a path parameter or a posted field.
 export fn param(visitor: &Context.Visitor, name: Str) -> Str { Option.unwrapOr(Route.param(&visitor.request, name), "") }

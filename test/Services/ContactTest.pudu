@@ -1,0 +1,84 @@
+/** @Test.Contact.Suite — the contact relay's bot defenses, validation, recording and mail */
+module Services.ContactTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Test as Test
+import Api.Mail as Mail
+import Api.Supabase.Gateway as Gateway
+import Domain.Contact as Contact
+import Domain.Problem as Problem
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
+import PuduLangHttpClient.Response as Response
+import Services.Contact as ContactService
+import Services.Runtime as Runtime
+import Validation.Contact as Rules
+
+/// The time every case is judged at.
+const NOW: Int = 1800000000000
+
+/// A complete, valid form.
+fn form() -> Contact.Form { Contact.Form{topic: "general", name: "Ana Rivera", email: "ana@example.com", body: "Quisiera saber cómo publicar una actividad en mi pueblo."} }
+
+/// A runtime whose database calls are recorded and answered with a receipt.
+fn recorded() -> (Runtime.Runtime, Sync.Cell[Array[Str]]) {
+  let calls: Sync.Cell[Array[Str]] = Sync.cell([])
+  let gateway = Gateway.over(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      let _noted = Sync.set(&calls, Result.unwrapOr(Sync.get(&calls), []).push(request.uri))
+      if request.uri.contains("submit_contact") { return Ok(Response.answer(&request, 200).withJson(&Json.object(&[("id", Json.Number(7))]))) }
+      Ok(Response.answer(&request, 204))
+    }, "https://example.test", "fixture")
+  (Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://example.test"), calls)
+}
+
+/// A sending of the form with a stamp issued `age` seconds before now.
+fn sending(runtime: &Runtime.Runtime, given: Contact.Form, age: Int, trap: Str) -> ContactService.Sending {
+  ContactService.Sending{form: given, locale: "es", address: "203.0.113.9", stamp: ContactService.stamp(runtime, NOW - age * 1000), trap: trap, memberId: "", nowMillis: NOW}
+}
+
+/// The recorded calls.
+fn callsOf(calls: &Sync.Cell[Array[Str]]) -> Array[Str] { Result.unwrapOr(Sync.get(calls), []) }
+
+/// Runs the contact regressions without a network call.
+fn main() -> Int {
+  let (runtime, calls) = recorded()
+  let accepted = ContactService.submit(&runtime, &sending(&runtime, form(), 30, ""))
+  let afterAccepted = callsOf(&calls)
+  let (trapped, trapCalls) = recorded()
+  let ignored = ContactService.submit(&trapped, &sending(&trapped, form(), 30, "http://spam.example"))
+  let (quick, quickCalls) = recorded()
+  let tooFast = ContactService.submit(&quick, &sending(&quick, form(), 1, ""))
+  let stale = ContactService.submit(&quick, &sending(&quick, form(), 9000, ""))
+  let forged = ContactService.submit(&quick, &ContactService.Sending{..sending(&quick, form(), 30, ""), stamp: show(NOW - 30000) + ".forged"})
+  let invalid = ContactService.submit(&quick, &sending(&quick, Contact.Form{..form(), email: "ana@example.com\r\nBcc: x@example.com"}, 30, ""))
+  let mailer = Mail.over(Client.create(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] { Ok(Response.answer(&request, 200)) }), "Boricua Experience <hola@example.com>")
+  let letter = ContactService.letter(&Runtime.Runtime{..runtime, contactTo: "team@example.com"}, &Contact.Form{..form(), name: "Ana\r\nBcc: x"}, "es", 7)
+  let mailBody = Json.encode(&Mail.body(&mailer, &letter))
+  let checks = Test.suite("Contact", &[
+      Test.that("plausible mailboxes pass", Rules.mailbox("ana@example.com") && Rules.mailbox("a.b+c@sub.example.pr")),
+      Test.that("malformed and injected mailboxes fail", !Rules.mailbox("ana@") && !Rules.mailbox("@example.com") && !Rules.mailbox("a@b@c.com") && !Rules.mailbox("a b@c.com") && !Rules.mailbox("a@b.c") && !Rules.mailbox("a@c.com\nBcc: x@y.com") && !Rules.mailbox("<a@c.com>")),
+      Test.that("a complete form validates", Result.isOk(&Rules.form(&form()))),
+      Test.equals("web addresses are counted in any case", &Rules.links("see HTTPS://a.pr and www.b.com or http://c.io"), &3),
+      Test.that("a message with three links passes", Result.isOk(&Rules.form(&Contact.Form{..form(), body: "Mira https://a.pr https://b.pr https://c.pr por favor gracias"}))),
+      Test.that("a message stuffed with links is refused", Result.isErr(&Rules.form(&Contact.Form{..form(), body: "Gana https://a.pr https://b.pr https://c.pr https://d.pr ahora mismo ya"}))),
+      Test.that("short messages and unknown topics are refused", Result.isErr(&Rules.form(&Contact.Form{..form(), body: "hola"})) && Result.isErr(&Rules.form(&Contact.Form{..form(), topic: "sales"}))),
+      Test.equals("a genuine stamp reports its age", &ContactService.stampAge(&runtime, ContactService.stamp(&runtime, NOW - 12000), NOW), &Some(12)),
+      Test.equals("a stamp signed with another key is refused", &ContactService.stampAge(&runtime, ContactService.stamp(&Runtime.Runtime{..runtime, sessionKey: Bytes.fromText("abcdefghijabcdefghijabcdefghij12")}, NOW), NOW), &None),
+      Test.that("a valid message is recorded, then its delivery marked", accepted == Ok(ContactService.Accepted(false)) && afterAccepted.length() == 2 && afterAccepted[0].contains("submit_contact") && afterAccepted[1].contains("mark_contact")),
+      Test.that("a filled trap is ignored without any call", ignored == Ok(ContactService.Ignored) && callsOf(&trapCalls).isEmpty()),
+      Test.that("instant, stale and forged stamps are refused before any call", tooFast == Err(Problem.Refused("contact_too_fast")) && stale == Err(Problem.Refused("contact_expired")) && forged == Err(Problem.Refused("contact_expired")) && callsOf(&quickCalls).isEmpty()),
+      Test.that("an injected email is refused as invalid", match invalid { case Err(Problem.Invalid(_)) => true case _ => false }),
+      Test.that("the letter replies to the sender and keeps headers single-line", mailBody.contains("\"reply_to\":\"ana@example.com\"") && mailBody.contains("\"to\":[\"team@example.com\"]") && !mailBody.contains("Ana\\r\\nBcc")),
+      Test.that("the same fingerprint for one address and day, another for another address", ContactService.fingerprint(&runtime, "203.0.113.9", NOW) == ContactService.fingerprint(&runtime, "203.0.113.9", NOW + 1000) && ContactService.fingerprint(&runtime, "203.0.113.9", NOW) != ContactService.fingerprint(&runtime, "198.51.100.1", NOW))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

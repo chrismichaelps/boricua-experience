@@ -4,6 +4,11 @@ module Constants.Codes
 /// Failure codes the database API raises, each mapped to the message key shown to a person.
 /// A code missing here is shown with `problem.generic`.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("saved_search_limit", "problem.saved_search_limit"),
+    ("contact_too_fast", "problem.contact_too_fast"),
+    ("contact_expired", "problem.contact_expired"),
+    ("contact_limit", "problem.contact_limit"),
+    ("contact_busy", "problem.contact_busy"),
     ("menu_changed", "menu.changed"),
     ("menu_invalid", "menu.invalid"),
     ("menu_empty", "menu.empty_publish"),
@@ -36,6 +41,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("invalid_response", "review.response_length"),
     ("external_booking", "problem.external_booking"),
     ("event_full", "problem.event_full"),
+    ("event_held", "problem.event_held"),
     ("event_cancelled", "problem.event_cancelled"),
     ("event_ended", "problem.event_ended"),
     ("own_event", "problem.own_event"),

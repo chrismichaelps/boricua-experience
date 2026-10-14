@@ -50,7 +50,8 @@ cat > "$function_dir/.vc-config.json" <<JSON
 }
 JSON
 
-# Assets are immutable per version query; the service worker and manifest are always revalidated;
+# Assets are immutable per version query, except HTML documents, which are revalidated because their
+# own address cannot carry the version a returning visitor has not seen yet; the service worker and manifest are always revalidated;
 # everything that is not a file goes to the function. One daily cron (the free plan's limit) deletes
 # unreferenced place media; it authenticates with CRON_SECRET.
 cat > "$output/config.json" <<'JSON'
@@ -58,6 +59,7 @@ cat > "$output/config.json" <<'JSON'
   "version": 3,
   "routes": [
     { "src": "^/assets/(.*)$", "headers": { "cache-control": "public, max-age=31536000, immutable" }, "continue": true },
+    { "src": "^/assets/(.*)\\.html$", "headers": { "cache-control": "public, max-age=0, must-revalidate" }, "continue": true },
     { "src": "^/sw\\.js$", "headers": { "cache-control": "no-cache", "service-worker-allowed": "/" }, "continue": true },
     { "src": "^/favicon\\.ico$", "headers": { "cache-control": "public, max-age=86400" }, "continue": true },
     { "src": "^/api/chat$", "dest": "/chat" },
@@ -65,7 +67,8 @@ cat > "$output/config.json" <<'JSON'
     { "src": "/(.*)", "dest": "/app" }
   ],
   "crons": [
-    { "path": "/internal/media-sweep", "schedule": "17 8 * * *" }
+    { "path": "/internal/media-sweep", "schedule": "17 8 * * *" },
+    { "path": "/internal/digest", "schedule": "5 13 * * *" }
   ]
 }
 JSON

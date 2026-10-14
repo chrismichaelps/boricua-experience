@@ -16,3 +16,6 @@ tags: [moc, seams]
 ## Referenced by
 
 [[00-INDEX]]
+- [[seams/FailureLog]] — server failures kept on Cloudflare for thirty days.
+
+- [[seams/LegalContract]] — published promises and release acceptance evidence.

@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Std.Option as Option
+import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Problem as Problem
@@ -17,7 +18,7 @@ import View.Layout as Layout
 import View.Seo as Seo
 
 /// The account page; `problem` is the refusal of the last form posted from it.
-export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.Catalog, email: Str, usesPassword: Bool, problem: &Option[Problem.Problem]) -> Html.Html {
+export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.Catalog, email: Str, usesPassword: Bool, problem: &Option[Problem.Problem], calendarFeed: Str) -> Html.Html {
   let errors = match problem {
     case Some(found) => Problem.fieldErrors(&found)
     case None => []
@@ -37,6 +38,11 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
         if me.status == Profile.PAUSED { H.div().class("banner").holding([H.p().says(Frame.t(frame, "account.paused_notice")), H.form().action(Routes.ACCOUNT_REACTIVATE).method("post").holding([Form.token(frame), H.button().submit().class("button button-small").says(Frame.t(frame, "account.reactivate"))])]) } else { H.nothing() },
         if me.isAdmin { H.a().class("button button-ghost").href(Routes.ADMIN).holding([Icons.sized("settings", 18), H.span().says(Frame.t(frame, "admin.title"))]) } else { H.nothing() },
         Form.problemBanner(frame, problem),
+        H.a().class("panel ach-link").href(Routes.ACHIEVEMENTS).holding([
+            H.img().src("/assets/badges/golden-cotorra.svg?v=" + App.ASSET_VERSION).alt("").at("width", "56").at("height", "56"),
+            H.span().class("ach-link-text").holding([H.strong().says(Frame.t(frame, "achievements.title")), H.span().class("muted small").says(Frame.t(frame, "achievements.link_body"))]),
+            Icons.sized("chevron-right", 20)
+          ]),
         H.section().class("panel").id("profile").holding([
             H.h2().class("section-title").says(Frame.t(frame, "account.profile")),
             H.form().class("stack-form").action(Routes.ACCOUNT_PROFILE).method("post").holding([
@@ -57,6 +63,7 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
                 Form.toggle("notifyNewRequests", Frame.t(frame, "account.notify_requests"), Frame.t(frame, "account.notify_requests_body"), me.notifyNewRequests),
                 Form.toggle("notifyReminders", Frame.t(frame, "account.notify_reminders"), Frame.t(frame, "account.notify_reminders_body"), me.notifyReminders),
                 Form.toggle("notifyEventChanges", Frame.t(frame, "account.notify_changes"), Frame.t(frame, "account.notify_changes_body"), me.notifyEventChanges),
+                Form.toggle("emailDigest", Frame.t(frame, "account.email_digest"), Frame.t(frame, "account.email_digest_body"), me.emailDigest),
                 Form.toggle("marketingOptIn", Frame.t(frame, "account.marketing"), Frame.t(frame, "account.marketing_body"), me.marketingOptIn),
                 H.h3().says(Frame.t(frame, "account.privacy")),
                 Form.toggle("showInAttendeeLists", Frame.t(frame, "account.attendee_lists"), Frame.t(frame, "account.attendee_lists_body"), me.showInAttendeeLists),
@@ -67,6 +74,20 @@ export fn render(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.
                   ]),
                 H.button().submit().class("button").says(Frame.t(frame, "account.save"))
               ])
+          ]),
+        discoveryPanel(frame, me, catalog),
+        H.section().class("panel").id("calendar").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "account.calendar")),
+            H.p().class("muted small").says(Frame.t(frame, "account.calendar_body")),
+            H.div().class("field").holding([
+                H.labelFor().at("for", "f-calendar-feed").says(Frame.t(frame, "account.calendar_address")),
+                H.input().kind("text").id("f-calendar-feed").value(calendarFeed).at("readonly", "readonly").at("spellcheck", "false")
+              ]),
+            H.div().class("manage-actions").holding([
+                H.a().class("button button-small").href(calendarFeed.replace("https://", "webcal://").replace("http://", "webcal://")).holding([Icons.sized("calendar", 16), H.span().says(Frame.t(frame, "account.calendar_subscribe"))]),
+                H.a().class("button button-ghost button-small").href("https://calendar.google.com/calendar/r?cid=" + calendarFeed.replace("https://", "webcal://")).target("_blank").at("rel", "noopener noreferrer").says("Google Calendar")
+              ]),
+            H.p().class("muted small").says(Frame.t(frame, "account.calendar_private"))
           ]),
         H.section().class("panel").id("location").holding([
             H.h2().class("section-title").says(Frame.t(frame, "account.location")),
@@ -135,5 +156,38 @@ fn photoEditor(frame: &Frame.Frame, me: &Profile.MyProfile) -> H.Node {
         case None => removePhoto(frame).at("hidden", "hidden")
       },
       H.p().class("photo-status small muted").role("status").at("aria-live", "polite")
+    ])
+}
+
+/// The discovery radius and up to five favourite towns, grouped by region; they shape the nearby
+/// rail on the home page and lift recommendations from those towns.
+fn discoveryPanel(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.Catalog) -> H.Node {
+  let chosenRadius = match me.preferredRadiusKm { case Some(km) => show(km) case None => "" }
+  let radii = [("", Frame.t(frame, "account.radius_none"))].concat(Profile.DISCOVERY_RADII.map(|km: Int| (show(km), Frame.tf(frame, "account.radius_km", &[("km", show(km))]))))
+  var groups: Array[H.Node] = []
+  for region in Catalog.regions(catalog) {
+    var boxes: Array[H.Node] = []
+    for town in catalog.municipalities {
+      if town.region == region {
+        var box = H.input().kind("checkbox").name("town_" + town.slug).id("f-town-" + town.slug).value("on")
+        if me.preferredTowns.contains(town.slug) { box = box.checked() }
+        boxes = boxes.push(H.labelFor().class("town-choice").at("for", "f-town-" + town.slug).holding([box, H.span().says(town.name)]))
+      }
+    }
+    groups = groups.push(H.fieldset().class("town-group").holding([H.legend().says(Frame.t(frame, "region." + region))].concat(boxes)))
+  }
+  H.section().class("panel").id("discovery").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "account.discovery")),
+      H.p().class("muted small").says(Frame.t(frame, "account.discovery_body")),
+      H.form().class("stack-form").action(Routes.ACCOUNT_DISCOVERY).method("post").holding([
+          Form.token(frame),
+          Form.select(frame, &Form.field("radius", Frame.t(frame, "account.radius"), chosenRadius), &radii, &[]),
+          H.div().class("field").holding([
+              H.p().class("label").says(Frame.t(frame, "account.towns")),
+              H.p().class("field-hint").says(Frame.t(frame, "account.towns_hint")),
+              H.div().class("town-groups").holding(groups)
+            ]),
+          H.button().submit().class("button").says(Frame.t(frame, "account.save"))
+        ])
     ])
 }

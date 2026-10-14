@@ -7,7 +7,7 @@ export const ENDPOINTS = {
   locationStop: '/api/location/stop',
 };
 export const MAP = { minViewportPx: 8,
-  style: '/assets/map/style.json?v=57',
+  style: '/assets/map/style.json?v=59',
   script: '/assets/vendor/maplibre-gl.js',
   stylesheet: '/assets/vendor/maplibre-gl.css',
   center: [-66.4, 18.22],
@@ -31,6 +31,10 @@ export const MAP = { minViewportPx: 8,
   speedMargin: 0.2,
   pitch3d: 50,
   buildingsZoom: 15.5,
+  // Degrees one turn button moves the camera, the turn worth reporting, and the steepest tilt.
+  turnStep: 30,
+  turnNoticeDeg: 15,
+  maxPitch: 70,
 };
 export const LIVE = {
   minIntervalMs: 15000,

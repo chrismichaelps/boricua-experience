@@ -85,3 +85,22 @@ Resolved: search segments own one neutral2px inset focus indication; nested inpu
 
 ## Resolved feedback Grill Log · #45
 Password visibility targets44px; guidance meter neutral/ocean palette. Busy submitters preserve labels, show inline spinner and reduced-motion static state; no layout shift. Resolved.
+
+## Compact map sheet Grill Log · #88
+Resolved: desktop sheet begins16px below map top instead of84px; explicit auto-sized handle/filter/count/notice tracks and one minmax scrolling list track eliminate expanding heading gaps. Phone retains swipe/two snap states. Desktop date/category use paired44px bordered controls with free/list actions below; phone uses one horizontally scrolling44px control row. All controls use consistent14px corners. Preserve cards and map viewport reservation; verify scaled desktop and narrow phone.
+
+Track refinement: explicit child grid-row placement keeps the scrolling list in the final minmax track even when the desktop handle or empty limit notice is hidden. Hidden rows collapse without assigning spare height to count/filters. Resolved.
+
+Short-phone refinement: mobile filters use one horizontally scrollable44px row instead of stacking; a shared bounded sheet footprint reserves at least260px where space allows and leaves112px of map. Zoom controls use the same footprint for collapsed/expanded states. Desktop retains paired controls. Verify short phone and keyboard/no-script fallback. Resolved.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Map expansion uses an8px inset rounded container like the home hero. Hide only the existing sheet in expanded mode; restore previous state on close/Escape, keep zoom controls clear. Three-dot loader reflects real map/data work and respects reduced motion.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Radios and auth on small screens
+Radios outside region chips are drawn as ink rings with a filled centre when checked, matching the checkbox style. Below 1000px the sign-in and sign-up pages are a plain full-width sheet: no photo behind the form and no floating card; the photo panel appears only beside the form on wide screens.
+
+## Phone map
+Below 700px the sheet is a rounded native-style panel (46% default, full height raised, eased height change) of full-width 4:3 photo cards with 28px gaps; filters are compact chips and the list link is hidden; map buttons are icon circles with visually hidden text; map overlays hide while the list is raised; the dark Map pill floats above the tab bar.

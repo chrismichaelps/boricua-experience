@@ -1,5 +1,17 @@
 # Changelog
 
+- 2026-10-13 · [[src/Public/DateCalendar]] · localized accessible date ranges with inclusive Puerto Rico server filtering; compact map list tracks and phone filter row remove wasted space · issue #88.
+
+- 2026-10-13 · [[seams/FailureLog]] · server failures with their reason reported to a free Cloudflare Worker and kept 30 days in D1.
+
+- 2026-10-13 · [[src/Database/NotificationDigest]] · low-cost notifications: optional weekly email summary only when there is something to say, batched daily within the free mail allowance, one-click stop.
+
+- 2026-10-13 · [[src/Database/DiscoveryFunnel]] · discovery-to-request conversion by channel (referrer or tagged assistant, share and notification links), aggregate counts only, in the administrator dashboard.
+
+- 2026-10-13 · [[src/Database/Achievements]] · data-driven achievements: 81 seeded across discovery, participation, hosting, social, profile, Puerto Rico and seasonal categories; one unlock mechanism over existing actions and browser signals; animated rarity badges; board, detail dialog, unlock toasts with chime; public badge showcase; backfill for existing members.
+
+- 2026-10-13 · [[src/Database/Community]] · waitlist with automatic promotion, organizer overview with views-to-requests conversion, approve-all and guest spreadsheet, review holds after repeated reports with administrator restore, Google/Outlook/file calendar links, share menu and a private subscribable calendar feed.
+
 - 2026-10-12 · [[src/Database/EventCovers]] · organizer-managed activity covers across categories; trusted server confirmation, shared reservation quota and pending-only cleanup; development verification passes, production cutover pending · issue #82.
 
 - 2026-10-12 · release 0.4.0 · owner menu editor, place photos and menu files, save/like fix, moving nearby and 3D map; asset version 56 · issues #69 #76 #78.
@@ -163,3 +175,23 @@ Release production site-URL guard, tolerant map location, empty-camera map reads
 Organizer cover photographs for activities across all categories, trusted server-only media confirmation, shared actor reservation limits, race-safe pending cleanup and48px removal controls. Existing source covers remain labeled accurately. Additive migrations prepare both environments before new callers deploy; legacy member confirmation grants are removed after cutover. Development browser upload/replace/remove and storage cleanup are verified; production smoke/parity follow deployment.
 
 - 2026-10-12 · [[seams/SearchConsole]] · verify the production Domain property through Cloudflare DNS, submit the generated sitemap (192discovered pages), and validate homepage indexing/crawl access · issue #45.
+- 2026-10-12 · [[src/Public/Assistant]] · the assistant renders only on the root homepage; reply playback is removed while optional dictation stays; while its dialog is open the page underneath cannot scroll, and the original position returns on close, Escape, external dismissal and navigation. Asset/cache version 58 · risk LOW · issue #86
+- 2026-10-12 · [[src/Public/Map3d]] · the 3D map turns freely by drag, twist, tilt, keyboard and turn buttons with a north compass; 2D stays north-up. The visible location explanation box is removed (status and help remain for screen readers). Photography credits are linked by version and asset HTML is revalidated, so style changes reach returning visitors. Asset/cache version 59 · risk LOW
+- 2026-10-12 · [[src/Services/Contact]] · contact page in the app's form layout that never exposes the team address: messages are validated, rate-limited by a keyed daily fingerprint, recorded, then relayed by email with the sender as reply-to; bot defenses are a silent trap field, a signed timing stamp and the origin guard. Linked from the footer and the account menu. Asset/cache version 59 · risk MED
+- 2026-10-12 · [[src/View/Components/A11y]] · accessibility toolbar on every page (Alt+A): six profiles, text size, line height and letter spacing, readable and dyslexia fonts, title and link highlights, left alignment, six color modes, stop animations, hide images, mute sounds, reading guide and mask, big cursor, strong focus and a page map. Settings apply before first paint and stay in the browser · risk LOW
+- 2026-10-12 · [[src/Database/Discovery]] · discovery radius and up to five favourite towns in account settings (they fill the home nearby rail when the browser remembers no choice and lift recommendations); ranking adds quality, freshness, fill and report signals and hides near-duplicate listings; Most popular sort; saved searches from any listing, kept on the Activity page with list and map links; the map gains the listing's date, category and free filters and a link back to the same list · risk MED
+- 2026-10-12 · [[src/View/Components/A11y]] · accessibility panel laid out as a floating card: header with close, language, title and Reset / Statement / Hide pills; OFF/ON profile rows with outline glyphs on transparent backgrounds; content, color and orientation cards; footer with the Alt + A shortcut. New accessibility statement at `/accessibility` on the existing legal template, linked from the panel and the footer · risk LOW
+
+- 2026-10-13 · #88 · restore essential contact delivery with separate environment-scoped application credentials; normalize fixed-panel footer reservation under accessibility scaling, and make shared operational logging admission transactional. Live production application rollout remains pending.
+
+- 2026-10-13 · #89 · enforce private activity detail/direct attendee audiences and approved-cohort attendee lists; member public/historical cards derive coarse coordinates. Both databases verified with role rollback tests and unchanged production publication count; the full published-contract gate remains open.
+
+- 2026-10-13 · #89 · redact private calendar/digest URL capabilities in platform and remote access logs, including repeated-slash/encoded variants; source release remains gated by the full published-contract audit.
+
+2026-10-13 · #89 — Guard optional digest delivery with current consent generation, record digest preference changes, retain idempotent service-only unsubscribe and canonical no-login confirmation routes with private/no-store/no-referrer. Additive suppression migration applied and rollback-verified in both databases; no optional production scheduling enabled.17suites/541assertions plus browser harnesses pass.
+
+2026-10-13 · #88 — Stop location camera oscillation: no empty-result widening or speed-driven zoom, initial coarse fit/precise refinement once, retained intended animated zoom and explicit exploration detach. Preserve existing map cards/mobile sheet; no hover popup. Normal-motion/deferred location regressions and independent review pass; asset revision61. Physical iPhone verification and production app rollout remain pending.
+
+2026-10-13 · #88 — Add inclusive Puerto Rico date ranges with a bilingual, keyboard-accessible calendar across discovery surfaces; compact map filters and explicit sheet rows remove excess list spacing. Calendar/domain regressions and desktop/320–390px Chrome checks pass; asset revision62.
+
+2026-10-13 · #88 — Inspect Airbnb's live calendar, expanded map and loading skeleton, then unify neutral discovery pickers including home nearby selectors. Omit the accessibility launcher on map, add reversible rounded expansion and request-driven three-dot status, and render a fail-open home readiness skeleton. Independent review,17suites/552assertions and focused browser harnesses pass; actual320px Chrome verifies home pickers and expansion restoration. Asset revision63. No migration or production app promotion; physical iPhone and published-contract release gates remain.

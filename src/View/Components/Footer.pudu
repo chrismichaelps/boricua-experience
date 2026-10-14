@@ -31,14 +31,14 @@ export fn render(frame: &Frame.Frame) -> H.Node {
           H.nav().class("footer-grid").label(Frame.t(frame, "footer.navigation")).holding([
               group(frame, "footer.discover", [(Routes.SEARCH, "nav.explore"), (Routes.SEARCH + "?when=weekend", "home.weekend"), (Routes.SEARCH + "?free=1", "footer.free"), (Routes.MAP, "nav.map")]),
               group(frame, "home.towns", [(Routes.HOME + "#towns", "home.all_towns"), (Routes.MAP, "nav.map")]),
-              group(frame, "footer.community", [(Routes.CREATE, "nav.create"), (Routes.ACTIVITY, "nav.activity"), (Routes.ACCOUNT, "nav.profile"), (Routes.ABOUT, "footer.about")]),
-              group(frame, "footer.legal", [(Routes.TERMS, "footer.terms"), (Routes.PRIVACY, "footer.privacy"), (Routes.COOKIES, "footer.cookies"), (Routes.RECOVER, "footer.recover")])
+              group(frame, "footer.community", [(Routes.CREATE, "nav.create"), (Routes.ACTIVITY, "nav.activity"), (Routes.ACCOUNT, "nav.profile"), (Routes.ABOUT, "footer.about"), (Routes.CONTACT, "footer.contact")]),
+              group(frame, "footer.legal", [(Routes.TERMS, "footer.terms"), (Routes.PRIVACY, "footer.privacy"), (Routes.COOKIES, "footer.cookies"), (Routes.ACCESSIBILITY, "footer.accessibility"), (Routes.RECOVER, "footer.recover")])
             ]),
           H.div().class("footer-bottom").holding([
               H.p().class("footer-note").says(Frame.tf(frame, "footer.copyright", &[("year", show(Time.local(&StdTime.instantOf(frame.nowMillis)).year))])),
               H.div().class("footer-links").holding([
                   H.a().class("footer-preferences").href(Routes.COOKIES).says(Frame.t(frame, "footer.preferences")),
-                  H.a().class("footer-credits").href("/assets/img/credits.html").says(Frame.t(frame, "footer.photography"))
+                  H.a().class("footer-credits").href("/assets/img/credits.html?v=" + App.ASSET_VERSION).says(Frame.t(frame, "footer.photography"))
                 ])
             ])
         ])

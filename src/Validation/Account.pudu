@@ -96,12 +96,35 @@ export fn onboarding(form: &Credentials.Onboarding) -> Result[Credentials.Onboar
       ]), *form)
 }
 
+/// Both documents accepted again after a new version.
+export fn renewal(form: &Credentials.Renewal) -> Result[Credentials.Renewal, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("terms", |f: Credentials.Renewal| f.terms, |v: Bool| v, TERMS),
+        Check.rule("privacy", |f: Credentials.Renewal| f.privacy, |v: Bool| v, PRIVACY)
+      ]), *form)
+}
+
+/// Whether an onboarded member accepted an earlier Terms of Use or Privacy Policy than the current
+/// ones. An unknown version (an older profile read) never blocks.
+export fn owesRenewal(member: &Profile.MyProfile) -> Bool {
+  if !member.onboarded || member.termsVersion.isEmpty() || member.privacyVersion.isEmpty() { return false }
+  member.termsVersion != App.TERMS_VERSION || member.privacyVersion != App.PRIVACY_VERSION
+}
+
 /// A profile edit: a name, a short bio, and the language.
 export fn profile(edit: &Profile.ProfileEdit) -> Result[Profile.ProfileEdit, Problem.Problem] {
   Check.run(&Check.all(&[
         Check.rule("displayName", |e: Profile.ProfileEdit| e.displayName, |v: Str| Check.lengthWithin(v, 1, Limits.DISPLAY_NAME_MAX), NAME),
         Check.rule("bio", |e: Profile.ProfileEdit| e.bio, |v: Str| v.length() <= Limits.BIO_MAX, BIO)
       ]), *edit)
+}
+
+/// Preferences with a known location visibility.
+export fn discovery(chosen: &Profile.Discovery) -> Result[Profile.Discovery, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("radius", |d: Profile.Discovery| d.radiusKm, |v: Option[Int]| match v { case Some(km) => Profile.DISCOVERY_RADII.contains(km) case None => true }, "form.radius_invalid"),
+        Check.rule("towns", |d: Profile.Discovery| d.towns.length(), |v: Int| v <= Profile.DISCOVERY_TOWNS_MAX, "form.too_many_towns")
+      ]), *chosen)
 }
 
 /// Preferences with a known location visibility.

@@ -6,7 +6,9 @@ import Std.Html.Build as H
 import Std.Html as Html
 import Std.Json as Json
 import Std.Option as Option
+import Constants.App as App
 import Constants.Routes as Routes
+import Domain.Achievement as Achievement
 import Domain.Profile as Profile
 import I18n.Dates as Dates
 import I18n.Translate as Translate
@@ -21,7 +23,7 @@ import View.Layout as Layout
 import View.Seo as Seo
 
 /// The profile page.
-export fn render(frame: &Frame.Frame, person: &Profile.PublicProfile) -> Html.Html {
+export fn render(frame: &Frame.Frame, person: &Profile.PublicProfile, badges: &Achievement.Showcase) -> Html.Html {
   let path = Routes.PROFILE_PREFIX + person.id
   let since = match Time.parseTimestamp(person.memberSince) {
     case Some(at) => Frame.tf(frame, "profile.member_since", &[("date", Dates.monthYear(&frame.locale, &Time.local(&at)))])
@@ -50,7 +52,20 @@ export fn render(frame: &Frame.Frame, person: &Profile.PublicProfile) -> Html.Ht
             stat(person.guestsHosted, "profile.guests_hosted"),
             stat(person.likesReceived, "profile.likes")
           ]),
+        showcase(frame, badges),
         H.h2().class("section-title").says(Frame.t(frame, "profile.upcoming_title")),
         if person.upcoming.isEmpty() { Notice.empty("calendar", Frame.t(frame, "profile.no_upcoming"), "", H.nothing()) } else { EventCard.grid(frame, &person.upcoming) }
       ]))
+}
+
+/// A member's recent badges, with their names for assistive technology; nothing before the first.
+fn showcase(frame: &Frame.Frame, badges: &Achievement.Showcase) -> H.Node {
+  if badges.items.isEmpty() { return H.nothing() }
+  H.section().class("ach-showcase").label(Frame.t(frame, "achievements.showcase")).holding([
+      H.h2().class("section-title").says(Frame.t(frame, "achievements.showcase")),
+      H.p().class("muted small").says(Translate.count(&frame.locale, "achievements.showcase_count", badges.total)),
+      H.ul().class("ach-strip").holding(badges.items.map(|found: Achievement.Badge| H.li().class("rarity-" + found.rarity).holding([
+              H.img().src(Achievement.badgePath(found.badge) + "?v=" + App.ASSET_VERSION).alt(found.title).at("title", found.title).at("width", "56").at("height", "56").at("loading", "lazy")
+            ])))
+    ])
 }

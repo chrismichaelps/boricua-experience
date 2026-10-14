@@ -1,0 +1,197 @@
+/** @View.Components.A11y.Toolbar — the accessibility toolbar: profiles, content, colors, and orientation */
+module View.Components.A11y
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.Routes as Routes
+import Domain.Locale as Locale
+import View.Components.Form as Form
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// Outline glyphs from the Lucide set the app's icons come from (ISC, see the brand notices),
+/// drawn on a transparent background: the standing figure, the badge check, and one per profile.
+const GLYPHS: Array[(Str, Str)] = [
+  ("figure", "<circle cx=\"12\" cy=\"5\" r=\"1\"/><path d=\"m9 20 3-6 3 6\"/><path d=\"m6 8 6 2 6-2\"/><path d=\"M12 10v4\"/>"),
+  ("check", "<path d=\"M20 6 9 17l-5-5\"/>"),
+  ("seizure", "<path d=\"M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z\"/>"),
+  ("vision", "<path d=\"M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>"),
+  ("adhd", "<rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"/><path d=\"M3 12h18\"/>"),
+  ("cognitive", "<line x1=\"2\" x2=\"5\" y1=\"12\" y2=\"12\"/><line x1=\"19\" x2=\"22\" y1=\"12\" y2=\"12\"/><line x1=\"12\" x2=\"12\" y1=\"2\" y2=\"5\"/><line x1=\"12\" x2=\"12\" y1=\"19\" y2=\"22\"/><circle cx=\"12\" cy=\"12\" r=\"7\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>"),
+  ("keyboard", "<path d=\"M17 12H3\"/><path d=\"m11 18 6-6-6-6\"/><path d=\"M21 5v14\"/>"),
+  ("dyslexia", "<polyline points=\"4 7 4 4 20 4 20 7\"/><line x1=\"9\" x2=\"15\" y1=\"20\" y2=\"20\"/><line x1=\"12\" x2=\"12\" y1=\"4\" y2=\"20\"/>"),
+  ("reader", "<path d=\"M2 10v3\"/><path d=\"M6 6v11\"/><path d=\"M10 3v18\"/><path d=\"M14 8v7\"/><path d=\"M18 5v13\"/><path d=\"M22 10v3\"/>"),
+  ("older", "<circle cx=\"6\" cy=\"15\" r=\"4\"/><circle cx=\"18\" cy=\"15\" r=\"4\"/><path d=\"M14 15a2 2 0 0 0-2-2 2 2 0 0 0-2 2\"/><path d=\"M2.5 13 5 7c.7-1.3 1.4-2 3-2\"/><path d=\"M21.5 13 19 7c-.7-1.3-1.5-2-3-2\"/>"),
+  ("left", "<path d=\"M15 12H3\"/><path d=\"M17 18H3\"/><path d=\"M21 6H3\"/>"),
+  ("center", "<path d=\"M17 12H7\"/><path d=\"M19 18H5\"/><path d=\"M21 6H3\"/>"),
+  ("right", "<path d=\"M21 12H9\"/><path d=\"M21 18H7\"/><path d=\"M21 6H3\"/>"),
+  ("link", "<path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/>")
+]
+
+/// Colors a member may paint text, titles, or backgrounds with; the boot script accepts only these.
+const PALETTE: Array[(Str, Str)] = [("#1a6ff2", "blue"), ("#7b4bd1", "purple"), ("#d43c3c", "red"), ("#e07b22", "orange"), ("#2f8fa8", "teal"), ("#3f7f32", "green"), ("#ffffff", "white"), ("#000000", "black")]
+
+/// The paint settings: setting and label key.
+const PAINTS: Array[(Str, Str)] = [("ink", "a11y.paint.ink"), ("heading", "a11y.paint.heading"), ("paper", "a11y.paint.paper")]
+
+/// Pages the useful-links menu reaches, with their label keys.
+const LINKS: Array[(Str, Str)] = [
+  (Routes.HOME, "nav.explore"),
+  (Routes.SEARCH, "a11y.link.search"),
+  (Routes.MAP, "nav.map"),
+  (Routes.CREATE, "a11y.link.create"),
+  (Routes.ACTIVITY, "nav.activity"),
+  (Routes.ACCOUNT, "a11y.link.account"),
+  (Routes.CONTACT, "a11y.link.contact"),
+  (Routes.ACCESSIBILITY, "a11y.statement_link")
+]
+
+/// The profiles, in the order they are offered.
+const PROFILES: Array[Str] = ["seizure", "vision", "adhd", "cognitive", "keyboard", "reader", "older", "dyslexia"]
+
+/// The stepped settings: name and label key.
+const STEPS: Array[(Str, Str)] = [("scale", "a11y.content_scale"), ("text", "a11y.text_size"), ("line", "a11y.line_height"), ("spacing", "a11y.letter_spacing")]
+
+/// The content switches: setting, label key, and icon.
+const CONTENT: Array[(Str, Str, Str)] = [
+  ("font:readable", "a11y.readable_font", "edit"),
+  ("font:dyslexia", "a11y.dyslexia_font", "edit"),
+  ("titles", "a11y.highlight_titles", "star"),
+  ("links", "a11y.highlight_links", "share")
+]
+
+/// The alignments, of which at most one is on.
+const ALIGNS: Array[Str] = ["left", "center", "right"]
+
+/// The color modes, of which at most one is on: value and icon.
+const COLORS: Array[(Str, Str)] = [("dark", "moon"), ("light", "sparkle"), ("high", "eye"), ("mono", "mask"), ("saturate", "wave"), ("desaturate", "leaf")]
+
+/// The orientation switches: setting, label key, and icon.
+const ORIENTATION: Array[(Str, Str, Str)] = [
+  ("still", "a11y.still", "pause"),
+  ("noimg", "a11y.no_images", "camera"),
+  ("mute", "a11y.mute", "bell"),
+  ("guide", "a11y.guide", "list"),
+  ("mask", "a11y.mask", "eye"),
+  ("cursor", "a11y.cursor", "navigation"),
+  ("focus", "a11y.focus", "crosshair")
+]
+
+/// An outline glyph by name, transparent and drawn in the current text color; decorative.
+fn glyph(name: Str, stroke: Str) -> Str {
+  var paths = ""
+  for entry in GLYPHS {
+    if entry[0] == name { paths = entry[1] }
+  }
+  "<svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"" + stroke + "\" stroke-linecap=\"round\" stroke-linejoin=\"round\">" + paths + "</svg>"
+}
+
+/// A profile row: an OFF/ON switch, its name and purpose, and its glyph.
+fn profile(frame: &Frame.Frame, name: Str) -> H.Node {
+  let title = Frame.t(frame, "a11y.profile." + name)
+  H.li().class("a11y-row").holding([
+      H.button().kind("button").class("a11y-onoff").data("profile", name).at("aria-pressed", "false").label(title).holding([
+          H.span().class("a11y-off").at("aria-hidden", "true").says(Frame.t(frame, "a11y.off")),
+          H.span().class("a11y-on").at("aria-hidden", "true").says(Frame.t(frame, "a11y.on"))
+        ]),
+      H.span().class("a11y-row-text").holding([H.strong().says(title), H.span().says(Frame.t(frame, "a11y.profile." + name + "_hint"))]),
+      H.span().class("a11y-row-glyph").raw(glyph(name, "2"))
+    ])
+}
+
+/// A pressable tile that switches one setting.
+fn tile(attribute: Str, value: Str, label: Str, icon: Str) -> H.Node {
+  H.button().kind("button").class("a11y-tile").data(attribute, value).at("aria-pressed", "false").holding([Icons.sized(icon, 22), H.span().says(label)])
+}
+
+/// A pressable tile drawn with one of the toolbar's own glyphs.
+fn glyphTile(attribute: Str, value: Str, label: Str, name: Str) -> H.Node {
+  H.button().kind("button").class("a11y-tile").data(attribute, value).at("aria-pressed", "false").holding([H.span().class("a11y-tile-glyph").raw(glyph(name, "2")), H.span().says(label)])
+}
+
+/// One row of color swatches for a paint setting, with a button that clears it.
+fn palette(frame: &Frame.Frame, name: Str, label: Str) -> H.Node {
+  H.div().class("a11y-palette").role("group").label(Frame.t(frame, label)).holding([
+      H.span().class("a11y-stepper-label").says(Frame.t(frame, label)),
+      H.div().class("a11y-swatches").holding(PALETTE.map(|entry: (Str, Str)| H.button().kind("button").class("a11y-swatch").data("paint", name + "=" + entry[0]).at("aria-pressed", "false").at("style", "--swatch: " + entry[0]).label(Frame.t(frame, label) + ": " + Frame.t(frame, "a11y.swatch." + entry[1])))),
+      H.button().kind("button").class("a11y-swatch-clear").data("paint", name + "=").at("aria-pressed", "true").says(Frame.t(frame, "a11y.default"))
+    ])
+}
+
+/// The useful-links menu: choosing a page goes there.
+fn usefulLinks(frame: &Frame.Frame) -> H.Node {
+  H.div().class("a11y-links").data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).holding([
+      H.labelFor().at("for", "a11y-links").holding([H.span().class("a11y-tile-glyph").raw(glyph("link", "2")), H.span().says(Frame.t(frame, "a11y.links"))]),
+      H.select().id("a11y-links").data("a11y", "links").holding([H.option().value("").says(Frame.t(frame, "a11y.links_choose"))].concat(LINKS.map(|entry: (Str, Str)| H.option().value(entry[0]).says(Frame.t(frame, entry[1])))))
+    ])
+}
+
+/// A labelled stepper for one stepped setting, with its current value announced.
+fn stepper(frame: &Frame.Frame, name: Str, label: Str) -> H.Node {
+  H.div().class("a11y-stepper").role("group").label(Frame.t(frame, label)).holding([
+      H.span().class("a11y-stepper-label").says(Frame.t(frame, label)),
+      H.button().kind("button").class("a11y-step").data("step", name).data("by", "-1").label(Frame.t(frame, "a11y.smaller") + ": " + Frame.t(frame, label)).says("−"),
+      H.span().class("a11y-step-value").data("value", name).at("aria-live", "polite").says(Frame.t(frame, "a11y.default")),
+      H.button().kind("button").class("a11y-step").data("step", name).data("by", "1").label(Frame.t(frame, "a11y.larger") + ": " + Frame.t(frame, label)).says("+")
+    ])
+}
+
+/// A card of the panel with its heading.
+fn card(title: Str, children: Array[H.Node]) -> H.Node {
+  H.section().class("a11y-card").holding([H.h3().says(title)].concat(children))
+}
+
+/// The language switch in the panel header, naming the language it switches to, like the top bar.
+fn language(frame: &Frame.Frame) -> H.Node {
+  let other = if frame.locale == Locale.Es { "en" } else { "es" }
+  H.form().action(Routes.LANGUAGE).method("post").class("a11y-language").holding([
+      Form.token(frame),
+      H.input().kind("hidden").name("lang").value(other),
+      H.input().kind("hidden").name("return").value(Frame.here(frame)),
+      H.button().submit().label(Frame.t(frame, "nav.language")).holding([Icons.sized("globe", 18), H.span().at("lang", other).says(Frame.t(frame, "nav.language_other").toUpper())])
+    ])
+}
+
+/// The panel, with the floating launcher when `launcher` is set. Without it (the map) the panel opens
+/// from the menu row or Alt+A. Settings are kept in this browser and applied before the page paints.
+export fn render(frame: &Frame.Frame, launcher: Bool) -> H.Node {
+  let t = |key: Str| Frame.t(frame, key)
+  H.div().class("a11y").data("feature", "a11y").data("open", t("a11y.open")).data("show", t("a11y.show")).data("default", t("a11y.default")).data("saved", t("a11y.saved")).data("landmark", t("a11y.landmark")).holding([
+      if launcher { H.button().kind("button").class("a11y-launch").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").label(t("a11y.open")).holding([
+          H.span().class("a11y-figure").raw(glyph("figure", "2.6")),
+          H.span().class("a11y-badge").raw(glyph("check", "3.2"))
+        ]) } else { H.nothing() },
+      H.dialog().class("a11y-panel").id("a11y-panel").at("aria-labelledby", "a11y-title").holding([
+          H.header().class("a11y-head").holding([
+              H.div().class("a11y-head-top").holding([
+                  H.button().kind("button").class("a11y-close").data("a11y", "close").label(t("a11y.close")).holding([Icons.sized("x", 26)]),
+                  language(frame)
+                ]),
+              H.h2().id("a11y-title").says(t("a11y.title")),
+              H.div().class("a11y-actions").holding([
+                  H.button().kind("button").class("a11y-pill").data("a11y", "reset").holding([Icons.sized("settings", 18), H.span().says(t("a11y.reset"))]),
+                  H.a().class("a11y-pill").href(Routes.ACCESSIBILITY).holding([Icons.sized("message", 18), H.span().says(t("a11y.statement"))]),
+                  H.button().kind("button").class("a11y-pill").data("a11y", "hide").holding([Icons.sized("eye", 18), H.span().says(t("a11y.hide"))])
+                ])
+            ]),
+          H.div().class("a11y-body").holding([
+              card(t("a11y.customize"), [H.ul().class("a11y-rows").holding(PROFILES.map(|name: Str| profile(frame, name)))]),
+              card(t("a11y.content"), STEPS.map(|entry: (Str, Str)| stepper(frame, entry[0], entry[1])).concat([H.div().class("a11y-tiles").holding(CONTENT.map(|entry: (Str, Str, Str)| tile("toggle", entry[0], t(entry[1]), entry[2])).concat(ALIGNS.map(|name: Str| glyphTile("toggle", "align:" + name, t("a11y.align_" + name), name))))])),
+              card(t("a11y.colors"), [H.div().class("a11y-tiles").holding(COLORS.map(|entry: (Str, Str)| tile("color", entry[0], t("a11y.color." + entry[0]), entry[1])))].concat(PAINTS.map(|entry: (Str, Str)| palette(frame, entry[0], entry[1])))),
+              card(t("a11y.navigation"), [
+                  H.div().class("a11y-tiles").holding(ORIENTATION.map(|entry: (Str, Str, Str)| tile("toggle", entry[0], t(entry[1]), entry[2]))),
+                  usefulLinks(frame),
+                  H.details().class("a11y-structure").data("a11y", "structure").holding([
+                      H.summary().holding([Icons.sized("list", 18), H.span().says(t("a11y.structure"))]),
+                      H.p().class("small").says(t("a11y.structure_hint")),
+                      H.ul().class("a11y-structure-list")
+                    ])
+                ])
+            ]),
+          H.footer().class("a11y-foot").holding([
+              H.span().says(t("a11y.shortcut")),
+              H.a().href(Routes.ACCESSIBILITY).holding([H.span().says(t("a11y.statement_link")), Icons.sized("chevron-right", 16)])
+            ])
+        ])
+    ])
+}

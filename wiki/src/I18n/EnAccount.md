@@ -62,3 +62,6 @@ Replace the generic cookie-policy anchor with a descriptive localized label. Des
 
 ## Expired-request output Grill Log · #51
 Resolved: event_ended refusal says requests are closed, without claiming completion of an unknown-end activity. Both locales use neutral wording.
+
+## Renewal
+`auth.renew_title`, `auth.renew_lead`, `auth.renew_accept`, `auth.renew_decline`, `flash.terms_renewed`.

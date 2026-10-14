@@ -2,6 +2,7 @@
 module App.Messages
 
 import Std.Json as Json
+import Domain.Achievement as Achievement
 import Domain.Assistant as Conversation
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
@@ -23,6 +24,7 @@ import Domain.Session as Session
 import PuduLangMediator.Request as Request
 import Services.Admin as AdminService
 import Services.Auth.Accounts as Accounts
+import Services.Contact as ContactService
 import Services.Discovery as Discovery
 import Services.Participation as Participation
 import Validation.Participation as ParticipationRules
@@ -79,7 +81,7 @@ export type ReviewReporting = { reviewId: Str, reason: Str, detail: Str }
 export type ReviewDecision = { reviewId: Str, keep: Bool }
 
 /** @App.Messages.Joining — a join request with its message */
-export type Joining = { eventId: Str, message: Str }
+export type Joining = { eventId: Str, message: Str, channel: Str }
 
 /** @App.Messages.Reacting — a reaction to an event */
 export type Reacting = { eventId: Str, value: Int }
@@ -103,7 +105,7 @@ export type Onboard = { form: Credentials.Onboarding, locale: Str }
 export type CookieChoice = { subject: Str, choice: Consent.Choice }
 
 /** @App.Messages.Resolution — an administrator's decision on a report */
-export type Resolution = { reportId: Int, act: Bool }
+export type Resolution = { reportId: Int, action: Str }
 
 /** @App.Messages.Kinds — every kind of request, made once and shared by the mediator and the routes */
 export type Kinds = {
@@ -115,6 +117,7 @@ export type Kinds = {
   pins: Request.Kind[Search.Filters, Search.Pins, Problem.Problem],
   catalog: Request.Kind[(), Catalog.Catalog, Problem.Problem],
   event: Request.Kind[Visit[Str], Event.Detail, Problem.Problem],
+  eventPage: Request.Kind[Visit[(Str, Str)], Event.Detail, Problem.Problem],
   attendees: Request.Kind[Visit[Str], Event.Attendees, Problem.Problem],
   publish: Request.Kind[Signed[Draft.Draft], Draft.Published, Problem.Problem],
   editable: Request.Kind[Signed[Str], (Event.Detail, Draft.Draft), Problem.Problem],
@@ -148,6 +151,10 @@ export type Kinds = {
   decide: Request.Kind[Signed[Decision], Str, Problem.Problem],
   queue: Request.Kind[Signed[Str], Participation.Queue, Problem.Problem],
   save: Request.Kind[Signed[Str], Bool, Problem.Problem],
+  approveAll: Request.Kind[Signed[Str], Int, Problem.Problem],
+  calendarFeed: Request.Kind[(Str, Str), Array[Event.CalendarEntry], Problem.Problem],
+  saveSearch: Request.Kind[Signed[Search.Saving], (), Problem.Problem],
+  deleteSearch: Request.Kind[Signed[Str], (), Problem.Problem],
   react: Request.Kind[Signed[Reacting], Participation.ReactionState, Problem.Problem],
   report: Request.Kind[Signed[Reporting], (), Problem.Problem],
   activity: Request.Kind[Signed[()], Participation.Activity, Problem.Problem],
@@ -158,8 +165,10 @@ export type Kinds = {
   me: Request.Kind[Signed[()], Profile.MyProfile, Problem.Problem],
   profile: Request.Kind[Str, Profile.PublicProfile, Problem.Problem],
   onboard: Request.Kind[Signed[Onboard], (), Problem.Problem],
+  renewConsent: Request.Kind[Signed[Credentials.Renewal], (), Problem.Problem],
   updateProfile: Request.Kind[Signed[Profile.ProfileEdit], (), Problem.Problem],
   updatePreferences: Request.Kind[Signed[Profile.Preferences], (), Problem.Problem],
+  updateDiscovery: Request.Kind[Signed[Profile.Discovery], (), Problem.Problem],
   changeAvatar: Request.Kind[Signed[Str], Str, Problem.Problem],
   removeAvatar: Request.Kind[Signed[()], (), Problem.Problem],
   notifications: Request.Kind[Signed[()], Array[Notification.Notification], Problem.Problem],
@@ -178,7 +187,11 @@ export type Kinds = {
   signOut: Request.Kind[Signed[()], (), Problem.Problem],
   sitemap: Request.Kind[(), Array[Index.Entry], Problem.Problem],
   dashboard: Request.Kind[Signed[()], AdminService.Dashboard, Problem.Problem],
-  resolve: Request.Kind[Signed[Resolution], (), Problem.Problem]
+  resolve: Request.Kind[Signed[Resolution], (), Problem.Problem],
+  contact: Request.Kind[ContactService.Sending, ContactService.Outcome, Problem.Problem],
+  achievements: Request.Kind[Signed[Str], Achievement.Board, Problem.Problem],
+  achievementSignals: Request.Kind[Signed[(Array[Achievement.Signal], Str)], Array[Achievement.Unlocked], Problem.Problem],
+  showcase: Request.Kind[(Str, Str), Achievement.Showcase, Problem.Problem]
 }
 
 /// Tags grouping kinds for behaviors: pages read, commands change state.
@@ -200,6 +213,7 @@ export fn kinds() -> Kinds {
     pins: kind("discover.pins", READ),
     catalog: kind("discover.catalog", READ),
     event: kind("events.detail", READ),
+    eventPage: kind("events.page", READ),
     attendees: kind("events.attendees", READ),
     publish: kind("events.publish", COMMAND),
     editable: kind("events.editable", READ),
@@ -233,6 +247,10 @@ export fn kinds() -> Kinds {
     decide: kind("participation.decide", COMMAND),
     queue: kind("participation.queue", READ),
     save: kind("participation.save", COMMAND),
+    approveAll: kind("participation.approve_all", COMMAND),
+    calendarFeed: kind("participation.calendar_feed", READ),
+    saveSearch: kind("participation.save_search", COMMAND),
+    deleteSearch: kind("participation.delete_search", COMMAND),
     react: kind("participation.react", COMMAND),
     report: kind("participation.report", COMMAND),
     activity: kind("participation.activity", READ),
@@ -243,8 +261,10 @@ export fn kinds() -> Kinds {
     me: kind("account.me", READ),
     profile: kind("account.profile", READ),
     onboard: kind("account.onboard", COMMAND),
+    renewConsent: kind("account.renew_consent", COMMAND),
     updateProfile: kind("account.update_profile", COMMAND),
     updatePreferences: kind("account.update_preferences", COMMAND),
+    updateDiscovery: kind("account.update_discovery", COMMAND),
     changeAvatar: kind("account.change_avatar", COMMAND),
     removeAvatar: kind("account.remove_avatar", COMMAND),
     notifications: kind("account.notifications", COMMAND),
@@ -263,6 +283,10 @@ export fn kinds() -> Kinds {
     signOut: kind("identity.sign_out", IDENTITY),
     sitemap: kind("seo.sitemap", READ),
     dashboard: kind("admin.dashboard", READ),
-    resolve: kind("admin.resolve", COMMAND)
+    resolve: kind("admin.resolve", COMMAND),
+    contact: kind("site.contact", COMMAND),
+    achievements: kind("achievements.board", READ),
+    achievementSignals: kind("achievements.signals", COMMAND),
+    showcase: kind("achievements.showcase", READ)
   }
 }

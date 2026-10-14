@@ -17,6 +17,7 @@ import Services.Auth.Sealer as Sealer
 import Utils.Cookie as Cookie
 import View.Pages.Errors as Errors
 import Web.Context as Context
+import Web.FailureLog as FailureLog
 
 /// A rendered page with a status.
 export fn page(status: Int, view: &Html.Html) -> Http.Response {
@@ -104,8 +105,16 @@ export fn problemJson(found: &Problem.Problem, secure: Bool) -> Http.Response {
     case Some(first) => first.key
     case None => Problem.messageKey(found)
   }
-  let response = json(Problem.status(found), &Json.object(&[("error", Json.Text(Problem.code(found))), ("message", Json.Text(key))]))
+  let response = withReason(json(Problem.status(found), &Json.object(&[("error", Json.Text(Problem.code(found))), ("message", Json.Text(key))])), found)
   if *found == Problem.SignedOut { withCookie(response, Cookie.expire(Cookies.SESSION, secure)) } else { response }
+}
+
+/// The response with an unavailable dependency's reason for the access log, which removes it.
+fn withReason(response: Http.Response, found: &Problem.Problem) -> Http.Response {
+  match found {
+    case Problem.Unavailable(reason) => Http.Response{..response, headers: response.headers.push((FailureLog.REASON_HEADER, FailureLog.reasonLine(reason)))}
+    case _ => response
+  }
 }
 
 /// The response for a problem: sign-in for a signed-out visitor, onboarding for an account that owes
@@ -121,7 +130,7 @@ export fn problem(app: &Assembly.App, visitor: &Context.Visitor, found: &Problem
       page(Problem.status(found), &Errors.problem(&Context.frame(app, visitor), found))
     }
     case Problem.Missing => page(404, &Errors.missing(&Context.frame(app, visitor)))
-    case _ => page(Problem.status(found), &Errors.problem(&Context.frame(app, visitor), found))
+    case _ => withReason(page(Problem.status(found), &Errors.problem(&Context.frame(app, visitor), found)), found)
   }
 }
 

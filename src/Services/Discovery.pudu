@@ -39,6 +39,14 @@ export fn bounds(window: &Search.When, now: &StdTime.Instant) -> (Str, Str) {
     }
     case Search.Week => Some((today, today + 7))
     case Search.Month => Some((today, today + 31))
+    case Search.Dates(first, last) => {
+      match (Search.dateDay(first), Search.dateDay(last)) {
+        case (Some(start), Some(end)) => {
+          return (Time.toTimestamp(&Time.startOfDay(start)), Time.toTimestamp(&Time.startOfDay(end + 1)))
+        }
+        case _ => None
+      }
+    }
   }
   match span {
     case Some((first, last)) => {

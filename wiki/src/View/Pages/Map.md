@@ -52,6 +52,9 @@ MEDIUM.
 - **Q:** Templates or values?
   **A:** Values: a page is an `Html` tree, so escaping cannot be forgotten and pages are testable with fixtures.
 
+## Location text
+The visible location explanation was removed to keep the map clean. The live status and the location help remain as visually hidden text so screen readers still hear status changes and the buttons keep their description. The 3D turn group is rendered hidden and shown by the map script while 3D is on.
+
 ## Referenced by
 
 [[src/_MOC]]
@@ -77,3 +80,9 @@ Resolved: missing price is null/None and never free; explicit zero is free. Miss
 
 ## Moving nearby and 3D Grill Log · #78
 Resolved: a 3D switch sits beside Near me; its label names the action for assistive technology and shortens to “3D” on narrow screens.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Render a translated44px expand/close control, initially hidden until enhancement, and a hidden accessible three-dot loading status. Expansion preserves the existing map instance, filters and card sheet; no popups are added.
+
+## Phone sheet
+A `sheet-map-pill` button (map icon + `nav.map`) follows the sheet; phones show it only while the list is raised, and it lowers the list.

@@ -12,13 +12,14 @@ import View.Layout as Layout
 import View.Seo as Seo
 
 /** @View.Pages.Legal.Document — which policy page to render */
-export type Document = Terms | Privacy | Cookies | About
+export type Document = Terms | Privacy | Cookies | About | Accessibility
 
 /// The section keys of each document, in reading order.
 const TERMS_SECTIONS: Array[Str] = ["service", "eligibility", "account", "publishing", "joining", "minors", "conduct", "safety", "content", "moderation", "disclaimers", "liability", "indemnity", "changes", "law", "contact"]
 const PRIVACY_SECTIONS: Array[Str] = ["scope", "collect", "use", "visibility", "location", "providers", "retention", "rights", "deletion", "security", "minors", "transfers", "changes"]
 const COOKIES_SECTIONS: Array[Str] = ["what", "necessary", "storage", "optional", "third", "choices"]
 const ABOUT_SECTIONS: Array[Str] = ["mission", "how", "safety", "privacy"]
+const ACCESSIBILITY_SECTIONS: Array[Str] = ["commitment", "standard", "tools", "compatibility", "limitations", "feedback"]
 
 /// The key prefix, sections, path, and whether it carries an effective-date line.
 fn shape(document: &Document) -> (Str, Array[Str], Str, Bool) {
@@ -27,6 +28,7 @@ fn shape(document: &Document) -> (Str, Array[Str], Str, Bool) {
     case Privacy => ("legal.privacy", PRIVACY_SECTIONS, Routes.PRIVACY, true)
     case Cookies => ("legal.cookies", COOKIES_SECTIONS, Routes.COOKIES, true)
     case About => ("about", ABOUT_SECTIONS, Routes.ABOUT, false)
+    case Accessibility => ("legal.accessibility", ACCESSIBILITY_SECTIONS, Routes.ACCESSIBILITY, true)
   }
 }
 

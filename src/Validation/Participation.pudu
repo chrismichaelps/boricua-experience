@@ -4,6 +4,7 @@ module Validation.Participation
 import Constants.Limits as Limits
 import Domain.Participation as Participation
 import Domain.Problem as Problem
+import Domain.Search as Search
 import Validation.Check as Check
 
 /// Message keys of participation forms.
@@ -31,4 +32,12 @@ export fn report(form: &Report) -> Result[Report, Problem.Problem] {
 /// A reaction of -1, 0, or 1.
 export fn reaction(value: Int) -> Result[Int, Problem.Problem] {
   Check.run(&Check.all(&[Check.rule("reaction", |v: Int| v, |v: Int| v >= -1 && v <= 1, REACTION)]), value)
+}
+
+/// A saved search: a short label and a query string without spaces, quotes or angle brackets.
+export fn saving(given: &Search.Saving) -> Result[Search.Saving, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("label", |s: Search.Saving| s.label, |v: Str| Check.lengthWithin(v, 1, 80), "form.search_label"),
+        Check.rule("query", |s: Search.Saving| s.query, |v: Str| v.length() <= 400 && !v.contains(" ") && !v.contains("<") && !v.contains(">") && !v.contains("\"") && (v.isEmpty() || v.startsWith("?")), "form.search_query")
+      ]), *given)
 }

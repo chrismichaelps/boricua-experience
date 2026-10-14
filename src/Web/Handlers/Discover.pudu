@@ -6,6 +6,7 @@ import Std.Http.Server.Route as Route
 import Std.Json as Json
 import Std.Option as Option
 import Std.Result as Result
+import Std.Url as Url
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.App as App
@@ -18,6 +19,7 @@ import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Search as Search
+import Domain.Session as Session
 import Utils.Cookie as Cookie
 import Utils.Geo as Geo
 import View.Pages.Home as HomePage
@@ -29,7 +31,11 @@ import Web.Serve as Serve
 
 /// The filters a query string describes.
 export fn filtersOf(visitor: &Context.Visitor) -> Search.Filters {
-  let read = |name: Str| Serve.query(visitor, name)
+  filtersFrom(|name: Str| Serve.query(visitor, name))
+}
+
+/// The filters a source of named values describes: a request's query, or a posted query string.
+export fn filtersFrom(read: fn(Str) -> Str) -> Search.Filters {
   let lat = Geo.parseDegrees(read("lat"))
   let lng = Geo.parseDegrees(read("lng"))
   let located = match (lat, lng) {
@@ -62,6 +68,8 @@ export fn filtersOf(visitor: &Context.Visitor) -> Search.Filters {
 export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   let held = *app
   [
+    Route.post(Routes.SEARCH_SAVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveSearch(&held, &visitor, &session))),
+    Route.post(Routes.SEARCH_DELETE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| deleteSearch(&held, &visitor, &session))),
     Route.get(Routes.HOME, Serve.page(app, |visitor: Context.Visitor| home(&held, &visitor))),
     Route.get(Routes.SEARCH, Serve.page(app, |visitor: Context.Visitor| listing(&held, &visitor, SearchPage.Open, filtersOf(&visitor)))),
     Route.get(Routes.CATEGORY, Serve.page(app, |visitor: Context.Visitor| landingPage(&held, &visitor, true))),
@@ -128,7 +136,7 @@ fn remembered(app: &Assembly.App, visitor: &Context.Visitor, filters: &Search.Fi
 /// The home rail around the visitor's remembered town, as rendered markup for the home page script.
 /// The home page itself stays the same for every guest so that the edge may keep it.
 fn nearRail(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
-  let (town, meters) = match Option.andThen(visitor.cookies.get(Cookies.NEAR), |value: Str| Search.rememberedNear(value)) {
+  let (town, meters) = match Option.orElse(Option.andThen(visitor.cookies.get(Cookies.NEAR), |value: Str| Search.rememberedNear(value)), preferredNear(app, visitor)) {
     case Some(found) => found
     case None => { return private(Respond.json(200, &Json.object(&[("html", Json.Text(""))]))) }
   }
@@ -145,6 +153,52 @@ fn nearRail(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
     case Ok(page) => private(Respond.json(200, &Json.object(&[("html", Json.Text(HomePage.nearRail(&Context.frame(app, visitor), place, &filters, &page.items)))])))
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
+}
+
+/// Keeps the posted listing: its query string is parsed into filters and rendered again, so only
+/// known filters are stored, and its label is written from them in the member's language.
+fn saveSearch(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let posted = Option.unwrapOr(Serve.fields(visitor).get("query"), "")
+  let pairs = Url.parseQuery(if posted.startsWith("?") { posted.drop(1) } else { posted })
+  let read = |name: Str| {
+    var found = ""
+    for pair in pairs {
+      if pair[0] == name && found.isEmpty() { found = pair[1] }
+    }
+    found
+  }
+  let filters = Search.Filters{..filtersFrom(read), after: ""}
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  let query = SearchPage.queryOf(&filters, &SearchPage.Open, "")
+  let saving = Search.Saving{label: SearchPage.label(&Context.frame(app, visitor), &catalog, &filters), query: query}
+  match Serve.ask(app, &app.kinds.saveSearch, Serve.signed(session, saving)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.SEARCH + query), "flash.search_saved")
+    case Err(Problem.Refused(reason)) => Respond.withFlash(app, Respond.redirect(Routes.SEARCH + query), "problem." + reason)
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// Removes a saved search, then returns to the activity page.
+fn deleteSearch(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.deleteSearch, Serve.signed(session, Serve.param(visitor, "id"))) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACTIVITY + "#searches"), "flash.search_deleted")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A signed-in member's first favourite town (or home town) with their preferred radius, used when
+/// the browser remembers no nearby choice.
+fn preferredNear(app: &Assembly.App, visitor: &Context.Visitor) -> Option[(Str, Int)] {
+  let session = visitor.session ?
+  let me = match Serve.ask(app, &app.kinds.me, Serve.signed(&session, ())) {
+    case Ok(found) => found
+    case Err(_) => { return None }
+  }
+  let town = Option.orElse(Option.fromArray(&me.preferredTowns), me.homeMunicipality) ?
+  Some((town, Option.unwrapOr(me.preferredRadiusKm, Search.DEFAULT_RADIUS_KM) * 1000))
 }
 
 /// A script answer that depends on the visitor's cookies and is never kept by a shared cache.
@@ -185,13 +239,14 @@ fn landingPage(app: &Assembly.App, visitor: &Context.Visitor, byCategory: Bool) 
 
 /// The map, with pins for the filters' position or the next events.
 fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
-  let located = match Serve.ask(app, &app.kinds.catalog, ()) {
-    case Ok(catalog) => Search.anchored(&filtersOf(visitor), &catalog)
-    case Err(_) => Search.Filters{..filtersOf(visitor), near: ""}
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
+  let located = Search.anchored(&filtersOf(visitor), &catalog)
   let filters = Search.Filters{..located, viewport: Some(Search.Viewport{south: App.BOUNDS_SOUTH, west: App.BOUNDS_WEST, north: App.BOUNDS_NORTH, east: App.BOUNDS_EAST})}
   match Serve.ask(app, &app.kinds.pins, filters) {
-    case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards.items, cards.limited, Serve.query(visitor, "near") == "1"))
+    case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards.items, cards.limited, Serve.query(visitor, "near") == "1", &catalog, &located, Routes.SEARCH + SearchPage.queryOf(&located, &SearchPage.Open, "")))
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

@@ -19,9 +19,9 @@ public/assets/js/features/explorer.js, wired by [[src/View/Pages/Map]] and main.
 
 Start watches only from an explicit location action. Each control owns a distinct callback subscription. Stop watches on off/page hide. Map reads the current search query when refreshing nearby.
 
-## Widening after locating
+## Stable location camera
 
-The first precise fix frames the visitor at street zoom. If that viewport returns no activities, the map eases out two zoom levels around the visitor and asks again, stopping at the first non-empty view, at zoom 11, or when the visitor pans or zooms.
+Explicit locate frames the first reading. A coarse initial reading fits its accuracy circle once; the first precise reading may refine that view to street zoom once. Subsequent readings retain zoom, and empty results never move the camera. User gestures detach following until explicit recenter.
 
 ## Negative Logic
 
@@ -83,7 +83,7 @@ Only the sheet itself ending a height/max-height transition updates map padding.
 - **Q:** Why did the current-position dot look misplaced?
   **A:** Three causes. The first, often coarse network fix was centred once and never followed, so the dot drifted from the camera as GPS sharpened. A coarse fix was shown at a tight fixed zoom, so a ±2 km guess looked exact. And `transform` rules on price markers overrode the transform MapLibre uses to position each marker. Resolved.
 - **Q:** What is the contract now?
-  **A:** The locate control starts follow mode. Every reading re-frames the camera until the visitor pans, zooms, or rotates; only events carrying `originalEvent` count, so programmatic easing never cancels following. A detached state keeps the control pressed with an outline; pressing it again re-frames the last reading at once. A reading less precise than 500 m fits the camera to its accuracy circle, mutes the halo, and shows a one-time approximate-location toast. A precise first fix opens at zoom 15, and later fixes keep the visitor's zoom. Hover and selected price markers scale through the independent `scale` property. Resolved.
+  **A:** The locate control starts follow mode. Every reading re-frames the camera until the visitor pans, zooms, or rotates; only events carrying `originalEvent` count, so programmatic easing never cancels following. A detached state keeps the control pressed with an outline; pressing it again re-frames the last reading at once. An initial reading less precise than 500 m fits the camera to its accuracy circle once, mutes the halo, and shows a one-time approximate-location toast. Later accuracy changes update the halo without refitting. A precise first fix opens at zoom 15, and later fixes keep the visitor's zoom. Hover and selected price markers scale through the independent `scale` property. Resolved.
 - **Q:** What proves it?
   **A:** A simulated 2.5 km reading framed the circle and showed the toast; a 25 m reading switched to precise and centred the marker in the unobscured canvas. A real drag detached following and a later reading left the camera alone; pressing locate re-centred. Resolved.
 
@@ -98,4 +98,21 @@ Resolved: nearby lookup stays private; initial acquisition uses the bounded accu
 Resolved: refreshed sheet data-ends normalizes null to empty; LocalTime treats malformed ends as unknown. Organizing activity final-state text uses archived when actual end unknown, retaining cancellation precedence. Test actual date renderer with null-end sheet data and bilingual archived output.
 
 ## Moving nearby and 3D Grill Log · #78
-Resolved: area requests are grid-aligned and carry `hl`; a hidden tab defers its refresh until shown; following zoom adapts to speed; the 3D switch is wired through [[src/Public/Map3d]]. See [[decisions/ADR-0011-moving-nearby-and-3d-map]].
+Resolved: area requests are grid-aligned and carry `hl`; a hidden tab defers its refresh until shown; following retains the chosen zoom (superseding the earlier speed-adaptive camera); the 3D switch is wired through [[src/Public/Map3d]]. See [[decisions/ADR-0011-moving-nearby-and-3d-map]].
+
+## Stable discovery camera Grill Log · #88
+Resolved: result responses never zoom the discovery camera. Remove empty-result widening and speed-based zoom because competing GPS/result eases cause oscillation. Explicit locate frames the initial accuracy once; a first precise fix may refine a previously coarse initial view once. Later readings only update position and follow center, preserving zoom even if accuracy degrades or speed changes. User pan/zoom/rotation detaches; recenter is explicit. Turning private locate off detaches even while sharing continues. Regression cases cover empty/filled responses, accuracy alternation, stationary/noisy/moving fixes, user gestures and sharing lifecycle. This supersedes earlier widening/speed-follow contracts.
+
+Reference boundary: preserve existing cards, markers and mobile sheet. No Airbnb-style hover card or map popup is introduced.
+
+Independent review refinement: preserve intended follow zoom while easing is in flight, including duplicated locate/share delivery. Defer coarse follow framing until its first fit settles; a precise reading can refine once. A gesture during initial acquisition cancels pending recenter and marks locate detached. Deferred normal-motion tests exercise these cases. Resolved.
+
+Explicit exploration refinement: list focus that moves the camera and activated clusters detach location following, including pending initial framing. Hover and price-pin selection retain existing highlighting/scroll behavior and do not introduce popups. Resolved.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Visible loading state follows the current request ticket, cached/error/no-area branches and pagehide. MapSurface owns expansion; expanded camera coverage is zero, resizing updates bounds without event refit or GPS recenter.
+
+## Phone sheet behavior
+Below 700px, scrolling the list past 24px raises the sheet and the Map pill lowers it. While raised, viewport refreshes are skipped so the list keeps what it showed; lowering re-reads the visible map.
+
+Programmatic list scrolls (selecting a pin) are ignored for 900ms so they never raise the sheet.

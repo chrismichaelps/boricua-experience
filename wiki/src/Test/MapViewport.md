@@ -45,9 +45,9 @@ MEDIUM.
 - **Q:** What is the resolved mobile and scaling contract?
   **A:** Exact view bounds account for sheet occlusion and are passed to the bounded server request. Explorer test covers aborts and bounded cache behavior in addition to stale response protection. Resolved.
 
-## Empty located viewport regression
+## Stable located viewport regression
 
-Grill resolved: model the real camera zoom and changing bounds after easing. Confirm an empty first precise view steps out by two levels, stops at the configured regional floor, stops when data appears, and respects a visitor pan. No hardware coordinates or database writes.
+Grill resolved: model camera zoom and changing bounds after easing. Empty results retain zoom; GPS jitter, accuracy degradation and recovery cannot repeatedly fit bounds. Initial coarse readings fit once before the first precise refinement. Visitor pan/zoom detaches until explicit recenter, and locate off preserves independent sharing without camera following. No hardware coordinates or database writes.
 
 Refreshed-card regression asserts the semantic time child, its instant/style attributes and readable server text.
 
@@ -56,3 +56,10 @@ Resolved: bounded acquisition and writes, immediate stop plus late-update cleanu
 
 ## Nullable schedule rendering Grill Log · #51
 Resolved: refreshed sheet data-ends normalizes null to empty; LocalTime treats malformed ends as unknown. Organizing activity final-state text uses archived when actual end unknown, retaining cancellation precedence. Test actual date renderer with null-end sheet data and bilingual archived output.
+
+## Stable discovery camera Grill Log · #88
+Resolved: result responses never zoom the discovery camera. Remove empty-result widening and speed-based zoom because competing GPS/result eases cause oscillation. Explicit locate frames the initial accuracy once; a first precise fix may refine a previously coarse initial view once. Later readings only update position and follow center, preserving zoom even if accuracy degrades or speed changes. User pan/zoom/rotation detaches; recenter is explicit. Turning private locate off detaches even while sharing continues. Regression cases cover empty/filled responses, accuracy alternation, stationary/noisy/moving fixes, user gestures and sharing lifecycle. This supersedes earlier widening/speed-follow contracts.
+
+Reviewed transition cases: simulate nonzero-duration easing without immediately assigning target zoom, duplicated locate/share callbacks, and pan before first location. Assert intended scale remains stable and late readings cannot reclaim the manually moved camera. Resolved.
+
+Explicit exploration tests: focused list cards and activated clusters detach the location camera; later GPS readings still update the marker without undoing those choices. Resolved.

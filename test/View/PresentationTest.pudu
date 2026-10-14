@@ -5,11 +5,13 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Std.Http as Http
+import Std.Io as Io
 import Std.Json as Json
 import Std.List as List
 import Std.Result as Result
 import Std.Test as Test
 import Constants.App as App
+import Domain.Achievement as Achievement
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
@@ -29,6 +31,7 @@ import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
 import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
+import View.Components.Form as Form
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
 import View.Components.PhotoHeader as PhotoHeader
@@ -85,14 +88,16 @@ fn main() -> Int {
   let results = Html.render(&Layout.page(&visitor(Locale.En, "/search"), &meta, Layout.Explore, H.div().says("Results")))
   let town = Catalog.Municipality{name: "Ponce", slug: "ponce", region: "sur", lat: 18.011, lng: -66.614}
   let narrowed = Search.Filters{..Search.everything(), municipality: "ponce", category: "musica", query: "salsa", freeOnly: true, window: Search.Weekend}
-  let listing = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}, &[]))
+  let listing = Html.render(&SearchPage.render(&visitor(Locale.En, "/pueblo/ponce"), &catalog, &narrowed, &SearchPage.ForTown(town), &Event.Page{items: [], next: None}, &[]))
   let openSearch = Html.render(&SearchPage.render(&en, &catalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
   let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let dateField = Html.render(&Form.input(&en, &Form.Field{..Form.field("startsAt", "Starts", "2026-10-20T19:35"), kind: "datetime-local"}, &[], |c: H.Node| c).html())
   let signup = Html.render(&Auth.signUp(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let renewal = Html.render(&Auth.renewal(&en, "/activity", &None))
   let missing = Html.render(&Errors.missing(&en))
-  let map = Html.render(&MapPage.render(&en, &[], false, false))
+  let map = Html.render(&MapPage.render(&en, &[], false, false, &emptyCatalog, &Search.Filters{..Search.everything(), category: "musica", freeOnly: true}, "/search?category=musica&free=1"))
   let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(why) => panic("fixture failed: " + Json.explainDecode(&why)) }
   let detail = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(found) => found case Err(_) => panic("fixture failed") }
   let unknownCard = Event.Card{..detail.card, priceCents: None, endsAt: None, discoveryUntil: Some("2026-10-13T02:00:00Z")}
@@ -103,7 +108,7 @@ fn main() -> Int {
 
   let endedFrame = Frame.Frame{..es, nowMillis: 1791576000000}
   let endedOutput = Html.render(&EventCard.card(&endedFrame, &endedCard).html())
-  let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], organizing: [endedCard]}))
+  let endedActivity = Html.render(&ActivityPage.render(&endedFrame, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [endedCard]}))
   let seriesCard = Html.render(&EventCard.card(&es, &Event.Card{..detail.card, moreDates: 3}).html())
   let singleCard = Html.render(&EventCard.card(&es, &detail.card).html())
   let seriesPage = Html.render(&EventPage.render(&en, &Event.Detail{..detail, otherDates: [Event.Occurrence{slug: "plaza-2026-11-21", startsAt: "2026-11-21T22:00:00+00:00", endsAt: None}]}, &None))
@@ -156,8 +161,8 @@ fn main() -> Int {
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
   let original = match Event.decodeDetail(&Fixtures.json("event-detail-guest.json")) { case Ok(d) => d case Err(_) => panic("detail fixture") }
   let curated = Event.Detail{..original, source: "curated", sourceUrl: Some("https://example.org/official"), card: Event.Card{..original.card, source: "curated"}}
-  let curatedActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [curated.card]}))
-  let nativeActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [original.card]}))
+  let curatedActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [curated.card]}))
+  let nativeActivity = Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [original.card]}))
   let nativeEndedOwner = Html.render(&EventPage.render(&en, &Event.Detail{..original, card: Event.Card{..original.card, status: "ended"}, viewer: Event.Viewer{..original.viewer, signedIn: true, isOrganizer: true}}, &None))
   let curatedGuest = Html.render(&EventPage.render(&en, &curated, &None))
   let curatedEs = Html.render(&EventPage.render(&es, &curated, &None))
@@ -175,9 +180,20 @@ fn main() -> Int {
   let unavailable = Html.render(&EventPage.render(&en, &badSource, &None))
   let sourceCard = Html.render(&EventCard.card(&en, &curated.card).html())
   let profile: Profile.PublicProfile = match Wire.decode(&Fixtures.json("public-profile.json")) { case Ok(p) => p case Err(_) => panic("profile fixture") }
-  let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}))
-  let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}))
+  let noBadges = Achievement.Showcase{total: 0, items: []}
+  let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
+  let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let checks = Test.suite("Presentation", &[
+      Test.equals("map omits accessibility launcher", &map.contains("a11y-launch"), &false),
+      Test.that("phone map offers a Map pill that lowers the list", map.contains("class=\"sheet-map-pill\"") && map.contains("data-sheet-collapse=\"1\"")),
+      Test.that("map keeps the accessibility panel for the menu row", map.contains("id=\"a11y-panel\"") && map.contains("data-a11y-open")),
+      Test.that("every page menu offers the accessibility panel", results.contains("data-a11y-open")),
+      Test.equals("other pages retain accessibility launcher", &results.contains("a11y-launch"), &true),
+      Test.that("accessibility language switch names the language it switches to", results.contains("<span lang=\"es\">ESPAÑOL</span>") && !results.contains(">ENGLISH<")),
+      Test.equals("map expansion is named", &map.contains("Expand map"), &true),
+      Test.equals("map loading is named", &map.contains("Loading activities"), &true),
+      Test.equals("home has decorative loading skeleton", &homePage.contains("home-skeleton"), &true),
+      Test.equals("home nearby uses shared picker", &homePage.contains("class=\"near-form\" data-feature=\"search-pickers\""), &true),
       Test.that("menu renders distinct unknown, free and paid facts", menuReader.contains("Ask for price") && menuReader.contains("Free") && menuReader.contains("$12.50")),
       Test.that("menu unavailable and declared allergens are readable", menuReader.contains("Currently unavailable") && menuReader.contains("Declared allergens: milk")),
       Test.that("menu labels respect Spanish interface language", spanishMenu.contains("Precio por confirmar") && spanishMenu.contains("No disponible actualmente")),
@@ -236,6 +252,12 @@ fn main() -> Int {
       Test.that("a single card names no later dates", !singleCard.contains("card-series")),
       Test.that("a recurring page links its other dates", seriesPage.contains("Other dates") && seriesPage.contains("href=\"/e/plaza-2026-11-21\"")),
       Test.that("a single page has no other dates", !singlePage.contains("other-dates")),
+      Test.that("date-time calendar retains native name and clock", dateField.contains("type=\"datetime-local\"") && dateField.contains("name=\"startsAt\"") && dateField.contains("2026-10-20T19:35") && dateField.contains("data-form-date=")),
+      Test.that("birthdate calendar retains historical native fallback", signup.contains("data-form-date=") && signup.contains("min=\"1900-01-01\"")),
+      Test.that("birthdate calendar caps the choosable dates at adulthood", signup.contains("data-date-age=\"18\"")),
+      Test.that("renewal asks for both documents and keeps the return path", renewal.contains("name=\"terms\"") && renewal.contains("name=\"privacy\"") && renewal.contains("action=\"/terms/accept\"") && renewal.contains("value=\"/activity\"")),
+      Test.that("renewal links both documents and offers signing out", renewal.contains("href=\"/terms\"") && renewal.contains("href=\"/privacy\"") && renewal.contains("action=\"/signout\"")),
+      Test.that("place category and town reuse shared selectors", restaurantForm.contains("data-feature=\"search-pickers\"")),
       Test.equals("signup requires password confirmation", &signup.contains("name=\"confirmation\""), &true),
       Test.equals("signup does not expose itself to indexing", &signup.contains("noindex,follow"), &true),
       Test.equals("password controls are localized", &signup.contains("Show password"), &true),
@@ -263,7 +285,7 @@ fn main() -> Int {
       Test.equals("curated SEO avoids availability claims", &Json.encode(&Seo.event(en.siteUrl, &curated)).contains("InStock"), &false),
       Test.equals("admin profile badge is English", &adminEn.contains("Administrator"), &true),
       Test.equals("admin profile badge is Spanish", &adminEs.contains("Administrador"), &true),
-      Test.equals("member profile never has admin badge", &Html.render(&ProfilePage.render(&en, &profile)).contains("admin-badge"), &false),
+      Test.equals("member profile never has admin badge", &Html.render(&ProfilePage.render(&en, &profile, &noBadges)).contains("admin-badge"), &false),
 
       Test.equals("signed-out JSON status", &signedOutReply.status.code, &401),
       Test.equals("signed-out JSON expires secure session", &expiredCookies.filter(|cookie: Str| cookie.startsWith("bx_session=") && cookie.contains("Max-Age=0") && cookie.contains("Secure")).length(), &1),
@@ -275,9 +297,9 @@ fn main() -> Int {
       Test.equals("category and town landings retain their own heading", &listing.contains("search-hero-photo"), &false),
       Test.equals("footer removes the adult-only note", &openSearch.contains("For adults 18 and over"), &false),
       Test.equals("footer uses the frame year", &openSearch.contains("© 1969 Boricua Experience."), &true),
-      Test.equals("both language actions carry session token", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &2),
-      Test.equals("organizing unknown archive is neutral in English", &Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("This activity has ended."), &false),
-      Test.equals("organizing unknown archive is neutral in Spanish", &Html.render(&ActivityPage.render(&es, &ParticipationService.Activity{requests: [], saved: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("Esta actividad ya terminó."), &false),
+      Test.equals("every language action carries the session token (bar, menu, accessibility panel)", &languageForms.filter(|part: Str| part.take(part.indexOf("</form>")).contains("name=\"_token\"") && part.take(part.indexOf("</form>")).contains("value=\"session-token\"")).length(), &3),
+      Test.equals("organizing unknown archive is neutral in English", &Html.render(&ActivityPage.render(&en, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("This activity has ended."), &false),
+      Test.equals("organizing unknown archive is neutral in Spanish", &Html.render(&ActivityPage.render(&es, &ParticipationService.Activity{requests: [], saved: [], searches: [], organizing: [Event.Card{..unknownCard, status: "ended"}]})).contains("Esta actividad ya terminó."), &false),
       Test.equals("unknown ended card says archived", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("Archived"), &true),
       Test.equals("unknown archived card never claims actual end", &Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, status: "ended"}).html()).contains("This activity has ended"), &false),
       Test.equals("stale English submission has neutral refusal", &Frame.t(&en, "problem.event_ended"), &"This activity is no longer accepting requests."),
@@ -319,7 +341,16 @@ fn main() -> Int {
       Test.equals("hero uses a real Luquillo photograph", &hero.contains("luquillo-photo.webp"), &true),
       Test.equals("footer has cookie preferences", &home.contains("Cookie preferences"), &true),
       Test.equals("obsolete AI notice is removed", &home.contains("AI-generated images"), &false),
+      Test.equals("home exposes assistant", &home.contains("data-feature=\"assistant\""), &true),
+      Test.equals("search omits assistant", &results.contains("data-feature=\"assistant\""), &false),
+      Test.equals("root failure omits assistant", &failure.contains("data-feature=\"assistant\""), &false),
+      Test.equals("town landing omits assistant", &listing.contains("data-feature=\"assistant\""), &false),
+      Test.equals("login omits assistant", &login.contains("data-feature=\"assistant\""), &false),
+      Test.equals("signup omits assistant", &signup.contains("data-feature=\"assistant\""), &false),
       Test.equals("map omits the assistant", &map.contains("data-feature=\"assistant\""), &false),
+      Test.that("map carries its filters to the list and back to itself", map.contains("href=\"/search?category=musica&amp;free=1\"") && map.contains("class=\"map-filters\"") && map.contains("action=\"/map\"")),
+      Test.that("map keeps location help for screen readers without the visible box", map.contains("class=\"sr-only\" id=\"map-location-help\"") && !map.contains("How location works")),
+      Test.that("map offers the 3D turn controls", map.contains("data-turn=\"north\"") && map.contains("Face north")),
       Test.equals("map explains private location", &map.contains("Near me centers the map privately"), &true),
       Test.equals("map sheet has a named keyboard button", &map.contains("Expand or collapse the activity list"), &true),
       Test.equals("map sheet exposes its controlled list", &map.contains("aria-controls=\"map-list\""), &true),
@@ -343,5 +374,7 @@ fn main() -> Int {
       Test.equals("Spanish search remains translated", &spanish.contains("Dónde"), &true),
       Test.equals("local refresh styles are versioned", &home.contains("/assets/css/home.css?v=" + App.ASSET_VERSION), &true)
     ])
-  Test.report(&Test.run(&checks))
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
 }

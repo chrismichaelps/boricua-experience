@@ -98,3 +98,15 @@ Resolved: nested editor validation and revision conflicts have actionable interf
 
 ## Owner editor Grill Log · #69
 Resolved: Add complete owner editor field/action/conflict labels and unknown declaration guidance.
+
+## Date-range calendar Grill Log · #88
+Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject malformed, impossible, reversed and over366-day spans. Inclusive end converts to following Puerto Rico midnight in existing from/to database arguments, without changing expiration or inventing availability. Preserve presets and canonical when URL across map/list/saved searches. Exact-date dialog uses semantic day buttons, roving keyboard focus, localized two-month desktop/one-month phone calendar, draft selection and explicit apply/clear. Escape cancels draft; existing select fallback remains functional. No Airbnb assets, popups or booking semantics.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Add translated map expand/close/loading labels; no behavioral or catalog values.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Language names
+`nav.language_other` names the other language in its own spelling for the accessibility panel switch.

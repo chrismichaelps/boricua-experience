@@ -1,0 +1,25 @@
+/** @Api.Achievements.Client — the board, browser signals, and public badges through the database API */
+module Api.Achievements
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Achievement as Achievement
+import Domain.Problem as Problem
+
+/// The member's board in a language.
+export fn board(gateway: &Gateway.Gateway, locale: Str, token: Str) -> Result[Achievement.Board, Problem.Problem] {
+  Gateway.query(gateway, Supabase.MY_ACHIEVEMENTS, &[("p_locale", Gateway.text(locale))], Some(token), Gateway.Read)
+}
+
+/// Records browser signals and answers the member's unseen unlocks, which the call marks seen.
+export fn record(gateway: &Gateway.Gateway, signals: &Array[Achievement.Signal], locale: Str, token: Str) -> Result[Array[Achievement.Unlocked], Problem.Problem] {
+  let items = Json.list(&signals.map(|signal: Achievement.Signal| signal.encode()))
+  let answer: Achievement.Unlocks = Gateway.query(gateway, Supabase.RECORD_ACHIEVEMENT_SIGNALS, &[("p_items", items), ("p_locale", Gateway.text(locale))], Some(token), Gateway.Write) ?
+  Ok(answer.unlocked)
+}
+
+/// A member's recent unlocked badges, readable by anyone.
+export fn showcase(gateway: &Gateway.Gateway, userId: Str, locale: Str) -> Result[Achievement.Showcase, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PUBLIC_ACHIEVEMENTS, &[("p_user_id", Gateway.text(userId)), ("p_locale", Gateway.text(locale))], None, Gateway.Read)
+}

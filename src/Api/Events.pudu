@@ -144,9 +144,9 @@ export fn cancel(gateway: &Gateway.Gateway, eventId: Str, token: Str) -> Result[
   Ok(())
 }
 
-/// Counts one view of an event.
-export fn recordView(gateway: &Gateway.Gateway, eventId: Str) -> Result[(), Problem.Problem] {
-  let _answer = Gateway.call(gateway, Supabase.RECORD_EVENT_VIEW, &[("p_event_id", Gateway.text(eventId))], None, Gateway.Write) ?
+/// Counts one view of an event, and the channel that led to it when one is named.
+export fn recordView(gateway: &Gateway.Gateway, eventId: Str, channel: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.RECORD_EVENT_VIEW, &[("p_event_id", Gateway.text(eventId)), ("p_channel", Gateway.textOrNull(channel))], None, Gateway.Write) ?
   Ok(())
 }
 

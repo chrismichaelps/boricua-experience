@@ -57,3 +57,6 @@ MEDIUM.
 
 ## Curated publication Grill Log · #42
 Resolved: Show a small labeled crown only when the trusted public profile isAdmin is true.
+
+## Formatting baseline Grill Log · #88
+Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.

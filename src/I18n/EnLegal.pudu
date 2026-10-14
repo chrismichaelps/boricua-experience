@@ -98,5 +98,22 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("about.safety.title", "Safety first"),
     ("about.safety.body", "Accounts are for adults 18 and over. Exact addresses stay hidden until the organizer approves you, anyone can report an activity, and reports involving minors are reviewed first."),
     ("about.privacy.title", "Privacy by design"),
-    ("about.privacy.body", "Your location is yours: off by default, never public, with a history you can delete. You can download or delete your information at any time.")
+    ("about.privacy.body", "Your location is yours: off by default, never public, with a history you can delete. You can download or delete your information at any time."),
+    ("legal.accessibility.title", "Accessibility statement"),
+    ("legal.accessibility.description", "How we make Boricua Experience accessible, the tools we offer and how to report a barrier."),
+    ("legal.accessibility.intro", "We want anyone to be able to find, join or host activities in Puerto Rico, whether or not they use assistive technology."),
+    ("legal.accessibility.summary", "We design and test the site against WCAG 2.1 level AA. The accessibility tool (Alt + A) adjusts text, colors and orientation and keeps your preferences only in your browser. If you find a barrier, write to us and we will fix it."),
+    ("legal.accessibility.commitment.title", "Our commitment"),
+    ("legal.accessibility.commitment.body", "Accessibility is part of the product from the start, not an add-on. We check every change with a keyboard, a screen reader, zoom up to 200% and on real phones."),
+    ("legal.accessibility.standard.title", "The standard we follow"),
+    ("legal.accessibility.standard.body", "We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 level AA: sufficient contrast, text alternatives, labelled forms, visible focus, touch targets of at least 44 pixels and respect for reduced-motion preferences."),
+    ("legal.accessibility.tools.title", "The accessibility tool"),
+    ("legal.accessibility.tools.body", "The blue button with the figure opens the tool, as does Alt + A. It offers profiles for seizure safety, low vision, ADHD, reading, keyboard and dyslexia, and adjustments for text size, spacing, fonts, contrast, saturation, animations, images, sounds, a reading guide and mask, a big cursor, highlighted focus and a page map.\n\nYour settings stay in this browser and are never sent to our servers. The tool complements, and does not replace, your device's own accessibility features."),
+    ("legal.accessibility.compatibility.title", "Compatibility"),
+    ("legal.accessibility.compatibility.body", "The site works with current versions of Chrome, Safari, Firefox and Edge, and with VoiceOver, TalkBack and NVDA."),
+    ("legal.accessibility.limitations.title", "Known limitations"),
+    ("legal.accessibility.limitations.body", "The interactive map relies on gestures and a graphic view; every activity on the map is also in the accessible list beside it. Some photos and images published by organizers may lack a full description."),
+    ("legal.accessibility.feedback.title", "Tell us about a barrier"),
+    ("legal.accessibility.feedback.body", "If something does not work for you, write to us from Contact and choose the Accessibility topic. Tell us the page and the technology you use; we reply within one or two business days."),
+    ("footer.accessibility", "Accessibility")
   ])

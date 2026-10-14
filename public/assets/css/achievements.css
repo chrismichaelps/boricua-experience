@@ -1,0 +1,93 @@
+/* Achievements: the board's grid of badges, one achievement's detail, unlock toasts, and the
+   badges shown on account and public profile pages. Badge motion lives in badges.css. */
+:root { --ach-common: #3f9440; --ach-rare: #1878ec; --ach-epic: #7b4bd1; --ach-legendary: #d99a00; }
+.rarity-common { --ach-color: var(--ach-common); }
+.rarity-rare { --ach-color: var(--ach-rare); }
+.rarity-epic { --ach-color: var(--ach-epic); }
+.rarity-legendary { --ach-color: var(--ach-legendary); }
+
+.achievements { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-bottom: 32px; }
+.ach-head { display: grid; gap: 6px; }
+.ach-head .page-title { margin: 4px 0 0; }
+.ach-summary { display: grid; gap: 8px; max-width: 420px; }
+.ach-bar { display: block; height: 8px; border-radius: 999px; background: var(--color-mist); overflow: hidden; }
+.ach-bar-wide { height: 10px; }
+.ach-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6fc055, #3f9440); }
+.ach-filters .chips { display: flex; gap: 8px; overflow-x: auto; margin: 0; padding: 2px 2px 6px; list-style: none; scrollbar-width: none; }
+.ach-filters .chips::-webkit-scrollbar { display: none; }
+.ach-filters .chip { text-decoration: none; color: var(--color-ink); }
+.ach-filters .chip.is-on { border-color: var(--color-ink); background: var(--color-ink); color: #fff; }
+
+/* The grid: three columns on phones, four on tablets, five to six on desktops. */
+.ach-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 600px) { .ach-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; } }
+@media (min-width: 960px) { .ach-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .ach-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.ach-grid > li { display: contents; }
+.ach-tile { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; justify-items: center; align-items: center; gap: 6px; aspect-ratio: 1 / 1; min-width: 0; padding: 10px 8px 12px; border: 2px solid var(--color-divider); border-radius: 20px; background: var(--color-white); color: var(--color-ink); text-align: center; text-decoration: none; transition: transform .18s cubic-bezier(.22, 1, .36, 1), box-shadow .18s ease, border-color .18s ease; }
+.ach-tile.is-unlocked { border-color: var(--ach-color); box-shadow: 0 4px 14px color-mix(in srgb, var(--ach-color) 22%, transparent); }
+.ach-tile.is-unlocked.rarity-legendary { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ach-legendary) 25%, transparent), 0 6px 18px color-mix(in srgb, var(--ach-legendary) 30%, transparent); }
+.ach-tile:hover { transform: translateY(-3px); }
+.ach-tile.is-unlocked:hover { box-shadow: 0 10px 24px color-mix(in srgb, var(--ach-color) 32%, transparent); }
+.ach-tile:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 3px; }
+.ach-art { display: grid; place-items: center; height: 100%; min-height: 0; aspect-ratio: 1 / 1; max-width: 100%; }
+.ach-art img, .ach-art svg { display: block; width: 100%; height: 100%; }
+.ach-name { font-size: 13px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ach-tile .ach-progress { width: 80%; }
+.ach-tile .ach-bar { height: 5px; }
+.ach-season { position: absolute; top: 8px; right: 8px; display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 999px; background: #fff3d6; color: #8a5a00; font-size: 10px; font-weight: 800; }
+.ach-season span { display: none; }
+@media (min-width: 600px) { .ach-season span { display: inline; } }
+
+/* Locked: gray, faint, and still. */
+.is-locked .ach-art { filter: grayscale(1) contrast(.9); opacity: .42; }
+.is-locked .ach-name { color: var(--color-graphite); }
+.is-locked .ach-art svg, .is-locked .ach-art svg * { animation-play-state: paused !important; }
+.is-locked .ach-fill { background: var(--color-graphite); }
+
+/* One achievement's detail, in the dialog or on its own page. */
+.ach-dialog { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 0; border-radius: 28px; background: var(--color-white); color: var(--color-ink); box-shadow: 0 30px 80px rgb(0 0 0 / 25%); overflow: auto; }
+.ach-dialog::backdrop { background: rgb(17 17 17 / 45%); }
+.ach-dialog[open] { animation: ach-dialog-in .28s cubic-bezier(.22, 1, .36, 1); }
+@keyframes ach-dialog-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+.ach-dialog-close { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--color-cloud); color: var(--color-ink); cursor: pointer; }
+.ach-dialog-close:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 2px; }
+.ach-detail { display: grid; justify-items: center; gap: 8px; padding: 36px 28px 28px; text-align: center; }
+.ach-detail .ach-art { height: auto; width: 62%; max-width: 200px; }
+.ach-rarity { margin: 6px 0 0; padding: 3px 12px; border-radius: 999px; background: color-mix(in srgb, var(--ach-color) 14%, white); color: var(--ach-color); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.ach-detail-title { margin: 0; font-size: 22px; font-weight: 800; }
+.ach-detail-text { margin: 0; color: var(--color-graphite); line-height: 1.45; }
+.ach-when { display: inline-flex; align-items: center; gap: 6px; margin: 4px 0 0; font-weight: 700; color: var(--ach-common); }
+.ach-when.muted { color: var(--color-graphite); font-weight: 600; }
+.ach-detail .ach-progress { display: grid; gap: 6px; width: 100%; max-width: 260px; margin-top: 4px; }
+.ach-progress-text { font-weight: 700; font-size: 14px; }
+.ach-page { margin-top: 12px; border: 1px solid var(--color-divider); border-radius: 28px; }
+
+/* The account page's way in, and badges on a public profile. */
+.ach-link { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; color: var(--color-ink); text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+.ach-link:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgb(0 0 0 / 8%); }
+.ach-link-text { display: grid; gap: 2px; }
+.ach-showcase { margin: 8px 0 4px; }
+.ach-strip { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.ach-strip img { display: block; width: 56px; height: 56px; }
+
+/* Unlock toasts: the badge pops in with the sound, then the toast leaves after about five seconds. */
+.ach-toasts { position: fixed; z-index: 60; left: 50%; top: calc(12px + env(safe-area-inset-top)); width: min(420px, calc(100vw - 24px)); transform: translateX(-50%); display: grid; gap: 8px; pointer-events: none; }
+.ach-toast { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; padding: 10px 16px 10px 10px; border: 2px solid var(--ach-color); border-radius: 22px; background: var(--color-white); color: var(--color-ink); box-shadow: 0 16px 40px rgb(0 0 0 / 18%); pointer-events: auto; text-decoration: none; animation: ach-toast 4.8s cubic-bezier(.22, 1, .36, 1) both; }
+.ach-toast-art { width: 64px; height: 64px; animation: ach-pop .62s cubic-bezier(.34, 1.56, .64, 1) .08s both; }
+.ach-toast-art svg, .ach-toast-art img { display: block; width: 100%; height: 100%; }
+.ach-toast-text { display: grid; gap: 2px; min-width: 0; }
+.ach-toast-label { color: var(--ach-color); font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.ach-toast-title { font-size: 16px; font-weight: 800; overflow-wrap: anywhere; }
+@keyframes ach-toast { 0% { opacity: 0; transform: translateY(-16px) scale(.96); } 7%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px); } }
+@keyframes ach-pop { 0% { transform: scale(.2) rotate(-25deg); opacity: 0; } 60% { transform: scale(1.12) rotate(4deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ach-tile, .ach-link { transition: none; }
+  .ach-tile:hover, .ach-link:hover { transform: none; }
+  .ach-dialog[open] { animation: none; }
+  .ach-toast { animation: ach-toast-fade 4.8s linear both; }
+  .ach-toast-art { animation: none; }
+}
+@keyframes ach-toast-fade { 0%, 100% { opacity: 0; } 4%, 90% { opacity: 1; } }
+html.a11y-still .ach-art svg * { animation: none !important; }

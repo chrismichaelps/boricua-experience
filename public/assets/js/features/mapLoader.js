@@ -1,4 +1,4 @@
-import { MAP } from '../constants/config.js?v=57';
+import { MAP } from '../constants/config.js?v=59';
 
 let loading = null;
 
@@ -34,7 +34,9 @@ export async function createMap(container, options = {}) {
     attributionControl: { compact: true },
     cooperativeGestures: options.cooperative ?? false,
     dragRotate: false,
-    pitchWithRotate: false,
+    // A rotatable map tilts while turning once its 3D view enables rotation; others stay flat.
+    pitchWithRotate: options.rotatable ?? false,
+    maxPitch: MAP.maxPitch,
   });
   map.touchZoomRotate.disableRotation();
   if (options.controls !== false) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');

@@ -50,6 +50,7 @@ export const TOGGLE_SAVED: Str = "toggle_saved"
 export const SET_REACTION: Str = "set_reaction"
 export const REPORT_EVENT: Str = "report_event"
 export const COMPLETE_ONBOARDING: Str = "complete_onboarding"
+export const ACCEPT_TERMS: Str = "accept_terms"
 export const UPDATE_MY_PROFILE: Str = "update_my_profile"
 export const UPDATE_MY_PREFERENCES: Str = "update_my_preferences"
 export const RECORD_POSITION: Str = "record_position"
@@ -62,6 +63,7 @@ export const REACTIVATE_MY_ACCOUNT: Str = "reactivate_my_account"
 export const DELETE_MY_ACCOUNT: Str = "delete_my_account"
 export const ADMIN_OVERVIEW: Str = "admin_overview"
 export const ADMIN_REPORTS: Str = "admin_reports"
+export const ADMIN_DISCOVERY_FUNNEL: Str = "admin_discovery_funnel"
 export const ADMIN_RESOLVE_REPORT: Str = "admin_resolve_report"
 export const SET_MY_AVATAR: Str = "set_my_avatar"
 export const PLACE_MEDIA: Str = "place_media"
@@ -113,3 +115,30 @@ export const CLIENT_NAME: Str = "supabase"
 export const CALL_TIMEOUT_MILLIS: Int = 8000
 /// Milliseconds one attempt may take.
 export const ATTEMPT_TIMEOUT_MILLIS: Int = 4000
+
+/// Achievements: the board, browser signals, and public badges.
+export const MY_ACHIEVEMENTS: Str = "my_achievements"
+/// Weekly email summaries: the members due one, and stopping them from a letter.
+export const DIGEST_BATCH: Str = "digest_batch"
+export const STOP_DIGEST: Str = "stop_digest"
+/// Revalidates a claimed recipient against their current consent generation.
+export const DIGEST_ALLOWED: Str = "digest_allowed"
+export const RECORD_ACHIEVEMENT_SIGNALS: Str = "record_achievement_signals"
+export const PUBLIC_ACHIEVEMENTS: Str = "public_achievements"
+
+/// Organizer tools and the private calendar feed.
+export const EVENT_INSIGHTS: Str = "event_insights"
+export const APPROVE_PENDING: Str = "approve_pending"
+export const CALENDAR_FEED: Str = "calendar_feed"
+
+/// A member's saved searches.
+export const SAVE_SEARCH: Str = "save_search"
+export const DELETE_SAVED_SEARCH: Str = "delete_saved_search"
+export const MY_SAVED_SEARCHES: Str = "my_saved_searches"
+
+/// A member's discovery radius and favourite towns.
+export const UPDATE_MY_DISCOVERY: Str = "update_my_discovery"
+
+/// Service-only contact relay: record a message under rate windows, then mark its delivery.
+export const SUBMIT_CONTACT: Str = "submit_contact"
+export const MARK_CONTACT: Str = "mark_contact"

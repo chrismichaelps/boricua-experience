@@ -1,7 +1,9 @@
 /** @Services.Participation.Joining — requests, decisions, saves, reactions, and reports */
 module Services.Participation
 
+import Std.Bytes as Bytes
 import Std.Concurrent as Concurrent
+import Std.Crypto as Crypto
 import Std.Result as Result
 import Std.Sync as Sync
 import Api.Events as EventsApi
@@ -9,20 +11,21 @@ import Api.Participation as ParticipationApi
 import Domain.Event as Event
 import Domain.Participation as Participation
 import Domain.Problem as Problem
+import Domain.Search as Search
 import Domain.Session as Session
 import Services.Runtime as Runtime
 import Validation.Participation as Rules
 
 /** @Services.Participation.Activity — what the activity page shows */
-export type Activity = { requests: Array[Participation.MyRequest], saved: Array[Event.Card], organizing: Array[Event.Card] }
+export type Activity = { requests: Array[Participation.MyRequest], saved: Array[Event.Card], organizing: Array[Event.Card], searches: Array[Search.SavedSearch] }
 
 /** @Services.Participation.Queue — an event and the requests waiting on its organizer */
-export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest] }
+export type Queue = { event: Event.Detail, requests: Array[Participation.IncomingRequest], insights: Option[Participation.Insights] }
 
 /// Asks to join with an optional message; answers `approved` or `pending`.
-export fn join(runtime: &Runtime.Runtime, eventId: Str, message: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
+export fn join(runtime: &Runtime.Runtime, eventId: Str, message: Str, channel: Str, session: &Session.Session) -> Result[Str, Problem.Problem] {
   let valid = Rules.message(message) ?
-  let outcome = ParticipationApi.requestJoin(&runtime.gateway, eventId, valid.trim(), session.accessToken) ?
+  let outcome = ParticipationApi.requestJoin(&runtime.gateway, eventId, valid.trim(), channel, session.accessToken) ?
   Ok(outcome.status)
 }
 
@@ -43,13 +46,48 @@ export fn queue(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session)
   let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
   if !found.viewer.isOrganizer { return Err(Problem.Forbidden) }
   let requests = ParticipationApi.incoming(&runtime.gateway, found.card.id, session.accessToken) ?
-  Ok(Queue{event: found, requests: requests})
+  // The numbers are a convenience: the queue still opens when they cannot be read.
+  let insights = match ParticipationApi.insights(&runtime.gateway, found.card.id, session.accessToken) {
+    case Ok(found) => Some(found)
+    case Err(_) => None
+  }
+  Ok(Queue{event: found, requests: requests, insights: insights})
+}
+
+/// Approves every pending request that fits; answers how many were approved.
+export fn approveAll(runtime: &Runtime.Runtime, slug: Str, session: &Session.Session) -> Result[Int, Problem.Problem] {
+  let found = EventsApi.detail(&runtime.gateway, slug, Some(session.accessToken)) ?
+  if !found.viewer.isOrganizer { return Err(Problem.Forbidden) }
+  let bulk = ParticipationApi.approvePending(&runtime.gateway, found.card.id, session.accessToken) ?
+  Ok(bulk.approved)
+}
+
+/// The signature that makes a member's calendar feed address unguessable.
+export fn calendarToken(runtime: &Runtime.Runtime, userId: Str) -> Str {
+  Bytes.encodeBase64Url(&Crypto.hmacSha256(&runtime.sessionKey, &Bytes.fromText("calendar-feed|" + userId))).take(32)
+}
+
+/// A member's calendar entries when the feed's signature matches, and nothing otherwise.
+export fn calendarFeed(runtime: &Runtime.Runtime, userId: Str, token: Str) -> Result[Array[Event.CalendarEntry], Problem.Problem] {
+  if !Crypto.bytesMatch(&Bytes.fromText(calendarToken(runtime, userId)), &Bytes.fromText(token)) { return Err(Problem.Missing) }
+  ParticipationApi.calendarFeed(&runtime.gateway, userId)
 }
 
 /// Saves or unsaves an event; answers whether it is now saved.
 export fn toggleSaved(runtime: &Runtime.Runtime, eventId: Str, session: &Session.Session) -> Result[Bool, Problem.Problem] {
   let state = ParticipationApi.toggleSaved(&runtime.gateway, eventId, session.accessToken) ?
   Ok(state.saved)
+}
+
+/// Keeps a listing; the label and query are built by the server from parsed filters.
+export fn saveSearch(runtime: &Runtime.Runtime, saving: &Search.Saving, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let valid = Rules.saving(saving) ?
+  ParticipationApi.saveSearch(&runtime.gateway, &valid, session.accessToken)
+}
+
+/// Removes one saved search.
+export fn deleteSearch(runtime: &Runtime.Runtime, id: Str, session: &Session.Session) -> Result[(), Problem.Problem] {
+  ParticipationApi.deleteSearch(&runtime.gateway, id, session.accessToken)
 }
 
 /// Sets the member's reaction; answers the reaction and the new like count.
@@ -71,7 +109,9 @@ export fn activity(runtime: &Runtime.Runtime, session: &Session.Session) -> Resu
   let requests = Sync.cell(Ok([]))
   let saved = Sync.cell(Ok([]))
   let organizing = Sync.cell(Ok([]))
+  let searches = Sync.cell(Ok([]))
   let ran = Concurrent.parallel(&[
+        || { let _set = Sync.set(&searches, ParticipationApi.savedSearches(&held.gateway, token)) },
         || { let _set = Sync.set(&requests, ParticipationApi.mine(&held.gateway, token)) },
         || { let _set = Sync.set(&saved, ParticipationApi.saved(&held.gateway, token)) },
         || { let _set = Sync.set(&organizing, EventsApi.mine(&held.gateway, token)) }
@@ -80,6 +120,7 @@ export fn activity(runtime: &Runtime.Runtime, session: &Session.Session) -> Resu
   Ok(Activity {
       requests: Result.unwrapOr(Sync.get(&requests), Err(Problem.Unavailable("lost"))) ?,
       saved: Result.unwrapOr(Sync.get(&saved), Err(Problem.Unavailable("lost"))) ?,
-      organizing: Result.unwrapOr(Sync.get(&organizing), Err(Problem.Unavailable("lost"))) ?
+      organizing: Result.unwrapOr(Sync.get(&organizing), Err(Problem.Unavailable("lost"))) ?,
+      searches: Result.unwrapOr(Sync.get(&searches), Err(Problem.Unavailable("lost"))) ?
     })
 }

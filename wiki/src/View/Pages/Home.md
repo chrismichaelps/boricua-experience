@@ -78,3 +78,6 @@ Real destination assets now use `*-photo.webp`; location and licenses are record
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Destination tiles use Catalog scenes and bilingual captions; region tabs derive from municipalities, first available region selected. Resolved.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Render an aria-hidden layout skeleton only for root home; external readiness enhancement enables it while the first hero photo/font is pending, clears without an artificial delay and fails open. Enhance the nearby town/radius form with the same named-select picker as home/search/map.

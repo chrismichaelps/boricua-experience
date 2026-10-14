@@ -11,11 +11,14 @@ import Services.Runtime as Runtime
 import Validation.EventForm as EventForm
 
 /// An event as the viewer may see it; a view is counted for everyone but the organizer.
-export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.Session]) -> Result[Event.Detail, Problem.Problem] {
+export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.Session]) -> Result[Event.Detail, Problem.Problem] { detailVia(runtime, slug, "", session) }
+
+/// An event's page, counting the view with the channel that led to it.
+export fn detailVia(runtime: &Runtime.Runtime, slug: Str, channel: Str, session: Option[Session.Session]) -> Result[Event.Detail, Problem.Problem] {
   let token = tokenOf(&session)
   let found = EventsApi.detail(&runtime.gateway, slug, token) ?
   if !found.viewer.isOrganizer {
-    let _counted = EventsApi.recordView(&runtime.gateway, found.card.id)
+    let _counted = EventsApi.recordView(&runtime.gateway, found.card.id, channel)
   }
   Ok(found)
 }

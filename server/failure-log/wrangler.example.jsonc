@@ -1,0 +1,13 @@
+{
+  // Copy to wrangler.jsonc (kept out of the repository) and fill in the database id.
+  // Receives the site's server failures and keeps them for thirty days in D1, on the free plan.
+  "name": "boricua-failure-log",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "triggers": { "crons": ["31 4 * * *"] },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "boricua-failures", "database_id": "<boricua-failures database id: wrangler d1 info boricua-failures>" }
+  ]
+}

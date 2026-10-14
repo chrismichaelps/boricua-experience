@@ -1,0 +1,27 @@
+/** @Api.Contact.Client — recording contact messages and their delivery */
+module Api.Contact
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Contact as Contact
+import Domain.Problem as Problem
+
+/// Records a message under the sender's fingerprint; refused as `contact_limit` or `contact_busy`.
+export fn submit(gateway: &Gateway.Gateway, form: &Contact.Form, locale: Str, fingerprint: Str, memberId: Str) -> Result[Contact.Receipt, Problem.Problem] {
+  Gateway.queryAsService(gateway, Supabase.SUBMIT_CONTACT, &[
+      ("p_topic", Gateway.text(form.topic)),
+      ("p_name", Gateway.text(form.name)),
+      ("p_email", Gateway.text(form.email)),
+      ("p_body", Gateway.text(form.body)),
+      ("p_locale", Gateway.text(locale)),
+      ("p_fingerprint", Gateway.text(fingerprint)),
+      ("p_member_id", Gateway.textOrNull(memberId))
+    ])
+}
+
+/// Marks whether a recorded message was delivered.
+export fn mark(gateway: &Gateway.Gateway, id: Int, sent: Bool) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.callAsService(gateway, Supabase.MARK_CONTACT, &[("p_id", Json.Number(id)), ("p_sent", Gateway.truth(sent))]) ?
+  Ok(())
+}

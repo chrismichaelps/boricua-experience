@@ -2,6 +2,7 @@
 module App.Handlers.Participation
 
 import App.Messages as Messages
+import Domain.Search as Search
 import PuduLangMediator.Context as Context
 import PuduLangMediator as Messaging
 import PuduLangMediator.Registration as Registration
@@ -12,11 +13,15 @@ import Services.Runtime as Runtime
 export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
   let held = *runtime
   [
-    Registration.handler(&kinds.join, |asked: Messages.Signed[Messages.Joining], _context: Context.Context| Messaging.lift(Participation.join(&held, asked.input.eventId, asked.input.message, &asked.session))),
+    Registration.handler(&kinds.join, |asked: Messages.Signed[Messages.Joining], _context: Context.Context| Messaging.lift(Participation.join(&held, asked.input.eventId, asked.input.message, asked.input.channel, &asked.session))),
     Registration.handler(&kinds.withdraw, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.withdraw(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.decide, |asked: Messages.Signed[Messages.Decision], _context: Context.Context| Messaging.lift(Participation.decide(&held, asked.input.requestId, asked.input.approve, asked.input.note, &asked.session))),
     Registration.handler(&kinds.queue, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.queue(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.save, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.toggleSaved(&held, asked.input, &asked.session))),
+    Registration.handler(&kinds.approveAll, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.approveAll(&held, asked.input, &asked.session))),
+    Registration.handler(&kinds.calendarFeed, |asked: (Str, Str), _context: Context.Context| Messaging.lift(Participation.calendarFeed(&held, asked[0], asked[1]))),
+    Registration.handler(&kinds.saveSearch, |asked: Messages.Signed[Search.Saving], _context: Context.Context| Messaging.lift(Participation.saveSearch(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.deleteSearch, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.deleteSearch(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.react, |asked: Messages.Signed[Messages.Reacting], _context: Context.Context| Messaging.lift(Participation.react(&held, asked.input.eventId, asked.input.value, &asked.session))),
     Registration.handler(&kinds.report, |asked: Messages.Signed[Messages.Reporting], _context: Context.Context| Messaging.lift(Participation.report(&held, asked.input.eventId, &asked.input.form, &asked.session))),
     Registration.handler(&kinds.activity, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Participation.activity(&held, &asked.session)))

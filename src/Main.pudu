@@ -12,6 +12,7 @@ import PuduLangLog.Logger as Logger
 import PuduLangLog.Value as Value
 import Services.Runtime as Runtime
 import Web.Access as Access
+import Web.FailureLog as FailureLog
 import Web.Router as Router
 import Web.Static as Static
 
@@ -29,10 +30,14 @@ fn main() -> Int {
     case Ok(built) => built
     case Err(problem) => { return stopped(problem) }
   }
+  let failures = match FailureLog.create(settings.failureLogUrl) {
+    case Ok(found) => found
+    case Err(problem) => { return stopped(problem) }
+  }
   match Server.start(settings.host, settings.port) {
     case Ok(live) => {
       logs.requests.information("Boricua Experience listening on \{Url\}", [Value.text("http://" + settings.host + ":" + show(Server.portOf(&live)))])
-      let served = Server.server(&Router.routes(&app)).withLimits(Limits.BODY_BYTES_MAX, Limits.BODY_BYTES_MAX).using(Static.middleware(PUBLIC_ROOT)).using(Access.middleware(&logs.requests))
+      let served = Server.server(&Router.routes(&app)).withLimits(Limits.BODY_BYTES_MAX, Limits.BODY_BYTES_MAX).using(Static.middleware(PUBLIC_ROOT)).using(Access.middleware(&logs.requests, &failures))
       let ran = Server.run(&served, &live, settings.connections)
       let _stopped = Server.stop(&live)
       Logger.close(&logs.requests)

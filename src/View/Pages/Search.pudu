@@ -15,6 +15,7 @@ import Domain.Search as Search
 import Utils.Geo as Geo
 import Utils.Query as Query
 import View.Components.EventCard as EventCard
+import View.Components.Form as Form
 import View.Components.Hero as Hero
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
@@ -51,6 +52,37 @@ export fn queryOf(filters: &Search.Filters, landing: &Landing, after: Str) -> St
       ("lat", if filters.near.isEmpty() { coordinate(filters.lat) } else { "" }),
       ("lng", if filters.near.isEmpty() { coordinate(filters.lng) } else { "" }),
       ("after", after)
+    ])
+}
+
+/// A short name for a listing, from its filters, for a saved search.
+export fn label(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters) -> Str {
+  var parts: Array[Str] = []
+  if !filters.query.isEmpty() { parts = parts.push("“" + filters.query.take(40) + "”") }
+  match Catalog.category(catalog, filters.category) {
+    case Some(category) => { parts = parts.push(SearchControls.categoryName(frame, &category)) }
+    case None => {}
+  }
+  match Catalog.municipality(catalog, filters.municipality) {
+    case Some(town) => { parts = parts.push(town.name) }
+    case None => {}
+  }
+  match Catalog.municipality(catalog, filters.near) {
+    case Some(town) => { parts = parts.push(Frame.tf(frame, "search.around_town", &[("town", town.name), ("km", show(Search.radiusKm(filters)))])) }
+    case None => {}
+  }
+  if filters.window != Search.Anytime { parts = parts.push(SearchControls.windowLabel(frame, &filters.window)) }
+  if filters.freeOnly { parts = parts.push(Frame.t(frame, "footer.free")) }
+  if parts.isEmpty() { Frame.t(frame, "search.saved_all") } else { parts.join(" · ").take(80) }
+}
+
+/// The button that keeps the listing, for members.
+fn saveButton(frame: &Frame.Frame, filters: &Search.Filters) -> H.Node {
+  if !Frame.signedIn(frame) { return H.nothing() }
+  H.form().class("save-search").action(Routes.SEARCH_SAVE).method("post").holding([
+      Form.token(frame),
+      H.input().kind("hidden").name("query").value(queryOf(filters, &Open, "")),
+      H.button().submit().class("button button-ghost button-small").holding([Icons.sized("bookmark", 18), H.span().says(Frame.t(frame, "search.save"))])
     ])
 }
 
@@ -107,7 +139,10 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
         SearchControls.chips(frame, catalog, activeCategory),
         H.div().class("results-head").holding([
             if photographic { H.h2().class("page-title").says(Frame.t(frame, "search.activities")) } else { H.h1().class("page-title").says(title) },
-            H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, &Open, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
+            H.div().class("results-actions").holding([
+                saveButton(frame, filters),
+                H.a().class("button button-ghost button-small").href(Routes.MAP + queryOf(filters, &Open, "")).holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "search.show_map"))])
+              ])
           ]),
         SearchControls.filterBar(frame, catalog, filters),
         match landing {

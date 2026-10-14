@@ -105,3 +105,24 @@ Resolved: The menu stylesheet joins the current versioned shell; advance the com
 
 ## Release0.5.0 Grill Log
 Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.
+
+## Home-only assistant Grill Log · #86
+Resolved: Advance document asset version to58. Changed main and assistant module identities are58; unchanged dependencies retain57 so shared state remains a single module instance. No policy version changes.
+
+## Pending release cache Grill Log · #88
+Resolved: advance document entry/styles/branding to60 and changed join-panel module import to60. Unchanged modules retain their current single identities; no private HTML enters the worker cache.
+
+## Stable map cache Grill Log · #88
+Resolved: document asset revision61 and worker61 load Explorer61; unchanged shared modules retain their existing identities. Preserve private HTML network-only and the existing map card/sheet presentation.
+
+## Calendar and sheet cache Grill Log · #88
+Resolved: asset/worker62 load SearchPickers62 and DateCalendar62; Explorer61 and shared dependencies retain their existing identities. CSS62 includes compact sheet tracks and localized calendar. No private data enters precache.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Advance asset version63 for shared discovery surfaces.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Picker fields and terms renewal Grill Log · #88
+Resolved: advance asset/worker version to 65 for FormDates, SearchPickers and DateCalendar. Date, date-time, month and opening-hour fields now render as picker triggers (calendar, time, month and year pickers) instead of native text boxes, superseding the earlier native month/clock decision; native inputs stay canonical and validated. Members on older Terms or Privacy versions are asked to accept the current ones before other pages.

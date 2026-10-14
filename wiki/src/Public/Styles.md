@@ -86,3 +86,12 @@ Resolved: search segments own one neutral2px inset focus indication; nested inpu
 
 ## Curated publication Grill Log · #42
 Resolved: Admin badge uses a compact crown, visible role text and existing ink/cloud palette; no permission is inferred from the badge.
+
+## Footer spacing Grill Log · #88
+Resolved: standard pages use32px phone/40px desktop space before footer, without the obsolete150px event padding. Phone activity footers reserve fixed join-panel height, normalized for accessibility zoom; full-screen map behavior stays intact.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Home readiness skeleton matches the hero, filters and card rails, uses neutral placeholders and reduced-motion support. It never captures input or waits an artificial minimum. No script means existing server content remains visible.
+
+## Skeleton shimmer
+`home.css` paints the home skeleton blocks with a shared gradient and animates its position while the page is pending.

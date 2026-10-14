@@ -1,0 +1,30 @@
+/** @View.Pages.Digest.Stop — stopping the weekly email summary from its own link */
+module View.Pages.Digest
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Constants.Routes as Routes
+import View.Components.Icons as Icons
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The confirmation, and the page shown once the summaries are stopped.
+export fn render(frame: &Frame.Frame, action: Str, stopped: Bool) -> Html.Html {
+  let meta = Seo.meta(Frame.t(frame, "digest.stop_title"), Frame.t(frame, "digest.stop_title"), Routes.ACCOUNT, false)
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("narrow").holding([
+        H.h1().class("page-title").says(Frame.t(frame, "digest.stop_title")),
+        if stopped {
+          H.div().class("stack").holding([
+              H.p().holding([Icons.sized("check", 18), H.span().says(" " + Frame.t(frame, "digest.stopped"))]),
+              H.a().class("button button-ghost").href(Routes.ACCOUNT + "#preferences").says(Frame.t(frame, "digest.manage"))
+            ])
+        } else {
+          H.form().action(action).method("post").class("stack").holding([
+              H.p().says(Frame.t(frame, "digest.stop_body")),
+              H.button().submit().class("button").says(Frame.t(frame, "digest.stop_confirm"))
+            ])
+        }
+      ]))
+}
