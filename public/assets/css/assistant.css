@@ -65,3 +65,23 @@ html.assistant-open body { position:fixed;width:100%;overflow:hidden; }
  .assistant-privacy { padding:0 18px 10px; }.assistant-controls { padding:10px 14px 0; }.assistant-status { padding:10px 18px; }
 }
 @media(prefers-reduced-motion:reduce) { .assistant-dialog,.assistant-launch,.assistant-status::before { animation:none;transition:none; } }
+
+.assistant-plan { margin:20px 0;padding:16px;border:1px solid #dce2e6;border-radius:20px;background:#fff; }
+.assistant-plan h3 { margin:0 0 8px;font-size:17px; }
+.assistant-route-name { font-size:14px;line-height:1.5;overflow-wrap:anywhere; }
+.assistant-route-map { height:240px;border-radius:16px;overflow:hidden;background:#f2f4f5; }
+.assistant-route-note,.assistant-plan-stops small { display:block;color:#65747e;font-size:12px;line-height:1.6;margin:10px 0; }
+.assistant-plan-stops { padding-left:24px; }.assistant-plan-stops li { padding:8px 0;font-size:14px; }.assistant-plan-stops a { color:inherit; }
+.assistant-plan-actions { display:flex;gap:8px;flex-wrap:wrap; }.assistant-plan-actions a { min-height:44px; }
+.assistant-route-pin { display:grid;place-items:center;width:28px;height:28px;border:2px solid white;border-radius:50%;color:white;background:#1878ec;font-weight:700;box-shadow:0 2px 6px #0002; }
+.assistant-map-fallback { padding:20px;font-size:14px; }
+/* Follow-ups worked out from the last answer, and the same search on the map. */
+.assistant-next { margin:18px 0 6px; }
+.assistant-next h3 { font-size:12px;font-weight:600;color:#627281;margin-bottom:8px; }
+.assistant-next-list { display:flex;flex-wrap:wrap;gap:8px; }
+.assistant-next-list button { font:inherit;font-size:13px;line-height:1.4;min-height:40px;padding:8px 12px;border:1px solid #e0e5e8;border-radius:12px;background:#fff;color:#40525f;cursor:pointer;text-align:left; }
+.assistant-next-list button:hover { border-color:#aab9c5; }
+.assistant-next-list button:focus-visible { outline:2px solid #1878ec;outline-offset:3px; }
+.assistant-sources a.assistant-explore { display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:40px;height:auto;margin-top:12px;padding:8px 16px;border:1px solid #e0e5e8;border-radius:999px;background:#fff;color:#1d2b36;font-size:14px;font-weight:600;text-decoration:none;box-shadow:none; }
+.assistant-compose-actions [data-assistant="near"][aria-pressed=true] { color:#0f5cc0;background:#eef6ff; }
+.assistant-compose-actions [aria-busy=true] { opacity:.6; }

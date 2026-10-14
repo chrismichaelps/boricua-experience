@@ -1,4 +1,4 @@
-import { MAP, STORAGE } from '../constants/config.js?v=69';
+import { MAP, STORAGE } from '../constants/config.js?v=73';
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -23,12 +23,13 @@ export function rotation(map, on) {
 
 // The camera and layer for a view: 3D tilts the camera and raises buildings from their mapped heights;
 // 2D restores the flat, north-up map. Buildings exist only where OpenStreetMap maps them.
-export function view3d(map, on, animate = true) {
+export function view3d(map, on, animate = true, zoomIn = true) {
   if (map.getLayer('building-3d')) map.setLayoutProperty('building-3d', 'visibility', on ? 'visible' : 'none');
   rotation(map, on);
   const camera = { pitch: on ? MAP.pitch3d : 0, bearing: on ? map.getBearing() : 0 };
   // Only the visitor's own switch zooms in; restoring a remembered choice keeps the page's framing.
-  if (on && animate && map.getZoom() < MAP.buildingsZoom) camera.zoom = MAP.buildingsZoom;
+  // A map framing a whole route keeps its framing and only tilts.
+  if (on && animate && zoomIn && map.getZoom() < MAP.buildingsZoom) camera.zoom = MAP.buildingsZoom;
   map.easeTo({ ...camera, duration: animate && !reduced() ? 600 : 0 });
 }
 
@@ -63,13 +64,14 @@ function rotationControls(map, group) {
   return (on) => { group.hidden = !on; paint(); };
 }
 
-// The 3D switch on the map page; the choice is kept in this browser only.
-export function buildings3d(map, button, group = null) {
+// The 3D switch on the map page; the choice is kept in this browser only. A route map passes
+// zoomIn false so turning 3D on tilts the whole route instead of zooming into its middle.
+export function buildings3d(map, button, group = null, { zoomIn = true } = {}) {
   let on = remembered();
   const showControls = rotationControls(map, group);
   const apply = (animate) => {
     button.setAttribute('aria-pressed', String(on));
-    view3d(map, on, animate);
+    view3d(map, on, animate, zoomIn);
     showControls(on);
   };
   button.addEventListener('click', () => {

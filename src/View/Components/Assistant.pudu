@@ -12,7 +12,7 @@ import View.Frame as Frame
 export fn render(frame: &Frame.Frame) -> H.Node {
   let t = |key: Str| Frame.t(frame, "assistant." + key)
   var root = H.div().class("assistant").data("feature", "assistant").data("signed-in", if Frame.signedIn(frame) { "1" } else { "0" })
-  for key in ["send", "stop", "thinking", "reading", "preferences", "busy", "error", "limit", "unsupported", "listening", "voice_error", "voice", "stop_voice", "sources"] { root = root.data(key.replace("_", "-"), t(key)) }
+  for key in ["send", "stop", "thinking", "reading", "preferences", "busy", "error", "limit", "member_limit", "crowded", "slow_down", "unsupported", "listening", "voice_error", "voice", "stop_voice", "sources", "itinerary", "route", "estimated", "town_centers", "approximate", "no_road", "suggested", "open_plan", "directions", "map_unavailable", "next_title", "next_plan", "next_route", "next_free", "next_family", "next_another", "next_freeplan", "next_place", "start_trip", "see_map", "near", "near_on", "near_off"] { root = root.data(key.replace("_", "-"), t(key)) }
   root.holding([
       H.button().kind("button").class("assistant-launch").at("hidden", "hidden").at("aria-haspopup", "dialog").holding([Icons.sized("message", 20), H.span().says(t("launch"))]),
       H.dialog().class("assistant-dialog").at("aria-labelledby", "assistant-title").holding([
@@ -23,7 +23,7 @@ export fn render(frame: &Frame.Frame) -> H.Node {
           H.div().class("assistant-thread").role("log").at("aria-live", "polite").at("aria-relevant", "additions").holding([H.div().class("assistant-welcome").holding([
                   H.img().class("assistant-mascot").src("/assets/brand/cotorra-mark.svg?v=" + App.ASSET_VERSION).alt("").at("width", "64").at("height", "64"),
                   H.h3().says(t("welcome")), H.p().class("assistant-intro").says(t("intro")),
-                  if Frame.signedIn(frame) { H.div().class("assistant-prompts").holding(["weekend", "free", "town"].map(|key: Str| H.button().kind("button").data("assistant-prompt", t("prompt_" + key)).says(t("prompt_" + key)))) } else { H.nothing() }
+                  if Frame.signedIn(frame) { H.div().class("assistant-prompts").holding(["weekend", "free", "town", "plan", "route"].map(|key: Str| H.button().kind("button").data("assistant-prompt", t("prompt_" + key)).says(t("prompt_" + key)))) } else { H.nothing() }
                 ])]),
           H.p().class("assistant-status").role("status").at("hidden", "hidden"),
           H.div().class("assistant-controls").holding(if Frame.signedIn(frame) { [
@@ -31,6 +31,7 @@ export fn render(frame: &Frame.Frame) -> H.Node {
                     H.labelFor().at("for", "assistant-message").class("sr-only").says(t("question")),
                     H.textarea().id("assistant-message").name("message").at("maxlength", "1200").at("rows", "1").at("placeholder", t("placeholder")).flag("required"),
                     H.div().class("assistant-compose-actions").holding([
+                        H.button().kind("button").class("icon-button").data("assistant", "near").label(t("near")).at("aria-pressed", "false").holding([Icons.sized("crosshair", 20)]),
                         H.button().kind("button").class("icon-button").data("assistant", "voice").label(t("voice")).at("aria-pressed", "false").holding([Icons.sized("microphone", 20), H.span().says(t("voice_short"))]),
                         H.button().submit().class("assistant-send").label(t("send")).holding([H.span().at("aria-hidden", "true").says("↑")])
                       ])

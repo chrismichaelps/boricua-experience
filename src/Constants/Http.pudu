@@ -22,6 +22,8 @@ export const CACHE_GUEST_PAGE: Str = "private, no-cache"
 /// Map pins for an explicitly named language and a grid-aligned area: identical for every visitor, so
 /// the CDN answers repeated areas for a minute and serves a stale copy while it refreshes.
 export const CACHE_SHARED_PINS: Str = "public, max-age=0, s-maxage=60, stale-while-revalidate=300"
+/// A trip's route options: five minutes at the CDN, so a crowd following the same plan routes it once.
+export const CACHE_ROUTE_OPTIONS: Str = "public, max-age=60, s-maxage=300, stale-while-revalidate=600"
 /// Reference documents (sitemap, manifest, robots): an hour at the CDN.
 export const CACHE_REFERENCE: Str = "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400"
 

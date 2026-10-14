@@ -1,4 +1,7 @@
-import { renderMarkdown } from './assistantMarkdown.js?v=69';
+import { assistantMaps } from './assistantMaps.js?v=73';
+import { renderMarkdown } from './assistantMarkdown.js?v=73';
+import { followUps } from './assistantNext.js?v=73';
+import { requestLocation } from '../utils/locate.js?v=73';
 
 export async function consumeChat(stream, receive) {
   const reader = stream.getReader(), decoder = new TextDecoder();
@@ -7,7 +10,7 @@ export async function consumeChat(stream, receive) {
     while (true) {
       const { done, value } = await reader.read();
       pending += done ? decoder.decode() : decoder.decode(value, { stream: true });
-      if (pending.length > 32000) throw new Error('assistant_unavailable');
+      if (pending.length > 128000) throw new Error('assistant_unavailable');
       let end;
       while ((end = pending.indexOf('\n\n')) >= 0) {
         const block = pending.slice(0, end); pending = pending.slice(end + 2);
@@ -36,6 +39,17 @@ export function sourceImage(value, origin) {
   return '';
 }
 
+/** A link to the same search on the map. */
+function exploreLink(href) {
+  const root = document.querySelector('.assistant');
+  const link = document.createElement('a'); link.className = 'button button-ghost button-small assistant-explore'; link.href = href;
+  link.textContent = root?.dataset.seeMap || '';
+  return link;
+}
+
+// Why the assistant could not answer, as the status message to show.
+const REFUSALS = { assistant_limit: 'limit', assistant_member_limit: 'memberLimit', assistant_busy: 'crowded', assistant_slow_down: 'slowDown' };
+
 export function assistant(root) {
   const dialog = root.querySelector('dialog'), launch = root.querySelector('.assistant-launch');
   if (!dialog?.showModal) return;
@@ -44,11 +58,16 @@ export function assistant(root) {
   const voice = root.querySelector('[data-assistant="voice"]'), intro = thread.firstElementChild.cloneNode(true);
   const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
   let controller, active = false, recording, history = [], ticket = 0, returnFocus, listening = false, frame;
+  // A position the member chose to share for this conversation; the server turns it into the nearest town.
+  let near = null;
   const announce = (key = '') => { status.textContent = root.dataset[key] || ''; status.hidden = !key; };
   const stopVoice = () => { listening = false; const previous = recording; recording = null; previous?.abort(); voice?.setAttribute('aria-pressed', 'false'); voice?.setAttribute('aria-label', root.dataset.voice); };
   const submit = form?.querySelector('[type="submit"]');
   const ready = () => { active = false; if (submit) { submit.disabled = false; submit.textContent = '↑'; submit.setAttribute('aria-label', root.dataset.send); submit.classList.remove('is-streaming'); } };
   let pagePosition;
+  let mapEntries = [];
+  const clearMaps = () => { for (const entry of mapEntries) { entry.dispose(); entry.dispose = () => {}; } };
+  const restoreMaps = () => { for (const entry of mapEntries) { entry.holder.replaceChildren(); entry.dispose = assistantMaps(entry.holder, entry.item, root.dataset); } };
   const lockPage = () => {
     if (pagePosition) return;
     const body = document.body;
@@ -65,6 +84,7 @@ export function assistant(root) {
   };
   const cleanup = () => {
     ticket++; controller?.abort(); stopVoice(); cancelAnimationFrame(frame); frame = null;
+    clearMaps();
     ready(); announce();
     unlockPage();
   };
@@ -76,7 +96,7 @@ export function assistant(root) {
   launch.hidden = false;
   launch.addEventListener('click', () => {
     returnFocus = document.activeElement;
-    dialog.showModal(); lockPage(); fit();
+    dialog.showModal(); lockPage(); fit(); restoreMaps();
     document.dispatchEvent(new CustomEvent('bx:assistant-open', { detail: { dialog } }));
     (input || root.querySelector('.assistant-controls a'))?.focus({ preventScroll: true });
   });
@@ -104,8 +124,26 @@ export function assistant(root) {
       listening = true; recording.start(); voice.setAttribute('aria-pressed', 'true'); voice.setAttribute('aria-label', root.dataset.stopVoice); announce('listening');
     } catch { stopVoice(); announce('voiceError'); }
   });
+  const nearButton = root.querySelector('[data-assistant="near"]');
+  const setNear = (value) => { near = value; nearButton?.setAttribute('aria-pressed', String(Boolean(value))); };
+  nearButton?.addEventListener('click', async () => {
+    if (near) { setNear(null); announce(); return; }
+    nearButton.setAttribute('aria-busy', 'true');
+    try {
+      const position = await requestLocation();
+      setNear({ lat: +position.coords.latitude.toFixed(3), lng: +position.coords.longitude.toFixed(3) });
+      announce('nearOn');
+    } catch { setNear(null); announce('nearOff'); }
+    finally { nearButton.removeAttribute('aria-busy'); }
+  });
+  // A suggested follow-up is asked at once, like a question the member typed.
+  thread.addEventListener('click', event => {
+    const ask = event.target.closest('[data-assistant-send]');
+    if (!ask || active || !thread.contains(ask)) return;
+    input.value = ask.dataset.assistantSend; form.requestSubmit();
+  });
   root.querySelector('[data-assistant="reset"]').addEventListener('click', () => {
-    ticket++; controller?.abort(); stopVoice(); cancelAnimationFrame(frame); frame = null; history = []; thread.replaceChildren(intro.cloneNode(true)); input.value = ''; announce(); ready(); input.focus();
+    setNear(null); ticket++; controller?.abort(); stopVoice(); cancelAnimationFrame(frame); frame = null; clearMaps(); mapEntries = []; history = []; thread.replaceChildren(intro.cloneNode(true)); input.value = ''; announce(); ready(); input.focus();
   });
   input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); form.requestSubmit(); } });
   const stopResponse = () => { ticket++; controller?.abort(); cancelAnimationFrame(frame); frame = null; announce(); ready(); };
@@ -124,13 +162,16 @@ export function assistant(root) {
     active = true; submit.textContent = '■'; submit.setAttribute('aria-label', root.dataset.stop); submit.classList.add('is-streaming');
     const question = document.createElement('p'); question.className = 'assistant-question'; question.textContent = message; thread.querySelector('.assistant-welcome')?.remove(); thread.append(question);
     const reply = document.createElement('div'); reply.className = 'assistant-answer'; thread.append(reply); question.scrollIntoView({ block: 'end' });
-    let answer = '', sourceSection;
+    let answer = '', sourceSection, visualSection, exploreHref = '', lastSources = [];
+    const shownVisuals = [];
+    thread.querySelector('.assistant-next')?.remove();
+    const visualKeys = new Set();
     const paint = () => { frame = null; renderMarkdown(reply, answer); if (thread.scrollHeight - thread.scrollTop - thread.clientHeight < 180) reply.scrollIntoView({ block: 'end' }); };
     announce('busy');
     try {
       const response = await fetch('/api/chat', { method: 'POST', credentials: 'same-origin', signal: requestController.signal,
         headers: { 'content-type': 'application/json', 'x-requested-with': 'boricua', accept: 'text/event-stream', 'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || '' },
-        body: JSON.stringify({ message, history: history.slice(-6) }) });
+        body: JSON.stringify({ message, history: history.slice(-6), ...(near ? { near } : {}) }) });
       if (!response.ok || !response.body) { const detail = await response.json().catch(() => ({})); throw new Error(detail.error || 'assistant_unavailable'); }
       await consumeChat(response.body, (eventName, data) => {
         if (current !== ticket) return;
@@ -139,12 +180,28 @@ export function assistant(root) {
           answer += data.text; if (answer.length > 6000) throw new Error('assistant_unavailable');
           announce(); if (!frame) frame = requestAnimationFrame(paint);
         }
+        if (eventName === 'visuals' && Array.isArray(data.items)) {
+          visualSection ||= document.createElement('section');
+          visualSection.className = 'assistant-visuals';
+          if (!visualSection.parentNode) thread.append(visualSection);
+          for (const item of data.items.slice(0,3)) {
+            const key = JSON.stringify(item.pins);
+            if (visualKeys.has(key) || visualKeys.size >= 3) continue;
+            visualKeys.add(key); shownVisuals.push(item);
+            const holder = document.createElement('div'); visualSection.append(holder);
+            mapEntries.push({holder, item, dispose: assistantMaps(holder, item, root.dataset)});
+          }
+        }
+        if (eventName === 'explore' && typeof data.href === 'string' && /^\/map(\?[A-Za-z0-9%=&._~,-]{0,600})?$/.test(data.href)) {
+          exploreHref = data.href;
+          if (sourceSection && !sourceSection.querySelector('.assistant-explore')) sourceSection.append(exploreLink(exploreHref));
+        }
         if (eventName === 'sources' && Array.isArray(data.items) && data.items.length) {
           sourceSection ||= document.createElement('section'); sourceSection.className = 'assistant-sources';
           const heading = document.createElement('h3'); heading.textContent = root.dataset.sources;
           const grid = document.createElement('div'); grid.className = 'assistant-result-grid';
           for (const source of data.items.slice(0, 12)) {
-            if (!/^\/e\/[a-z0-9-]+$/.test(source.href)) continue;
+            if (!/^\/(e|lugar)\/[a-z0-9-]+$/.test(source.href)) continue;
             const link = document.createElement('a'); link.href = `${source.href}?from=assistant`;
             const image = sourceImage(source.image, location.origin);
             if (image) { const img = document.createElement('img'); img.src = image; img.alt = ''; img.loading = 'lazy'; img.addEventListener('error', () => img.remove()); link.append(img); }
@@ -152,15 +209,25 @@ export function assistant(root) {
             const town = document.createElement('span'); town.textContent = [source.town,source.category].filter(Boolean).join(' · ');
             body.append(title, town); link.append(body); grid.append(link);
           }
+          lastSources = data.items.slice(0, 12);
           sourceSection.replaceChildren(heading,grid); if (!sourceSection.parentNode) thread.append(sourceSection);
+          if (exploreHref) sourceSection.append(exploreLink(exploreHref));
         }
       });
       if (current !== ticket) return;
       cancelAnimationFrame(frame); paint();
       history.push({ role: 'user', content: message }, { role: 'assistant', content: answer.slice(0, 1200) }); history = history.slice(-6);
+      const asks = followUps(lastSources, shownVisuals, root.dataset, message);
+      if (asks.length) {
+        const next = document.createElement('section'); next.className = 'assistant-next';
+        const heading = document.createElement('h3'); heading.textContent = root.dataset.nextTitle;
+        const list = document.createElement('div'); list.className = 'assistant-next-list';
+        for (const ask of asks) { const button = document.createElement('button'); button.type = 'button'; button.dataset.assistantSend = ask; button.textContent = ask; list.append(button); }
+        next.append(heading, list); thread.append(next);
+      }
       input.value = ''; announce();
     } catch (error) {
-      if (current === ticket) { if (!answer) reply.remove(); else { cancelAnimationFrame(frame); paint(); } announce(error.message === 'assistant_limit' ? 'limit' : 'error'); }
+      if (current === ticket) { if (!answer) reply.remove(); else { cancelAnimationFrame(frame); paint(); } announce(REFUSALS[error.message] || 'error'); }
     } finally { clearTimeout(timer); if (current === ticket) ready(); }
   });
 }

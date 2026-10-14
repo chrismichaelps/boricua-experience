@@ -1,0 +1,80 @@
+/** @Services.AssistantPlans.Tools — public itineraries and routes projected for the chat */
+module Services.AssistantPlans
+
+import Std.Json as Json
+import Std.List as List
+import Std.Option as Option
+import Api.AssistantRoutes as RoutesApi
+import Api.Events as Events
+import Api.Supabase.Gateway as Gateway
+import Domain.Assistant as Conversation
+import Domain.Catalog as Catalog
+import Domain.Event as Event
+import Domain.Plan as Plan
+import Domain.Problem as Problem
+import Services.Catalog as CatalogService
+import Services.Plans as Plans
+import Services.Runtime as Runtime
+
+fn text(args: &Json.Json, key: Str) -> Str { Option.unwrapOr(Gateway.textAt(args, key), "") }
+
+fn pin(card: &Event.Card, order: Int) -> Json.Json {
+  Json.object(&[("order", Json.Number(order)), ("slug", Json.Text(card.slug)), ("title", Json.Text(card.title)), ("href", Json.Text("/e/" + card.slug)), ("lat", Gateway.fraction(Some(card.lat))), ("lng", Gateway.fraction(Some(card.lng)))])
+}
+
+fn response(result: Json.Json, cards: &Array[Event.Card], visuals: &Array[Json.Json], locale: Str) -> Json.Json {
+  Json.object(&[("result", result), ("sources", Json.list(&cards.map(|card: Event.Card| Conversation.sourceLocalized(&card, locale)))), ("visuals", Json.list(visuals))])
+}
+
+/// Only server-read public stops and road geometry reach the client or provider.
+export fn execute(runtime: &Runtime.Runtime, name: Str, args: &Json.Json, known: &Array[Str], locale: Str) -> Result[Json.Json, Problem.Problem] {
+  if name == "route_towns" {
+    let catalog = CatalogService.current(runtime) ?
+    let from = text(args, "from")
+    let to = text(args, "to")
+    if Catalog.municipality(&catalog, from) == None || Catalog.municipality(&catalog, to) == None || from == to { return Err(Problem.Refused("assistant_invalid")) }
+    let route = RoutesApi.towns(&runtime.gateway, from, to) ?
+    return Ok(response(Json.object(&[("verified", Json.Boolean(true)), ("route", route)]), &[], &[route], locale))
+  }
+  if name == "route_activities" {
+    let raw = text(args, "slugs")
+    let slugs = Plan.sharedSlugs(raw)
+    if slugs.length() < 2 || slugs.length() > 4 || slugs.join(",") != raw || slugs.filter(|slug: Str| !known.contains(slug)).length() > 0 { return Err(Problem.Refused("assistant_invalid")) }
+    var cards: Array[Event.Card] = []
+    var pins: Array[Json.Json] = []
+    for slug in slugs {
+      let detail = Events.detail(&runtime.gateway, slug, None) ?
+      if detail.card.visibility != "public" { return Err(Problem.Forbidden) }
+      cards = cards.push(detail.card)
+      pins = pins.push(pin(&detail.card, pins.length() + 1))
+    }
+    let route = Plans.route(runtime, &slugs) ?
+    let visual = Json.object(&[("kind", Json.Text("route")), ("pins", Json.list(&pins)), ("legs", Option.unwrapOr(Json.field(&route, "legs"), Json.list(&[]))), ("href", Json.Text("/plan?e=" + slugs.join(","))), ("location_scope", Json.Text("public_approximate"))])
+    return Ok(response(Json.object(&[("verified", Json.Boolean(true)), ("route", visual)]), &cards, &[visual], locale))
+  }
+  let catalog = CatalogService.current(runtime) ?
+  let town = match Catalog.municipality(&catalog, text(args, "town")) { case Some(found) => found case None => { return Err(Problem.Refused("assistant_invalid")) } }
+  let when = text(args, "when")
+  let style = text(args, "style")
+  let mode = text(args, "mode")
+  if !(when.isEmpty() || ["today", "tomorrow", "weekend"].contains(when)) || !(style.isEmpty() || ["mixed", "free", "family", "adventure", "culture"].contains(style)) || !(mode.isEmpty() || ["local", "visitor"].contains(mode)) { return Err(Problem.Refused("assistant_invalid")) }
+  if Json.field(args, "stops") != None && Option.andThen(Json.field(args, "stops"), |v: Json.Json| Json.asInt(&v)) == None { return Err(Problem.Refused("assistant_invalid")) }
+  let wanted = Option.unwrapOr(Option.andThen(Json.field(args, "stops"), |v: Json.Json| Json.asInt(&v)), 3)
+  if wanted < 2 || wanted > 4 { return Err(Problem.Refused("assistant_invalid")) }
+  let outings = Plans.outings(runtime, &Plan.Request{lat: town.lat, lng: town.lng, window: Plan.windowFrom(when), style: Plan.styleFrom(style), stops: wanted, mode: Plan.modeFrom(mode), radiusM: Plan.RADIUS_M, seed: 0}) ?
+  var visuals: Array[Json.Json] = []
+  var cards: Array[Event.Card] = []
+  for plan in List.take(&outings.plans, 2) {
+    let slugs = Plan.slugsOf(&plan)
+    let route = Plans.route(runtime, &slugs) ?
+    var pins: Array[Json.Json] = []
+    var stops: Array[Json.Json] = []
+    for stop in plan.stops {
+      cards = cards.push(stop.card)
+      pins = pins.push(pin(&stop.card, pins.length() + 1))
+      stops = stops.push(Json.object(&[("activity", Conversation.sourceLocalized(&stop.card, locale)), ("arrive", Json.Text(stop.arrive)), ("leave", Json.Text(stop.leave)), ("duration_assumed", Json.Boolean(stop.card.endsAt == None))]))
+    }
+    visuals = visuals.push(Json.object(&[("kind", Json.Text("itinerary")), ("title", Json.Text(town.name)), ("pins", Json.list(&pins)), ("stops", Json.list(&stops)), ("legs", Option.unwrapOr(Json.field(&route, "legs"), Json.list(&[]))), ("seconds", Json.Number(plan.travelSeconds)), ("meters", Json.Number(plan.travelMeters)), ("href", Json.Text("/plan?e=" + slugs.join(","))), ("location_scope", Json.Text("public_approximate"))]))
+  }
+  Ok(response(Json.object(&[("verified", Json.Boolean(true)), ("plans", Json.list(&visuals)), ("planning_note", Json.Text("Travel times are estimates without live traffic. Arrival/leave times are planning suggestions; unknown event duration is assumed, not a published end time."))]), &cards, &visuals, locale))
+}

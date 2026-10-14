@@ -336,3 +336,15 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/Listing]] — discovery action arrival and progressive listings.
 - [[src/Test/Listing]] — explicit search arrival regressions.
+
+- [[src/Services/AssistantPlans]] — grounded chat itinerary/routing boundary.
+
+- [[src/Public/AssistantMaps]] — grounded chat itinerary/routing boundary.
+
+- [[src/Public/AssistantNext]] — follow-ups from what an answer found; trips and map links from the chat.
+
+- [[src/View/Pages/Trip]] — a plan followed live: location, route choices, arrivals.
+
+- [[src/Api/AssistantRoutes]] — grounded chat itinerary/routing boundary.
+
+- [[src/Test/AssistantMaps]] — grounded chat itinerary/routing boundary.
