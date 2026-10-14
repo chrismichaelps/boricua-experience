@@ -1,4 +1,4 @@
-import { MAP } from '../constants/config.js?v=59';
+import { MAP } from '../constants/config.js?v=69';
 
 let loading = null;
 
@@ -39,6 +39,12 @@ export async function createMap(container, options = {}) {
     maxPitch: MAP.maxPitch,
   });
   map.touchZoomRotate.disableRotation();
-  if (options.controls !== false) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+  // The map data's licence asks for visible credit, so it stays, folded into its small "i" button
+  // from the start instead of a banner across the map; a tap still opens it.
+  map.once('load', () => {
+    const credit = container.querySelector('.maplibregl-ctrl-attrib.maplibregl-compact-show');
+    credit?.querySelector('.maplibregl-ctrl-attrib-button')?.click();
+  });
+  if (options.controls !== false) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), options.controlsAt ?? 'bottom-right');
   return { map, maplibregl };
 }

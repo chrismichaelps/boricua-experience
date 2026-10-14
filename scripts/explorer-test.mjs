@@ -18,13 +18,13 @@ const nodes={'#map':canvas,'#map-list':list,'#map-count':count,'#map-pins':{text
 const page={classList:{toggle:()=>{}},dataset:{clusterLabel:'See :count activities',near:'0'},querySelector:s=>nodes[s]};
 let offset=0,zoom=14,sharing=false,watches=0,stops=0;
 const lifecycle={};
-const events={},readings=new Set(),statuses=new Set(),requests=[],timers=new Map();let tid=0;
+const events={},readings=new Set(),statuses=new Set(),requests=[],nearbyRequests=[],timers=new Map();let tid=0;
 const me=new Node();let mePosition=null;const eases=[],fits=[];let clusterAction=null;
-const map={setPadding:()=>{},setMaxBounds:()=>{},on:(name,fn)=>events[name]=fn,project:([x,y])=>({x:x-offset,y}),getZoom:()=>zoom,isStyleLoaded:()=>true,fitBounds:(_bounds,options)=>{fits.push(options);zoom=10;},easeTo:o=>{eases.push(o);},getSource:()=>null,addSource:()=>{},addLayer:()=>{},getCenter:()=>({lng:-66.1+offset/10000,lat:18.4}),getBounds:()=>({}),};
+const map={setPadding:()=>{},setMaxBounds:()=>{},on:(name,fn)=>events[name]=fn,project:([x,y])=>({x:x-offset,y}),getZoom:()=>zoom,isStyleLoaded:()=>true,fitBounds:(_bounds,options)=>{fits.push(options);zoom=10;},cameraForBounds:()=>({zoom:10}),easeTo:o=>{eases.push(o);},getSource:()=>null,addSource:()=>{},addLayer:()=>{},getCenter:()=>({lng:-66.1+offset/10000,lat:18.4}),getBounds:()=>({}),};
 class Bounds {extend(){return this;}}
 const makeMarker=(element)=>({element,marker:{addTo(){return this;},remove(){}}});
 const live={onReading:fn=>{readings.add(fn);return()=>readings.delete(fn);},onStatus:fn=>{statuses.add(fn);return()=>statuses.delete(fn);},startWatching:()=>{watches++;for(const fn of statuses)fn('waiting');},stopWatching:()=>{stops++;for(const fn of statuses)fn('stopped');},isSharing:()=>sharing,startSharing:()=>{sharing=true;live.startWatching();},stopSharing:async()=>{sharing=false;live.stopWatching();}};
-const scope={console,URLSearchParams,AbortController,location:{search:'?category=cultura&when=weekend&free=1'},document:{activeElement:null,hidden:false,documentElement:{lang:'es-PR'},addEventListener:(name,fn)=>lifecycle['document:'+name]=fn},window:{addEventListener:(name,fn)=>lifecycle[name]=fn},matchMedia:()=>({matches:true}),MAP:{clusterMaxZoom:13,clusterRadius:56,viewportDelayMs:300,viewportCacheMs:30000,viewportCacheSize:8,focusZoom:11,selfZoom:15,searchBounds:[[-67.5,17.5],[-65.1,18.7]]},ENDPOINTS:{map:'/api/map'},LIVE:{},message:k=>k,toast:()=>{},live,create:(tag,attrs,text)=>new Node(attrs,text),localizeMoment:()=>{},$:s=>nodes[s],$$:(s,root)=>root===list?list.children.filter(n=>n.className==='sheet-item'):[],createMap:async()=>({map,maplibregl:{LngLatBounds:Bounds}}),clusterPins:ps=>ps.map(p=>[p]),priceMarker:()=>makeMarker(new Node()),clusterMarker:(_library,_group,_label,expand)=>{clusterAction=expand;return makeMarker(new Node());},meMarker:()=>({setLngLat(p){mePosition=p;return this;},addTo(){return this;},getElement:()=>me}),accuracyCircle:reading=>({geometry:{coordinates:[[[reading.lng,reading.lat],[reading.lng+.01,reading.lat+.01]]]}}),visiblePins:(ps,project,width,height)=>ps.filter(p=>{const point=project([p.lng,p.lat]);return point.x>=0&&point.x<=width&&point.y>=0&&point.y<=height;}),snapArea:(area)=>area,speedZoom:(_speed,current)=>current,speedBetween:()=>NaN,buildings3d:()=>{},viewportBounds:()=>({west:-66.3+offset/10000,east:-65.9+offset/10000,north:18.5,south:18.2}),getJson:(url,options)=>new Promise(resolve=>requests.push({url,resolve,signal:options.signal})),setTimeout:fn=>{timers.set(++tid,fn);return tid;},clearTimeout:id=>timers.delete(id)};
+const scope={console,URLSearchParams,AbortController,location:{search:'?category=cultura&when=weekend&free=1'},document:{activeElement:null,hidden:false,documentElement:{lang:'es-PR'},addEventListener:(name,fn)=>lifecycle['document:'+name]=fn},window:{addEventListener:(name,fn)=>lifecycle[name]=fn},matchMedia:()=>({matches:true}),MAP:{nearbyFrameCount:3,nearbyFrameM:25000,islandBounds:[[-67.28,17.9],[-65.22,18.53]],clusterMaxZoom:13,clusterRadius:56,viewportDelayMs:300,viewportCacheMs:30000,viewportCacheSize:8,focusZoom:11,selfZoom:15,searchBounds:[[-67.5,17.5],[-65.1,18.7]]},ENDPOINTS:{map:'/api/map',nearby:'/api/nearby'},LIVE:{},message:k=>k,toast:()=>{},live,create:(tag,attrs,text)=>new Node(attrs,text),localizeMoment:()=>{},$:s=>nodes[s],$$:(s,root)=>root===list?list.children.filter(n=>n.className==='sheet-item'):[],createMap:async()=>({map,maplibregl:{LngLatBounds:Bounds}}),clusterPins:ps=>ps.map(p=>[p]),priceMarker:()=>makeMarker(new Node()),clusterMarker:(_library,_group,_label,expand)=>{clusterAction=expand;return makeMarker(new Node());},meMarker:()=>({setLngLat(p){mePosition=p;return this;},addTo(){return this;},getElement:()=>me}),accuracyCircle:reading=>({geometry:{coordinates:[[[reading.lng,reading.lat],[reading.lng+.01,reading.lat+.01]]]}}),visiblePins:(ps,project,width,height)=>ps.filter(p=>{const point=project([p.lng,p.lat]);return point.x>=0&&point.x<=width&&point.y>=0&&point.y<=height;}),snapArea:(area)=>area,speedZoom:(_speed,current)=>current,speedBetween:()=>NaN,buildings3d:()=>{},viewportBounds:()=>({west:-66.3+offset/10000,east:-65.9+offset/10000,north:18.5,south:18.2}),getJson:(url,options)=>new Promise(resolve=>(url.startsWith('/api/nearby')?nearbyRequests:requests).push({url,resolve,signal:options?.signal})),innerWidth:1200,distanceM:(a,b)=>Math.hypot(a.lat-b.lat,a.lng-b.lng)*111000,setTimeout:fn=>{timers.set(++tid,fn);return tid;},clearTimeout:id=>timers.delete(id)};
 const source=readFileSync(new URL('../public/assets/js/features/explorer.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace(/^export /gm,'');
 const surfaceSource=readFileSync(new URL('../public/assets/js/features/mapSurface.js',import.meta.url),'utf8').replace(/^export /gm,'');
 vm.runInNewContext(surfaceSource+'\n'+source+'\nthis.run=explorer;this.renderItem=sheetItem;',scope);
@@ -161,6 +161,26 @@ for(const fn of readings)fn({lat:18.47,lng:-66.18,accuracy:8});
 assert.equal(eases.length,clusterEases,'cluster exploration is not undone by location');
 assert.equal(fits.length,clusterFits);
 console.log('PASS: empty results, GPS noise and accuracy degradation retain zoom; gestures detach; explicit recenter; independent sharing');
+
+scope.clusterPins=ps=>ps.map(p=>[p]);
+await emptyLocatedView();
+const nearbyFits=fits.length;
+assert.ok(nearbyRequests.at(-1).url.startsWith('/api/nearby?lat=18.40000&lng=-66.10000'),'the first precise fix asks for the closest activities');
+nearbyRequests.at(-1).resolve([{...pins[0],lat:18.41,lng:-66.11},{...pins[0],slug:'far',lat:19.9,lng:-66.1}]);
+await Promise.resolve();await Promise.resolve();
+assert.equal(fits.length,nearbyFits+1,'close activities widen the street view to include them');
+const fittingEases=eases.length;
+for(const fn of readings)fn({lat:18.4001,lng:-66.1001,accuracy:10});
+assert.equal(eases.length,fittingEases,'readings wait while the nearby frame settles');
+events.moveend();
+for(const fn of readings)fn({lat:18.4002,lng:-66.1002,accuracy:10});
+assert.equal(eases.length,fittingEases+1,'after it settles, readings follow at the framed zoom');
+await emptyLocatedView();
+const lonelyFits=fits.length;
+nearbyRequests.at(-1).resolve([{...pins[0],slug:'far',lat:19.9,lng:-66.1}]);
+await Promise.resolve();await Promise.resolve();
+assert.equal(fits.length,lonelyFits,'with nothing close the street view stays');
+console.log('PASS: near me frames the closest activities and falls back to the street');
 
 const rendered=scope.renderItem({...pins[0],when:'Dom 18 oct · 6:00 PM',starts:'2026-10-18T22:00:00Z',ends:'2026-10-19T00:00:00Z'});
 const dateLine=rendered.children[0].children[0].children[1].children[0];

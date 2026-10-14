@@ -1,0 +1,39 @@
+/** @Services.Plans.Outings — plans near a visitor, a shared plan, and its road route */
+module Services.Plans
+
+import Std.Json as Json
+import Api.Plans as PlansApi
+import Domain.Plan as Plan
+import Domain.Problem as Problem
+import Domain.Search as Search
+import Services.Discovery as Discovery
+import Services.Runtime as Runtime
+import Utils.Time as Time
+
+/// The search window a plan window covers.
+fn searchWindow(window: &Plan.Window) -> Search.When {
+  match window {
+    case Plan.Today => Search.Today
+    case Plan.Tomorrow => Search.Tomorrow
+    case Plan.Weekend => Search.Weekend
+  }
+}
+
+/// Plans of nearby activities for the visitor's position, window and style, best first.
+export fn outings(runtime: &Runtime.Runtime, request: &Plan.Request) -> Result[Plan.Outings, Problem.Problem] {
+  if request.lat < 17.5 || request.lat > 18.7 || request.lng < -67.5 || request.lng > -65.1 { return Err(Problem.Refused("invalid_coordinates")) }
+  let (from, to) = Discovery.bounds(&searchWindow(&request.window), &Time.now())
+  PlansApi.outings(&runtime.gateway, request, from, to)
+}
+
+/// A shared plan rebuilt from its activities in order.
+export fn shared(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[Plan.Outings, Problem.Problem] {
+  if slugs.isEmpty() { return Ok(Plan.Outings{plans: []}) }
+  PlansApi.shared(&runtime.gateway, slugs)
+}
+
+/// The road route between activities in order, for the plan's map.
+export fn route(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[Json.Json, Problem.Problem] {
+  if slugs.length() < 2 { return Ok(Json.object(&[("legs", Json.list(&[]))])) }
+  PlansApi.route(&runtime.gateway, slugs)
+}

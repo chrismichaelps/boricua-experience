@@ -15,6 +15,8 @@ import Domain.Media as Media
 import Domain.Menu as Menu
 import Domain.MenuDraft as MenuDraft
 import Domain.Notification as Notification
+import Domain.Participation as Marks
+import Domain.Plan as Plan
 import Domain.Place as Listing
 import Domain.Problem as Problem
 import Domain.Profile as Profile
@@ -86,6 +88,9 @@ export type Joining = { eventId: Str, message: Str, channel: Str }
 /** @App.Messages.Reacting — a reaction to an event */
 export type Reacting = { eventId: Str, value: Int }
 
+/** @App.Messages.Marking — an interested or going mark on an event; empty clears it */
+export type Marking = { eventId: Str, kind: Str }
+
 /** @App.Messages.Reporting — a report about an event */
 export type Reporting = { eventId: Str, form: ParticipationRules.Report }
 
@@ -156,6 +161,10 @@ export type Kinds = {
   saveSearch: Request.Kind[Signed[Search.Saving], (), Problem.Problem],
   deleteSearch: Request.Kind[Signed[Str], (), Problem.Problem],
   react: Request.Kind[Signed[Reacting], Participation.ReactionState, Problem.Problem],
+  interest: Request.Kind[Signed[Marking], Marks.InterestState, Problem.Problem],
+  planOutings: Request.Kind[Plan.Request, Plan.Outings, Problem.Problem],
+  planShared: Request.Kind[Array[Str], Plan.Outings, Problem.Problem],
+  planRoute: Request.Kind[Array[Str], Json.Json, Problem.Problem],
   report: Request.Kind[Signed[Reporting], (), Problem.Problem],
   activity: Request.Kind[Signed[()], Participation.Activity, Problem.Problem],
   recordPosition: Request.Kind[Signed[Location.Position], Str, Problem.Problem],
@@ -252,6 +261,10 @@ export fn kinds() -> Kinds {
     saveSearch: kind("participation.save_search", COMMAND),
     deleteSearch: kind("participation.delete_search", COMMAND),
     react: kind("participation.react", COMMAND),
+    interest: kind("participation.interest", COMMAND),
+    planOutings: kind("plans.outings", READ),
+    planShared: kind("plans.shared", READ),
+    planRoute: kind("plans.route", READ),
     report: kind("participation.report", COMMAND),
     activity: kind("participation.activity", READ),
     recordPosition: kind("location.record", COMMAND),

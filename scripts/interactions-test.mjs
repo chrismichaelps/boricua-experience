@@ -18,7 +18,9 @@ preference.matches = false;document.hidden = true;scope.pulse();assert.equal(pul
 document.hidden = false;scope.navigator = {};scope.pulse();
 scope.navigator = { vibrate: () => { throw Error(); } };scope.pulse();
 const handlers = {}, lifecycle = {}, snaps = [];
-const sheet = { style: {} };let expanded = false, clicks = 0;
+const headingHandlers = {};
+const heading = { addEventListener: (name, fn) => headingHandlers[name] = fn, setPointerCapture: () => {} };
+const sheet = { style: {}, querySelectorAll: selector => selector === '[data-sheet-drag]' ? [heading] : [] };let expanded = false, clicks = 0;
 const handle = { closest: () => sheet, addEventListener: (name, fn) => handlers[name] = fn, setPointerCapture: () => {}, getAttribute: () => String(expanded), click: () => { expanded = !expanded;clicks++; } };
 const gesture = { innerWidth: 390, performance: { now: () => now }, haptic: () => {}, addEventListener: (name, fn) => lifecycle[name] = fn, document: { dispatchEvent: event => snaps.push(event) }, CustomEvent: class { constructor(name, options) { this.detail = options.detail; } } };
 vm.runInNewContext(read('sheetGestures')+'\nthis.attach=sheetGestures;', gesture);gesture.attach(handle);
@@ -32,8 +34,10 @@ handlers.pointerdown(point(10,100));handlers.pointermove(point(10,80));handlers.
 handlers.pointerdown(point(10,100));handlers.pointermove(point(10,40));handlers.pointercancel();assert.equal(sheet.style.transform,'');
 gesture.innerWidth=1200;handlers.pointerdown(point(10,100));handlers.pointermove(point(10,40));handlers.pointerup(point(10,40));assert.equal(clicks,2);
 gesture.innerWidth=390;handlers.pointerdown(point(10,100,'mouse'));handlers.pointermove(point(10,40,'mouse'));handlers.pointerup(point(10,40,'mouse'));assert.equal(clicks,2);
+headingHandlers.pointerdown(point(10,100));headingHandlers.pointermove(point(10,40));headingHandlers.pointerup(point(10,40));assert.equal(clicks,3,'the sheet heading drags the sheet too');
+headingHandlers.pointerdown(point(10,40));headingHandlers.pointermove(point(10,100));headingHandlers.pointerup(point(10,100));assert.equal(clicks,4);
 lifecycle.pagehide();assert.equal(sheet.style.transform,'');
-console.log('PASS: trusted haptics, cooldown, reduced motion, hidden/unsupported devices, sheet swipe/tap/cancel, click suppression and desktop/mouse isolation');
+console.log('PASS: trusted haptics, cooldown, reduced motion, hidden/unsupported devices, sheet swipe/tap/cancel from handle and heading, click suppression and desktop/mouse isolation');
 const forms = [];
 const group = { attrs: {}, getAttribute(name) { return this.attrs[name]; }, setAttribute(name,value) { this.attrs[name]=value; }, querySelectorAll(selector) { return selector === 'button' ? forms.map(f=>f.button) : forms; } };
 for (const own of [1,-1]) {

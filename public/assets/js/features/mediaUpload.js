@@ -1,4 +1,4 @@
-import { postJson, RequestFailed } from '../net/http.js?v=59';
+import { postJson, RequestFailed } from '../net/http.js?v=69';
 
 const SIDE = 1600;
 const QUALITY = 0.85;

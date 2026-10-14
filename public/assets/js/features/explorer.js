@@ -1,16 +1,17 @@
-import { mapSurface } from './mapSurface.js?v=63';
-import { clusterPins } from './mapClusters.js?v=59';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=59';
-import { message } from '../constants/messages.js?v=59';
-import { getJson } from '../net/http.js?v=59';
-import { $, $$, create } from '../utils/dom.js?v=59';
-import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=59';
-import { toast } from './toast.js?v=59';
-import { createMap } from './mapLoader.js?v=59';
-import { buildings3d } from './map3d.js?v=59';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=59';
-import * as live from './live.js?v=59';
-import { localizeMoment } from './localTime.js?v=59';
+import { mapSurface } from './mapSurface.js?v=69';
+import { clusterPins } from './mapClusters.js?v=69';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=69';
+import { message } from '../constants/messages.js?v=69';
+import { getJson } from '../net/http.js?v=69';
+import { $, $$, create } from '../utils/dom.js?v=69';
+import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=69';
+import { toast } from './toast.js?v=69';
+import { createMap } from './mapLoader.js?v=69';
+import { buildings3d } from './map3d.js?v=69';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=69';
+import * as live from './live.js?v=69';
+import { localizeMoment } from './localTime.js?v=69';
+import { distanceM } from '../utils/geo.js?v=69';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -40,7 +41,7 @@ export async function explorer(page) {
   const surface = mapSurface(page, list);
   surface.busy(true);
   let loaded;
-  try { loaded = await createMap(canvas, { rotatable: true }); }
+  try { loaded = await createMap(canvas, { rotatable: true, controlsAt: 'top-right' }); }
   catch (error) { surface.busy(false); throw error; }
   const { map, maplibregl } = loaded;
   const toggle3d = $('[data-feature="map-3d"]', page);
@@ -58,6 +59,20 @@ export async function explorer(page) {
   let requestController = null;
   let centerRequested = false;
   const sheet = $('.map-sheet', page);
+  // The camera's padding is the part of the canvas the visitor actually sees: on phones the sheet
+  // covers the bottom and the buttons line both sides, so a fit asks only a little more than that.
+  const framePadding = () => {
+    const open = page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches;
+    const phone = innerWidth < 700;
+    return { top: phone ? 16 : 72, right: 64, left: phone ? 64 : 40, bottom: open ? 40 : sheet.getBoundingClientRect().height + 16 };
+  };
+  const FIT_PAD = 24;
+  // Frames the bounds inside the visible part of the map; a group too spread out for the room left
+  // still zooms in around its middle instead of silently doing nothing.
+  const fitTo = (bounds, maxZoom, duration) => {
+    if (map.cameraForBounds(bounds, { padding: FIT_PAD, maxZoom })) map.fitBounds(bounds, { padding: FIT_PAD, maxZoom, duration });
+    else map.easeTo({ center: bounds.getCenter(), zoom: Math.min(map.getZoom() + 2, maxZoom), duration });
+  };
   const visible = () => {
     const rect = canvas.getBoundingClientRect();
     const covered = (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 0 : Math.max(0, rect.bottom - sheet.getBoundingClientRect().top);
@@ -92,7 +107,7 @@ export async function explorer(page) {
         detachFollow();
         const bounds = new maplibregl.LngLatBounds();
         for (const member of group) bounds.extend([member.lng, member.lat]);
-        map.fitBounds(bounds, { padding: 64, maxZoom: Math.min(map.getZoom() + 2, MAP.clusterMaxZoom), duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350 });
+        fitTo(bounds, Math.max(Math.min(map.getZoom() + 2, MAP.clusterMaxZoom), map.getZoom() + 1), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350);
       };
       const entry = group.length === 1 ? priceMarker(maplibregl, pin, (slug) => select(slug)) : clusterMarker(maplibregl, group, label, expand);
       entry.slugs = group.map((member) => member.slug);
@@ -111,12 +126,10 @@ export async function explorer(page) {
     if (!pins.length && page.dataset.fit !== 'island') return;
     const bounds = new maplibregl.LngLatBounds();
     if (page.dataset.fit === 'island') {
-      for (const point of MAP.searchBounds) bounds.extend(point);
+      for (const point of MAP.islandBounds) bounds.extend(point);
     } else for (const pin of pins) bounds.extend([pin.lng, pin.lat]);
-    const sheet = page.querySelector('.map-sheet');
-    const wide = matchMedia('(min-width: 960px)').matches;
-    const covered = sheet ? sheet.getBoundingClientRect() : { height: 0, width: 0 };
-    map.fitBounds(bounds, { padding: { top: 80, right: 40, left: 40, bottom: wide ? 40 : covered.height + 24 }, maxZoom: 15, duration: 0 });
+    map.setPadding(framePadding());
+    fitTo(bounds, 15, 0);
   };
 
   const render = () => {
@@ -183,7 +196,7 @@ export async function explorer(page) {
     if (!ready) return;
     render();
     // A hidden tab keeps its position but asks for nothing until it is seen again.
-    if (document.hidden) { staleWhileHidden = true; return; }
+    if (document.hidden) { staleWhileHidden = true; surface.busy(false); return; }
     clearTimeout(queryTimer);
     requestController?.abort();
     const ticket = ++queryTicket;
@@ -194,10 +207,10 @@ export async function explorer(page) {
   let precise = false;
   let followZoom = null;
   let fittingAccuracy = false;
+  let fittingNearby = false;
   let warnedCoarse = false;
   let lastMe = null;
   const COARSE_M = 500;
-  const sheetPadding = () => ({ top: 72, left: 24, right: 24, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 24 : sheet.getBoundingClientRect().height + 24 });
   const motionMs = (ms) => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms);
 
   const frameReading = (reading, first) => {
@@ -207,16 +220,34 @@ export async function explorer(page) {
       followZoom = null;
       const circle = accuracyCircle(reading, accuracy).geometry.coordinates[0];
       const bounds = circle.reduce((box, point) => box.extend(point), new maplibregl.LngLatBounds(circle[0], circle[0]));
-      map.fitBounds(bounds, { padding: sheetPadding(), maxZoom: MAP.selfZoom, duration: motionMs(first ? 450 : 300) });
+      fitTo(bounds, MAP.selfZoom, motionMs(first ? 450 : 300));
       return;
     }
     if (fittingAccuracy && accuracy > COARSE_M) return;
     fittingAccuracy = false;
+    if (fittingNearby) return;
     const refine = !precise && accuracy <= COARSE_M;
     const zoom = refine ? MAP.selfZoom : (followZoom ?? map.getZoom());
     followZoom = zoom;
-    if (refine) precise = true;
-    map.easeTo({ center: [reading.lng, reading.lat], zoom, padding: sheetPadding(), duration: motionMs(first ? 450 : 300) });
+    if (refine) {
+      precise = true;
+      frameNearby(reading);
+    }
+    map.easeTo({ center: [reading.lng, reading.lat], zoom, padding: framePadding(), duration: motionMs(first ? 450 : 300) });
+  };
+
+  // The first precise reading then widens the view to the closest activities, so "near me" never
+  // leaves the visitor on an empty street; with nothing close the street view stays.
+  const frameNearby = async (reading) => {
+    let items = [];
+    try { items = await getJson(`${ENDPOINTS.nearby}?lat=${reading.lat.toFixed(5)}&lng=${reading.lng.toFixed(5)}`); }
+    catch { items = []; }
+    if (!follow) return;
+    const near = (Array.isArray(items) ? items : []).filter((pin) => distanceM(reading, pin) <= MAP.nearbyFrameM).slice(0, MAP.nearbyFrameCount);
+    if (!near.length) return;
+    const bounds = near.reduce((box, pin) => box.extend([pin.lng, pin.lat]), new maplibregl.LngLatBounds([reading.lng, reading.lat], [reading.lng, reading.lat]));
+    fittingNearby = true;
+    fitTo(bounds, MAP.selfZoom, motionMs(450));
   };
 
   const showMe = (reading) => {
@@ -258,6 +289,7 @@ export async function explorer(page) {
     follow = false;
     centerRequested = false;
     fittingAccuracy = false;
+    fittingNearby = false;
     followZoom = null;
     $('[data-feature="locate"]', page)?.classList.add('is-detached');
   };
@@ -280,7 +312,7 @@ export async function explorer(page) {
     if (!ready) return;
     // A phone sheet raised over the map keeps the list it showed; lowering it re-reads the visible map.
     if (innerWidth < 700 && sheet.classList.contains('is-expanded')) return;
-    map.setPadding({ top: 80, right: 40, left: 40, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 40 : sheet.getBoundingClientRect().height + 24 });
+    map.setPadding(framePadding());
     schedule();
   };
   surface.connect(map, resizeViewport);
@@ -289,8 +321,9 @@ export async function explorer(page) {
     if (event.target === sheet && ['height', 'max-height'].includes(event.propertyName)) resizeViewport();
   });
   map.on('moveend', () => {
-    if (fittingAccuracy) {
+    if (fittingAccuracy || fittingNearby) {
       fittingAccuracy = false;
+      fittingNearby = false;
       followZoom = map.getZoom();
     }
     schedule();
@@ -369,10 +402,18 @@ export async function explorer(page) {
     resizeViewport();
   });
   // Phones: the floating Map pill lowers a raised list, and scrolling the list raises it, like a native sheet.
-  $('[data-sheet-collapse]', page)?.addEventListener('click', () => { if (sheet.classList.contains('is-expanded')) handle?.click(); });
   const sheetList = $('.sheet-list', page);
+  $('[data-sheet-collapse]', page)?.addEventListener('click', () => {
+    if (!sheet.classList.contains('is-expanded')) return;
+    handle?.click();
+    sheetList?.scrollTo({ top: 0, behavior: 'instant' });
+  });
+  // Only the visitor's own finger or wheel raises the sheet; a card scrolled into view for a pin does not.
+  let touchedAt = 0;
+  for (const type of ['touchstart', 'touchmove', 'wheel']) sheetList?.addEventListener(type, () => { touchedAt = performance.now(); }, { passive: true });
   sheetList?.addEventListener('scroll', () => {
-    if (innerWidth < 700 && performance.now() > quietScrollUntil && !sheet.classList.contains('is-expanded') && sheetList.scrollTop > 24) handle?.click();
+    const byVisitor = performance.now() - touchedAt < 1200;
+    if (innerWidth < 700 && byVisitor && performance.now() > quietScrollUntil && !sheet.classList.contains('is-expanded') && sheetList.scrollTop > 24) handle?.click();
   }, { passive: true });
 
   const feedback = $('#map-location-status', page);

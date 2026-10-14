@@ -1,0 +1,33 @@
+/** @Api.Plans.Client — plans near a point, a shared plan, and a plan's road route */
+module Api.Plans
+
+import Std.Json as Json
+import Api.Supabase.Gateway as Gateway
+import Constants.Supabase as Supabase
+import Domain.Plan as Plan
+import Domain.Problem as Problem
+
+/// Plans of nearby activities between two instants, best first.
+export fn outings(gateway: &Gateway.Gateway, request: &Plan.Request, from: Str, to: Str) -> Result[Plan.Outings, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLAN_OUTINGS, &[
+      ("p_lat", Gateway.fraction(Some(request.lat))),
+      ("p_lng", Gateway.fraction(Some(request.lng))),
+      ("p_from", Gateway.text(from)),
+      ("p_to", Gateway.text(to)),
+      ("p_style", Gateway.text(Plan.styleName(&request.style))),
+      ("p_stops", Json.Number(request.stops)),
+      ("p_mode", Gateway.text(Plan.modeName(&request.mode))),
+      ("p_radius_m", Json.Number(request.radiusM)),
+      ("p_seed", Json.Number(request.seed))
+    ], None, Gateway.Read)
+}
+
+/// One plan rebuilt from its activities in order.
+export fn shared(gateway: &Gateway.Gateway, slugs: &Array[Str]) -> Result[Plan.Outings, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLAN_OF, &[("p_slugs", Json.list(&slugs.map(|slug: Str| Json.Text(slug))))], None, Gateway.Read)
+}
+
+/// The road route between the activities in order, as drawing coordinates per leg.
+export fn route(gateway: &Gateway.Gateway, slugs: &Array[Str]) -> Result[Json.Json, Problem.Problem] {
+  Gateway.call(gateway, Supabase.PLAN_ROUTE, &[("p_slugs", Json.list(&slugs.map(|slug: Str| Json.Text(slug))))], None, Gateway.Read)
+}

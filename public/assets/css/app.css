@@ -452,9 +452,11 @@ ul { padding: 0; list-style: none; }
 .sheet-item { scroll-snap-align: start; }
 .sheet-item.is-active .card-media { outline: 3px solid var(--color-ocean); outline-offset: 2px; }
 
-.price-marker { padding: 5px 10px; border-radius: var(--radius-pill); background: var(--color-white); color: var(--color-ink); font: 800 13px/18px var(--font); box-shadow: 0 1px 4px rgba(60, 64, 67, .35); white-space: nowrap; cursor: pointer; border: 0; transition: scale .12s ease; }
-.price-marker:hover { scale: 1.06; }
-.price-marker.is-active { background: var(--color-coral); color: var(--color-white); scale: 1.1; z-index: 2; }
+/* Markers never scale: the map positions them with a transform, and a scale would multiply that
+   position and slide the pin away from its place. Emphasis is a ring and a deeper shadow instead. */
+.price-marker { padding: 5px 10px; border-radius: var(--radius-pill); background: var(--color-white); color: var(--color-ink); font: 800 13px/18px var(--font); box-shadow: 0 1px 4px rgba(60, 64, 67, .35); white-space: nowrap; cursor: pointer; border: 0; transition: box-shadow .12s ease, background-color .12s ease; }
+.price-marker:hover { box-shadow: 0 2px 8px rgba(60, 64, 67, .45); }
+.price-marker.is-active { background: var(--color-coral); color: var(--color-white); box-shadow: 0 0 0 3px var(--color-white), 0 4px 12px rgba(60, 64, 67, .45); z-index: 2; }
 .me-marker.is-coarse { background: #8ab4f8; }
 .me-marker.is-coarse::after { animation: none; opacity: 0; }
 .me-marker { position: relative; width: 22px; height: 22px; border-radius: 50%; background: #1a73e8; border: 3px solid var(--color-white); box-shadow: 0 1px 4px rgba(0, 0, 0, .35); }

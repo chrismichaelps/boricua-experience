@@ -34,6 +34,11 @@ export fn reaction(value: Int) -> Result[Int, Problem.Problem] {
   Check.run(&Check.all(&[Check.rule("reaction", |v: Int| v, |v: Int| v >= -1 && v <= 1, REACTION)]), value)
 }
 
+/// An interest mark: interested, going, or empty to clear.
+export fn interest(kind: Str) -> Result[Str, Problem.Problem] {
+  if kind == "" || kind == Participation.INTERESTED || kind == Participation.GOING { Ok(kind) } else { Err(Problem.Refused("invalid_interest")) }
+}
+
 /// A saved search: a short label and a query string without spaces, quotes or angle brackets.
 export fn saving(given: &Search.Saving) -> Result[Search.Saving, Problem.Problem] {
   Check.run(&Check.all(&[

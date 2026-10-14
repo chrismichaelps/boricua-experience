@@ -152,7 +152,7 @@ fn language(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
-/// The panel, with the floating launcher when `launcher` is set. Without it (the map) the panel opens
+/// The panel, with the floating launcher when `launcher` is set. Without it the panel opens
 /// from the menu row or Alt+A. Settings are kept in this browser and applied before the page paints.
 export fn render(frame: &Frame.Frame, launcher: Bool) -> H.Node {
   let t = |key: Str| Frame.t(frame, key)

@@ -161,3 +161,9 @@
 .field-invalid .temporal-control > .date-trigger, .field-invalid .temporal-part > .picker-trigger { border-color: #c5221f; }
 .review-report .picker-trigger, .a11y-links .picker-trigger { min-height: 48px; padding: 12px 16px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font-size: 15px; }
 .review-report .picker-trigger:hover, .a11y-links .picker-trigger:hover { border-color: #25343b; }
+/* A focused day's ring draws above its neighbours instead of being cut by the next day. */
+.calendar-day:focus-visible { position: relative; z-index: 1; }
+@media(max-width:699px) {
+  /* On phones the apply and clear buttons stay in reach at the bottom of the sheet while the month scrolls. */
+  .calendar-picker .calendar-actions { position: sticky; bottom: calc(-24px - env(safe-area-inset-bottom)); z-index: 2; margin: 0 -16px calc(-24px - env(safe-area-inset-bottom)); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); background: white; }
+}

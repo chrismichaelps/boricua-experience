@@ -23,6 +23,7 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.saveSearch, |asked: Messages.Signed[Search.Saving], _context: Context.Context| Messaging.lift(Participation.saveSearch(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.deleteSearch, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Participation.deleteSearch(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.react, |asked: Messages.Signed[Messages.Reacting], _context: Context.Context| Messaging.lift(Participation.react(&held, asked.input.eventId, asked.input.value, &asked.session))),
+    Registration.handler(&kinds.interest, |asked: Messages.Signed[Messages.Marking], _context: Context.Context| Messaging.lift(Participation.setInterest(&held, asked.input.eventId, asked.input.kind, &asked.session))),
     Registration.handler(&kinds.report, |asked: Messages.Signed[Messages.Reporting], _context: Context.Context| Messaging.lift(Participation.report(&held, asked.input.eventId, &asked.input.form, &asked.session))),
     Registration.handler(&kinds.activity, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Participation.activity(&held, &asked.session)))
   ]

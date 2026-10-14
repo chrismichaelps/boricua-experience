@@ -33,7 +33,7 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           Footer.render(frame),
           tabBar(frame, &section),
           if frame.path == Routes.HOME && section == Explore { Assistant.render(frame) } else { H.nothing() },
-          A11y.render(frame, section != MapView),
+          A11y.render(frame, true),
           achievementToasts(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
@@ -161,7 +161,7 @@ fn languageRow(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
-/// The menu row that opens the accessibility panel; on phones it replaces the floating launcher.
+/// The menu row that also opens the accessibility panel, beside the floating launcher.
 fn accessibilityRow(frame: &Frame.Frame) -> H.Node {
   H.button().kind("button").class("menu-row").role("menuitem").data("a11y-open", "").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").holding([
       Icons.sized("eye", 20),

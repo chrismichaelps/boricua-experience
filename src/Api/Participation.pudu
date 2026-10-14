@@ -54,6 +54,11 @@ export fn react(gateway: &Gateway.Gateway, eventId: Str, value: Int, token: Str)
   Gateway.query(gateway, Supabase.SET_REACTION, &[("p_event_id", Gateway.text(eventId)), ("p_value", Json.Number(value))], Some(token), Gateway.Write)
 }
 
+/// Marks an activity interesting or as one the member is going to; an empty kind clears the mark.
+export fn setInterest(gateway: &Gateway.Gateway, eventId: Str, kind: Str, token: Str) -> Result[Participation.InterestState, Problem.Problem] {
+  Gateway.query(gateway, Supabase.SET_INTEREST, &[("p_event_id", Gateway.text(eventId)), ("p_kind", Gateway.textOrNull(kind))], Some(token), Gateway.Write)
+}
+
 /// Reports an event for moderation.
 export fn report(gateway: &Gateway.Gateway, eventId: Str, reason: Str, detail: Str, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.REPORT_EVENT, &[

@@ -96,6 +96,12 @@ export fn react(runtime: &Runtime.Runtime, eventId: Str, value: Int, session: &S
   ParticipationApi.react(&runtime.gateway, eventId, valid, session.accessToken)
 }
 
+/// Sets the member's interested or going mark; answers the mark and the activity's counts.
+export fn setInterest(runtime: &Runtime.Runtime, eventId: Str, kind: Str, session: &Session.Session) -> Result[Participation.InterestState, Problem.Problem] {
+  let valid = Rules.interest(kind) ?
+  ParticipationApi.setInterest(&runtime.gateway, eventId, valid, session.accessToken)
+}
+
 /// Reports an event for moderation.
 export fn report(runtime: &Runtime.Runtime, eventId: Str, form: &Rules.Report, session: &Session.Session) -> Result[(), Problem.Problem] {
   let valid = Rules.report(form) ?
