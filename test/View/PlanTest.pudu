@@ -1,0 +1,61 @@
+/** @Test.View.Plan — plan choices, shared links, and the plans page and calendar */
+module View.PlanTest
+
+import Std.Html as Html
+import Std.Io as Io
+import Std.Test as Test
+import Domain.Build as Build
+import Domain.Catalog as Catalog
+import Domain.Locale as Locale
+import Domain.Plan as Plan
+import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
+import View.Calendar as Calendar
+import View.Frame as Frame
+import View.Pages.Plan as PlanPage
+
+/// A frame for a guest reading in a language.
+fn visitor(locale: Locale.Locale) -> Frame.Frame {
+  Frame.Frame{locale: locale, siteUrl: "http://localhost:8080", path: "/plan", query: "", member: None, formToken: "", consent: None, flash: "", nowMillis: 0, build: Build.development()}
+}
+
+/// Runs the plan checks.
+fn main() -> Int {
+  let outings: Plan.Outings = match Wire.decode(&Fixtures.json("plan-outings.json")) {
+    case Ok(found) => found
+    case Err(_) => Plan.Outings{plans: []}
+  }
+  let catalog = Catalog.Catalog{categories: [], municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.4655, lng: -66.1057}], scenes: []}
+  let choices = PlanPage.Choices{lat: None, lng: None, town: "san-juan", window: Plan.Weekend, style: Plan.Mixed, stops: 3, mode: Plan.Local}
+  let es = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Found(outings)))
+  let en = Html.render(&PlanPage.render(&visitor(Locale.En), &catalog, &choices, &PlanPage.Found(outings)))
+  let start = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Nothing))
+  let empty = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Found(Plan.Outings{plans: []})))
+  let first = outings.plans[0]
+  let shared = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Shared(Plan.Outings{plans: [first]})))
+  let ics = Calendar.plan("https://boricuaexperience.com", "Plan", &first.stops.map(|stop: Plan.Stop| (stop.card, stop.arrive, stop.leave)))
+  let checks = Test.suite("Plan", &[
+      Test.equals("styles read their wire names", &Plan.styleName(&Plan.styleFrom("adventure")), &"adventure"),
+      Test.equals("an unknown style is mixed", &Plan.styleName(&Plan.styleFrom("<script>")), &"mixed"),
+      Test.equals("an unknown window is today", &Plan.windowName(&Plan.windowFrom("someday")), &"today"),
+      Test.equals("the visitor mode is remembered by name", &Plan.modeName(&Plan.modeFrom("visitor")), &"visitor"),
+      Test.equals("stop counts stay within the offered choices", &[Plan.stopsFrom("1"), Plan.stopsFrom("3"), Plan.stopsFrom("9"), Plan.stopsFrom("x")], &[2, 3, 4, 3]),
+      Test.equals("shared plans keep well-formed slugs once, in order", &Plan.sharedSlugs("b-one, a-two,b-one,../x,UPPER,c-three"), &["b-one", "a-two", "c-three"]),
+      Test.equals("shared plans carry at most six stops", &Plan.sharedSlugs("aaa,bbb,ccc,ddd,eee,fff,ggg").length(), &6),
+      Test.that("the fixture holds plans with stops", outings.plans.length() == 3 && first.stops.length() == 2),
+      Test.that("each plan is a section with its map pins", es.split("class=\"plan-card\"").length() == 4 && es.contains("data-pins=")),
+      Test.that("stops link to their activities in order", es.contains("href=\"/e/" + first.stops[0].card.slug + "\"")),
+      Test.that("the drive between stops is measured on roads", es.contains("min en carro") && en.contains("min drive")),
+      Test.that("a plan shares to WhatsApp with its own link", es.contains("https://wa.me/?text=") && es.contains("plan%3Fe%3D")),
+      Test.that("a plan downloads as a calendar file", es.contains("/plan/calendar.ics?e=")),
+      Test.that("found plans fold the choices under a summary", es.contains("plan-choices") && es.contains("San Juan · Este fin de semana")),
+      Test.that("the start page invites a location or a town and stays open", start.contains("Empieza con tu ubicación") && !start.contains("plan-choices\"")),
+      Test.that("no plans explains and offers to explore", empty.contains("No encontramos un plan")),
+      Test.that("a shared plan says so", shared.contains("Un plan compartido") && shared.split("class=\"plan-card\"").length() == 2),
+      Test.that("the plan calendar holds one event per stop", ics.split("BEGIN:VEVENT").length() == 3 && ics.endsWith("END:VCALENDAR\r\n")),
+      Test.that("calendar stops run from arrival to departure", ics.contains("DTSTART:20261018") && ics.contains("DTEND:20261018"))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

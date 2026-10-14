@@ -397,3 +397,85 @@ input[type="radio"]:disabled { opacity: .55; cursor: default; }
 }
 /* The map page never rubber-bands as a whole document; only the map and the sheet's list move. */
 html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
+
+/* Interest marks on an activity: "Interested" and "Going" with their public counts. */
+.interest { display: grid; gap: 8px; margin: 4px 0 8px; }
+.interest-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.interest-buttons form { margin: 0; }
+.interest-button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border: 1px solid #c9d2d8; border-radius: 999px; background: white; color: #182c36; font: 700 15px var(--font); text-decoration: none; cursor: pointer; touch-action: manipulation; transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+.interest-button:hover { border-color: #25343b; }
+.interest-button.is-on { background: #25343b; border-color: #25343b; color: white; }
+.interest-button.is-on .icon { color: white; }
+.interest-button:focus-visible { outline: 3px solid var(--color-ocean); outline-offset: 2px; }
+.interest-count { margin: 0; font-size: 14px; font-weight: 700; color: #3c4d57; }
+
+/* Plans near the visitor. */
+.plan-page { display: grid; gap: 20px; max-width: 880px; margin: 0 auto; }
+.plan-head .lead { margin-top: 6px; }
+.plan-form { display: grid; gap: 16px; padding: 18px; border: 1px solid #e1e6ea; border-radius: 24px; background: white; box-shadow: 0 4px 18px rgb(28 43 55 / 6%); }
+.plan-start { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.plan-locate { gap: 8px; }
+.plan-locate[aria-busy="true"] { opacity: .75; }
+.plan-town { min-height: 44px; padding: 8px 14px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; font: inherit; font-size: 15px; color: #182c36; max-width: 100%; }
+.plan-privacy { margin: -6px 0 0; font-size: 13px; }
+.plan-choice { margin: 0; padding: 0; border: 0; min-width: 0; }
+.plan-choice-label { padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #52616e; }
+.plan-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px; margin: -2px; }
+.plan-chips::-webkit-scrollbar { display: none; }
+.plan-chip { position: relative; flex: none; }
+.plan-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.plan-chip span { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px solid #d5dbe0; border-radius: 999px; background: white; font-size: 14px; font-weight: 700; color: #25343b; }
+.plan-chip input:checked + span { background: #25343b; border-color: #25343b; color: white; }
+.plan-chip input:focus-visible + span { outline: 3px solid var(--color-ocean); outline-offset: 2px; }
+.plan-submit { display: flex; flex-wrap: wrap; gap: 10px; }
+.plan-surprise { gap: 6px; }
+.plan-results { display: grid; gap: 14px; transition: opacity .2s ease; }
+.plan-page.is-planning .plan-results, .plan-page.is-planning .empty { opacity: .35; pointer-events: none; }
+.plan-page.is-planning .plan-form .button[type="submit"] { opacity: .7; }
+.plan-list { display: grid; gap: 18px; }
+.plan-card { display: grid; gap: 12px; padding: 16px; border: 1px solid #e1e6ea; border-radius: 24px; background: white; box-shadow: 0 4px 18px rgb(28 43 55 / 6%); }
+.plan-card-head { display: grid; gap: 4px; }
+.plan-card-title { margin: 0; font-size: 20px; }
+.plan-card-summary { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0; font-size: 14px; font-weight: 700; }
+.plan-map { height: 200px; border-radius: 18px; overflow: hidden; background: #e8eef3; }
+.plan-pin { display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid white; border-radius: 50%; background: #1878ec; color: white; font: 800 13px/1 var(--font); box-shadow: 0 2px 6px rgb(28 43 55 / 30%); }
+.plan-stops { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.plan-stop { display: grid; gap: 6px; }
+.plan-leg { display: flex; align-items: center; gap: 8px; margin: 0; padding: 4px 0 4px 12px; border-left: 2px dashed #c9d6e2; margin-left: 13px; font-size: 13px; color: #52616e; }
+.plan-leg .icon { color: #1878ec; flex: none; }
+.plan-stop-link { display: grid; grid-template-columns: 28px 72px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px; border-radius: 16px; color: inherit; text-decoration: none; }
+.plan-stop-link:hover { background: #f4f7fa; }
+.plan-stop-link:focus-visible { outline: 3px solid var(--color-ocean); outline-offset: 2px; }
+.plan-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #1878ec; color: white; font-weight: 800; font-size: 13px; }
+.plan-stop-cover { width: 72px; height: 54px; border-radius: 12px; object-fit: cover; background: #eef2f5; }
+.plan-stop-body { display: grid; gap: 2px; min-width: 0; justify-items: start; }
+.plan-stop-time { font-size: 13px; font-weight: 800; color: #1878ec; }
+.plan-stop-title { font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.plan-stop-place { font-size: 13px; color: #52616e; overflow-wrap: anywhere; }
+.plan-stop-price { position: static; margin-top: 2px; font-size: 12px; padding: 3px 8px; border: 1px solid #e1e6ea; }
+.plan-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.plan-actions .button { gap: 6px; }
+.plan-whatsapp { background: #128c4b; border-color: #128c4b; }
+.plan-shared { display: grid; gap: 4px; }
+@media (min-width: 760px) {
+  .plan-card { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "head map" "stops map" "actions map"; align-items: start; }
+  .plan-card-head { grid-area: head; } .plan-stops { grid-area: stops; } .plan-actions { grid-area: actions; }
+  .plan-map { grid-area: map; height: 100%; min-height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) { .plan-results, .interest-button { transition: none; } }
+/* The home invitation to plans. */
+.plan-tile { display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px; align-items: center; gap: 14px; margin: 4px 16px 0; padding: 14px 16px; border-radius: 22px; background: linear-gradient(120deg, #1878ec, #1b5fc4); color: white; text-decoration: none; box-shadow: 0 8px 22px rgb(24 120 236 / 25%); }
+.plan-tile-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background: rgb(255 255 255 / 18%); }
+.plan-tile .icon { color: white; }
+.plan-tile-copy { display: grid; gap: 2px; }
+.plan-tile-copy strong { font-size: 17px; }
+.plan-tile-copy span { font-size: 14px; opacity: .92; }
+.plan-tile:focus-visible { outline: 3px solid #0d3f86; outline-offset: 3px; }
+@media (min-width: 960px) { .plan-tile { max-width: 1120px; margin-inline: auto; width: calc(100% - 40px); } }
+.plan-choices { border: 1px solid #e1e6ea; border-radius: 20px; background: white; }
+.plan-choices[open] { padding-bottom: 4px; }
+.plan-choices-summary { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 52px; padding: 8px 16px; list-style: none; cursor: pointer; font-weight: 700; font-size: 14px; }
+.plan-choices-summary::-webkit-details-marker { display: none; }
+.plan-choices-summary span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plan-choices-edit { color: var(--color-ocean); text-decoration: underline; }
+.plan-choices .plan-form { border: 0; box-shadow: none; padding-top: 4px; }

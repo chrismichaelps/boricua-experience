@@ -10,6 +10,7 @@ import I18n.EnAchievements as EnAchievements
 import I18n.EnContact as EnContact
 import I18n.EnLegal as EnLegal
 import I18n.EnMenu as EnMenu
+import I18n.EnPlan as EnPlan
 import I18n.Es as Es
 import I18n.EsA11y as EsA11y
 import I18n.EsAccount as EsAccount
@@ -17,6 +18,7 @@ import I18n.EsAchievements as EsAchievements
 import I18n.EsContact as EsContact
 import I18n.EsLegal as EsLegal
 import I18n.EsMenu as EsMenu
+import I18n.EsPlan as EsPlan
 
 /// The text of a key in a language; the Spanish text when English lacks it; the key itself when
 /// neither has it, so a missing entry is visible rather than blank.
@@ -29,10 +31,10 @@ export fn text(locale: &Locale.Locale, key: Str) -> Str {
 }
 
 /// The Spanish text of a key from the interface, account, policy, menu, contact, or accessibility catalogue.
-fn spanish(key: Str) -> Option[Str] { Option.firstPresent(&[Es.MESSAGES.get(key), EsAccount.MESSAGES.get(key), EsLegal.MESSAGES.get(key), EsMenu.MESSAGES.get(key), EsContact.MESSAGES.get(key), EsA11y.MESSAGES.get(key), EsAchievements.MESSAGES.get(key)]) }
+fn spanish(key: Str) -> Option[Str] { Option.firstPresent(&[Es.MESSAGES.get(key), EsAccount.MESSAGES.get(key), EsLegal.MESSAGES.get(key), EsMenu.MESSAGES.get(key), EsContact.MESSAGES.get(key), EsA11y.MESSAGES.get(key), EsAchievements.MESSAGES.get(key), EsPlan.MESSAGES.get(key)]) }
 
 /// The English text of a key from the interface, account, policy, menu, contact, or accessibility catalogue.
-fn english(key: Str) -> Option[Str] { Option.firstPresent(&[En.MESSAGES.get(key), EnAccount.MESSAGES.get(key), EnLegal.MESSAGES.get(key), EnMenu.MESSAGES.get(key), EnContact.MESSAGES.get(key), EnA11y.MESSAGES.get(key), EnAchievements.MESSAGES.get(key)]) }
+fn english(key: Str) -> Option[Str] { Option.firstPresent(&[En.MESSAGES.get(key), EnAccount.MESSAGES.get(key), EnLegal.MESSAGES.get(key), EnMenu.MESSAGES.get(key), EnContact.MESSAGES.get(key), EnA11y.MESSAGES.get(key), EnAchievements.MESSAGES.get(key), EnPlan.MESSAGES.get(key)]) }
 
 /// Whether a language's catalogues hold a key, without falling back.
 export fn has(locale: &Locale.Locale, key: Str) -> Bool {

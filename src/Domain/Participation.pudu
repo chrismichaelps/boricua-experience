@@ -57,6 +57,13 @@ export type SavedState = { saved: Bool } derives Json.Decode
 /** @Domain.Participation.ReactionState — a reaction after it changed, with the new like count */
 export type ReactionState = { reaction: Int, @json("like_count") likeCount: Int } derives Json.Decode
 
+/** @Domain.Participation.InterestState — a member's mark on an activity and its public counts */
+export type InterestState = { kind: Option[Str], interested: Int, going: Int } derives Json.Decode
+
+/// The marks a member may leave: interested, or going.
+export const INTERESTED: Str = "interested"
+export const GOING: Str = "going"
+
 /// Statuses a request may hold.
 export const PENDING: Str = "pending"
 export const APPROVED: Str = "approved"

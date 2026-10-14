@@ -40,6 +40,8 @@ export type Card = {
   @json("approved_count") approvedCount: Int,
   @json("saved_count") savedCount: Int,
   @default("0") @json("like_count") likeCount: Int,
+  @default("0") @json("interested_count") interestedCount: Int,
+  @default("0") @json("going_count") goingCount: Int,
   @json("cover_url") coverUrl: Option[Str],
   lat: Float64,
   lng: Float64,
@@ -86,6 +88,7 @@ export type Viewer = {
   @json("request_message") requestMessage: Option[Str],
   @json("decision_note") decisionNote: Option[Str],
   @default("0") reaction: Int,
+  @default("null") interest: Option[Str],
   saved: Bool,
   @json("waitlist_position") waitlistPosition: Option[Int]
 } derives Json.Decode

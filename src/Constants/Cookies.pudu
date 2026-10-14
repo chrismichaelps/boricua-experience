@@ -15,6 +15,8 @@ export const VISITOR: Str = "bx_visitor"
 export const AGE_GATE: Str = "bx_age"
 /// The town and radius a visitor last chose to search around, written `town:km`.
 export const NEAR: Str = "bx_near"
+/// Whether the visitor explores plans as a local or as a visitor, remembered as a preference.
+export const MODE: Str = "bx_mode"
 /// A one-time message shown on the next page.
 export const FLASH: Str = "bx_flash"
 

@@ -28,6 +28,12 @@ export const EVENT_JOIN: Str = "/e/:slug/join"
 export const EVENT_WITHDRAW: Str = "/e/:slug/withdraw"
 export const EVENT_SAVE: Str = "/e/:slug/save"
 export const EVENT_REACT: Str = "/e/:slug/react"
+/// A member's "interested" or "going" mark.
+export const EVENT_INTEREST: Str = "/e/:slug/interest"
+/// Plans near the visitor: the page, one plan's calendar file, and its road route for the map.
+export const PLAN: Str = "/plan"
+export const PLAN_CALENDAR: Str = "/plan/calendar.ics"
+export const API_PLAN_ROUTE: Str = "/api/plan/route"
 export const EVENT_REPORT: Str = "/e/:slug/report"
 export const EVENT_CANCEL: Str = "/e/:slug/cancel"
 export const EVENT_CALENDAR: Str = "/e/:slug/calendar.ics"

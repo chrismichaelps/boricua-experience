@@ -1,0 +1,208 @@
+/** @View.Pages.Plan.Outings — ready-made plans near the visitor: the choices, the plans, their maps */
+module View.Pages.Plan
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Json as Json
+import Std.Option as Option
+import Std.Time as StdTime
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Plan as Plan
+import I18n.Dates as Dates
+import I18n.Format as Format
+import Utils.Query as Query
+import Utils.Time as Time
+import View.Components.EventCard as EventCard
+import View.Components.Icons as Icons
+import View.Components.Notice as Notice
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/** @View.Pages.Plan.Choices — what the visitor chose on the page */
+export type Choices = { lat: Option[Float64], lng: Option[Float64], town: Str, window: Plan.Window, style: Plan.Style, stops: Int, mode: Plan.Mode }
+
+/** @View.Pages.Plan.Shown — what the page shows below the choices */
+export type Shown = Nothing | Found(Plan.Outings) | Shared(Plan.Outings)
+
+/// The local clock time of a database timestamp, like "3:00 PM".
+fn clock(timestamp: Str) -> Str {
+  match Time.parseTimestamp(timestamp) {
+    case Some(at) => Time.clock12(&Time.local(&at))
+    case None => ""
+  }
+}
+
+/// The day a plan happens, like "Today" or "Saturday".
+fn day(frame: &Frame.Frame, timestamp: Str) -> Str {
+  match Time.parseTimestamp(timestamp) {
+    case Some(at) => Dates.relativeDay(&frame.locale, &at, &StdTime.instantOf(frame.nowMillis))
+    case None => ""
+  }
+}
+
+/// A drive as minutes, or hours and minutes past the hour.
+fn duration(frame: &Frame.Frame, seconds: Int) -> Str {
+  let minutes = (seconds + 59) / 60
+  if minutes < 60 { return Frame.tf(frame, "plan.minutes", &[("count", show(minutes))]) }
+  Frame.tf(frame, "plan.hours", &[("hours", show(minutes / 60)), ("minutes", show(minutes % 60))])
+}
+
+/// Kilometres with one decimal.
+fn kilometres(meters: Int) -> Str { show(meters / 1000) + "." + show((meters % 1000) / 100) }
+
+/// The drive to a stop: measured on roads, or an estimate from the straight line.
+fn legLine(frame: &Frame.Frame, leg: &Option[Plan.Leg], first: Bool) -> H.Node {
+  match leg {
+    case Some(found) => {
+      let minutes = show((found.seconds + 59) / 60)
+      let text = Frame.tf(frame, if found.road && !first { "plan.leg_road" } else { "plan.leg_estimate" }, &[("minutes", minutes), ("km", kilometres(found.meters))])
+      H.p().class("plan-leg").holding([Icons.sized("car", 16), H.span().says(text)])
+    }
+    case None => H.p().class("plan-leg").holding([Icons.sized("pin", 16), H.span().says(Frame.t(frame, "plan.leg_start"))])
+  }
+}
+
+/// One stop: its number, when to be there, and the activity.
+fn stop(frame: &Frame.Frame, item: &Plan.Stop, number: Int) -> H.Node {
+  let card = item.card
+  H.li().class("plan-stop").holding([
+      legLine(frame, &item.leg, number == 1),
+      H.a().class("plan-stop-link").href(Routes.EVENT_PREFIX + card.slug).holding([
+          H.span().class("plan-number").at("aria-hidden", "true").says(show(number)),
+          H.img().class("plan-stop-cover").src(EventCard.coverOf(&card)).alt("").at("loading", "lazy").at("width", "96").at("height", "72"),
+          H.span().class("plan-stop-body").holding([
+              H.time().class("plan-stop-time").at("datetime", item.arrive).says(Frame.tf(frame, "plan.stay", &[("start", clock(item.arrive)), ("end", clock(item.leave))])),
+              H.strong().class("plan-stop-title").says(card.title),
+              H.span().class("plan-stop-place").says(card.venueName + " · " + card.municipality.name),
+              H.span().class("pill pill-light plan-stop-price").says(Format.price(&frame.locale, card.priceCents))
+            ])
+        ])
+    ])
+}
+
+/// The pins a plan's map draws, in order.
+fn pins(plan: &Plan.Plan) -> Str {
+  var listed: Array[Json.Json] = []
+  for i in 0..plan.stops.length() {
+    let item = plan.stops[i]
+    listed = listed.push(Json.object(&[("order", Json.Number(i + 1)), ("slug", Json.Text(item.card.slug)), ("title", Json.Text(item.card.title)), ("lat", Json.Fractional(show(item.card.lat))), ("lng", Json.Fractional(show(item.card.lng)))]))
+  }
+  Json.encode(&Json.list(&listed))
+}
+
+/// One plan: its summary, map, stops, and the ways to keep or share it.
+fn planCard(frame: &Frame.Frame, plan: &Plan.Plan, number: Int) -> H.Node {
+  let slugs = Plan.slugsOf(plan).join(",")
+  let link = frame.siteUrl + Routes.PLAN + Query.render(&[("e", slugs), ("from", "share")])
+  let titles = plan.stops.map(|item: Plan.Stop| item.card.title).join(" → ")
+  let message = Frame.t(frame, "plan.share_text") + " " + titles + " " + link
+  let summary = if plan.stops.length() == 1 { Frame.t(frame, "plan.summary_one") } else { Frame.tf(frame, "plan.summary", &[("stops", show(plan.stops.length())), ("drive", duration(frame, plan.travelSeconds))]) }
+  var stops: Array[H.Node] = []
+  for i in 0..plan.stops.length() { stops = stops.push(stop(frame, &plan.stops[i], i + 1)) }
+  H.section().class("plan-card").data("plan", slugs).at("aria-labelledby", "plan-" + show(number)).holding([
+      H.header().class("plan-card-head").holding([
+          H.h2().class("plan-card-title").id("plan-" + show(number)).says(Frame.tf(frame, "plan.option", &[("number", show(number))])),
+          H.p().class("plan-card-summary").holding([
+              H.span().says(summary),
+              H.span().class("muted").says(day(frame, plan.starts) + " · " + Frame.tf(frame, "plan.span", &[("start", clock(plan.starts)), ("end", clock(plan.ends))]))
+            ])
+        ]),
+      H.div().class("plan-map").data("pins", pins(plan)).role("img").label(Frame.tf(frame, "plan.map_label", &[("number", show(number))])),
+      H.ol().class("plan-stops").holding(stops),
+      H.div().class("plan-actions").holding([
+          H.a().class("button button-small plan-whatsapp").href("https://wa.me/" + Query.render(&[("text", message)])).target("_blank").at("rel", "noopener noreferrer").holding([Icons.sized("share", 16), H.span().says(Frame.t(frame, "plan.whatsapp"))]),
+          H.button().kind("button").class("button button-ghost button-small").data("feature", "share").data("title", Frame.t(frame, "plan.title")).data("url", link).holding([Icons.sized("share", 16), H.span().says(Frame.t(frame, "plan.share"))]),
+          H.a().class("button button-ghost button-small").href(Routes.PLAN_CALENDAR + Query.render(&[("e", slugs)])).at("download", "plan.ics").holding([Icons.sized("calendar", 16), H.span().says(Frame.t(frame, "plan.calendar"))])
+        ])
+    ])
+}
+
+/// A row of choices as radio chips.
+fn chips(frame: &Frame.Frame, name: Str, label: Str, options: &Array[(Str, Str)], chosen: Str) -> H.Node {
+  H.fieldset().class("plan-choice").holding([
+      H.legend().class("plan-choice-label").says(label),
+      H.div().class("plan-chips").holding(options.map(|option: (Str, Str)| H.labelFor().class("plan-chip").holding([
+              if option[0] == chosen { H.input().kind("radio").name(name).value(option[0]).at("checked", "checked") } else { H.input().kind("radio").name(name).value(option[0]) },
+              H.span().says(option[1])
+            ])))
+    ])
+}
+
+/// The choices, folded under a one-line summary once plans are shown so the plans come first on phones.
+fn choicesPanel(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choices, folded: Bool) -> H.Node {
+  if !folded { return form(frame, catalog, choices) }
+  let start = match Catalog.municipality(catalog, choices.town) {
+    case Some(town) => town.name
+    case None => Frame.t(frame, "plan.near_you")
+  }
+  let line = [start, Frame.t(frame, "plan.when." + Plan.windowName(&choices.window)), Frame.t(frame, "plan.style." + Plan.styleName(&choices.style)), Frame.t(frame, "plan.mode." + Plan.modeName(&choices.mode))].join(" · ")
+  H.details().class("plan-choices").holding([
+      H.summary().class("plan-choices-summary").holding([Icons.sized("sliders", 18), H.span().says(line), H.span().class("plan-choices-edit").says(Frame.t(frame, "plan.change"))]),
+      form(frame, catalog, choices)
+    ])
+}
+
+/// The choices: where to start, when, what style, how many stops, and how the visitor explores.
+fn form(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choices) -> H.Node {
+  let position = |value: Option[Float64]| match value { case Some(found) => show(found) case None => "" }
+  H.form().class("plan-form").action(Routes.PLAN).method("get").data("plan-form", "1").holding([
+      H.div().class("plan-start").holding([
+          H.button().kind("button").class("button plan-locate").data("plan-locate", "1").data("busy-label", Frame.t(frame, "plan.locating")).holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "plan.use_location"))]),
+          H.input().kind("hidden").name("lat").value(position(choices.lat)),
+          H.input().kind("hidden").name("lng").value(position(choices.lng)),
+          H.span().class("plan-or muted").says(Frame.t(frame, "plan.or_town")),
+          H.labelFor().at("for", "plan-town").class("sr-only").says(Frame.t(frame, "plan.town")),
+          H.select().id("plan-town").name("town").class("plan-town").holding([H.option().value("").says(Frame.t(frame, "plan.choose_town"))].concat(catalog.municipalities.map(|town: Catalog.Municipality| if town.slug == choices.town { H.option().value(town.slug).at("selected", "selected").says(town.name) } else { H.option().value(town.slug).says(town.name) })))
+        ]),
+      H.p().class("plan-privacy muted").says(Frame.t(frame, "plan.location_private")),
+      chips(frame, "when", Frame.t(frame, "plan.when"), &Plan.WINDOWS.map(|window: Plan.Window| (Plan.windowName(&window), Frame.t(frame, "plan.when." + Plan.windowName(&window)))), Plan.windowName(&choices.window)),
+      chips(frame, "style", Frame.t(frame, "plan.style"), &Plan.STYLES.map(|style: Plan.Style| (Plan.styleName(&style), Frame.t(frame, "plan.style." + Plan.styleName(&style)))), Plan.styleName(&choices.style)),
+      chips(frame, "stops", Frame.t(frame, "plan.stops"), &Plan.STOP_CHOICES.map(|count: Int| (show(count), Frame.tf(frame, "plan.stops_count", &[("count", show(count))]))), show(choices.stops)),
+      chips(frame, "mode", Frame.t(frame, "plan.mode"), &[("local", Frame.t(frame, "plan.mode.local")), ("visitor", Frame.t(frame, "plan.mode.visitor"))], Plan.modeName(&choices.mode)),
+      H.div().class("plan-submit").holding([
+          H.button().submit().class("button").says(Frame.t(frame, "plan.submit")),
+          H.button().submit().class("button button-ghost plan-surprise").name("surprise").value("1").holding([Icons.sized("star", 16), H.span().says(Frame.t(frame, "plan.surprise"))])
+        ])
+    ])
+}
+
+/// The plans, the shared plan, or an invitation to choose a starting point.
+fn results(frame: &Frame.Frame, shown: &Shown) -> H.Node {
+  match shown {
+    case Nothing => Notice.empty("map", Frame.t(frame, "plan.start_title"), Frame.t(frame, "plan.start_body"), H.nothing())
+    case Found(outings) => if outings.plans.isEmpty() {
+      Notice.empty("map", Frame.t(frame, "plan.empty_title"), Frame.t(frame, "plan.empty_body"), H.a().class("button").href(Routes.SEARCH).says(Frame.t(frame, "nav.explore")))
+    } else {
+      var cards: Array[H.Node] = []
+      for i in 0..outings.plans.length() { cards = cards.push(planCard(frame, &outings.plans[i], i + 1)) }
+      H.section().class("plan-results").at("aria-labelledby", "plan-results").holding([
+          H.h2().class("section-title").id("plan-results").says(Frame.t(frame, "plan.results")),
+          H.div().class("plan-list").holding(cards)
+        ])
+    }
+    case Shared(outings) => match Option.fromArray(&outings.plans) {
+      case Some(plan) => H.section().class("plan-results").holding([
+          H.div().class("plan-shared").holding([H.h2().class("section-title").says(Frame.t(frame, "plan.shared_title")), H.p().class("muted").says(Frame.t(frame, "plan.shared_body"))]),
+          H.div().class("plan-list").holding([planCard(frame, &plan, 1)])
+        ])
+      case None => Notice.empty("map", Frame.t(frame, "plan.empty_title"), Frame.t(frame, "plan.empty_body"), H.a().class("button").href(Routes.PLAN).says(Frame.t(frame, "plan.make_own")))
+    }
+  }
+}
+
+/// The plans page.
+export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choices, shown: &Shown) -> Html.Html {
+  let indexable = match shown { case Nothing => true case _ => false }
+  let meta = Seo.meta(Frame.t(frame, "plan.title"), Frame.t(frame, "plan.description"), Routes.PLAN, indexable)
+  Layout.page(frame, &meta, Layout.Explore, H.div().class("plan-page").data("feature", "plan").holding([
+        H.header().class("plan-head").holding([
+            H.h1().class("page-title").says(Frame.t(frame, "plan.heading")),
+            H.p().class("lead").says(Frame.t(frame, "plan.lead"))
+          ]),
+        choicesPanel(frame, catalog, choices, match shown { case Found(outings) => !outings.plans.isEmpty() case _ => false }),
+        results(frame, shown)
+      ]))
+}

@@ -94,3 +94,25 @@ export fn feed(siteUrl: Str, name: Str, entries: &Array[Event.CalendarEntry]) ->
   }
   lines.push("END:VCALENDAR").filter(|line: Str| !line.isEmpty()).join("\r\n") + "\r\n"
 }
+
+/// A plan as one calendar: each stop from its arrival to when the plan moves on, linked to its page.
+export fn plan(siteUrl: Str, name: Str, stops: &Array[(Event.Card, Str, Str)]) -> Str {
+  let host = siteUrl.replace("https://", "").replace("http://", "")
+  var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//" + App.SITE_NAME + "//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + escaped(name)]
+  for (card, arrive, leave) in *stops {
+    let path = Routes.EVENT_PREFIX + card.slug
+    lines = lines.concat([
+        "BEGIN:VEVENT",
+        "UID:plan-" + card.slug + "-" + stamp(arrive) + "@" + host,
+        "DTSTAMP:" + stamp(arrive),
+        "DTSTART:" + stamp(arrive),
+        "DTEND:" + stamp(leave),
+        "SUMMARY:" + escaped(card.title),
+        "DESCRIPTION:" + escaped(card.summary + "\n" + siteUrl + path),
+        "LOCATION:" + escaped(placeOf(&card)),
+        "URL:" + siteUrl + path,
+        "END:VEVENT"
+      ])
+  }
+  lines.push("END:VCALENDAR").join("\r\n") + "\r\n"
+}
