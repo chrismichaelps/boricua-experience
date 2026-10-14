@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-14 · release 0.6.0 · picker-style date, time, month and choice fields; terms and privacy renewal; accessibility toolbar on every page with a menu entry on phones; native-style phone map sheet; clean mobile sign-in and sign-up; shimmering home skeleton; community, achievements, discovery preferences, contact relay and weekly digest; asset version 65 · issues #86 #88 #89. Production needs the pending database migrations before the application deploy.
+
 - 2026-10-13 · [[src/Public/DateCalendar]] · localized accessible date ranges with inclusive Puerto Rico server filtering; compact map list tracks and phone filter row remove wasted space · issue #88.
 
 - 2026-10-13 · [[seams/FailureLog]] · server failures with their reason reported to a free Cloudflare Worker and kept 30 days in D1.
