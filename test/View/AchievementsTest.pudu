@@ -6,6 +6,7 @@ import Std.Io as Io
 import Std.Json as Json
 import Std.Option as Option
 import Std.Test as Test
+import Domain.Build as Build
 import Domain.Achievement as Achievement
 import Domain.Locale as Locale
 import I18n.Dates as Dates
@@ -17,7 +18,7 @@ import View.Pages.Achievements as AchievementsPage
 
 /// A frame for a page at a path.
 fn frameAt(locale: Locale.Locale, path: Str) -> Frame.Frame {
-  Frame.Frame{locale: locale, siteUrl: "http://localhost:8080", path: path, query: "", member: None, formToken: "", consent: None, flash: "", nowMillis: 0}
+  Frame.Frame{locale: locale, siteUrl: "http://localhost:8080", path: path, query: "", member: None, formToken: "", consent: None, flash: "", nowMillis: 0, build: Build.development()}
 }
 
 /// An achievement with only what a case needs.

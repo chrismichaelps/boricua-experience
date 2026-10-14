@@ -114,3 +114,6 @@ Resolved: Omit the accessibility panel/launcher in MapView at server rendering, 
 
 ## Accessibility row
 `accessibilityRow(frame)` sits after the language row in both menus and opens the accessibility panel. The panel is rendered on the map too, without its launcher.
+
+## Build meta
+`<meta name="build" content="<hash>">` with the short form and the localized update notice texts for [[src/Public/BuildCheck]].

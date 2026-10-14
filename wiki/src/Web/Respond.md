@@ -66,3 +66,6 @@ JSON problem responses use the same SignedOut cookie expiry as HTML redirects. `
 
 ## Moving nearby and 3D Grill Log · #78
 Resolved: a handler-chosen cache policy is kept without `vary: cookie`, except that any response setting a cookie is forced private so a shared cache never stores it.
+
+## x-build
+`finish` adds `x-build: <short fingerprint>` to every function response.

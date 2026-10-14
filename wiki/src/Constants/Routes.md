@@ -66,3 +66,6 @@ Resolved: integrate all-category organizer covers with existing upload presentat
 
 ## Renewal
 `TERMS_ACCEPT = "/terms/accept"` — the page and post where an onboarded member accepts new versions of the Terms of Use and Privacy Policy.
+
+## Version
+`VERSION = "/version"`.

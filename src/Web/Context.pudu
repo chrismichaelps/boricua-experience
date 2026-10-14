@@ -101,7 +101,8 @@ export fn frame(app: &Assembly.App, visitor: &Visitor) -> Frame.Frame {
     },
     consent: visitor.consent,
     flash: visitor.flash,
-    nowMillis: Time.now().millis
+    nowMillis: Time.now().millis,
+    build: app.runtime.build
   }
 }
 

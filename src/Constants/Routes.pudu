@@ -114,6 +114,7 @@ export const SITEMAP: Str = "/sitemap.xml"
 export const ROBOTS: Str = "/robots.txt"
 export const MANIFEST: Str = "/manifest.webmanifest"
 export const HEALTH: Str = "/health"
+export const VERSION: Str = "/version"
 /// JSON endpoints read by the browser scripts.
 export const API_MAP: Str = "/api/map"
 export const API_NEARBY: Str = "/api/nearby"

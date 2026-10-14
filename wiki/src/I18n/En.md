@@ -110,3 +110,6 @@ Resolved: enhance canonical native selects through the shared dialog, retaining 
 
 ## Language names
 `nav.language_other` names the other language in its own spelling for the accessibility panel switch.
+
+## Build
+`footer.build`, `build.update`, `build.refresh`.

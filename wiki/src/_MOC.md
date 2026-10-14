@@ -33,6 +33,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Domain/Menu]] — Structured menu projections and editable documents with unknown price and availability preserved.
 
+- [[src/Domain/Build]] — The running build: version, commit, content fingerprint, and how pages and services read it.
 - [[src/Domain/Admin]] — The administrator's overview counts and open reports.
 - [[src/Domain/Catalog]] — Category and municipality reference values and lookups by slug.
 - [[src/Domain/Consent]] — Which optional cookie uses a visitor allowed, and the versioned cookie value that remembers it.
@@ -252,7 +253,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/Domain]] — domain and nullable account-profile regressions.
 - [[src/Test/Menus]] — Menu wire contract regressions for unknown facts and write shapes.
 
-[[src/Infrastructure/SupabaseConfig]]
+[[src/Infrastructure/SupabaseConfig]] · [[src/Infrastructure/ReleaseIdentity]]
 
 - [[src/Public/Passwords]] · [[src/Public/SubmitFeedback]] — local password guidance and native submission feedback.
 - [[src/Test/FormFeedback]] — native and asynchronous submission lifecycle regressions.
@@ -318,8 +319,10 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/MapSurface]]
 - [[src/Public/HomeReadiness]]
+- [[src/Public/BuildCheck]]
 
 - [[src/Test/DiscoverySurfaces]]
+- [[src/Test/BuildCheck]]
 
 - [[src/Public/FormDates]] — shared form calendars and native temporal fallback.
 
