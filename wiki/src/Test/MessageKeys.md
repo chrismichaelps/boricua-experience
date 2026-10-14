@@ -15,3 +15,6 @@ No database values, secrets or private inputs. Runtime-composed keys must not be
 Resolved: include calendar dictionary keys alongside existing runtime families so month/year and shared calendar labels survive fixture regeneration and bilingual coverage.
 ## Referenced by
 [[src/_MOC]] · [[src/I18n/Translate]]
+
+## Build family
+The key scan includes `build.*`.

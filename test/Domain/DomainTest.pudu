@@ -8,6 +8,7 @@ import Std.Result as Result
 import Std.Test as Test
 import Api.Account as AccountApi
 import Domain.Admin as Admin
+import Domain.Build as Build
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
 import Domain.Draft as Draft
@@ -57,7 +58,17 @@ fn main() -> Int {
   let at = |weekday: Int, hour: Int, minute: Int| Place.openAt(&fonda.card.hours, &Time.Local{year: 2026, month: 10, day: 12, weekday: weekday, hour: hour, minute: minute})
   let refilled = Place.fromDetail(&fonda)
   let dateNow = Option.unwrapOr(Time.parseTimestamp("2026-10-18T20:00:00Z"), Time.now())
+  let release = Build.of(" 0.6.1 ", "0123456789abcdef0123456789abcdef01234567", "sha256:" + "0123456789abcdef".repeat(4), "2026-10-14T05:00:00Z")
   let checks = Test.suite("Domain", &[
+      Test.that("a release fingerprint is sha256 and 64 lowercase hex characters", Build.wellFormed("sha256:" + "a".repeat(64))),
+      Test.that("an uppercase or short fingerprint is not a release", !Build.wellFormed("sha256:" + "A".repeat(64)) && !Build.wellFormed("sha256:abc") && !Build.wellFormed("a".repeat(71))),
+      Test.equals("a malformed release identity falls back to development", &Build.of("0.6.1", "abc", "sha256:nothex", "now"), &Build.development()),
+      Test.equals("a release identity trims what the environment gave", &release.version, &"0.6.1"),
+      Test.equals("the short fingerprint is twelve hex characters", &Build.short(&release), &"0123456789ab"),
+      Test.equals("the short commit is seven characters", &Build.shortCommit(&release), &"0123456"),
+      Test.equals("the footer label names version and fingerprint", &Build.label(&release), &"v0.6.1 · 0123456789ab"),
+      Test.equals("a development build is labelled as such", &Build.label(&Build.development()), &"development"),
+      Test.that("the JSON carries every field the ecosystem reads", Json.encode(&Build.json(&release)).contains("\"hash\":\"sha256:0123") && Json.encode(&Build.json(&release)).contains("\"short\":\"0123456789ab\"") && Json.encode(&Build.json(&release)).contains("\"built_at\":\"2026-10-14T05:00:00Z\"")),
       Test.equals("a place answer decodes with its facts and owner relation", &(fonda.card.name, fonda.viewer.isOwner, Json.asText(&Option.unwrapOr(Json.field(&fonda.details, "cuisine"), Json.Null))), &("La Fonda", true, Some("criolla"))),
       Test.equals("open inside a range, closed outside it and on a day without hours", &(at(1, 12, 0), at(1, 22, 0), at(1, 10, 59), at(2, 12, 0)), &(Some(true), Some(false), Some(false), Some(false))),
       Test.equals("a range past midnight stays open into the next morning", &(at(5, 23, 30), at(6, 1, 59), at(6, 2, 0)), &(Some(true), Some(true), Some(false))),

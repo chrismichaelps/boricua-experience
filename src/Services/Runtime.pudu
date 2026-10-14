@@ -7,9 +7,10 @@ import Std.Sync as Sync
 import Api.Mail as Mail
 import Api.Supabase.Gateway as Gateway
 import Config.Settings as Settings
+import Domain.Build as Build
 import Domain.Catalog as Catalog
 
-/** @Services.Runtime.Runtime — the gateway, the mailer, the session key, the site address, and caches */
+/** @Services.Runtime.Runtime — the gateway, the mailer, the session key, the site address, caches, and the running build */
 export type Runtime = {
   gateway: Gateway.Gateway,
   assistantConfigured: Bool,
@@ -19,7 +20,8 @@ export type Runtime = {
   cronSecret: Str,
   mailer: Option[Mail.Mailer],
   contactTo: Str,
-  catalog: Sync.Cell[Option[(Int, Catalog.Catalog)]]
+  catalog: Sync.Cell[Option[(Int, Catalog.Catalog)]],
+  build: Build.Build
 }
 
 /// The runtime for the configured project.
@@ -36,11 +38,12 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
       cronSecret: Secret.reveal(&settings.cronSecret),
       mailer: mailer,
       contactTo: Secret.reveal(&settings.contactTo).trim(),
-      catalog: Sync.cell(None)
+      catalog: Sync.cell(None),
+      build: Build.of(settings.buildVersion, settings.buildCommit, settings.buildHash, settings.buildTime)
     })
 }
 
 /// A runtime over a given gateway, for tests.
 export fn over(gateway: Gateway.Gateway, sessionKey: Bytes, siteUrl: Str) -> Runtime {
-  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", mailer: None, contactTo: "", catalog: Sync.cell(None)}
+  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", mailer: None, contactTo: "", catalog: Sync.cell(None), build: Build.development()}
 }

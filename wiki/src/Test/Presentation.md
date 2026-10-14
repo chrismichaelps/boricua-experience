@@ -108,3 +108,6 @@ Resolved: enhance canonical native selects through the shared dialog, retaining 
 
 ## Renewal and age cap
 Asserts the sign-up birth date declares the adult cap, and the renewal page posts to `/terms/accept` with both checkboxes, both document links, the return path and a sign-out form.
+
+## Build meta
+Asserts every page carries the build meta, the update texts, and the footer link to `/version`.

@@ -57,3 +57,6 @@ Original compact parrot replaces the former mascot. Brand asset URLs use shared 
 
 ## Discovery photo and footer Grill Log
 Resolved: open search uses the first database-ordered featured scene, a local responsive real photograph and unchanged named filters. Category/town landing behavior stays intact. Empty scene catalogs render usable search without a broken image. Footer has current-year copyright, quiet grouped links and phone touch targets; eligibility policy is unchanged. Photograph source, CC BY2.0 attribution, resizing and crop are recorded in public credits and THIRD_PARTY_NOTICES.
+
+## Build label
+The footer bottom shows `Build.label` linking to `/version`.

@@ -13,6 +13,9 @@
   document.addEventListener('DOMContentLoaded', ready, { once: true });
   document.addEventListener('focusin', clear, { once: true });
   document.addEventListener('pointerdown', clear, { once: true });
+  // Any intent to scroll reveals the page at once: the content is already rendered, and scrolling
+  // behind a fixed placeholder would land the visitor somewhere they never saw.
+  for (const type of ['wheel', 'touchmove', 'scroll', 'keydown']) window.addEventListener(type, clear, { once: true, passive: true });
   window.addEventListener('pagehide', clear);
   window.addEventListener('pageshow', event => { if (event.persisted) clear(); });
 })();

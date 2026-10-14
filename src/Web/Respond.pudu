@@ -11,6 +11,7 @@ import Constants.Codes as Codes
 import Constants.Cookies as Cookies
 import Constants.Http as HttpConstants
 import Constants.Routes as Routes
+import Domain.Build as Build
 import Domain.Problem as Problem
 import Domain.Session as Session
 import Services.Auth.Sealer as Sealer
@@ -158,6 +159,7 @@ export fn finish(app: &Assembly.App, visitor: &Context.Visitor, response: Http.R
   // A handler's own public policy covers a body that is the same for everyone; varying it by cookie
   // would split the shared cache per visitor.
   if !cacheable && (!chosen || cookied) { headers = headers.push(("vary", "cookie")) }
+  headers = headers.push(("x-build", Build.short(&app.runtime.build)))
   Http.Response{..finished, headers: headers}
 }
 

@@ -32,7 +32,11 @@ export type Settings = {
   @env("BORICUA_LOG_FORMAT") @default("text") logFormat: Str,
   @env("BORICUA_HOST") @default("127.0.0.1") host: Str,
   @env("BORICUA_PORT") @default("8080") port: Int,
-  @env("BORICUA_CONNECTIONS") @default("64") connections: Int
+  @env("BORICUA_CONNECTIONS") @default("64") connections: Int,
+  @env("BORICUA_BUILD_VERSION") @default("development") buildVersion: Str,
+  @env("BORICUA_BUILD_COMMIT") @default("") buildCommit: Str,
+  @env("BORICUA_BUILD_HASH") @default("development") buildHash: Str,
+  @env("BORICUA_BUILD_TIME") @default("") buildTime: Str
 } derives Binding.Bind, Binding.Redacted
 
 /// Log levels the server accepts.

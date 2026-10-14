@@ -116,3 +116,6 @@ Resolved: enhance canonical native selects through the shared dialog, retaining 
 
 ## Picker fields and terms renewal Grill Log · #88
 Resolved: advance asset/worker version to 65 for FormDates, SearchPickers and DateCalendar. Date, date-time, month and opening-hour fields now render as picker triggers (calendar, time, month and year pickers) instead of native text boxes, superseding the earlier native month/clock decision; native inputs stay canonical and validated. Members on older Terms or Privacy versions are asked to accept the current ones before other pages.
+
+## Build fingerprint Grill Log
+Resolved: shell 66 adds buildCheck.

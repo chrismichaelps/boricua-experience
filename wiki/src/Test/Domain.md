@@ -27,3 +27,6 @@ Resolved: nullable prices/end retain explicit unknown state; known free/paid and
 
 ## Date-range calendar Grill Log · #88
 Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject malformed, impossible, reversed and over366-day spans. Inclusive end converts to following Puerto Rico midnight in existing from/to database arguments, without changing expiration or inventing availability. Preserve presets and canonical when URL across map/list/saved searches. Exact-date dialog uses semantic day buttons, roving keyboard focus, localized two-month desktop/one-month phone calendar, draft selection and explicit apply/clear. Escape cancels draft; existing select fallback remains functional. No Airbnb assets, popups or booking semantics.
+
+## Build identity
+Covers well-formed fingerprints, development fallback, trimming, short forms, the footer label and the JSON fields.
