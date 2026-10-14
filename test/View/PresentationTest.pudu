@@ -31,6 +31,7 @@ import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
 import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
+import View.Components.Form as Form
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
 import View.Components.PhotoHeader as PhotoHeader
@@ -92,7 +93,9 @@ fn main() -> Int {
   let emptySearch = Html.render(&SearchPage.render(&en, &emptyCatalog, &narrowed, &SearchPage.Open, &Event.Page{items: [], next: None}, &[]))
   let hero = Html.render(&Hero.render(&es, &catalog).html())
   let login = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let dateField = Html.render(&Form.input(&en, &Form.Field{..Form.field("startsAt", "Starts", "2026-10-20T19:35"), kind: "datetime-local"}, &[], |c: H.Node| c).html())
   let signup = Html.render(&Auth.signUp(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/activity"}, &None))
+  let renewal = Html.render(&Auth.renewal(&en, "/activity", &None))
   let missing = Html.render(&Errors.missing(&en))
   let map = Html.render(&MapPage.render(&en, &[], false, false, &emptyCatalog, &Search.Filters{..Search.everything(), category: "musica", freeOnly: true}, "/search?category=musica&free=1"))
   let endedPage: Event.Page = match Wire.decode(&Fixtures.json("search-page.json")) { case Ok(page) => page case Err(why) => panic("fixture failed: " + Json.explainDecode(&why)) }
@@ -245,6 +248,12 @@ fn main() -> Int {
       Test.that("a single card names no later dates", !singleCard.contains("card-series")),
       Test.that("a recurring page links its other dates", seriesPage.contains("Other dates") && seriesPage.contains("href=\"/e/plaza-2026-11-21\"")),
       Test.that("a single page has no other dates", !singlePage.contains("other-dates")),
+      Test.that("date-time calendar retains native name and clock", dateField.contains("type=\"datetime-local\"") && dateField.contains("name=\"startsAt\"") && dateField.contains("2026-10-20T19:35") && dateField.contains("data-form-date=")),
+      Test.that("birthdate calendar retains historical native fallback", signup.contains("data-form-date=") && signup.contains("min=\"1900-01-01\"")),
+      Test.that("birthdate calendar caps the choosable dates at adulthood", signup.contains("data-date-age=\"18\"")),
+      Test.that("renewal asks for both documents and keeps the return path", renewal.contains("name=\"terms\"") && renewal.contains("name=\"privacy\"") && renewal.contains("action=\"/terms/accept\"") && renewal.contains("value=\"/activity\"")),
+      Test.that("renewal links both documents and offers signing out", renewal.contains("href=\"/terms\"") && renewal.contains("href=\"/privacy\"") && renewal.contains("action=\"/signout\"")),
+      Test.that("place category and town reuse shared selectors", restaurantForm.contains("data-feature=\"search-pickers\"")),
       Test.equals("signup requires password confirmation", &signup.contains("name=\"confirmation\""), &true),
       Test.equals("signup does not expose itself to indexing", &signup.contains("noindex,follow"), &true),
       Test.equals("password controls are localized", &signup.contains("Show password"), &true),

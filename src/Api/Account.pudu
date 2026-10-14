@@ -45,6 +45,15 @@ export fn completeOnboarding(gateway: &Gateway.Gateway, displayName: Str, locale
   Ok(())
 }
 
+/// Records acceptance of the current Terms of Use and Privacy Policy by an onboarded account.
+export fn acceptTerms(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.ACCEPT_TERMS, &[
+      ("p_terms_version", Gateway.text(App.TERMS_VERSION)),
+      ("p_privacy_version", Gateway.text(App.PRIVACY_VERSION))
+    ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
 /// Changes the member's name, bio, home municipality, and language.
 export fn updateProfile(gateway: &Gateway.Gateway, edit: &Profile.ProfileEdit, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_PROFILE, &[

@@ -54,3 +54,6 @@ DEEP.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Renewal gate
+After the onboarding check, a page request from a member who `owesRenewal` is redirected to `/terms/accept?return=<path>`. The renewal page itself and the legal, about, contact and offline pages stay open. Actions (posts) are not gated, so signing out always works.

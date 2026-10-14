@@ -63,3 +63,9 @@ Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject 
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Use shared neutral option surfaces, selected borders and restrained pill focus across home/search/map and nearby selectors. Preserve labels/native submission, keyboard focus and44px controls.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Form temporal fields
+`.temporal-control` lays a date trigger and an optional `.temporal-part` time picker side by side as bordered field boxes (52px, 14px radius, ink border on hover, red when invalid). `.date-icon` draws the calendar glyph; `.date-trigger.is-empty` greys the "Add date" placeholder. The calendar's month/year jump selects are pill-shaped with a chevron. Review-report and accessibility-links triggers share the bordered field style.

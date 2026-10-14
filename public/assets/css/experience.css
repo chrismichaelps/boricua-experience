@@ -115,15 +115,12 @@
 .map-cluster.is-active { background: #153d77; }
 
 @media (max-width: 999px) {
-  .auth { position: relative; isolation: isolate; overflow: hidden; border-radius: 28px; margin: 8px auto 40px; padding: 48px 16px; gap: 0; }
-  .auth-story { display: block; position: absolute; inset: 0; z-index: -1; }
-  .auth-story img { width: 100%; height: 100%; object-fit: cover; }
-  .auth-story::after { content: ''; position: absolute; inset: 0; background: rgb(8 36 31 / 22%); }
-  .auth-story-copy { display: none; }
-  .auth-card { padding: 28px 22px; background: rgb(255 255 255 / 97%); border: 1px solid rgb(255 255 255 / 80%); border-radius: 22px; gap: 20px; }
+  .auth { margin: 0 auto 40px; padding: 8px 4px 0; gap: 0; }
+  .auth-story { display: none; }
+  .auth-card { padding: 16px 0 8px; background: none; border: 0; border-radius: 0; gap: 20px; }
   .auth-card .page-title { font-size: 28px; }
   .auth-card .lead { font-size: 15px; }
-  .auth-card .consents { padding: 12px; }
+  .auth-card .consents { padding: 14px; }
 }
 .map-empty { color: var(--color-graphite); padding: 16px; font-size: 14px; line-height: 1.5; }
 .map-button[aria-busy="true"] { color: var(--color-ocean); background: #f0f6ff; }
@@ -323,3 +320,21 @@ button[disabled] { cursor: wait; }
 @media(prefers-reduced-motion:reduce) { .map-loading > span:not(.sr-only) { animation: none; } }
 .field select { border-color: #b6c2c8; border-radius: 14px; }
 .field select:focus-visible { outline: 2px solid #53666d; outline-offset: 2px; box-shadow: none; }
+
+.field input:not([type="checkbox"]):not([type="radio"]), .field select, .field textarea { border-radius: 14px; }
+.stack-form .field input, .stack-form .field textarea, .stack-form .field select { background-color: white; }
+input[type="checkbox"]:not([role="switch"]):not(.toggle input):not(.privacy-switch input) { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; min-height: 22px; padding: 0; margin: 0; border: 2px solid #87949a; border-radius: 6px; background: white; cursor: pointer; vertical-align: middle; }
+input[type="checkbox"]:not([role="switch"]):not(.toggle input):not(.privacy-switch input):checked { border-color: #25343b; background: #25343b url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='m5 12 4 4 10-10'/%3E%3C/svg%3E") center/18px no-repeat; }
+input[type="checkbox"]:not([role="switch"]):not(.toggle input):not(.privacy-switch input):focus-visible, input[type="radio"]:focus-visible { outline: 2px solid #25343b; outline-offset: 3px; }
+input[type="checkbox"]:disabled { opacity: .55; cursor: default; }
+input[type="radio"]:not(.region-input) { appearance: none; -webkit-appearance: none; flex: none; width: 22px; height: 22px; min-height: 22px; padding: 0; margin: 0; border: 2px solid #87949a; border-radius: 50%; background: white; cursor: pointer; vertical-align: middle; transition: border-color .15s, box-shadow .15s; }
+input[type="radio"]:not(.region-input):checked { border-color: #25343b; box-shadow: inset 0 0 0 5px white; background: #25343b; }
+input[type="radio"]:disabled { opacity: .55; cursor: default; }
+.choice:has(input:checked) { border-color: #53666d; background: #f7f7f7; }
+.toggle input:checked + .toggle-track { background: #25343b; }
+.toggle input:focus-visible + .toggle-track { outline: 2px solid #25343b; outline-offset: 3px; box-shadow: none; }
+.check label, .choice, .filter:has(input[type="checkbox"]), .fav-town { min-height: 44px; align-items: center; }
+.field input[type="time"]:not(.picker-native), .hours-slot input[type="time"]:not(.picker-native), .field input[type="month"]:not(.picker-native) { min-height: 48px; min-width: 0; padding: 10px 12px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font: inherit; }
+
+.privacy-switch input:checked + .privacy-switch-track { background: #25343b; }
+.review-report select { min-height: 48px; padding: 10px 14px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; }

@@ -92,3 +92,6 @@ Resolved: standard pages use32px phone/40px desktop space before footer, without
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Home readiness skeleton matches the hero, filters and card rails, uses neutral placeholders and reduced-motion support. It never captures input or waits an artificial minimum. No script means existing server content remains visible.
+
+## Skeleton shimmer
+`home.css` paints the home skeleton blocks with a shared gradient and animates its position while the page is pending.

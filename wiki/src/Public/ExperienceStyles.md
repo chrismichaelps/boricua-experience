@@ -95,3 +95,9 @@ Short-phone refinement: mobile filters use one horizontally scrollable44px row i
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Map expansion uses an8px inset rounded container like the home hero. Hide only the existing sheet in expanded mode; restore previous state on close/Escape, keep zoom controls clear. Three-dot loader reflects real map/data work and respects reduced motion.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Radios and auth on small screens
+Radios outside region chips are drawn as ink rings with a filled centre when checked, matching the checkbox style. Below 1000px the sign-in and sign-up pages are a plain full-width sheet: no photo behind the form and no floating card; the photo panel appears only beside the form on wide screens.

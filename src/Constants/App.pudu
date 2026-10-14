@@ -26,7 +26,7 @@ export const PUERTO_RICO_OFFSET_MINUTES: Int = -240
 export const MINIMUM_AGE: Int = 18
 
 /// Query suffix appended to stylesheet and script addresses so a deployment replaces cached copies.
-export const ASSET_VERSION: Str = "63"
+export const ASSET_VERSION: Str = "65"
 
 /// The bounding box of Puerto Rico and its islands: south, north, west, east.
 export const BOUNDS_SOUTH: Float64 = 17.5

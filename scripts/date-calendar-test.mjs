@@ -56,3 +56,24 @@ assert.equal(active.dataset.date,'2026-11-01','responsive rerender restores the 
 calendar.open();assert.equal(byClass('calendar-month').length,1,'phone renders a full-width month');
 byClass('calendar-arrow')[1].click();assert(day('2026-11-01'));
 console.log('PASS: real/invalid/leap/bounded ranges; Puerto Rico today; draft/apply/cancel/clear/presets; roving cross-month keyboard; phone calendar');
+
+const singleDialog=new Node('dialog'),singleChoices=new Node('div'),singleValue={value:'1992-02-29'},singleCommits=[];
+singleDialog.append(singleChoices);
+const single=scope.calendar(singleDialog,singleValue,singleChoices,{...labels,month:'Mes',year:'Año'},value=>{singleValue.value=value;singleCommits.push(value);},{single:true,min:'1900-01-01',max:'2026-10-12'});
+const singleClass=cls=>all(singleDialog).filter(node=>node.className===cls);
+const singleDay=value=>all(singleDialog).find(node=>node.dataset.date===value);
+single.open();assert(singleDay('1992-02-29'));assert.equal(singleDay('1992-02-29').disabled,false);
+assert.equal(singleClass('calendar-modes')[0].hidden,true);
+singleDay('1992-02-27').click();assert.equal(singleValue.value,'1992-02-29','single date remains a draft');
+singleClass('button calendar-apply')[0].click();assert.equal(singleValue.value,'1992-02-27');assert.equal(singleCommits.length,1);
+const year=singleClass('calendar-year-select')[0],month=singleClass('calendar-month-select')[0];
+year.value='1900';month.value='0';year.handlers.change();assert(singleDay('1900-01-01'));assert.equal(singleClass('calendar-arrow')[0].disabled,true);
+year.value='1899';year.handlers.change();assert(singleDay('1900-01-01'),'invalid year cannot navigate outside min');
+year.value='2026';month.value='9';year.handlers.change();assert(singleDay('2026-10-13').disabled);assert.equal(singleClass('calendar-arrow')[1].disabled,true);
+singleClass('calendar-clear')[0].click();assert.equal(singleValue.value,'');
+assert.equal(year.children[0].value,'2026');assert(year.children.some(option=>option.value==='1906'),'year choices reach 120 years back');assert(!year.children.some(option=>option.value==='1905'),'year choices stop at 120 years');
+const adultDialog=new Node('dialog'),adultChoices=new Node('div');adultDialog.append(adultChoices);
+const adult=scope.calendar(adultDialog,{value:''},adultChoices,{...labels,month:'Mes',year:'Año'},()=>{},{single:true,min:'1900-01-01',max:'2008-10-12'});
+adult.open();const adultDay=value=>all(adultDialog).find(node=>node.dataset.date===value);
+assert(adultDay('2008-10-12'),'a calendar whose today is out of range opens on its nearest allowed month');assert.equal(adultDay('2008-10-13').disabled,true);
+console.log('PASS: historical single dates, leap birthdate, draft/apply/clear, year/month jump, declared min/max, out-of-range today');

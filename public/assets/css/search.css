@@ -131,3 +131,33 @@
 .picker-check { color: #25343b; }
 .near-form .picker-trigger { width: auto; min-height: 44px; padding: 10px 16px; border: 1px solid #c6cdd1; border-radius: 14px; background: white; color: #182c36; font-size: 14px; }
 .near-form .picker-trigger .picker-value { max-width: 160px; }
+
+.field { position: relative; }
+.field > .picker-trigger { width: 100%; min-height: 52px; padding: 14px 16px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font-size: 16px; }
+.field > .picker-trigger:focus-visible { outline: 2px solid #25343b; outline-offset: 2px; }
+.field > .picker-trigger[aria-invalid="true"] { border-color: #c5221f; }
+.form-calendar { inset: 0; margin: auto; height: fit-content; width: min(720px,calc(100vw - 32px)); max-height: calc(100svh - 32px); }
+.calendar-modes[hidden] { display: none; }
+.calendar-jump { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; }
+.calendar-jump select { appearance: none; -webkit-appearance: none; min-height: 44px; min-width: 0; width: 150px; padding: 8px 36px 8px 14px; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2325343b' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") right 14px center/12px no-repeat; color: #182c36; border: 1px solid #b6c2c8; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
+.calendar-jump select:hover { border-color: #25343b; }
+.calendar-jump :focus-visible { outline: 2px solid #25343b; outline-offset: 2px; }
+.temporal-control { display: flex; gap: 8px; align-items: stretch; }
+.temporal-control > .date-trigger, .temporal-part > .picker-trigger { min-height: 52px; padding: 14px 16px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font-size: 16px; }
+.temporal-control > .date-trigger { flex: 1 1 auto; }
+.temporal-part { position: relative; flex: 0 0 150px; min-width: 0; }
+.temporal-control:has(.temporal-month) .temporal-part { flex: 1 1 0; }
+.temporal-control > .date-trigger:hover, .temporal-part > .picker-trigger:hover { border-color: #25343b; }
+.temporal-control > .date-trigger:focus-visible, .temporal-part > .picker-trigger:focus-visible { outline: 2px solid #25343b; outline-offset: 2px; }
+.date-trigger.is-empty .picker-value { color: #6a7378; }
+.date-icon { flex: none; width: 22px; height: 22px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%2325343b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='3'/%3E%3Cpath d='M7 3v4m10-4v4M3 10h18M8 14h1m6 0h1m-8 4h1m6 0h1'/%3E%3C/svg%3E") center/22px no-repeat; }
+.temporal-control [aria-invalid="true"] { border-color: #c5221f; }
+@media (max-width: 420px) { .temporal-part { flex-basis: 128px; } }
+@media(max-width:699px) { .form-calendar { inset: auto 0 0; margin: 0; width: 100%; max-width: none; max-height: 88svh; } }
+
+.calendar-day.is-endpoint { background: #25343b; }
+.calendar-day.is-range { background: #f0f0f0; }
+
+.field-invalid .temporal-control > .date-trigger, .field-invalid .temporal-part > .picker-trigger { border-color: #c5221f; }
+.review-report .picker-trigger, .a11y-links .picker-trigger { min-height: 48px; padding: 12px 16px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font-size: 15px; }
+.review-report .picker-trigger:hover, .a11y-links .picker-trigger:hover { border-color: #25343b; }

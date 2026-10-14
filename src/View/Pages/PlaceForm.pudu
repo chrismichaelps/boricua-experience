@@ -138,7 +138,7 @@ fn hoursTable(frame: &Frame.Frame, draft: &Place.Draft, errors: &Array[Problem.F
   let refused = Problem.errorFor(errors, "hours")
   let time = |day: Int, slot: Int, closing: Bool, label: Str| {
     let name = Place.hoursName(day, slot, closing)
-    H.input().kind("time").name(name).id("f-" + name).value(Option.unwrapOr(draft.hours.get(name), "")).label(label).at("step", "300")
+    H.input().kind("time").name(name).id("f-" + name).value(Option.unwrapOr(draft.hours.get(name), "")).label(label).at("step", "300").data("form-time", Frame.t(frame, "calendar.time")).data("picker-close", Frame.t(frame, "search.close_picker"))
   }
   H.div().class(if refused == None { "hours-editor" } else { "hours-editor field-invalid" }).holding(WEEK.map(|day: Int| {
         let name = Dates.weekday(&frame.locale, day)

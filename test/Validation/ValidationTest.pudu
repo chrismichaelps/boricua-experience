@@ -7,11 +7,13 @@ import Std.Json as Json
 import Std.Option as Option
 import Std.Result as Result
 import Std.Test as Test
+import Constants.App as App
 import Domain.Catalog as Catalog
 import Domain.Credentials as Credentials
 import Domain.Draft as Draft
 import Domain.Location as Location
 import Domain.Place as Place
+import Domain.Profile as Profile
 import Domain.Problem as Problem
 import Domain.Review as Review
 import Support.Fixtures as Fixtures
@@ -29,6 +31,11 @@ import Validation.ReviewForm as ReviewForm
 fn profiles() -> Catalog.Catalog {
   let categories: Array[Catalog.Category] = Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), [])
   Catalog.Catalog{categories: categories, municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}, Catalog.Municipality{slug: "luquillo", name: "Luquillo", region: "este", lat: 18.37, lng: -65.72}], scenes: []}
+}
+
+/// The recorded member profile, read before profiles carried their accepted versions.
+fn member() -> Profile.MyProfile {
+  match Wire.decode(&Fixtures.json("my-profile.json")) { case Ok(found) => found case Err(_) => panic("profile fixture") }
 }
 
 /// A restaurant draft that passes every rule.
@@ -131,6 +138,13 @@ fn main() -> Int {
       Test.equals("an address with a domain passes", &Account.isEmail("ana.rivera@correo.pr"), &true),
       Test.equals("mismatched passwords are refused", &refused(&Account.newPassword(&Credentials.NewPassword{password: "boricua2026", confirmation: "boricua2027"})), &["confirmation"]),
       Test.equals("onboarding requires every confirmation", &refused(&Account.onboarding(&Credentials.Onboarding{displayName: "Ana", birthDate: "1990-05-17", terms: false, privacy: false})), &["terms", "privacy"]),
+      Test.equals("a renewal requires both documents", &refused(&Account.renewal(&Credentials.Renewal{terms: true, privacy: false})), &["privacy"]),
+      Test.succeeded("a renewal accepting both passes", &Account.renewal(&Credentials.Renewal{terms: true, privacy: true})),
+      Test.that("a member on the current versions owes nothing", !Account.owesRenewal(&Profile.MyProfile{..member(), termsVersion: App.TERMS_VERSION, privacyVersion: App.PRIVACY_VERSION})),
+      Test.that("a member on older terms owes a renewal", Account.owesRenewal(&Profile.MyProfile{..member(), termsVersion: "2025-01", privacyVersion: App.PRIVACY_VERSION})),
+      Test.that("a member on an older privacy policy owes a renewal", Account.owesRenewal(&Profile.MyProfile{..member(), termsVersion: App.TERMS_VERSION, privacyVersion: "2025-01"})),
+      Test.that("an unknown version never blocks", !Account.owesRenewal(&member())),
+      Test.that("an account still onboarding is sent to onboarding, not renewal", !Account.owesRenewal(&Profile.MyProfile{..member(), onboarded: false, termsVersion: "2025-01", privacyVersion: "2025-01"})),
       Test.equals("a long join message is refused", &refused(&ParticipationRules.message("x".repeat(501))), &["message"]),
       Test.equals("an unknown report reason is refused", &refused(&ParticipationRules.report(&ParticipationRules.Report{reason: "boring", detail: ""})), &["reason"]),
       Test.equals("a reaction of two is refused", &refused(&ParticipationRules.reaction(2)), &["reaction"]),

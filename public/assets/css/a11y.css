@@ -71,7 +71,7 @@
 .a11y-swatch[aria-pressed="true"] { outline: 3px solid var(--a11y-blue); outline-offset: 2px; }
 .a11y-swatch-clear { justify-self: start; min-height: 36px; padding: 0 12px; border: 1px solid #cfd8e4; border-radius: 999px; background: transparent; color: var(--a11y-blue); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .a11y-swatch-clear[aria-pressed="true"] { background: var(--a11y-blue); border-color: var(--a11y-blue); color: #fff; }
-.a11y-swatch:focus-visible, .a11y-swatch-clear:focus-visible, .a11y-links select:focus-visible { outline: 3px solid var(--a11y-ink); outline-offset: 2px; }
+.a11y-swatch:focus-visible, .a11y-swatch-clear:focus-visible, .a11y-links select:focus-visible, .a11y-links .picker-trigger:focus-visible { outline: 3px solid var(--a11y-ink); outline-offset: 2px; }
 .a11y-links { display: grid; gap: 8px; padding: 12px 0 4px; border-top: 1px solid #dde3ec; }
 .a11y-links label { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .a11y-links select { min-height: 46px; padding: 0 12px; border: 1px solid #cfd8e4; border-radius: 12px; background: #fff; color: var(--a11y-ink); font: inherit; font-size: 15px; }

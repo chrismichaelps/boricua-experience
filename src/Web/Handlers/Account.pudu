@@ -41,7 +41,9 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.PROFILE, Serve.page(app, |visitor: Context.Visitor| profilePage(&held, &visitor))),
     Route.get(Routes.NOTIFICATIONS, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| inbox(&held, &visitor, &session))),
     Route.get(Routes.ONBOARDING, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| welcome(&held, &visitor, None))),
-    Route.post(Routes.ONBOARDING, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| onboard(&held, &visitor, &session)))
+    Route.post(Routes.ONBOARDING, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| onboard(&held, &visitor, &session))),
+    Route.get(Routes.TERMS_ACCEPT, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| renewal(&held, &visitor, None))),
+    Route.post(Routes.TERMS_ACCEPT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| renew(&held, &visitor, &session)))
   ]
 }
 
@@ -186,6 +188,26 @@ fn onboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sess
   match Serve.ask(app, &app.kinds.onboard, Serve.signed(session, Messages.Onboard{form: form, locale: Locale.code(&visitor.locale)})) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.welcome")
     case Err(problem) => welcome(app, &Context.resolve(app, &visitor.request, true), Some(problem))
+  }
+}
+
+/// The page asking for the new Terms of Use and Privacy Policy; anyone who does not owe them moves on.
+fn renewal(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
+  let returnTo = Respond.returnPath(Option.orElse(Route.queryParam(&visitor.request, "return"), Route.fieldsOf(&visitor.request).get("return")))
+  match visitor.member {
+    case Some(member) => if !member.onboarded { return Respond.redirect(Routes.ONBOARDING + "?return=" + returnTo) } else if !AccountRules.owesRenewal(&member) && problem == None { return Respond.redirect(returnTo) }
+    case None => {}
+  }
+  Respond.page(if problem == None { 200 } else { 422 }, &AuthPage.renewal(&Context.frame(app, visitor), returnTo, &problem))
+}
+
+/// Records the renewed acceptance and continues.
+fn renew(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.Renewal{terms: Form.flag(&fields, "terms"), privacy: Form.flag(&fields, "privacy")}
+  match Serve.ask(app, &app.kinds.renewConsent, Serve.signed(session, form)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.terms_renewed")
+    case Err(problem) => renewal(app, &Context.resolve(app, &visitor.request, true), Some(problem))
   }
 }
 

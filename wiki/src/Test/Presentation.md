@@ -102,3 +102,9 @@ Resolved: Assert assistant presence only in the root Explore shell, including Sp
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Assert map lacks accessibility launcher but other sections retain it; map expansion/status labels and home skeleton/shared nearby enhancement render correctly in both locales.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Renewal and age cap
+Asserts the sign-up birth date declares the adult cap, and the renewal page posts to `/terms/accept` with both checkboxes, both document links, the return path and a sign-out form.

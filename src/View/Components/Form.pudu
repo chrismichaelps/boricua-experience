@@ -3,6 +3,7 @@ module View.Components.Form
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
+import Std.Json as Json
 import Domain.Problem as Problem
 import View.Frame as Frame
 
@@ -29,6 +30,9 @@ fn errorOf(frame: &Frame.Frame, errors: &Array[Problem.FieldError], name: Str) -
 export fn input(frame: &Frame.Frame, spec: &Field, errors: &Array[Problem.FieldError], extra: fn(H.Node) -> H.Node) -> H.Node {
   let invalid = Problem.errorFor(errors, spec.name) != None
   var control = H.input().kind(spec.kind).name(spec.name).id("f-" + spec.name).value(spec.value)
+  if spec.kind == "date" || spec.kind == "datetime-local" || spec.kind == "month" {
+    control = control.data("form-date", Json.encode(&Json.object(&["dates", "start", "end", "clear", "apply", "prev", "next", "month", "year", "add_date", "add_time", "time"].map(|key: Str| (key, Json.Text(Frame.t(frame, "calendar." + key))))))).data("picker-close", Frame.t(frame, "search.close_picker"))
+  }
   if spec.required { control = control.required() }
   if invalid { control = control.at("aria-invalid", "true").at("aria-describedby", spec.name + "-error") }
   H.div().class(if invalid { "field field-invalid" } else { "field" }).holding([
@@ -60,16 +64,19 @@ export fn area(frame: &Frame.Frame, spec: &Field, rows: Int, errors: &Array[Prob
 
 /// A labelled select of (value, label) options with one chosen.
 export fn select(frame: &Frame.Frame, spec: &Field, options: &Array[(Str, Str)], errors: &Array[Problem.FieldError]) -> H.Node {
+  let invalid = Problem.errorFor(errors, spec.name) != None
   var control = H.select().name(spec.name).id("f-" + spec.name)
+  if invalid { control = control.at("aria-invalid", "true").at("aria-describedby", spec.name + "-error") }
   if spec.required { control = control.required() }
   for option in *options {
     var item = H.option().value(option[0]).says(option[1])
     if option[0] == spec.value { item = item.flag("selected") }
     control = control.holding([item])
   }
-  H.div().class("field").holding([
+  H.div().class(if invalid { "field field-invalid" } else { "field" }).data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).holding([
       H.labelFor().at("for", "f-" + spec.name).says(spec.label),
       control,
+      if spec.hint.isEmpty() { H.nothing() } else { H.p().class("field-hint").says(spec.hint) },
       errorOf(frame, errors, spec.name)
     ])
 }

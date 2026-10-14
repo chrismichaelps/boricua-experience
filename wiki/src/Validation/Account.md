@@ -66,3 +66,6 @@ MEDIUM.
 
 ## Resolved feedback Grill Log · #45
 Signup rejects mismatched confirmation on the server before identity creation. Strength guidance is local presentation only; existing8–72 length policy remains authoritative. No email ownership is inferred from disabled confirmation. Resolved.
+
+## Consent renewal
+`renewal(form)` requires both checkboxes (`form.terms_required`, `form.privacy_required`). `owesRenewal(member)` is true only for an onboarded member whose recorded Terms or Privacy version differs from `App.TERMS_VERSION`/`App.PRIVACY_VERSION`; unknown (empty) versions never block.

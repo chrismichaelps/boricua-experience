@@ -1,9 +1,10 @@
+import { formDates } from './features/formDates.js?v=65';
 import { passwordControls } from './features/passwords.js?v=59';
 import { submitFeedback } from './features/submitFeedback.js?v=59';
 import { privacyControls } from './features/privacyControls.js?v=59';
 import { interactionFeedback } from './features/haptics.js?v=59';
 import { sheetGestures } from './features/sheetGestures.js?v=59';
-import { searchPickers } from './features/searchPickers.js?v=62';
+import { searchPickers } from './features/searchPickers.js?v=65';
 import { heroCarousel } from './features/carousel.js?v=59';
 import { accountMenu } from './features/accountMenu.js?v=59';
 import { bell } from './features/bell.js?v=59';
@@ -15,6 +16,7 @@ import { disclosures, share } from './features/share.js?v=59';
 import { suggest } from './features/suggest.js?v=59';
 import { reactToggle, saveToggle } from './features/toggle.js?v=59';
 
+formDates();
 passwordControls();
 submitFeedback();
 interactionFeedback();
@@ -43,7 +45,7 @@ const FEATURES = {
   explorer: (node) => import('./features/explorer.js?v=63').then((module) => module.explorer(node)),
   achievements: (node) => import('./features/achievements.js?v=59').then((module) => module.achievements(node)).catch(() => {}),
   'achievement-board': (node) => import('./features/achievements.js?v=59').then((module) => module.achievementBoard(node)).catch(() => {}),
-  a11y: (node) => import('./features/a11y.js?v=59').then((module) => module.a11y(node)).catch(() => {}),
+  a11y: (node) => import('./features/a11y.js?v=65').then((module) => module.a11y(node)).catch(() => {}),
   'mini-map': (node) => import('./features/eventMaps.js?v=59').then((module) => module.miniMap(node)),
   participants: (node) => import('./features/eventMaps.js?v=59').then((module) => module.participants(node)),
   'avatar-upload': (node) => import('./features/avatarUpload.js?v=59').then((module) => module.avatarUpload(node)),

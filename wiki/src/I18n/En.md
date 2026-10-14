@@ -104,3 +104,6 @@ Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject 
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Add translated map expand/close/loading labels; no behavioral or catalog values.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.

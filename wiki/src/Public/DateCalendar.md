@@ -23,3 +23,9 @@ Resolved: real validated server ranges exist before offering the calendar; inclu
 [[src/_MOC]] · [[src/Public/SearchPickers]] · [[src/Public/SearchStyles]]
 
 Resize refinement: preserve and restore the focused calendar day across rerender when a breakpoint/orientation changes. Calendar desktop positioning reserves actual available panel height; mobile remains a scrollable safe-area sheet. Resolved.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Year jump and out-of-range today
+The single-date jump uses a styled year `<select>` (from the minimum or 120 years back to the maximum or 10 years ahead) beside the month select; a navigated year outside that list is added so the control always shows the visible month. When today is outside the bounds (a birth date capped at adulthood) the calendar opens on the nearest allowed day instead of the minimum.

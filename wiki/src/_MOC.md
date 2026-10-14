@@ -320,3 +320,9 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Public/HomeReadiness]]
 
 - [[src/Test/DiscoverySurfaces]]
+
+- [[src/Public/FormDates]] — shared form calendars and native temporal fallback.
+
+- [[src/Test/FormControls]] — canonical temporal and selector validation regressions.
+
+- [[src/Test/MessageKeys]] — declared dynamic translation families.

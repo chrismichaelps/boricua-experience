@@ -13,11 +13,15 @@ export function rangeOf(value) {
   return parts.length === 2 && valid(first || '') && valid(last || '') && last >= first && (at(last) - at(first)) / DAY < MAX_DAYS ? [first, last] : null;
 }
 
-export function dateCalendar(dialog, select, choices, labels, commit) {
+export function dateCalendar(dialog, select, choices, labels, commit, config = {}) {
   const locale = document.documentElement.lang || 'es';
   const todayParts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Puerto_Rico', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
   const part = type => todayParts.find(p => p.type === type).value;
   const today = `${part('year')}-${part('month')}-${part('day')}`;
+  const single = !!config.single;
+  const minimum = valid(config.min || '') ? config.min : single ? '1900-01-01' : today;
+  const maximum = valid(config.max || '') ? config.max : '9999-12-31';
+  const allowed = value => value >= minimum && value <= maximum;
   const full = new Intl.DateTimeFormat(locale, { timeZone: 'UTC', dateStyle: 'full' });
   const short = new Intl.DateTimeFormat(locale, { timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric' });
   const monthName = new Intl.DateTimeFormat(locale, { timeZone: 'UTC', month: 'long', year: 'numeric' });
@@ -38,6 +42,7 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
   const dates = button('calendar-mode', labels.dates);
   const flexible = button('calendar-mode', labels.flexible);
   tabs.append(dates, flexible);
+  tabs.hidden = single;
   const panel = make('div', 'calendar-panel');
   const navigation = make('div', 'calendar-nav');
   const prev = button('calendar-arrow', '‹');
@@ -47,13 +52,43 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
   const summary = make('p', 'calendar-summary');
   summary.setAttribute('role', 'status');
   navigation.append(prev, summary, next);
+  if (single) {
+    const jump = make('div', 'calendar-jump');
+    const monthSelect = make('select', 'calendar-month-select');
+    const yearSelect = make('select', 'calendar-year-select');
+    monthSelect.setAttribute('aria-label', labels.month);
+    yearSelect.setAttribute('aria-label', labels.year);
+    const thisYear = Number(today.slice(0, 4));
+    const lowest = Math.max(Number(minimum.slice(0, 4)), thisYear - 120);
+    const highest = Math.min(Number(maximum.slice(0, 4)), thisYear + 10);
+    for (let year = highest; year >= lowest; year--) {
+      const option = make('option', '', String(year));
+      option.value = String(year); yearSelect.append(option);
+    }
+    for (let i = 0; i < 12; i++) {
+      const option = make('option', '', monthName.format(new Date(Date.UTC(2026, i, 1))).replace(/\s*2026\s*/, ''));
+      option.value = String(i); monthSelect.append(option);
+    }
+    const jumpTo = () => {
+      const year = Number(yearSelect.value);
+      if (!Number.isInteger(year)) return;
+      month = new Date(Date.UTC(year, Number(monthSelect.value), 1));
+      if (month < monthOf(at(minimum))) month = monthOf(at(minimum));
+      if (month > monthOf(at(maximum))) month = monthOf(at(maximum));
+      render();
+    };
+    monthSelect.addEventListener('change', jumpTo); yearSelect.addEventListener('change', jumpTo);
+    jump.append(monthSelect, yearSelect); navigation.afterJump = { jump, monthSelect, yearSelect };
+  }
   const months = make('div', 'calendar-months');
   const hint = make('p', 'calendar-hint', labels.hint);
   const actions = make('div', 'calendar-actions');
   const clear = button('calendar-clear', labels.clear);
   const apply = button('button calendar-apply', labels.apply);
   actions.append(clear, apply);
-  panel.append(navigation, months, hint, actions);
+  panel.append(navigation);
+  if (navigation.afterJump) panel.append(navigation.afterJump.jump);
+  panel.append(months, hint, actions);
   dialog.insertBefore(tabs, choices);
   dialog.insertBefore(panel, choices);
   let first = '', last = '', focusDay = today, month = monthOf(at(today));
@@ -67,7 +102,8 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
     flexible.setAttribute('aria-pressed', String(!exact));
   };
   const choose = value => {
-    if (!first || last || value < first) { first = value; last = ''; }
+    if (single) { first = value; last = ''; }
+    else if (!first || last || value < first) { first = value; last = ''; }
     else last = value;
     focusDay = value;
     render();
@@ -99,7 +135,7 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
         cell.setAttribute('aria-label', full.format(instant));
         cell.setAttribute('aria-pressed', String(value === first || value === last));
         if (value === today) cell.setAttribute('aria-current', 'date');
-        cell.disabled = value < today || (!!first && !last && value >= first && (instant - at(first)) / DAY >= MAX_DAYS);
+        cell.disabled = !allowed(value) || (!single && !!first && !last && value >= first && (instant - at(first)) / DAY >= MAX_DAYS);
         cell.tabIndex = value === focusDay && !cell.disabled ? 0 : -1;
         cell.classList.toggle('is-range', !!first && !!last && value > first && value < last);
         cell.classList.toggle('is-endpoint', value === first || value === last);
@@ -116,13 +152,22 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
       const available = cells.find(cell => !cell.disabled);
       if (available) { available.tabIndex = 0; focusDay = available.dataset.date; }
     }
-    prev.disabled = month <= monthOf(at(today));
-    summary.textContent = first ? `${labels.start}: ${short.format(at(first))}${last ? ` · ${labels.end}: ${short.format(at(last))}` : ''}` : labels.dates;
+    prev.disabled = month <= monthOf(at(minimum));
+    next.disabled = month >= monthOf(at(maximum));
+    if (navigation.afterJump) {
+      navigation.afterJump.monthSelect.value = String(month.getUTCMonth());
+      const shownYear = String(month.getUTCFullYear());
+      if (![...navigation.afterJump.yearSelect.options].some(option => option.value === shownYear)) {
+        const option = make('option', '', shownYear); option.value = shownYear; navigation.afterJump.yearSelect.append(option);
+      }
+      navigation.afterJump.yearSelect.value = shownYear;
+    }
+    summary.textContent = single ? first ? short.format(at(first)) : labels.dates : first ? `${labels.start}: ${short.format(at(first))}${last ? ` · ${labels.end}: ${short.format(at(last))}` : ''}` : labels.dates;
     apply.disabled = !first;
   };
   const moveFocus = date => {
     const value = iso(date);
-    if (value < today || (first && !last && value >= first && (date - at(first)) / DAY >= MAX_DAYS)) return;
+    if (!allowed(value) || (!single && first && !last && value >= first && (date - at(first)) / DAY >= MAX_DAYS)) return;
     focusDay = value;
     if (!cells.some(cell => cell.dataset.date === value)) month = monthOf(date);
     render();
@@ -149,6 +194,7 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
   clear.addEventListener('click', () => commit(''));
   apply.addEventListener('click', () => {
     if (!first) return;
+    if (single) { if (allowed(first)) commit(first); return; }
     const end = last || first;
     const value = `${first}..${end}`;
     if (!rangeOf(value)) return;
@@ -158,11 +204,11 @@ export function dateCalendar(dialog, select, choices, labels, commit) {
     commit(value);
   });
   const open = () => {
-    const range = rangeOf(select.value);
+    const range = single ? valid(select.value) ? [select.value, ''] : null : rangeOf(select.value);
     [first, last] = range || ['', ''];
-    focusDay = first && first >= today ? first : today;
+    focusDay = first && allowed(first) ? first : allowed(today) ? today : today > maximum ? maximum : minimum;
     month = monthOf(at(focusDay));
-    mode(!!range || !select.value);
+    mode(single || !!range || !select.value);
     render();
   };
   window.addEventListener('resize', () => {

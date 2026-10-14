@@ -206,9 +206,10 @@
 .skeleton-heading { margin-left: 20px; width: 240px; height: 24px; border-radius: 8px; background: #ededed; }
 .skeleton-cards { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 24px; padding-inline: 20px; }
 .skeleton-cards div { height: 240px; border-radius: 24px; background: #ededed; }
-.home-pending .home-skeleton > * { animation: skeleton-breathe 1.4s ease-in-out infinite alternate; }
+.home-skeleton .skeleton-hero, .home-skeleton .skeleton-filters span, .home-skeleton .skeleton-heading, .home-skeleton .skeleton-cards div { background: linear-gradient(90deg,#ececec 0%,#f6f6f6 40%,#ececec 80%) 0 0/300% 100%; }
+.home-pending .home-skeleton .skeleton-hero, .home-pending .home-skeleton .skeleton-filters span, .home-pending .home-skeleton .skeleton-heading, .home-pending .home-skeleton .skeleton-cards div { animation: skeleton-shimmer 1.3s linear infinite; }
 .home-pending .app-home .appbar { color: #182c36; }
 .home-pending .app-home .appbar .brand-name span, .home-pending .app-home .topnav-link, .home-pending .app-home .appbar .icon-button { color: #182c36; }
-@keyframes skeleton-breathe { to { opacity: .55; } }
+@keyframes skeleton-shimmer { from { background-position: 100% 0; } to { background-position: -50% 0; } }
 @media(max-width:699px) { .skeleton-hero { height: 46svh; border-radius: 24px; } .skeleton-pill { height: 100px; border-radius: 24px; } .skeleton-cards { width: 650px; grid-template-columns: repeat(3,200px); gap: 16px; } }
-@media(prefers-reduced-motion:reduce) { .home-pending .home-skeleton > * { animation: none; } }
+@media(prefers-reduced-motion:reduce) { .home-pending .home-skeleton * { animation: none !important; } }

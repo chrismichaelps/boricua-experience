@@ -66,3 +66,6 @@ Resolved: storage inspection transport errors propagate without discarding recor
 
 ## Email suppression Grill Log · #89
 Resolved: DIGEST_ALLOWED names the service-only revision-aware consent check; no browser credentials or direct profile table access.
+
+## Renewal
+`ACCEPT_TERMS = "accept_terms"` — records the current Terms and Privacy versions for an onboarded account and appends `renewal` rows to the consent ledger for each document whose version changed.

@@ -57,3 +57,6 @@ MEDIUM: typed values with their decoding, so no caller reads raw JSON.
 
 ## Curated publication Grill Log · #42
 Resolved: PublicProfile adds trusted isAdmin, default false for older payloads; no email or user metadata grants authority.
+
+## Accepted versions
+`MyProfile.termsVersion` and `privacyVersion` (default empty) carry the versions the member last accepted; empty means the profile read predates them and never blocks.

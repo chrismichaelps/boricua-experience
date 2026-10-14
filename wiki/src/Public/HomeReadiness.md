@@ -17,3 +17,6 @@ Resolved: the bounded contracts above preserve server rendering, native forms an
 
 ## Referenced by
 [[src/_MOC]]
+
+## Shimmer
+Skeleton blocks use a moving light band (1.3s linear) instead of an opacity pulse; reduced motion shows them static.

@@ -68,3 +68,6 @@ MEDIUM.
 
 ## Formatting baseline Grill Log · #88
 Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.
+
+## Terms renewal
+`GET /terms/accept` shows the renewal page; a member who owes nothing goes on to the return path, and one still onboarding goes to onboarding. `POST /terms/accept` records acceptance, flashes `flash.terms_renewed` and returns; a refusal re-renders with field errors (422).

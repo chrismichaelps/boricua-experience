@@ -120,7 +120,7 @@ fn palette(frame: &Frame.Frame, name: Str, label: Str) -> H.Node {
 
 /// The useful-links menu: choosing a page goes there.
 fn usefulLinks(frame: &Frame.Frame) -> H.Node {
-  H.div().class("a11y-links").holding([
+  H.div().class("a11y-links").data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).holding([
       H.labelFor().at("for", "a11y-links").holding([H.span().class("a11y-tile-glyph").raw(glyph("link", "2")), H.span().says(Frame.t(frame, "a11y.links"))]),
       H.select().id("a11y-links").data("a11y", "links").holding([H.option().value("").says(Frame.t(frame, "a11y.links_choose"))].concat(LINKS.map(|entry: (Str, Str)| H.option().value(entry[0]).says(Frame.t(frame, entry[1])))))
     ])

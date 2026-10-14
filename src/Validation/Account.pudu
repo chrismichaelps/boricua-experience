@@ -96,6 +96,21 @@ export fn onboarding(form: &Credentials.Onboarding) -> Result[Credentials.Onboar
       ]), *form)
 }
 
+/// Both documents accepted again after a new version.
+export fn renewal(form: &Credentials.Renewal) -> Result[Credentials.Renewal, Problem.Problem] {
+  Check.run(&Check.all(&[
+        Check.rule("terms", |f: Credentials.Renewal| f.terms, |v: Bool| v, TERMS),
+        Check.rule("privacy", |f: Credentials.Renewal| f.privacy, |v: Bool| v, PRIVACY)
+      ]), *form)
+}
+
+/// Whether an onboarded member accepted an earlier Terms of Use or Privacy Policy than the current
+/// ones. An unknown version (an older profile read) never blocks.
+export fn owesRenewal(member: &Profile.MyProfile) -> Bool {
+  if !member.onboarded || member.termsVersion.isEmpty() || member.privacyVersion.isEmpty() { return false }
+  member.termsVersion != App.TERMS_VERSION || member.privacyVersion != App.PRIVACY_VERSION
+}
+
 /// A profile edit: a name, a short bio, and the language.
 export fn profile(edit: &Profile.ProfileEdit) -> Result[Profile.ProfileEdit, Problem.Problem] {
   Check.run(&Check.all(&[

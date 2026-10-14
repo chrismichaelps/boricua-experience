@@ -53,3 +53,9 @@ Browser verification: first Escape closes the dialog even from a search input. P
 
 ## Date-range calendar Grill Log · #88
 Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject malformed, impossible, reversed and over366-day spans. Inclusive end converts to following Puerto Rico midnight in existing from/to database arguments, without changing expiration or inventing availability. Preserve presets and canonical when URL across map/list/saved searches. Exact-date dialog uses semantic day buttons, roving keyboard focus, localized two-month desktop/one-month phone calendar, draft selection and explicit apply/clear. Escape cancels draft; existing select fallback remains functional. No Airbnb assets, popups or booking semantics.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Placement
+On wide screens a list picker opens directly below its trigger, or above it when the space below is shorter than both 360px and the space above; the date calendar keeps its clamp so the whole month stays visible. Phones keep the bottom sheet. The same module now also enhances the time, month and year pickers FormDates builds, the review report reason and the accessibility panel's useful-links menu.

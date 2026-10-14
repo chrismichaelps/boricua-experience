@@ -28,6 +28,12 @@ export fn onboard(runtime: &Runtime.Runtime, form: &Credentials.Onboarding, loca
   AccountApi.completeOnboarding(&runtime.gateway, valid.displayName.trim(), locale, session.accessToken)
 }
 
+/// Records acceptance of new Terms of Use and Privacy Policy versions.
+export fn renewConsent(runtime: &Runtime.Runtime, form: &Credentials.Renewal, session: &Session.Session) -> Result[(), Problem.Problem] {
+  let _valid = Rules.renewal(form) ?
+  AccountApi.acceptTerms(&runtime.gateway, session.accessToken)
+}
+
 /// Saves a profile edit.
 export fn updateProfile(runtime: &Runtime.Runtime, edit: &Profile.ProfileEdit, session: &Session.Session) -> Result[(), Problem.Problem] {
   let valid = Rules.profile(edit) ?

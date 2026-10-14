@@ -3,6 +3,11 @@ module I18n.En
 
 /// English interface messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("calendar.add_date", "Add date"),
+    ("calendar.add_time", "Add time"),
+    ("calendar.time", "Time"),
+    ("calendar.month", "Month"),
+    ("calendar.year", "Year"),
     ("calendar.dates", "Dates"),
     ("calendar.flexible", "Flexible"),
     ("calendar.start", "From"),

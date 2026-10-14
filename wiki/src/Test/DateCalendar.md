@@ -20,3 +20,9 @@ Resolved: first tap never changes canonical GET field; apply commits exactly onc
 [[src/_MOC]] · [[src/Public/DateCalendar]]
 
 Resize regression: a focused day survives a desktop-to-phone month rerender with one roving tab stop. Resolved.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Year select
+Covers the 120-year year list and opening on the nearest allowed day when today is out of range.

@@ -43,7 +43,7 @@ export function a11y(root, view = window) {
       button.setAttribute('aria-pressed', String(value ? settings[name] === value : !settings[name]));
     }
     for (const button of root.querySelectorAll('[data-profile]')) button.setAttribute('aria-pressed', String(profileOn(button.dataset.profile)));
-    for (const output of root.querySelectorAll('[data-value]')) output.textContent = label(output.dataset.value);
+    for (const output of root.querySelectorAll('[data-value]:not(.picker-option)')) output.textContent = label(output.dataset.value);
     for (const button of root.querySelectorAll('[data-step]')) {
       const steps = model.STEPS[button.dataset.step];
       const next = settings[button.dataset.step] + Number(button.dataset.by);

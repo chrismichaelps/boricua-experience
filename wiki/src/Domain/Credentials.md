@@ -61,3 +61,6 @@ SHALLOW.
 
 ## Resolved feedback Grill Log · #45
 SignUp carries a required confirmation string; passwords and confirmation remain transient and never logged or stored as plaintext. Resolved.
+
+## Renewal
+`Renewal = { terms: Bool, privacy: Bool }` — the two documents an onboarded member accepts again after a new version.
