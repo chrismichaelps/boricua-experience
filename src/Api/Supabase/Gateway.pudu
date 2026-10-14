@@ -119,6 +119,30 @@ export fn query[T: Json.Decode](gateway: &Gateway, function: Str, arguments: &Ar
   }
 }
 
+/// Calls a service-only database function with the service key, which never leaves the server.
+/// Such calls are never repeated: the functions behind them record or send something.
+export fn callAsService(gateway: &Gateway, function: Str, arguments: &Array[(Str, Json.Json)]) -> Result[Json.Json, Problem.Problem] {
+  let request = Request.post(Supabase.RPC_PATH + function, Content.json(&Json.object(arguments)))
+    .setHeader(Supabase.API_KEY_HEADER, gateway.serviceKey)
+    .withBearer(gateway.serviceKey)
+    .accepting("application/json")
+  let response = sent(&gateway.http, request) ?
+  if response.status.code == 204 { return Ok(Json.Null) }
+  match Response.json(&response) {
+    case Ok(document) => Ok(document)
+    case Err(failure) => Err(Problem.Unavailable(HttpClient.describe(&failure)))
+  }
+}
+
+/// Calls a service-only database function and decodes its answer as the caller's type.
+export fn queryAsService[T: Json.Decode](gateway: &Gateway, function: Str, arguments: &Array[(Str, Json.Json)]) -> Result[T, Problem.Problem] {
+  let document = callAsService(gateway, function, arguments) ?
+  match Wire.decode(&document) {
+    case Ok(value) => Ok(value)
+    case Err(problem) => Err(Problem.Unavailable(function + ": " + Json.explainDecode(&problem)))
+  }
+}
+
 /// Sends a request, answering the response when it succeeded and its failure as a problem otherwise.
 export fn sent(http: &Client.Client, request: Request.Request) -> Result[Response.Response, Problem.Problem] {
   match Client.send(http, request) {

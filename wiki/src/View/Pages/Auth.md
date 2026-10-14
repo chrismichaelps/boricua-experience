@@ -75,3 +75,6 @@ Resolved: search matches home viewport height, minimum640px and rounded corners 
 
 ## Resolved feedback Grill Log · #45
 Signup renders required confirmation and is noindex; reset retains confirmation. Visibility and local strength guidance enhance signup/reset without changing consent or authentication. Resolved.
+
+## Renewal page
+`renewal(frame, returnTo, problem)` — the Terms summary, the two acceptance checkboxes linking both documents, "Accept and continue", and a sign-out link. The birth date fields declare `data-date-age` with `App.MINIMUM_AGE` so the calendar never offers an under-age date.

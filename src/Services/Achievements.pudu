@@ -1,0 +1,42 @@
+/** @Services.Achievements.Board — reading the board and recording what only the browser sees */
+module Services.Achievements
+
+import Api.Achievements as AchievementsApi
+import Domain.Achievement as Achievement
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+
+/// The member's board in a language.
+export fn board(runtime: &Runtime.Runtime, locale: Str, session: &Session.Session) -> Result[Achievement.Board, Problem.Problem] {
+  AchievementsApi.board(&runtime.gateway, locale, session.accessToken)
+}
+
+/// Whether a metric name has the shape the database accepts: lower-case letters, digits, underscores.
+export fn metricShape(name: Str) -> Bool {
+  if name.length() < 2 || name.length() > 32 { return false }
+  for part in name.split("") {
+    if !"abcdefghijklmnopqrstuvwxyz0123456789_".contains(part) { return false }
+  }
+  true
+}
+
+/// The signals worth sending: well-shaped, with keys of at most 80 characters, and no more than the
+/// limit. The database still decides which metrics the browser may send and whether keys exist.
+export fn usable(signals: &Array[Achievement.Signal]) -> Array[Achievement.Signal] {
+  let kept = signals.filter(|signal: Achievement.Signal| metricShape(signal.metric) && signal.key.length() <= 80)
+  kept.slice(0, if kept.length() > Achievement.SIGNALS_MAX { Achievement.SIGNALS_MAX } else { kept.length() })
+}
+
+/// Records browser signals and answers the unlocks the member has not seen yet.
+export fn record(runtime: &Runtime.Runtime, signals: &Array[Achievement.Signal], locale: Str, session: &Session.Session) -> Result[Array[Achievement.Unlocked], Problem.Problem] {
+  AchievementsApi.record(&runtime.gateway, &usable(signals), locale, session.accessToken)
+}
+
+/// A member's recent badges; an unreadable showcase is empty rather than a failure.
+export fn showcase(runtime: &Runtime.Runtime, userId: Str, locale: Str) -> Achievement.Showcase {
+  match AchievementsApi.showcase(&runtime.gateway, userId, locale) {
+    case Ok(found) => found
+    case Err(_) => Achievement.Showcase{total: 0, items: []}
+  }
+}

@@ -21,6 +21,9 @@ export type Overview = {
   @default("0") @json("review_reports_open") reviewReportsOpen: Int
 } derives Json.Decode
 
+/** @Domain.Admin.Channel — views of activity pages and join requests from one channel */
+export type Channel = { channel: Str, views: Int, joins: Int, rate: Option[Float64] } derives Json.Decode
+
 /** @Domain.Admin.ReportedEvent — the event a report names */
 export type ReportedEvent = { id: Str, slug: Str, title: Str, status: Str } derives Json.Decode
 
@@ -31,5 +34,7 @@ export type Report = {
   detail: Str,
   @json("created_at") createdAt: Str,
   event: ReportedEvent,
-  @json("reporter_name") reporterName: Option[Str]
+  @json("reporter_name") reporterName: Option[Str],
+  @default("false") held: Bool,
+  @default("1") @json("open_reports") openReports: Int
 } derives Json.Decode

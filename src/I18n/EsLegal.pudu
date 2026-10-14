@@ -98,5 +98,22 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("about.safety.title", "La seguridad primero"),
     ("about.safety.body", "Las cuentas son para adultos de 18 años o más. Las direcciones exactas se mantienen ocultas hasta que el organizador te aprueba, cualquiera puede reportar una actividad y los reportes que involucran menores se revisan primero."),
     ("about.privacy.title", "Privacidad desde el diseño"),
-    ("about.privacy.body", "Tu ubicación es tuya: apagada por defecto, nunca pública y con un historial que puedes borrar. Puedes descargar o borrar tu información en cualquier momento.")
+    ("about.privacy.body", "Tu ubicación es tuya: apagada por defecto, nunca pública y con un historial que puedes borrar. Puedes descargar o borrar tu información en cualquier momento."),
+    ("legal.accessibility.title", "Declaración de accesibilidad"),
+    ("legal.accessibility.description", "Cómo hacemos Boricua Experience accesible, qué herramientas ofrecemos y cómo avisarnos de una barrera."),
+    ("legal.accessibility.intro", "Queremos que cualquier persona pueda encontrar, unirse u organizar actividades en Puerto Rico, use o no tecnologías de apoyo."),
+    ("legal.accessibility.summary", "Diseñamos y probamos el sitio siguiendo las WCAG 2.1 nivel AA. La herramienta de accesibilidad (Alt + A) ajusta texto, colores y orientación, y guarda tus preferencias solo en tu navegador. Si encuentras una barrera, escríbenos y la atendemos."),
+    ("legal.accessibility.commitment.title", "Nuestro compromiso"),
+    ("legal.accessibility.commitment.body", "La accesibilidad es parte del producto desde el principio, no un añadido. Revisamos cada cambio con teclado, lector de pantalla, ampliación de hasta 200% y en teléfonos reales."),
+    ("legal.accessibility.standard.title", "Norma que seguimos"),
+    ("legal.accessibility.standard.body", "Nuestro objetivo es cumplir las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.1 nivel AA: contraste suficiente, textos alternativos, etiquetas en formularios, foco visible, áreas táctiles de al menos 44 píxeles y respeto a la preferencia de reducir el movimiento."),
+    ("legal.accessibility.tools.title", "La herramienta de accesibilidad"),
+    ("legal.accessibility.tools.body", "El botón azul con la figura abre la herramienta, también con Alt + A. Incluye perfiles para convulsiones, baja visión, TDAH, lectura, teclado y dislexia, y ajustes de tamaño del texto, espaciado, fuentes, contraste, saturación, animaciones, imágenes, sonidos, guía y máscara de lectura, cursor grande, foco resaltado y un mapa de la página.\n\nTus ajustes se guardan solo en este navegador y no se envían a nuestros servidores. La herramienta complementa, no sustituye, las funciones de accesibilidad de tu dispositivo."),
+    ("legal.accessibility.compatibility.title", "Compatibilidad"),
+    ("legal.accessibility.compatibility.body", "El sitio funciona con las versiones actuales de Chrome, Safari, Firefox y Edge, y con VoiceOver, TalkBack y NVDA."),
+    ("legal.accessibility.limitations.title", "Limitaciones conocidas"),
+    ("legal.accessibility.limitations.body", "El mapa interactivo depende de gestos y de una vista gráfica; toda actividad del mapa también aparece en la lista accesible junto a él. Algunas fotos e imágenes publicadas por organizadores pueden no tener una descripción completa."),
+    ("legal.accessibility.feedback.title", "Cuéntanos de una barrera"),
+    ("legal.accessibility.feedback.body", "Si algo no te funciona, escríbenos desde Contacto escogiendo el tema Accesibilidad. Indica la página y qué tecnología usas; respondemos en uno o dos días laborables."),
+    ("footer.accessibility", "Accesibilidad")
   ])

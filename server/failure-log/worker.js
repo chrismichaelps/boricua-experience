@@ -1,0 +1,83 @@
+// Failure log: the site's server posts each failed response here; it is checked, kept in D1 for thirty
+// days, and written to the Worker's logs. Nothing about visitors is accepted: no query strings, no
+// addresses, no identifiers.
+const LIMITS = { body: 2048, path: 200, reason: 400, release: 40 };
+const METHODS = new Set(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']);
+// The isolate burst guard supplements the transactional database quota.
+const PER_MINUTE = 120;
+let windowStart = 0;
+let windowCount = 0;
+
+/** The event when every field has the expected shape, or null. */
+export function clean(input) {
+  if (!input || typeof input !== 'object') return null;
+  const { method, path, status, elapsed, reason = '', release = '' } = input;
+  if (!METHODS.has(method)) return null;
+  if (typeof path !== 'string' || !path.startsWith('/') || path.length > LIMITS.path || /[?#\s]/.test(path)) return null;
+  if (!Number.isInteger(status) || status < 500 || status > 599) return null;
+  if (typeof reason !== 'string' || typeof release !== 'string') return null;
+  return {
+    method,
+    path,
+    status,
+    elapsed: Number.isInteger(elapsed) && elapsed >= 0 ? Math.min(elapsed, 600000) : 0,
+    reason: reason.replace(/[\u0000-\u001f]/g, ' ').slice(0, LIMITS.reason),
+    release: release.replace(/[^0-9A-Za-z._-]/g, '').slice(0, LIMITS.release),
+  };
+}
+
+/** The body as text, read as a stream and abandoned past `limit` bytes, or null when too large. */
+export async function bounded(request, limit) {
+  const declared = request.headers.get('content-length');
+  if (declared !== null && Number(declared) > limit) return null;
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) { await reader.cancel(); return null; }
+    chunks.push(value);
+  }
+  const joined = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { joined.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(joined);
+}
+
+function admitted(now) {
+  if (now - windowStart > 60000) { windowStart = now; windowCount = 0; }
+  windowCount += 1;
+  return windowCount <= PER_MINUTE;
+}
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (request.method !== 'POST' || url.pathname !== '/failures') return new Response('Not found', { status: 404 });
+    if (!(request.headers.get('content-type') || '').startsWith('application/json')) return new Response('Unsupported', { status: 415 });
+    const text = await bounded(request, LIMITS.body);
+    if (text === null) return new Response('Too large', { status: 413 });
+    let event;
+    try { event = clean(JSON.parse(text)); } catch { event = null; }
+    if (!event) return new Response('Invalid', { status: 400 });
+    if (!admitted(Date.now())) return new Response('Busy', { status: 429 });
+    console.log(JSON.stringify({ failure: event }));
+    // The insert trigger admits and stores together; failed inserts consume no daily quota.
+    const at = new Date().toISOString();
+    try {
+      const written = await env.DB.prepare('insert into failures (at, release, method, path, status, elapsed_ms, reason) values (?, ?, ?, ?, ?, ?, ?)')
+        .bind(at, event.release, event.method, event.path, event.status, event.elapsed, event.reason).run();
+      if (!written.meta?.changes) return new Response('Busy', { status: 429 });
+    } catch {
+      return new Response('Unavailable', { status: 503 });
+    }
+    return new Response(null, { status: 204 });
+  },
+  async scheduled(_controller, env) {
+    await env.DB.prepare("delete from failures where at < strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-30 days')").run();
+    await env.DB.prepare("delete from failure_days where day < date('now', '-30 days')").run();
+  },
+};

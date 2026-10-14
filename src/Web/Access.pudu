@@ -6,22 +6,33 @@ import Std.Http.Server.Route as Route
 import Std.Time as Time
 import PuduLangLog.Logger as Logger
 import PuduLangLog.Value as Value
+import Web.FailureLog as FailureLog
 
 /// The event written for every request; the query string is never written.
 export const COMPLETED: Str = "HTTP \{Method\} \{Path\} responded \{Status\} in \{Elapsed\} ms"
 
-/// The response, with its access event written.
-export fn around(logger: &Logger.Logger, request: Route.Request, handle: Route.Handler) -> Http.Response {
+/// The event written with a server failure's reason.
+export const FAILED: Str = "HTTP \{Method\} \{Path\} responded \{Status\} in \{Elapsed\} ms: \{Reason\}"
+
+/// The response, with its access event written. A server failure is also reported to the failure
+/// log with the reason its handler gave, which never leaves the server.
+export fn around(logger: &Logger.Logger, failures: &Option[FailureLog.Sink], request: Route.Request, handle: Route.Handler) -> Http.Response {
   let began = Time.elapsed()
-  let response = handle(request)
+  let (reason, response) = FailureLog.takeReason(handle(request))
   let took = Time.elapsed() - began
-  let values = [Value.text(Http.methodName(&request.message.method)), Value.text(request.path), Value.int(response.status.code), Value.int(took)]
-  if response.status.code >= 500 { logger.error(COMPLETED, values) } else { logger.information(COMPLETED, values) }
+  let method = Http.methodName(&request.message.method)
+  let path = FailureLog.pathForLog(request.path)
+  let values = [Value.text(method), Value.text(path), Value.int(response.status.code), Value.int(took)]
+  if response.status.code >= 500 {
+    logger.error(FAILED, values.push(Value.text(reason)))
+    FailureLog.report(failures, method, path, response.status.code, took, reason)
+  } else { logger.information(COMPLETED, values) }
   response
 }
 
 /// The same as middleware for the socket server.
-export fn middleware(logger: &Logger.Logger) -> Route.Middleware {
+export fn middleware(logger: &Logger.Logger, failures: &Option[FailureLog.Sink]) -> Route.Middleware {
   let held = *logger
-  fn(request: Route.Request, next: Route.Handler) -> Http.Response { around(&held, request, next) }
+  let sink = *failures
+  fn(request: Route.Request, next: Route.Handler) -> Http.Response { around(&held, &sink, request, next) }
 }

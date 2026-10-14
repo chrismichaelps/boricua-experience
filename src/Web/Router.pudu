@@ -7,8 +7,11 @@ import App.Assembly as Assembly
 import Domain.Problem as Problem
 import Web.Context as Context
 import Web.Handlers.Account as Account
+import Web.Handlers.Achievements as Achievements
 import Web.Handlers.Admin as Admin
 import Web.Handlers.Assistant as Assistant
+import Web.Handlers.Contact as Contact
+import Web.Handlers.Digest as Digest
 import Web.Handlers.Discover as Discover
 import Web.Handlers.EventCover as EventCover
 import Web.Handlers.Events as Events
@@ -39,6 +42,9 @@ export fn routes(app: &Assembly.App) -> Route.Router {
     .concat(Location.routes(app))
     .concat(Site.routes(app))
     .concat(Admin.routes(app))
+    .concat(Contact.routes(app))
+    .concat(Achievements.routes(app))
+    .concat(Digest.routes(app))
   Route.withFallback(&Route.routing(&table), fn(request: Route.Request) -> Http.Response {
       let visitor = Context.resolve(&held, &request, true)
       Respond.finish(&held, &visitor, Respond.problem(&held, &visitor, &Problem.Missing))

@@ -9,11 +9,13 @@ import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Cookies as Cookies
 import Constants.Routes as Routes
+import Domain.Achievement as Achievement
 import Domain.Credentials as Credentials
 import Domain.Locale as Locale
 import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Session as Session
+import Services.Participation as ParticipationService
 import Utils.Form as Form
 import Utils.Wire as Wire
 import Validation.Account as AccountRules
@@ -31,6 +33,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   [
     Route.get(Routes.ACCOUNT, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| accountPage(&held, &visitor, &session, None))),
     Route.post(Routes.ACCOUNT_PROFILE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveProfile(&held, &visitor, &session))),
+    Route.post(Routes.ACCOUNT_DISCOVERY, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| saveDiscovery(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_PREFERENCES, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| savePreferences(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_PASSWORD, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changePassword(&held, &visitor, &session))),
     Route.post(Routes.ACCOUNT_AVATAR, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| changeAvatar(&held, &visitor, &session))),
@@ -38,7 +41,9 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.PROFILE, Serve.page(app, |visitor: Context.Visitor| profilePage(&held, &visitor))),
     Route.get(Routes.NOTIFICATIONS, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| inbox(&held, &visitor, &session))),
     Route.get(Routes.ONBOARDING, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| welcome(&held, &visitor, None))),
-    Route.post(Routes.ONBOARDING, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| onboard(&held, &visitor, &session)))
+    Route.post(Routes.ONBOARDING, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| onboard(&held, &visitor, &session))),
+    Route.get(Routes.TERMS_ACCEPT, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| renewal(&held, &visitor, None))),
+    Route.post(Routes.TERMS_ACCEPT, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| renew(&held, &visitor, &session)))
   ]
 }
 
@@ -57,7 +62,8 @@ export fn accountPage(app: &Assembly.App, visitor: &Context.Visitor, session: &S
         case Some(found) => Problem.status(&found)
         case None => 200
       }
-      Respond.page(status, &AccountPage.render(&Context.frame(app, visitor), &me, &catalog, session.email, Session.usesPassword(session), &problem))
+      let feed = app.runtime.siteUrl + Routes.CALENDAR_FEED.replace(":user", me.id).replace(":token", ParticipationService.calendarToken(&app.runtime, me.id))
+      Respond.page(status, &AccountPage.render(&Context.frame(app, visitor), &me, &catalog, session.email, Session.usesPassword(session), &problem, feed))
     }
     case Err(found) => Respond.problem(app, visitor, &found)
   }
@@ -82,6 +88,24 @@ fn saveProfile(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.
   }
 }
 
+/// Saves the discovery radius and favourite towns; each town is a `town_<slug>` checkbox.
+fn saveDiscovery(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  var towns: Array[Str] = []
+  for town in catalog.municipalities {
+    if Form.flag(&fields, "town_" + town.slug) { towns = towns.push(town.slug) }
+  }
+  let chosen = Profile.Discovery{radiusKm: Form.whole(&fields, "radius"), towns: towns}
+  match Serve.ask(app, &app.kinds.updateDiscovery, Serve.signed(session, chosen)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT + "#discovery"), "flash.saved_settings")
+    case Err(problem) => refused(app, visitor, session, &problem)
+  }
+}
+
 /// Saves the preferences.
 fn savePreferences(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let fields = Serve.fields(visitor)
@@ -92,7 +116,8 @@ fn savePreferences(app: &Assembly.App, visitor: &Context.Visitor, session: &Sess
     notifyEventChanges: Form.flag(&fields, "notifyEventChanges"),
     marketingOptIn: Form.flag(&fields, "marketingOptIn"),
     locationVisibility: Form.text(&fields, "locationVisibility"),
-    showInAttendeeLists: Form.flag(&fields, "showInAttendeeLists")
+    showInAttendeeLists: Form.flag(&fields, "showInAttendeeLists"),
+    emailDigest: Form.flag(&fields, "emailDigest")
   }
   match Serve.ask(app, &app.kinds.updatePreferences, Serve.signed(session, chosen)) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Routes.ACCOUNT + "#preferences"), "flash.saved_settings")
@@ -113,7 +138,13 @@ fn changePassword(app: &Assembly.App, visitor: &Context.Visitor, session: &Sessi
 /// An organizer's public profile.
 fn profilePage(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.profile, Serve.param(visitor, "id")) {
-    case Ok(person) => Respond.page(200, &ProfilePage.render(&Context.frame(app, visitor), &person))
+    case Ok(person) => {
+      let badges = match Serve.ask(app, &app.kinds.showcase, (person.id, Locale.code(&visitor.locale))) {
+        case Ok(found) => found
+        case Err(_) => Achievement.Showcase{total: 0, items: []}
+      }
+      Respond.page(200, &ProfilePage.render(&Context.frame(app, visitor), &person, &badges))
+    }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
@@ -157,6 +188,26 @@ fn onboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sess
   match Serve.ask(app, &app.kinds.onboard, Serve.signed(session, Messages.Onboard{form: form, locale: Locale.code(&visitor.locale)})) {
     case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.welcome")
     case Err(problem) => welcome(app, &Context.resolve(app, &visitor.request, true), Some(problem))
+  }
+}
+
+/// The page asking for the new Terms of Use and Privacy Policy; anyone who does not owe them moves on.
+fn renewal(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
+  let returnTo = Respond.returnPath(Option.orElse(Route.queryParam(&visitor.request, "return"), Route.fieldsOf(&visitor.request).get("return")))
+  match visitor.member {
+    case Some(member) => if !member.onboarded { return Respond.redirect(Routes.ONBOARDING + "?return=" + returnTo) } else if !AccountRules.owesRenewal(&member) && problem == None { return Respond.redirect(returnTo) }
+    case None => {}
+  }
+  Respond.page(if problem == None { 200 } else { 422 }, &AuthPage.renewal(&Context.frame(app, visitor), returnTo, &problem))
+}
+
+/// Records the renewed acceptance and continues.
+fn renew(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let fields = Serve.fields(visitor)
+  let form = Credentials.Renewal{terms: Form.flag(&fields, "terms"), privacy: Form.flag(&fields, "privacy")}
+  match Serve.ask(app, &app.kinds.renewConsent, Serve.signed(session, form)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(Respond.returnPath(fields.get("return"))), "flash.terms_renewed")
+    case Err(problem) => renewal(app, &Context.resolve(app, &visitor.request, true), Some(problem))
   }
 }
 

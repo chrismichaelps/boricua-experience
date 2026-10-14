@@ -63,3 +63,6 @@ Resolved: Add PLACE_MENU_EDIT for owner GET/POST at /lugar/:slug/menu/edit.
 
 ## Activity covers Grill Log · #82
 Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
+
+## Renewal
+`TERMS_ACCEPT = "/terms/accept"` — the page and post where an onboarded member accepts new versions of the Terms of Use and Privacy Policy.

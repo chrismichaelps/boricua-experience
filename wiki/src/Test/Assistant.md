@@ -40,3 +40,6 @@ Resolved: Localized source tests assert English/Spanish database category labels
 
 ## Curated publication regression Grill Log · #42
 Resolved: Native and curated organizer_details use fixture HTTP responses through the actual gateway. Curated publisher role is explicit, organizer is null, hosting statistics are omitted and local join/seat fields are null. Native organizer statistics and refusal of unsearched slugs remain covered.
+
+## Home-only assistant Grill Log · #86
+Resolved: Verify page position and offset preservation across close, Escape, external dialog close, pagehide and reopen. Completed streamed responses must append no readout button or invoke speech synthesis; dictation ES/EN regressions remain.

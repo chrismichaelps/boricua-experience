@@ -53,3 +53,6 @@ SHALLOW.
 ## Referenced by
 
 [[src/_MOC]]
+
+## renewConsent
+Registers `kinds.renewConsent` to `Services.Account.renewConsent`.

@@ -1,0 +1,107 @@
+{
+ "items": [
+  {
+   "open": true,
+   "slug": "rsvp-1",
+   "badge": "rsvp-1",
+   "title": "Count me in!",
+   "rarity": "common",
+   "target": 1,
+   "window": null,
+   "category": "participation",
+   "editions": [],
+   "progress": 1,
+   "seasonal": false,
+   "description": "Join your first activity.",
+   "unlocked_at": "2026-10-13T16:14:34.702532+00:00",
+   "unlocked_now": true
+  },
+  {
+   "open": true,
+   "slug": "paid-1",
+   "badge": "paid-1",
+   "title": "Support local",
+   "rarity": "common",
+   "target": 1,
+   "window": null,
+   "category": "participation",
+   "editions": [],
+   "progress": 1,
+   "seasonal": false,
+   "description": "Join a paid activity.",
+   "unlocked_at": "2026-10-13T16:14:34.702532+00:00",
+   "unlocked_now": true
+  },
+  {
+   "open": true,
+   "slug": "towns-3",
+   "badge": "towns-3",
+   "title": "Town to town",
+   "rarity": "common",
+   "target": 3,
+   "window": null,
+   "category": "discovery",
+   "editions": [],
+   "progress": 0,
+   "seasonal": false,
+   "description": "Explore 3 different towns.",
+   "unlocked_at": null,
+   "unlocked_now": false
+  },
+  {
+   "open": true,
+   "slug": "hidden-island",
+   "badge": "hidden-island",
+   "title": null,
+   "rarity": "epic",
+   "target": 2,
+   "window": null,
+   "category": "boricua",
+   "editions": [],
+   "progress": 0,
+   "seasonal": false,
+   "description": null,
+   "unlocked_at": null,
+   "unlocked_now": false
+  },
+  {
+   "open": false,
+   "slug": "navidad",
+   "badge": "navidad",
+   "title": "Christmas parranda",
+   "rarity": "rare",
+   "target": 1,
+   "window": {
+    "ends": "2027-01-06",
+    "open": false,
+    "ended": false,
+    "label": "2026–2027",
+    "starts": "2026-12-01",
+    "edition": "2026"
+   },
+   "category": "seasonal",
+   "editions": [],
+   "progress": 0,
+   "seasonal": true,
+   "description": "Join an activity during the Christmas season.",
+   "unlocked_at": null,
+   "unlocked_now": false
+  }
+ ],
+ "total": 81,
+ "unlocked": 8,
+ "categories": [
+  {
+   "slug": "discovery",
+   "title": "Discovery and map"
+  },
+  {
+   "slug": "participation",
+   "title": "Participation"
+  },
+  {
+   "slug": "hosting",
+   "title": "Hosting"
+  }
+ ]
+}

@@ -86,7 +86,21 @@ export type Viewer = {
   @json("request_message") requestMessage: Option[Str],
   @json("decision_note") decisionNote: Option[Str],
   @default("0") reaction: Int,
-  saved: Bool
+  saved: Bool,
+  @json("waitlist_position") waitlistPosition: Option[Int]
+} derives Json.Decode
+
+/** @Domain.Event.CalendarEntry — one activity in a member's private calendar feed */
+export type CalendarEntry = {
+  slug: Str,
+  title: Str,
+  @json("starts_at") startsAt: Str,
+  @json("ends_at") endsAt: Option[Str],
+  @json("venue_name") venueName: Str,
+  @json("address_line") addressLine: Option[Str],
+  municipality: Str,
+  status: Str,
+  @json("updated_at") updatedAt: Str
 } derives Json.Decode
 
 /** @Domain.Event.Occurrence — another date of the same recurring activity */
@@ -108,6 +122,8 @@ export type Detail = {
   locationRevealed: Bool,
   isFull: Bool,
   spotsLeft: Option[Int],
+  waitlistCount: Int,
+  held: Bool,
   viewer: Viewer,
   otherDates: Array[Occurrence],
   updatedAt: Str
@@ -128,6 +144,8 @@ type DetailWire = {
   @json("location_revealed") locationRevealed: Bool,
   @json("is_full") isFull: Bool,
   @json("spots_left") spotsLeft: Option[Int],
+  @default("0") @json("waitlist_count") waitlistCount: Int,
+  @default("false") held: Bool,
   viewer: Viewer,
   @default("[]") @json("other_dates") otherDates: Array[Occurrence],
   @json("updated_at") updatedAt: Str
@@ -152,6 +170,8 @@ export fn decodeDetail(json: &Json.Json) -> Result[Detail, Json.DecodeError] {
       locationRevealed: wire.locationRevealed,
       isFull: wire.isFull,
       spotsLeft: wire.spotsLeft,
+      waitlistCount: wire.waitlistCount,
+      held: wire.held,
       viewer: wire.viewer,
       otherDates: wire.otherDates,
       updatedAt: wire.updatedAt

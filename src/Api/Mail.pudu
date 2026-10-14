@@ -1,0 +1,67 @@
+/** @Api.Mail.Client — transactional email through the delivery provider's HTTPS API */
+module Api.Mail
+
+import Std.Json as Json
+import Domain.Problem as Problem
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Factory.Builder as Builder
+import PuduLangHttpClient.Factory.Builder {Configuring}
+import PuduLangHttpClient.Factory as Factory
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
+import PuduLangHttpClient.Response as Response
+
+/** @Api.Mail.Mailer — the provider client, its key, and the sender every message is from */
+export type Mailer = { http: Client.Client, key: Str, from: Str }
+
+/** @Api.Mail.Letter — one plain-text message to one recipient */
+export type Letter = { to: Str, replyTo: Str, subject: Str, text: Str, idempotencyKey: Str, headers: Array[(Str, Str)] }
+
+/// The provider's API origin.
+const BASE: Str = "https://api.resend.com/"
+/// The path that sends one message.
+const SEND_PATH: Str = "emails"
+/// Milliseconds a send may take before it is abandoned.
+const TIMEOUT_MILLIS: Int = 8000
+/// The client name in the factory.
+const CLIENT_NAME: Str = "mail"
+
+/// A mailer for a provider key and sender, or nothing when no key is configured.
+export fn create(key: Str, from: Str) -> Result[Option[Mailer], Str] {
+  if key.trim().isEmpty() { return Ok(None) }
+  let builder = Builder.named(CLIENT_NAME).withBaseAddress(BASE).withTimeout(TIMEOUT_MILLIS).redactingHeaders(&["authorization"])
+  match Factory.build([builder]) {
+    case Ok(factory) => Ok(Some(Mailer{http: Factory.createClient(&factory, CLIENT_NAME), key: key.trim(), from: from}))
+    case Err(invalid) => Err(Factory.explain(&invalid))
+  }
+}
+
+/// A mailer sending through `send`, for tests that answer from a stub.
+export fn over(http: Client.Client, from: Str) -> Mailer { Mailer{http: http.withBaseAddress(BASE), key: "test", from: from} }
+
+/// The JSON body of a letter. The provider takes structured fields, so header values cannot be
+/// injected through a subject or reply-to; line breaks are still removed from single-line fields.
+export fn body(mailer: &Mailer, letter: &Letter) -> Json.Json {
+  let single = |value: Str| value.replace("\r", " ").replace("\n", " ").trim()
+  var fields = [
+    ("from", Json.Text(mailer.from)),
+    ("to", Json.list(&[Json.Text(single(letter.to))])),
+    ("subject", Json.Text(single(letter.subject))),
+    ("text", Json.Text(letter.text))
+  ]
+  if !letter.replyTo.isEmpty() { fields = fields.push(("reply_to", Json.Text(single(letter.replyTo)))) }
+  if !letter.headers.isEmpty() { fields = fields.push(("headers", Json.object(&letter.headers.map(|header: (Str, Str)| (single(header[0]), Json.Text(single(header[1]))))))) }
+  Json.object(&fields)
+}
+
+/// Sends one letter; a repeated idempotency key never sends a second copy.
+export fn send(mailer: &Mailer, letter: &Letter) -> Result[(), Problem.Problem] {
+  var request = Request.post(SEND_PATH, Content.json(&body(mailer, letter))).withBearer(mailer.key).accepting("application/json")
+  if !letter.idempotencyKey.isEmpty() { request = request.setHeader("idempotency-key", letter.idempotencyKey) }
+  match Client.send(&mailer.http, request) {
+    case Ok(response) => if Response.isSuccess(&response) { Ok(()) } else { Err(Problem.Unavailable("mail_status_" + show(response.status.code))) }
+    case Err(failure) => Err(Problem.Unavailable(HttpClient.describe(&failure)))
+  }
+}

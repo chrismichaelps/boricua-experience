@@ -16,6 +16,7 @@ import Utils.Form as Form
 import View.Calendar as Calendar
 import View.Pages.Event as EventPage
 import View.Pages.EventForm as EventForm
+import Web.Channel as Channel
 import Web.Context as Context
 import Web.Handlers.Places as Places
 import Web.Respond as Respond
@@ -59,13 +60,15 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
 
 /// The event page, with the refusal of the last action when there is one.
 export fn eventPage(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
-  match Serve.ask(app, &app.kinds.event, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
+  // A page shown again after a refused action is not a new visit from anywhere.
+  let channel = if problem == None { Channel.ofRequest(&visitor.request, app.runtime.siteUrl) } else { "" }
+  match Serve.ask(app, &app.kinds.eventPage, Serve.visit(visitor, (Serve.param(visitor, "slug"), channel))) {
     case Ok(detail) => {
       let status = match problem {
         case Some(found) => Problem.status(&found)
         case None => 200
       }
-      Respond.page(status, &EventPage.render(&Context.frame(app, visitor), &detail, &problem))
+      Respond.page(status, &EventPage.renderFrom(&Context.frame(app, visitor), &detail, &problem, channel))
     }
     case Err(found) => Respond.problem(app, visitor, &found)
   }

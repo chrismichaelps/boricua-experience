@@ -4,11 +4,12 @@ module Services.Runtime
 import Std.App.Secret as Secret
 import Std.Bytes as Bytes
 import Std.Sync as Sync
+import Api.Mail as Mail
 import Api.Supabase.Gateway as Gateway
 import Config.Settings as Settings
 import Domain.Catalog as Catalog
 
-/** @Services.Runtime.Runtime — the gateway, the session key, the site address, and caches */
+/** @Services.Runtime.Runtime — the gateway, the mailer, the session key, the site address, and caches */
 export type Runtime = {
   gateway: Gateway.Gateway,
   assistantConfigured: Bool,
@@ -16,6 +17,8 @@ export type Runtime = {
   siteUrl: Str,
   secureCookies: Bool,
   cronSecret: Str,
+  mailer: Option[Mail.Mailer],
+  contactTo: Str,
   catalog: Sync.Cell[Option[(Int, Catalog.Catalog)]]
 }
 
@@ -23,6 +26,7 @@ export type Runtime = {
 export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
   let gateway = Gateway.create(settings) ?
   let key = Settings.keyBytes(&settings.sessionKey) ?
+  let mailer = Mail.create(Secret.reveal(&settings.resendKey), settings.mailFrom) ?
   Ok(Runtime {
       gateway: gateway,
       assistantConfigured: !Secret.reveal(&settings.openRouterKey).isEmpty(),
@@ -30,11 +34,13 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
       siteUrl: settings.siteUrl,
       secureCookies: Settings.isSecure(settings),
       cronSecret: Secret.reveal(&settings.cronSecret),
+      mailer: mailer,
+      contactTo: Secret.reveal(&settings.contactTo).trim(),
       catalog: Sync.cell(None)
     })
 }
 
 /// A runtime over a given gateway, for tests.
 export fn over(gateway: Gateway.Gateway, sessionKey: Bytes, siteUrl: Str) -> Runtime {
-  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", catalog: Sync.cell(None)}
+  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", mailer: None, contactTo: "", catalog: Sync.cell(None)}
 }

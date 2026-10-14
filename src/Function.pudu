@@ -13,6 +13,7 @@ import PuduLangLog.Logger as Logger
 import PuduLangLog.Value as Value
 import Services.Runtime as Runtime
 import Web.Access as Access
+import Web.FailureLog as FailureLog
 import Web.Platform as Platform
 import Web.Router as Router
 
@@ -27,9 +28,13 @@ fn main() -> Int {
     case Ok(built) => built
     case Err(problem) => { return couldNotStart(problem) }
   }
+  let failures = match FailureLog.create(settings.failureLogUrl) {
+    case Ok(found) => found
+    case Err(problem) => { return couldNotStart(problem) }
+  }
   let router = Router.routes(&app)
   let served = Lambda.serveEnvironment(fn(event: Json.Json) -> Result[Str, Str] {
-      Ok(Platform.answered(&Access.around(&logs.requests, Platform.requestOf(&event), |request: Route.Request| Route.dispatch(&router, request))))
+      Ok(Platform.answered(&Access.around(&logs.requests, &failures, Platform.requestOf(&event), |request: Route.Request| Route.dispatch(&router, request))))
     })
   match served {
     case Ok(_) => 0

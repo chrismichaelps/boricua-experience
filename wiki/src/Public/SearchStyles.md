@@ -57,3 +57,15 @@ Resolved: explicit app-search body class on the open search route gives its shel
 
 ## Shared field focus and policy labels Grill Log · #39
 Resolved: search segments own one neutral2px inset focus indication; nested inputs/triggers do not add rings. Standard/picker fields use stronger neutral borders and a single focus stroke, with visible keyboard focus retained. Policy pages display effective dates without version numbers; internal agreement/version checks remain unchanged. Asset graph43 advances together.
+
+## Date-range calendar Grill Log · #88
+Resolved: add validated Dates(start,end) encoded YYYY-MM-DD..YYYY-MM-DD; reject malformed, impossible, reversed and over366-day spans. Inclusive end converts to following Puerto Rico midnight in existing from/to database arguments, without changing expiration or inventing availability. Preserve presets and canonical when URL across map/list/saved searches. Exact-date dialog uses semantic day buttons, roving keyboard focus, localized two-month desktop/one-month phone calendar, draft selection and explicit apply/clear. Escape cancels draft; existing select fallback remains functional. No Airbnb assets, popups or booking semantics.
+
+## Discovery surfaces Grill Log · #88
+Resolved: Use shared neutral option surfaces, selected borders and restrained pill focus across home/search/map and nearby selectors. Preserve labels/native submission, keyboard focus and44px controls.
+
+## Unified form controls Grill Log · #88
+Resolved: enhance canonical native selects through the shared dialog, retaining disabled options, validation, reset and category change events. Add single-date calendar mode with past-date and declared min/max support; date-time edits preserve the existing clock value. Birth dates permit historical year/month navigation; month-only reviews and opening-hour clocks keep native semantics with shared neutral styling. Checkboxes/radios/switches retain names and keyboard/disabled behavior. No new database contract or date inference.
+
+## Form temporal fields
+`.temporal-control` lays a date trigger and an optional `.temporal-part` time picker side by side as bordered field boxes (52px, 14px radius, ink border on hover, red when invalid). `.date-icon` draws the calendar glyph; `.date-trigger.is-empty` greys the "Add date" placeholder. The calendar's month/year jump selects are pill-shaped with a chevron. Review-report and accessibility-links triggers share the bordered field style.

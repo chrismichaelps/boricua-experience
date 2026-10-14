@@ -13,6 +13,6 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
   let held = *runtime
   [
     Registration.handler(&kinds.dashboard, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Admin.dashboard(&held, &asked.session))),
-    Registration.handler(&kinds.resolve, |asked: Messages.Signed[Messages.Resolution], _context: Context.Context| Messaging.lift(Admin.resolve(&held, asked.input.reportId, asked.input.act, &asked.session)))
+    Registration.handler(&kinds.resolve, |asked: Messages.Signed[Messages.Resolution], _context: Context.Context| Messaging.lift(Admin.resolve(&held, asked.input.reportId, asked.input.action, &asked.session)))
   ]
 }

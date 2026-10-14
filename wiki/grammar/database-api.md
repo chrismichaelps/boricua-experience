@@ -64,3 +64,6 @@ Featured destinations are active public editorial records, at most eight in stor
 
 ## Curated publications · #42
 public_profile exposes trusted is_admin. private.card adds source. request_join refuses curated records with external_booking before request/counter writes; security, grants and RLS are retained.
+
+## Media contracts · #82
+Public viewer-authorized read: place_media applies parent visibility and media-kind rules for guests and members. Member reservation/read/discard APIs: reserve_place_media, pending_place_media, discard_place_media; reserve_event_cover, pending_event_media, event_cover and event-bound discard_event_cover. Invalid-upload cleanup uses pending-only discard RPCs and refuses ready media. Trusted confirm_verified_place_media and confirm_verified_event_cover require the service role after server read-back and take the sealed-session actor explicitly. Legacy confirmation RPCs are not executable by members. Private media tables have RLS and no direct guest/member grants. See [[src/Database/EventCovers]] and [[src/Database/MediaConfirmation]] for signatures, ownership, locking and cutover.

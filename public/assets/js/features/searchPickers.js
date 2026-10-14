@@ -1,3 +1,5 @@
+import { dateCalendar } from './dateCalendar.js?v=65';
+
 const fold = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
 
 function node(tag, className, text) {
@@ -10,7 +12,7 @@ function node(tag, className, text) {
 export function searchPickers(form) {
   if (typeof HTMLDialogElement === 'undefined' || !HTMLDialogElement.prototype.showModal) return;
   for (const select of form.querySelectorAll('select')) {
-    if (select.classList.contains('picker-native')) continue;
+    if (select.disabled || select.classList.contains('picker-native')) continue;
     const label = form.querySelector(`label[for="${select.id}"]`);
     if (!label) continue;
     const trigger = node('button', 'picker-trigger');
@@ -51,7 +53,7 @@ export function searchPickers(form) {
     header.append(title, close);
     dialog.append(header);
     let search;
-    if (select.name === 'pueblo' || select.name === 'cerca') {
+    if (['pueblo', 'cerca', 'municipality', 'town'].includes(select.name)) {
       search = node('input', 'picker-search');
       search.type = 'search';
       search.placeholder = form.dataset.pickerSearch;
@@ -63,9 +65,10 @@ export function searchPickers(form) {
     const empty = node('p', 'picker-empty', form.dataset.pickerEmpty);
     empty.setAttribute('role', 'status');
     empty.hidden = true;
-    const rows = Array.from(select.options, (option) => {
+    const rows = Array.from(select.options).filter(option => select.name !== 'when' || !option.value.includes('..')).map((option) => {
       const button = node('button', 'picker-option');
       button.type = 'button';
+      button.disabled = option.disabled;
       const name = node('span', 'picker-option-name', option.textContent);
       const mark = node('span', 'picker-check', '✓');
       mark.setAttribute('aria-hidden', 'true');
@@ -87,38 +90,54 @@ export function searchPickers(form) {
       trigger.setAttribute('aria-label', `${title.textContent}: ${value.textContent}`);
       rows.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.value === select.value)));
     };
+    const commit = chosen => {
+      select.value = chosen;
+      sync();
+      closePicker();
+      trigger.focus();
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const calendar = select.name === 'when' && form.dataset.calendar
+      ? dateCalendar(dialog, select, choices, JSON.parse(form.dataset.calendar), commit) : null;
     const filter = () => {
       const query = fold(search?.value.trim() || '');
       rows.forEach((button) => { button.hidden = !fold(button.textContent).includes(query); });
-      empty.hidden = rows.some((button) => !button.hidden);
+      empty.hidden = rows.some((button) => !button.hidden && !button.disabled);
     };
     const position = () => {
-      if (innerWidth < 700) {
-        dialog.style.removeProperty('width');
-        dialog.style.removeProperty('top');
-        dialog.style.removeProperty('left');
-        dialog.style.removeProperty('max-height');
-        return;
-      }
+      for (const property of ['width', 'top', 'bottom', 'left', 'max-height']) dialog.style.removeProperty(property);
+      if (innerWidth < 700) return;
       const rect = trigger.getBoundingClientRect();
-      const width = Math.min(select.name === 'when' ? 440 : 400, innerWidth - 32);
-      const top = Math.min(rect.bottom + 16, Math.max(16, innerHeight - 340));
+      const width = Math.min(calendar ? 720 : 400, innerWidth - 32);
+      const cap = calendar ? 720 : 560;
+      const below = innerHeight - rect.bottom - 32;
+      const above = rect.top - 32;
       dialog.style.width = `${width}px`;
       dialog.style.left = `${Math.max(16, Math.min(rect.left - 20, innerWidth - width - 16))}px`;
-      dialog.style.top = `${top}px`;
-      dialog.style.maxHeight = `${Math.min(560, innerHeight - top - 16)}px`;
+      if (calendar || below >= Math.min(cap, 360) || below >= above) {
+        const top = calendar ? Math.min(rect.bottom + 16, Math.max(16, innerHeight - 720)) : Math.max(16, Math.min(rect.bottom + 12, innerHeight - 240));
+        dialog.style.top = `${top}px`;
+        dialog.style.maxHeight = `${Math.min(cap, innerHeight - top - 16)}px`;
+      } else {
+        dialog.style.top = 'auto';
+        dialog.style.bottom = `${innerHeight - rect.top + 12}px`;
+        dialog.style.maxHeight = `${Math.min(cap, above)}px`;
+      }
     };
     trigger.addEventListener('click', () => {
       if (search) search.value = '';
       filter();
       sync();
+      calendar?.open();
       position();
       dialog.showModal();
       dialog.dispatchEvent(new CustomEvent('bx:picker-open', { bubbles: true, detail: { dialog } }));
       document.documentElement.classList.add('picker-open');
       trigger.setAttribute('aria-expanded', 'true');
-      if (search) search.focus();
-      else (rows.find((button) => button.dataset.value === select.value) || close).focus();
+      if (calendar && !choices.hidden) (rows.find(button => button.dataset.value === select.value && !button.disabled) || close).focus();
+      else if (calendar) calendar.focus();
+      else if (search) search.focus();
+      else (rows.find((button) => button.dataset.value === select.value && !button.disabled) || close).focus();
     });
     close.addEventListener('click', closePicker);
     dialog.addEventListener('close', () => {
@@ -137,8 +156,9 @@ export function searchPickers(form) {
         closePicker();
         return;
       }
+      if (event.target.dataset.date || choices.hidden) return;
       if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) || event.target === search) return;
-      const visible = rows.filter((button) => !button.hidden);
+      const visible = rows.filter((button) => !button.hidden && !button.disabled);
       if (!visible.length) return;
       event.preventDefault();
       const index = visible.indexOf(document.activeElement);
@@ -149,14 +169,18 @@ export function searchPickers(form) {
     search?.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') {
         event.preventDefault();
-        rows.find((button) => !button.hidden)?.click();
+        rows.find((button) => !button.hidden && !button.disabled)?.click();
       } else if (event.key === 'ArrowDown') {
         event.preventDefault();
-        rows.find((button) => !button.hidden)?.focus();
+        rows.find((button) => !button.hidden && !button.disabled)?.focus();
       }
     });
-    select.addEventListener('change', sync);
-    form.addEventListener('reset', () => setTimeout(sync, 0));
+    select.addEventListener('change', () => { trigger.removeAttribute('aria-invalid'); sync(); });
+    select.addEventListener('invalid', event => { event.preventDefault(); trigger.setAttribute('aria-invalid', 'true'); const first = select.form?.querySelector?.(':invalid'); if (!first || first === select) trigger.focus(); });
+    if (select.required) trigger.setAttribute('aria-required', 'true');
+    if (select.getAttribute('aria-invalid')) trigger.setAttribute('aria-invalid', select.getAttribute('aria-invalid'));
+    if (select.getAttribute('aria-describedby')) trigger.setAttribute('aria-describedby', select.getAttribute('aria-describedby'));
+    (select.form || form).addEventListener('reset', () => setTimeout(sync, 0));
     window.addEventListener('resize', () => { if (dialog.open) position(); });
     select.after(trigger);
     form.append(dialog);

@@ -62,3 +62,6 @@ Lookup reads the interface, account ([[src/I18n/EsAccount]], [[src/I18n/EnAccoun
 
 ## Assistant integration Grill Log
 - **Q:** What changes here? **A:** Integrate the bounded assistant contract while preserving existing routes, source escaping, session guards and optional reduced-motion enhancement. Server credentials remain secret; browser cache graph advances together. Resolved.
+
+## Formatting baseline Grill Log · #88
+Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.

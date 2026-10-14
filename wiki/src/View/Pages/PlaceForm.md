@@ -41,3 +41,6 @@ The chooser lists every category with only the kinds it takes, its default first
 ## Referenced by
 
 [[src/_MOC]]
+
+## Hours pickers
+Each opening-hours time input declares `data-form-time` (placeholder) and `data-picker-close`, so FormDates turns it into a 30-minute picker; empty still means closed.

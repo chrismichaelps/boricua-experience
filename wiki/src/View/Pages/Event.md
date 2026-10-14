@@ -72,3 +72,6 @@ Resolved: guests see the like count as a sign-in link that returns to the activi
 
 ## Activity covers Grill Log · #82
 Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
+
+## Formatting baseline Grill Log · #88
+Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.

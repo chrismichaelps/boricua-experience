@@ -40,3 +40,6 @@ Average with a bar per star count; the composer for members who may review (pre-
 ## Referenced by
 
 [[src/_MOC]]
+
+## Report reason picker
+The report form declares `search-pickers`, so the reason select opens the shared picker instead of the native list.

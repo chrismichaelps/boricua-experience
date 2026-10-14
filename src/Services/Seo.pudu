@@ -17,9 +17,11 @@ const PAGES: Array[(Str, Str)] = [
   (Routes.SEARCH, "0.8"),
   (Routes.MAP, "0.6"),
   (Routes.ABOUT, "0.4"),
+  (Routes.CONTACT, "0.3"),
   (Routes.TERMS, "0.2"),
   (Routes.PRIVACY, "0.2"),
-  (Routes.COOKIES, "0.2")
+  (Routes.COOKIES, "0.2"),
+  (Routes.ACCESSIBILITY, "0.2")
 ]
 
 /// Every indexable address: fixed pages, categories, municipalities, and public events.

@@ -5,6 +5,9 @@ module Constants.Routes
 export const HOME: Str = "/"
 /// Search results and filters.
 export const SEARCH: Str = "/search"
+/// Keeping a listing, and removing a kept one.
+export const SEARCH_SAVE: Str = "/search/save"
+export const SEARCH_DELETE: Str = "/searches/:id/delete"
 /// The map of upcoming events.
 export const MAP: Str = "/map"
 /// Prefix of an event page; the slug follows.
@@ -16,6 +19,11 @@ export const EVENT_COVER: Str = "/e/:slug/cover"
 export const EVENT_COVER_FINISH: Str = "/e/:slug/cover/:id/finish"
 export const EVENT_COVER_REMOVE: Str = "/e/:slug/cover/:id/remove"
 export const EVENT_MANAGE: Str = "/e/:slug/requests"
+/// Approving every pending request that fits, and the guest list as a spreadsheet file.
+export const EVENT_APPROVE_ALL: Str = "/e/:slug/requests/approve-all"
+export const EVENT_GUESTS_CSV: Str = "/e/:slug/guests.csv"
+/// A member's private calendar feed, addressed by account and signature.
+export const CALENDAR_FEED: Str = "/calendar/:user/:token"
 export const EVENT_JOIN: Str = "/e/:slug/join"
 export const EVENT_WITHDRAW: Str = "/e/:slug/withdraw"
 export const EVENT_SAVE: Str = "/e/:slug/save"
@@ -49,6 +57,9 @@ export const PLACE_MEDIA_FINISH: Str = "/lugar/:slug/media/:id/finish"
 export const PLACE_MEDIA_REMOVE: Str = "/lugar/:slug/media/:id/remove"
 /// The scheduled media cleanup, answered only to the platform scheduler's secret.
 export const MEDIA_SWEEP: Str = "/internal/media-sweep"
+/// The weekly email summaries, sent by the platform scheduler once a day; and a summary's own stop link.
+export const DIGEST_RUN: Str = "/internal/digest"
+export const DIGEST_STOP: Str = "/digest/stop/:user/:token"
 export const PLACE_EDIT: Str = "/lugar/:slug/edit"
 export const PLACE_STATUS: Str = "/lugar/:slug/status"
 export const PLACE_REVIEW: Str = "/lugar/:slug/review"
@@ -58,10 +69,14 @@ export const PLACE_REVIEW_REPORT: Str = "/lugar/:slug/reviews/:id/report"
 /// The member's requests, saved events, and organized events.
 export const ACTIVITY: Str = "/activity"
 export const NOTIFICATIONS: Str = "/notifications"
+/// The member's achievements and one achievement's detail.
+export const ACHIEVEMENTS: Str = "/achievements"
+export const ACHIEVEMENT: Str = "/achievements/:slug"
 /// The member's profile and settings.
 export const ACCOUNT: Str = "/account"
 export const ACCOUNT_PROFILE: Str = "/account/profile"
 export const ACCOUNT_PREFERENCES: Str = "/account/preferences"
+export const ACCOUNT_DISCOVERY: Str = "/account/discovery"
 export const ACCOUNT_PASSWORD: Str = "/account/password"
 export const ACCOUNT_EXPORT: Str = "/account/export"
 export const ACCOUNT_LOCATION_HISTORY: Str = "/account/location-history"
@@ -84,9 +99,13 @@ export const ADMIN: Str = "/admin"
 export const ADMIN_REPORT: Str = "/admin/reports/:id"
 export const ADMIN_REVIEW: Str = "/admin/reviews/:id"
 export const TERMS: Str = "/terms"
+export const TERMS_ACCEPT: Str = "/terms/accept"
 export const PRIVACY: Str = "/privacy"
 export const COOKIES: Str = "/cookies"
+export const ACCESSIBILITY: Str = "/accessibility"
 export const ABOUT: Str = "/about"
+/// The contact form.
+export const CONTACT: Str = "/contact"
 export const OFFLINE: Str = "/offline"
 /// Language choice and cookie consent, both posted from every page.
 export const LANGUAGE: Str = "/language"
@@ -103,6 +122,8 @@ export const API_SUGGEST: Str = "/api/suggest"
 export const API_LOCATION: Str = "/api/location"
 export const API_LOCATION_STOP: Str = "/api/location/stop"
 export const API_PARTICIPANTS: Str = "/api/e/:slug/positions"
+/// Actions only the browser sees, posted for achievements; answers new unlocks.
+export const API_ACHIEVEMENT_SIGNALS: Str = "/api/achievements/signals"
 /// Static assets served by the CDN, or by the local server in development.
 export const ASSETS_PREFIX: Str = "/assets/"
 export const SERVICE_WORKER: Str = "/sw.js"

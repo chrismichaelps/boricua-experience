@@ -295,3 +295,34 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Database/MediaConfirmation]] — Activity cover integration.
 
 - [[src/Test/MediaService]] — Verification and cleanup transport regressions.
+- [[src/Database/Community]] — waitlist, organizer tools, review holds and the private calendar feed.
+- [[src/Database/Achievements]] · [[src/View/Pages/Achievements]] — achievements as data, their unlock mechanism, board and badges.
+- [[src/Database/DiscoveryFunnel]] — discovery-to-request counts by channel.
+- [[src/Database/NotificationDigest]] — the optional weekly email summary.
+
+- [[src/Server/FailureLogWorker]] · [[src/Server/FailureLogSchema]] — transactional bounded operational logging.
+- [[src/Public/App]] — navigation and fixed join-panel footer reservation.
+
+- [[src/Test/FailureLogIngestion]] · [[src/Test/JoinPanel]] — operational quota and footer lifecycle regressions.
+
+- [[src/Test/Community]] — pure calendar, referral and spreadsheet safety regressions.
+
+- [[src/Database/LegalAudiences]] — event and attendee audience protection.
+
+- [[src/Web/FailureLog]] · [[src/Test/FailureLog]] — private capability redaction in operational logs.
+
+- [[src/Services/Digest]] · [[src/Domain/Digest]] · [[src/Web/Handlers/Digest]] · [[src/Test/Digest]] · [[src/Database/EmailUnsubscribe]] — revision-aware optional email suppression.
+
+- [[src/Public/DateCalendar]] — exact date-range picker.
+- [[src/Test/DateCalendar]] — calendar draft/keyboard regressions.
+
+- [[src/Public/MapSurface]]
+- [[src/Public/HomeReadiness]]
+
+- [[src/Test/DiscoverySurfaces]]
+
+- [[src/Public/FormDates]] — shared form calendars and native temporal fallback.
+
+- [[src/Test/FormControls]] — canonical temporal and selector validation regressions.
+
+- [[src/Test/MessageKeys]] — declared dynamic translation families.

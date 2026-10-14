@@ -7,8 +7,11 @@ import Std.Html as Html
 import Constants.Routes as Routes
 import Domain.Event as Event
 import Domain.Participation as Participation
+import Domain.Search as Search
 import Services.Participation as ParticipationService
 import View.Components.EventCard as EventCard
+import View.Components.Form as Form
+import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Frame as Frame
 import View.Layout as Layout
@@ -31,6 +34,7 @@ export fn render(frame: &Frame.Frame, activity: &ParticipationService.Activity) 
         H.nav().class("segmented").label(Frame.t(frame, "activity.title")).holding([
             tab("going", "activity.requests", activity.requests.length()),
             tab("saved", "activity.saved", activity.saved.length()),
+            tab("searches", "activity.searches", activity.searches.length()),
             tab("organizing", "activity.organizing", activity.organizing.length())
           ]),
         H.section().id("going").class("activity-section").holding([
@@ -40,6 +44,16 @@ export fn render(frame: &Frame.Frame, activity: &ParticipationService.Activity) 
         H.section().id("saved").class("activity-section").holding([
             H.h2().class("section-title").says(Frame.t(frame, "activity.saved")),
             if activity.saved.isEmpty() { Notice.empty("bookmark", Frame.t(frame, "activity.no_saved"), Frame.t(frame, "activity.no_saved_body"), H.nothing()) } else { EventCard.grid(frame, &activity.saved) }
+          ]),
+        H.section().id("searches").class("activity-section").holding([
+            H.h2().class("section-title").says(Frame.t(frame, "activity.searches")),
+            if activity.searches.isEmpty() { Notice.empty("search", Frame.t(frame, "activity.no_searches"), Frame.t(frame, "activity.no_searches_body"), H.a().class("button").href(Routes.SEARCH).says(Frame.t(frame, "nav.explore"))) } else {
+              H.ul().class("saved-searches").holding(activity.searches.map(|saved: Search.SavedSearch| H.li().class("saved-search").holding([
+                      H.a().class("saved-search-link").href(Routes.SEARCH + saved.query).holding([Icons.sized("search", 18), H.span().says(saved.label)]),
+                      H.a().class("button button-ghost button-small").href(Routes.MAP + saved.query).holding([Icons.sized("map", 16), H.span().says(Frame.t(frame, "search.show_map"))]),
+                      H.form().action(Routes.SEARCH_DELETE.replace(":id", saved.id)).method("post").holding([Form.token(frame), H.button().submit().class("icon-button").label(Frame.tf(frame, "activity.delete_search", &[("label", saved.label)])).holding([Icons.sized("trash", 18)])])
+                    ])))
+            }
           ]),
         H.section().id("organizing").class("activity-section").holding([
             H.h2().class("section-title").says(Frame.t(frame, "activity.organizing")),

@@ -8,6 +8,7 @@ import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Locale as Locale
 import Domain.Profile as Profile
+import View.Components.A11y as A11y
 import View.Components.Assistant as Assistant
 import View.Components.Avatar as Avatar
 import View.Components.Footer as Footer
@@ -30,12 +31,23 @@ export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: 
           H.main().id("content").class("shell").at("tabindex", "-1").holding([content]),
           Footer.render(frame),
           tabBar(frame, &section),
-          if section == MapView { H.span() } else { Assistant.render(frame) },
+          if frame.path == Routes.HOME && section == Explore { Assistant.render(frame) } else { H.nothing() },
+          A11y.render(frame, section != MapView),
+          achievementToasts(frame),
           Notice.cookieBanner(frame),
           Notice.flash(frame),
           H.div().class("live-badge").id("live-badge").at("hidden", "hidden").role("status").holding([H.span().class("live-dot"), H.span().says(Frame.t(frame, "location.live"))])
         ])
     ]).html()
+}
+
+/// Where unlocked achievements are announced, for signed-in members only. The script records what only
+/// the browser sees and shows each new unlock here.
+fn achievementToasts(frame: &Frame.Frame) -> H.Node {
+  match frame.member {
+    case Some(_) => H.div().class("ach-toasts").data("feature", "achievements").data("label", Frame.t(frame, "achievements.toast")).data("view", Frame.t(frame, "achievements.view")).data("href", Routes.ACHIEVEMENTS).role("status").at("aria-live", "polite")
+    case None => H.nothing()
+  }
 }
 
 /// The body class for a section, so full-screen tools can drop the footer.
@@ -70,6 +82,11 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
     H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/a11y.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/achievements.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/badges.css" + version),
+    H.script().src("/assets/js/a11y-boot.js" + version),
+    if frame.path == Routes.HOME { H.script().src("/assets/js/home-readiness.js" + version) } else { H.nothing() },
     H.script().kind("module").src("/assets/js/main.js" + version).flag("defer").data("locale", Locale.code(&frame.locale))
   ].concat(if frame.formToken.isEmpty() { [] } else { [H.meta().name("csrf-token").at("content", frame.formToken)] })
 }
@@ -142,10 +159,20 @@ fn languageRow(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
+/// The menu row that opens the accessibility panel; on phones it replaces the floating launcher.
+fn accessibilityRow(frame: &Frame.Frame) -> H.Node {
+  H.button().kind("button").class("menu-row").role("menuitem").data("a11y-open", "").at("aria-haspopup", "dialog").at("aria-controls", "a11y-panel").holding([
+      Icons.sized("eye", 20),
+      H.span().says(Frame.t(frame, "a11y.title")),
+      Icons.sized("chevron-right", 16)
+    ])
+}
+
 /// The account menu: a disclosure that is a popover on wide screens and a full sheet on phones.
 fn accountMenu(frame: &Frame.Frame) -> H.Node {
   let legal = H.div().class("menu-foot").holding([
       H.a().href(Routes.ABOUT).says(Frame.t(frame, "footer.about")),
+      H.a().href(Routes.CONTACT).says(Frame.t(frame, "footer.contact")),
       H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms")),
       H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy"))
     ])
@@ -164,7 +191,8 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
           ]),
         H.div().class("menu-group").holding([
             menuLink(Routes.ACCOUNT, "settings", Frame.t(frame, "nav.account_settings"), H.nothing()),
-            languageRow(frame)
+            languageRow(frame),
+            accessibilityRow(frame)
           ]),
         H.div().class("menu-group").holding([
             H.form().action(Routes.SIGN_OUT).method("post").class("menu-form").holding([Form.token(frame), H.button().submit().class("menu-row").role("menuitem").holding([Icons.sized("logout", 20), H.span().says(Frame.t(frame, "nav.sign_out"))])])
@@ -180,7 +208,8 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
           ]),
         H.div().class("menu-group").holding([
             menuLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), H.nothing()),
-            languageRow(frame)
+            languageRow(frame),
+            accessibilityRow(frame)
           ]),
         legal
       ])

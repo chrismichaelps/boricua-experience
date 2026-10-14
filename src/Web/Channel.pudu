@@ -1,0 +1,42 @@
+/** @Web.Channel.Discovery — the part of the site, or the outside, that led a visitor to an activity */
+module Web.Channel
+
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+
+/// Channels the database counts, in the same spelling.
+export const CHANNELS: Set[Str] = setOf(["home", "search", "map", "town", "category", "profile", "event", "assistant", "activity", "notifications", "share", "external", "direct", "other"])
+
+/// Channels a link may name with `?from=`, for places the referring page cannot tell apart.
+const NAMED: Set[Str] = setOf(["assistant", "share", "notifications"])
+
+/// The channel of a visit to `path`, from a link's own `from` and the referring address. A visit
+/// from the same page (a reload or the redirect after joining) answers nothing, so it is not counted.
+export fn of(referer: Str, siteUrl: Str, path: Str, from: Str) -> Str {
+  if NAMED.contains(from) { return from }
+  if referer.isEmpty() { return "direct" }
+  if !referer.startsWith(siteUrl + "/") && referer != siteUrl { return "external" }
+  let rest = referer.drop(siteUrl.length())
+  let mark = rest.indexOf("?")
+  let page = if mark < 0 { rest } else { rest.take(mark) }
+  let trimmed = if page.length() > 1 && page.endsWith("/") { page.take(page.length() - 1) } else { page }
+  if trimmed == path { return "" }
+  if trimmed.isEmpty() || trimmed == "/" { return "home" }
+  if trimmed == "/search" { return "search" }
+  if trimmed == "/map" { return "map" }
+  if trimmed.startsWith("/pueblo/") { return "town" }
+  if trimmed.startsWith("/c/") { return "category" }
+  if trimmed.startsWith("/u/") { return "profile" }
+  if trimmed.startsWith("/e/") { return "event" }
+  if trimmed == "/activity" { return "activity" }
+  if trimmed == "/notifications" { return "notifications" }
+  "other"
+}
+
+/// The channel of the request being answered.
+export fn ofRequest(request: &Route.Request, siteUrl: Str) -> Str {
+  of(Option.unwrapOr(Route.header(request, "referer"), ""), siteUrl, request.path, Option.unwrapOr(Route.queryParam(request, "from"), ""))
+}
+
+/// A posted channel when it is one the database counts, and nothing otherwise.
+export fn known(given: Str) -> Str { if CHANNELS.contains(given) { given } else { "" } }

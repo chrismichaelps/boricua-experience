@@ -1,0 +1,96 @@
+/** @Services.Digest.Weekly — the optional weekly email summary, with current consent checked before delivery */
+module Services.Digest
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Std.Json as Json
+import Api.Mail as Mail
+import Api.Supabase.Gateway as Gateway
+import Constants.Limits as Limits
+import Constants.Routes as Routes
+import Constants.Supabase as Supabase
+import Domain.Digest as Digest
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import I18n.Dates as Dates
+import I18n.Translate as Translate
+import Services.Runtime as Runtime
+import Utils.Time as Time
+
+/// The signature that makes a member's stop link unguessable.
+export fn stopToken(runtime: &Runtime.Runtime, userId: Str) -> Str {
+  Bytes.encodeBase64Url(&Crypto.hmacSha256(&runtime.sessionKey, &Bytes.fromText("digest-stop|" + userId))).take(32)
+}
+
+/// Whether a stop link's signature is the member's own.
+export fn stopValid(runtime: &Runtime.Runtime, userId: Str, token: Str) -> Bool {
+  !userId.isEmpty() && Crypto.bytesMatch(&Bytes.fromText(stopToken(runtime, userId)), &Bytes.fromText(token))
+}
+
+/// A canonical same-origin action for a validated stop link.
+export fn stopPath(userId: Str, token: Str) -> Str {
+  Routes.DIGEST_STOP.replace(":user", userId).replace(":token", token)
+}
+
+/// A member's one-click stop address.
+export fn stopUrl(runtime: &Runtime.Runtime, userId: Str) -> Str {
+  runtime.siteUrl + stopPath(userId, stopToken(runtime, userId))
+}
+
+/// The week a run belongs to, so a retried run never sends a second copy the same week.
+fn weekOf(nowMillis: Int) -> Str { show(nowMillis / (7 * 86400000)) }
+
+/// One summary as plain text in the member's language, with its stop headers.
+export fn letter(runtime: &Runtime.Runtime, due: &Digest.Due, nowMillis: Int) -> Mail.Letter {
+  let locale = Locale.fromCode(due.locale)
+  let t = |key: Str| Translate.text(&locale, key)
+  let lines = due.upcoming.map(|found: Digest.Upcoming| {
+      let when = match Time.parseTimestamp(found.startsAt) {
+        case Some(at) => Dates.short(&locale, &Time.local(&at)) + " · " + Time.clock12(&Time.local(&at))
+        case None => ""
+      }
+      "• " + found.title + " — " + when + " · " + found.town + "\n  " + runtime.siteUrl + Routes.EVENT_PREFIX + found.slug + "?from=notifications"
+    })
+  let unread = if due.unread > 0 { Translate.count(&locale, "digest.unread", due.unread) + "\n" + runtime.siteUrl + Routes.NOTIFICATIONS + "\n\n" } else { "" }
+  let upcoming = if lines.isEmpty() { "" } else { t("digest.upcoming") + "\n\n" + lines.join("\n\n") + "\n\n" }
+  let stopAt = stopUrl(runtime, due.userId)
+  Mail.Letter {
+    to: due.email,
+    replyTo: "",
+    subject: t("digest.subject"),
+    text: Translate.fill(&locale, "digest.greeting", &[("name", due.name)]) + "\n\n" + unread + upcoming + t("digest.footer") + "\n" + runtime.siteUrl + Routes.ACCOUNT + "#preferences\n" + t("digest.stop") + "\n" + stopAt + "\n",
+    idempotencyKey: "digest-" + due.userId + "-" + weekOf(nowMillis),
+    headers: [("List-Unsubscribe", "<" + stopAt + ">"), ("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")]
+  }
+}
+
+/// Sends the summaries due today; without a mailer nothing is claimed, so no member misses a week.
+export fn run(runtime: &Runtime.Runtime, nowMillis: Int) -> Result[Digest.Run, Problem.Problem] {
+  let mailer = match runtime.mailer {
+    case Some(found) => found
+    case None => { return Err(Problem.Unavailable("mail_not_configured")) }
+  }
+  let due: Array[Digest.Due] = Gateway.queryAsService(&runtime.gateway, Supabase.DIGEST_BATCH, &[("p_limit", Json.Number(Limits.DIGEST_BATCH))]) ?
+  var sent = 0
+  var failed = 0
+  var skipped = 0
+  for member in due {
+    let allowed: Result[Bool, Problem.Problem] = Gateway.queryAsService(&runtime.gateway, Supabase.DIGEST_ALLOWED, &[("p_user_id", Gateway.text(member.userId)), ("p_generation", Json.Number(member.generation))])
+    match allowed {
+      case Ok(false) => { skipped = skipped + 1 }
+      case Err(_) => { failed = failed + 1 }
+      case Ok(true) => match Mail.send(&mailer, &letter(runtime, &member, nowMillis)) {
+        case Ok(_) => { sent = sent + 1 }
+        case Err(_) => { failed = failed + 1 }
+      }
+    }
+  }
+  Ok(Digest.Run{due: due.length(), sent: sent, failed: failed, skipped: skipped})
+}
+
+/// Stops a member's summaries from their own link.
+export fn stop(runtime: &Runtime.Runtime, userId: Str, token: Str) -> Result[(), Problem.Problem] {
+  if !stopValid(runtime, userId, token) { return Err(Problem.Missing) }
+  let _answer = Gateway.callAsService(&runtime.gateway, Supabase.STOP_DIGEST, &[("p_user_id", Gateway.text(userId))]) ?
+  Ok(())
+}

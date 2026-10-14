@@ -1,0 +1,71 @@
+/** @View.Pages.Contact.Form — the contact form; the team's address is never written into the page */
+module View.Pages.Contact
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Constants.Limits as Limits
+import Constants.Routes as Routes
+import Domain.Contact as Contact
+import Domain.Problem as Problem
+import View.Components.Form as Form
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/** @View.Pages.Contact.State — the form with its values and refusal, or the thank-you after sending */
+export type State = Writing(Contact.Form, Option[Problem.Problem]) | Sent
+
+/// The trap field a person never sees or reaches; automated senders fill it in.
+fn trap(frame: &Frame.Frame) -> H.Node {
+  H.div().class("contact-trap").at("aria-hidden", "true").holding([
+      H.labelFor().at("for", "f-website").says(Frame.t(frame, "contact.trap")),
+      H.input().kind("text").name("website").id("f-website").at("tabindex", "-1").at("autocomplete", "off").value("")
+    ])
+}
+
+/// The form: topic, then the sender, then the message, with the hidden stamp and trap.
+fn form(frame: &Frame.Frame, values: &Contact.Form, problem: &Option[Problem.Problem], stamp: Str) -> H.Node {
+  let errors = match problem { case Some(found) => Problem.fieldErrors(&found) case None => [] }
+  let topics = Contact.TOPICS.map(|topic: Str| (topic, Frame.t(frame, "contact.topic." + topic)))
+  let name = Form.Field{..Form.field("name", Frame.t(frame, "contact.name"), values.name), required: true}
+  let email = Form.Field{..Form.field("email", Frame.t(frame, "contact.email"), values.email), kind: "email", hint: Frame.t(frame, "contact.email_hint"), required: true}
+  let body = Form.Field{..Form.field("body", Frame.t(frame, "contact.body"), values.body), hint: Frame.t(frame, "contact.body_hint"), required: true}
+  H.form().class("stack-form").action(Routes.CONTACT).method("post").at("novalidate", "novalidate").holding([
+      Form.problemBanner(frame, problem),
+      Form.token(frame),
+      H.input().kind("hidden").name("stamp").value(stamp),
+      H.section().class("form-section").holding([
+          H.h2().class("section-title").says(Frame.t(frame, "contact.form_title")),
+          Form.select(frame, &Form.Field{..Form.field("topic", Frame.t(frame, "contact.topic"), values.topic), required: true}, &topics, &errors),
+          Form.input(frame, &name, &errors, |control: H.Node| control.at("autocomplete", "name").at("maxlength", show(Limits.CONTACT_NAME_MAX))),
+          Form.input(frame, &email, &errors, |control: H.Node| control.at("autocomplete", "email").at("maxlength", show(Limits.EMAIL_MAX)).at("inputmode", "email")),
+          Form.area(frame, &body, 7, &errors)
+        ]),
+      trap(frame),
+      H.p().class("muted small").holding([H.span().says(Frame.t(frame, "contact.privacy") + " "), H.a().href(Routes.PRIVACY).says(Frame.t(frame, "footer.privacy"))]),
+      H.button().submit().class("button button-block").says(Frame.t(frame, "contact.send"))
+    ])
+}
+
+/// The confirmation shown after a message is accepted.
+fn sent(frame: &Frame.Frame) -> H.Node {
+  H.div().class("form-section").role("status").holding([
+      H.h2().class("section-title").says(Frame.t(frame, "contact.sent_title")),
+      H.p().says(Frame.t(frame, "contact.sent_body")),
+      H.a().class("button button-ghost").href(Routes.CONTACT).says(Frame.t(frame, "contact.another"))
+    ])
+}
+
+/// The contact page in the app's form layout.
+export fn render(frame: &Frame.Frame, state: &State, stamp: Str) -> Html.Html {
+  let meta = Seo.meta(Frame.t(frame, "contact.title"), Frame.t(frame, "contact.description"), Routes.CONTACT, true)
+  Layout.page(frame, &meta, Layout.Elsewhere, H.div().class("narrow").holding([
+        H.h1().class("page-title").says(Frame.t(frame, "contact.title")),
+        H.p().class("lead").says(Frame.t(frame, "contact.lead")),
+        match state {
+          case Writing(values, problem) => form(frame, &values, &problem, stamp)
+          case Sent => sent(frame)
+        }
+      ]))
+}

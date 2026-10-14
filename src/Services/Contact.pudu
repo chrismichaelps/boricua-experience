@@ -1,0 +1,88 @@
+/** @Services.Contact.Relay — visitor messages recorded, then relayed to the team by email */
+module Services.Contact
+
+import Std.Bytes as Bytes
+import Std.Crypto as Crypto
+import Api.Contact as ContactApi
+import Api.Mail as Mail
+import Constants.Limits as Limits
+import Domain.Contact as Contact
+import Domain.Problem as Problem
+import Services.Runtime as Runtime
+import Validation.Contact as Rules
+
+/** @Services.Contact.Sending — a posted message with what the server knows about its sender */
+export type Sending = {
+  form: Contact.Form,
+  locale: Str,
+  address: Str,
+  stamp: Str,
+  trap: Str,
+  memberId: Str,
+  nowMillis: Int
+}
+
+/** @Services.Contact.Outcome — whether a message was accepted, and whether it was relayed already */
+export type Outcome = Accepted(Bool) | Ignored
+
+/// The signature of an issue time, bound to the contact form so no other stamp is accepted.
+fn signature(runtime: &Runtime.Runtime, issued: Str) -> Str {
+  Bytes.encodeBase64Url(&Crypto.hmacSha256(&runtime.sessionKey, &Bytes.fromText("contact-form|" + issued)))
+}
+
+/// The stamp a contact form carries: when it was issued, and a signature over that time.
+export fn stamp(runtime: &Runtime.Runtime, nowMillis: Int) -> Str {
+  let issued = show(nowMillis)
+  issued + "." + signature(runtime, issued)
+}
+
+/// The seconds since a genuine stamp was issued, or nothing for a forged or malformed one.
+export fn stampAge(runtime: &Runtime.Runtime, given: Str, nowMillis: Int) -> Option[Int] {
+  let parts = given.split(".")
+  if parts.length() != 2 { return None }
+  let issued = parts[0].toInt() ?
+  if !Crypto.bytesMatch(&Bytes.fromText(signature(runtime, parts[0])), &Bytes.fromText(parts[1])) { return None }
+  Some((nowMillis - issued) / 1000)
+}
+
+/// A one-way keyed fingerprint of a network address for one day; it only serves the rate windows.
+export fn fingerprint(runtime: &Runtime.Runtime, address: Str, nowMillis: Int) -> Str {
+  let day = show(nowMillis / 86400000)
+  Crypto.sha256Hex(Bytes.encodeBase64Url(&Crypto.hmacSha256(&runtime.sessionKey, &Bytes.fromText("contact-sender|" + address + "|" + day))))
+}
+
+/// The plain-text letter the team receives; the sender's text is never interpreted as markup.
+export fn letter(runtime: &Runtime.Runtime, form: &Contact.Form, locale: Str, id: Int) -> Mail.Letter {
+  let name = form.name.replace("\r", " ").replace("\n", " ").trim()
+  let email = form.email.replace("\r", "").replace("\n", "").trim()
+  Mail.Letter {
+    to: runtime.contactTo,
+    replyTo: email,
+    subject: "Boricua Experience · " + form.topic + " · " + name,
+    text: "Tema / Topic: " + form.topic + "\nNombre / Name: " + name + "\nCorreo / Email: " + email + "\nIdioma / Language: " + locale + "\nMensaje #" + show(id) + "\n\n" + form.body.trim() + "\n",
+    idempotencyKey: "contact-" + show(id),
+    headers: []
+  }
+}
+
+/// Records a message and relays it. A filled trap field is ignored without a trace, a stamp that is
+/// forged, too fresh, or too old is refused, and the form is validated before anything is written.
+/// A relay failure keeps the recorded message; it is marked failed for the team to read later.
+export fn submit(runtime: &Runtime.Runtime, sending: &Sending) -> Result[Outcome, Problem.Problem] {
+  if !sending.trap.trim().isEmpty() { return Ok(Ignored) }
+  match stampAge(runtime, sending.stamp, sending.nowMillis) {
+    case Some(age) => {
+      if age < Limits.CONTACT_MIN_SECONDS { return Err(Problem.Refused("contact_too_fast")) }
+      if age > Limits.CONTACT_MAX_SECONDS { return Err(Problem.Refused("contact_expired")) }
+    }
+    case None => { return Err(Problem.Refused("contact_expired")) }
+  }
+  let valid = Rules.form(&sending.form) ?
+  let receipt = ContactApi.submit(&runtime.gateway, &valid, sending.locale, fingerprint(runtime, sending.address, sending.nowMillis), sending.memberId) ?
+  let relayed = match runtime.mailer {
+    case Some(mailer) => if runtime.contactTo.isEmpty() { false } else { Mail.send(&mailer, &letter(runtime, &valid, sending.locale, receipt.id)) == Ok(()) }
+    case None => false
+  }
+  let _marked = ContactApi.mark(&runtime.gateway, receipt.id, relayed)
+  Ok(Accepted(relayed))
+}

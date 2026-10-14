@@ -48,6 +48,24 @@ fn row(frame: &Frame.Frame, request: &Participation.IncomingRequest, returnTo: S
     ])
 }
 
+/// The organizer's numbers: places, requests, waitlist, views, saves, and how many viewers asked to join.
+fn insights(frame: &Frame.Frame, found: &Participation.Insights) -> H.Node {
+  let stat = |value: Str, key: Str| H.li().class("stat").holding([H.strong().says(value), H.span().says(Frame.t(frame, key))])
+  H.section().class("panel insights").label(Frame.t(frame, "manage.insights")).holding([
+      H.h2().class("section-title").says(Frame.t(frame, "manage.insights")),
+      H.ul().class("stats").holding([
+          stat(show(found.approved) + (match found.capacity { case Some(cap) => " / " + show(cap) case None => "" }), "manage.stat_going"),
+          stat(show(found.pending), "manage.stat_pending"),
+          stat(show(found.waitlisted), "manage.stat_waitlist"),
+          stat(show(found.views7d), "manage.stat_views7"),
+          stat(show(found.views30d), "manage.stat_views30"),
+          stat(show(found.saves), "manage.stat_saves"),
+          stat(match found.conversion { case Some(rate) => show(rate) + "%" case None => "—" }, "manage.stat_conversion")
+        ]),
+      H.p().class("muted small").says(Frame.t(frame, "manage.conversion_hint"))
+    ])
+}
+
 /// The queue page.
 export fn render(frame: &Frame.Frame, queue: &ParticipationService.Queue, problem: &Option[Problem.Problem]) -> Html.Html {
   let card = queue.event.card
@@ -60,6 +78,13 @@ export fn render(frame: &Frame.Frame, queue: &ParticipationService.Queue, proble
         H.h1().class("page-title").says(Frame.t(frame, "manage.title")),
         H.p().class("lead").says(Translate.fill(&frame.locale, "manage.summary", &[("going", show(card.approvedCount)), ("pending", show(pending.length()))])),
         Form.problemBanner(frame, problem),
+        match queue.insights { case Some(found) => insights(frame, &found) case None => H.nothing() },
+        H.div().class("manage-actions").holding([
+            if pending.isEmpty() { H.nothing() } else {
+              H.form().action(Routes.EVENT_APPROVE_ALL.replace(":slug", card.slug)).method("post").holding([Form.token(frame), H.button().submit().class("button button-small").holding([Icons.sized("check", 16), H.span().says(Frame.t(frame, "manage.approve_all"))])])
+            },
+            H.a().class("button button-ghost button-small").href(Routes.EVENT_GUESTS_CSV.replace(":slug", card.slug)).holding([Icons.sized("download", 16), H.span().says(Frame.t(frame, "manage.download"))])
+          ]),
         if pending.isEmpty() { Notice.empty("check", Frame.t(frame, "manage.empty_title"), Frame.t(frame, "manage.empty_body"), H.nothing()) } else { H.ul().class("requests").holding(pending.map(|r: Participation.IncomingRequest| row(frame, &r, path))) },
         if decided.isEmpty() { H.nothing() } else { H.section().holding([H.h2().class("section-title").says(Frame.t(frame, "manage.decided")), H.ul().class("requests").holding(decided.map(|r: Participation.IncomingRequest| row(frame, &r, path)))]) }
       ]))

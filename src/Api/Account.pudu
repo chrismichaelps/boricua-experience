@@ -45,6 +45,15 @@ export fn completeOnboarding(gateway: &Gateway.Gateway, displayName: Str, locale
   Ok(())
 }
 
+/// Records acceptance of the current Terms of Use and Privacy Policy by an onboarded account.
+export fn acceptTerms(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.ACCEPT_TERMS, &[
+      ("p_terms_version", Gateway.text(App.TERMS_VERSION)),
+      ("p_privacy_version", Gateway.text(App.PRIVACY_VERSION))
+    ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
 /// Changes the member's name, bio, home municipality, and language.
 export fn updateProfile(gateway: &Gateway.Gateway, edit: &Profile.ProfileEdit, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_PROFILE, &[
@@ -52,6 +61,15 @@ export fn updateProfile(gateway: &Gateway.Gateway, edit: &Profile.ProfileEdit, t
       ("p_bio", Gateway.text(edit.bio)),
       ("p_home_municipality", Gateway.textOrNull(edit.homeMunicipality)),
       ("p_locale", Gateway.text(edit.locale))
+    ], Some(token), Gateway.Write) ?
+  Ok(())
+}
+
+/// Changes the member's discovery radius and favourite towns.
+export fn updateDiscovery(gateway: &Gateway.Gateway, chosen: &Profile.Discovery, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.UPDATE_MY_DISCOVERY, &[
+      ("p_radius_km", Gateway.whole(chosen.radiusKm)),
+      ("p_towns", Json.list(&chosen.towns.map(|town: Str| Json.Text(town))))
     ], Some(token), Gateway.Write) ?
   Ok(())
 }
@@ -64,6 +82,7 @@ export fn updatePreferences(gateway: &Gateway.Gateway, chosen: &Profile.Preferen
       ("p_notify_reminders", Gateway.truth(chosen.notifyReminders)),
       ("p_notify_event_changes", Gateway.truth(chosen.notifyEventChanges)),
       ("p_marketing_opt_in", Gateway.truth(chosen.marketingOptIn)),
+      ("p_email_digest", Gateway.truth(chosen.emailDigest)),
       ("p_location_visibility", Gateway.text(chosen.locationVisibility)),
       ("p_show_in_attendee_lists", Gateway.truth(chosen.showInAttendeeLists))
     ], Some(token), Gateway.Write) ?

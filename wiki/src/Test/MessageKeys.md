@@ -1,16 +1,17 @@
 ---
 type: module
+path: "@root/scripts/message-keys.sh"
 fidelity: Active
-tags: [module, test, i18n]
+tags: [module, test, translations]
 ---
 # MessageKeys
-## Purpose
-scripts/message-keys.sh writes the message-key fixture consumed by bilingual translation tests.
+## Purpose and interface
+Regenerate the public translation-key fixture from literal references and declared dynamic families; run bash scripts/message-keys.sh.
 ## Algorithm
-Scan statically named interface keys and include the complete menu/assistant catalog families used dynamically. Exclude incomplete family prefixes while retaining actual declared keys, including hyphenated menu tags.
-## Negative Logic
-No silent removal of missing interface keys or generated user content.
+Extract source literals and dynamic catalog, policy, assistant, menu, media and calendar families, then sort/deduplicate. Translation tests verify all listed keys exist in both languages.
+## Negative logic and edge cases
+No database values, secrets or private inputs. Runtime-composed keys must not be omitted merely because source names their suffixes.
 ## Grill Log
-Resolved: menu dietary, allergen and status keys are built dynamically in views, so enumerate their actual Spanish catalog keys and verify English parity through the existing test. Regeneration is deterministic and fixture-only.
+Resolved: include calendar dictionary keys alongside existing runtime families so month/year and shared calendar labels survive fixture regeneration and bilingual coverage.
 ## Referenced by
-[[src/_MOC]] · [[src/Test/Presentation]]
+[[src/_MOC]] · [[src/I18n/Translate]]

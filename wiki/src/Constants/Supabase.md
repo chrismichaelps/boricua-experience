@@ -63,3 +63,9 @@ Resolved: integrate all-category organizer covers with existing upload presentat
 
 ## Verification cleanup Grill Log
 Resolved: storage inspection transport errors propagate without discarding records or files. Invalid content cleanup atomically discards only a still-pending reservation; a file is removed only after successful discard, so overlapping confirmation cannot destroy ready media.
+
+## Email suppression Grill Log · #89
+Resolved: DIGEST_ALLOWED names the service-only revision-aware consent check; no browser credentials or direct profile table access.
+
+## Renewal
+`ACCEPT_TERMS = "accept_terms"` — records the current Terms and Privacy versions for an onboarded account and appends `renewal` rows to the consent ledger for each document whose version changed.
