@@ -147,3 +147,12 @@ html.a11y-focus :focus, html.a11y-focus :focus-visible { outline: 4px solid #ff8
   .app-full .a11y.is-tucked .a11y-launch { right: 0; top: calc(var(--appbar) + 160px); }
   .app-full:has(.is-sheet-expanded) .a11y-launch, .app-full:has(.is-map-expanded) .a11y-launch { visibility: hidden; }
 }
+
+@media (min-width: 960px) {
+  .app-trip .a11y-launch { top: auto; bottom: 24px; left: 16px; right: auto; width: 48px; height: 48px; }
+  .app-trip .a11y.is-tucked .a11y-launch { left: 0; right: auto; width: 30px; border-radius: 0 16px 16px 0; }
+  .app-trip .a11y.is-tucked .a11y-launch:focus-visible, .app-trip .a11y.is-tucked .a11y-launch:hover { width: 44px; }
+  .app-full:not(.app-trip) .a11y-launch { top: auto; bottom: 96px; right: 16px; width: 48px; height: 48px; }
+  .app-full:not(.app-trip) .a11y.is-tucked .a11y-launch { right: 0; width: 30px; }
+  .app-full:not(.app-trip) .a11y.is-tucked .a11y-launch:focus-visible, .app-full:not(.app-trip) .a11y.is-tucked .a11y-launch:hover { width: 44px; }
+}

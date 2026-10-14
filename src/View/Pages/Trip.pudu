@@ -5,36 +5,53 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Constants.Routes as Routes
+import Domain.Event as Event
+import Domain.Locale as Locale
 import Domain.Plan as Plan
 import Utils.Query as Query
 import View.Components.EventCard as EventCard
 import View.Components.Icons as Icons
+import View.Components.Weather as Weather
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Pages.Plan as PlanPage
 import View.Seo as Seo
 
 /// The messages the trip script shows as the visitor moves: the data attribute and the message key.
-const SCRIPT_MESSAGES: Array[(Str, Str)] = [("next", "plan.trip_next"), ("distance", "plan.trip_distance"), ("near", "plan.trip_near"), ("arrived", "plan.trip_arrived"), ("done-title", "plan.trip_done_title"), ("done-body", "plan.trip_done_body"), ("locating", "plan.trip_locating"), ("location-off", "plan.trip_location_off"), ("off-route", "plan.trip_off_route"), ("status-done", "plan.trip_status_done"), ("status-next", "plan.trip_status_next"), ("status-skipped", "plan.trip_status_skipped"), ("you", "plan.trip_you"), ("follow", "plan.trip_follow"), ("following", "plan.trip_following"), ("option-fastest", "plan.trip_option_fastest"), ("option-alternate", "plan.trip_option_alternate"), ("option-no-highways", "plan.trip_option_no_highways"), ("option-walk", "plan.trip_option_walk"), ("option-detail", "plan.trip_option_detail"), ("eta", "plan.trip_eta")]
+const SCRIPT_MESSAGES: Array[(Str, Str)] = [("next", "plan.trip_next"), ("distance", "plan.trip_distance"), ("near", "plan.trip_near"), ("arrived", "plan.trip_arrived"), ("done-title", "plan.trip_done_title"), ("done-body", "plan.trip_done_body"), ("locating", "plan.trip_locating"), ("location-off", "plan.trip_location_off"), ("off-route", "plan.trip_off_route"), ("status-done", "plan.trip_status_done"), ("status-next", "plan.trip_status_next"), ("status-skipped", "plan.trip_status_skipped"), ("you", "plan.trip_you"), ("follow", "plan.trip_follow"), ("following", "plan.trip_following"), ("option-fastest", "plan.trip_option_fastest"), ("option-alternate", "plan.trip_option_alternate"), ("option-no-highways", "plan.trip_option_no_highways"), ("option-walk", "plan.trip_option_walk"), ("option-detail", "plan.trip_option_detail"), ("eta", "plan.trip_eta"), ("ferry", "plan.leg_ferry"), ("toll", "plan.trip_toll"), ("tolls", "plan.trip_tolls")]
 
 /// One stop: everything the script needs to guide the visitor there, and the activity's link.
 fn stop(frame: &Frame.Frame, item: &Plan.Stop, number: Int) -> H.Node {
   let card = item.card
-  let (seconds, meters) = match item.leg {
-    case Some(leg) => (leg.seconds, leg.meters)
-    case None => (0, 0)
+  let (seconds, meters, ferry) = match item.leg {
+    case Some(leg) => (leg.seconds, leg.meters, leg.ferry)
+    case None => (0, 0, false)
   }
-  H.li().class("trip-stop").data("stop", card.slug).data("title", card.title).data("lat", show(card.lat)).data("lng", show(card.lng))
+  H.li().class("trip-stop").data("stop", card.slug).data("title", Event.titleFor(&card, frame.locale == Locale.En)).data("lat", show(card.lat)).data("lng", show(card.lng))
     .data("place", if card.venueName.isEmpty() { card.municipality.name } else { card.venueName + ", " + card.municipality.name })
+    .data("town", card.municipality.slug).data("town-name", card.municipality.name).data("arrive", item.arrive).data("outdoor", if card.outdoor { "1" } else { "0" }).data("ferry", if ferry { "1" } else { "0" })
     .data("leg-seconds", show(seconds)).data("leg-meters", show(meters)).holding([
       H.span().class("trip-stop-number").at("aria-hidden", "true").says(show(number)),
       H.img().class("trip-stop-cover").src(EventCard.coverOf(&card)).alt("").at("loading", "lazy").at("width", "64").at("height", "48"),
       H.span().class("trip-stop-body").holding([
-          H.a().class("trip-stop-title").href(Routes.EVENT_PREFIX + card.slug).says(card.title),
+          H.a().class("trip-stop-title").href(Routes.EVENT_PREFIX + card.slug).says(Event.titleFor(&card, frame.locale == Locale.En)),
           H.time().class("trip-stop-time").at("datetime", item.arrive).says(Frame.tf(frame, "plan.stay", &[("start", PlanPage.clock(item.arrive)), ("end", PlanPage.clock(item.leave))]) + " · " + card.municipality.name),
-          H.span().class("trip-stop-state").data("trip-state", "1")
+          practical(frame, &card),
+          H.span().class("trip-stop-state").data("trip-state", "1"),
+          Weather.slot(card.municipality.slug, item.arrive, card.outdoor)
         ])
     ])
+}
+
+/// What to know before leaving for a stop: parking and cash, when the organizer said.
+fn practical(frame: &Frame.Frame, card: &Event.Card) -> H.Node {
+  var tags: Array[H.Node] = []
+  match card.parking {
+    case Some(found) => { tags = tags.push(H.span().class("trip-tag").says(Frame.t(frame, if found { "event.parking_yes" } else { "event.parking_no" }))) }
+    case None => {}
+  }
+  if card.cashOnly == Some(true) { tags = tags.push(H.span().class("trip-tag trip-tag-cash").says(Frame.t(frame, "event.cash_only"))) }
+  if tags.isEmpty() { H.nothing() } else { H.span().class("trip-tags").holding(tags) }
 }
 
 /// The trip page: the map with its tools, the next stop with its actions, and every stop in order.
@@ -43,7 +60,7 @@ export fn render(frame: &Frame.Frame, plan: &Plan.Plan) -> Html.Html {
   let meta = Seo.meta(Frame.t(frame, "plan.trip_title"), Frame.t(frame, "plan.trip_description"), Routes.PLAN_TRIP, false)
   var stops: Array[H.Node] = []
   for i in 0..plan.stops.length() { stops = stops.push(stop(frame, &plan.stops[i], i + 1)) }
-  var root = H.div().class("trip-page").data("feature", "trip").data("plan", slugs).data("pins", PlanPage.pins(plan))
+  var root = H.div().class("trip-page").data("feature", "trip").data("plan", slugs).data("pins", PlanPage.pins(frame, plan))
     .data("signed-in", if Frame.signedIn(frame) { "1" } else { "0" })
   for message in SCRIPT_MESSAGES { root = root.data("say-" + message[0], Frame.t(frame, message[1])) }
   Layout.page(frame, &meta, Layout.Journey, root.holding([
@@ -62,9 +79,10 @@ export fn render(frame: &Frame.Frame, plan: &Plan.Plan) -> Html.Html {
         H.section().class("trip-panel").at("aria-labelledby", "trip-next-title").holding([
             H.div().class("trip-next").holding([
                 H.p().class("trip-next-label muted").id("trip-next-title").says(Frame.t(frame, "plan.trip_next")),
-                H.p().class("trip-next-title").data("trip-next", "1").says(firstTitle(plan)),
+                H.p().class("trip-next-title").data("trip-next", "1").says(firstTitle(frame, plan)),
                 H.p().class("trip-status").data("trip-status", "1").role("status").at("aria-live", "polite").says(Frame.t(frame, "plan.trip_intro"))
               ]),
+            Weather.card("", "", "", false),
             H.fieldset().class("trip-routes").data("trip-routes", "1").at("hidden", "hidden").holding([
                 H.legend().class("trip-routes-label").says(Frame.t(frame, "plan.trip_route_label")),
                 H.div().class("trip-route-options").data("trip-route-options", "1")
@@ -79,12 +97,13 @@ export fn render(frame: &Frame.Frame, plan: &Plan.Plan) -> Html.Html {
             if Frame.signedIn(frame) { H.nothing() } else { H.p().class("trip-signin muted").holding([H.a().href(Routes.SIGN_IN + Query.render(&[("return", Routes.PLAN_TRIP + "?e=" + slugs)])).says(Frame.t(frame, "plan.trip_signin"))]) },
             H.h2().class("trip-stops-title").says(Frame.t(frame, "plan.trip_stops_title")),
             H.ol().class("trip-stops").holding(stops),
-            H.button().kind("button").class("button button-ghost button-small trip-restart").data("trip-restart", "1").at("hidden", "hidden").says(Frame.t(frame, "plan.trip_restart"))
+            H.button().kind("button").class("button button-ghost button-small trip-restart").data("trip-restart", "1").at("hidden", "hidden").says(Frame.t(frame, "plan.trip_restart")),
+            Weather.labels(frame)
           ])
       ]))
 }
 
 /// The first stop's title, shown before the trip starts.
-fn firstTitle(plan: &Plan.Plan) -> Str {
-  if plan.stops.isEmpty() { "" } else { plan.stops[0].card.title }
+fn firstTitle(frame: &Frame.Frame, plan: &Plan.Plan) -> Str {
+  if plan.stops.isEmpty() { "" } else { Event.titleFor(&plan.stops[0].card, frame.locale == Locale.En) }
 }

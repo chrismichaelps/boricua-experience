@@ -35,6 +35,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.PLAN_CALENDAR, Serve.page(app, |visitor: Context.Visitor| calendar(&held, &visitor))),
     Route.get(Routes.API_PLAN_ROUTE, Serve.api(app, |visitor: Context.Visitor| route(&held, &visitor))),
     Route.get(Routes.API_PLAN_ROUTES, Serve.api(app, |visitor: Context.Visitor| routeOptions(&held, &visitor))),
+    Route.get(Routes.API_WEATHER, Serve.api(app, |visitor: Context.Visitor| weather(&held, &visitor))),
     Route.get(Routes.PLAN_TRIP, Serve.page(app, |visitor: Context.Visitor| trip(&held, &visitor))),
     Route.post(Routes.API_TRIP_ARRIVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| arrive(&held, &visitor, &session)))
   ]
@@ -143,10 +144,10 @@ fn arrive(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
   }
   match Serve.ask(app, &app.kinds.tripArrival, Serve.signed(session, (arrival, Locale.code(&visitor.locale)))) {
     case Ok(answer) => Respond.json(200, &Json.object(&[
-        ("arrived", Json.Boolean(answer.arrived)),
-        ("completed", Json.Boolean(answer.completed)),
-        ("unlocked", Json.list(&answer.unlocked.map(|found: Achievement.Unlocked| found.encode())))
-      ]))
+          ("arrived", Json.Boolean(answer.arrived)),
+          ("completed", Json.Boolean(answer.completed)),
+          ("unlocked", Json.list(&answer.unlocked.map(|found: Achievement.Unlocked| found.encode())))
+        ]))
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
@@ -156,6 +157,14 @@ fn arrive(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
 fn routeOptions(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.planRouteOptions, Plan.sharedSlugs(Serve.query(visitor, "e"))) {
     case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_ROUTE_OPTIONS))}
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The island's weather for the next 48 hours: the same small document for everyone, cached at the edge.
+fn weather(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.weather, ()) {
+    case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_WEATHER))}
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

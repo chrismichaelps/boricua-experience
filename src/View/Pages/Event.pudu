@@ -7,6 +7,7 @@ import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Event as Event
+import Domain.Locale as Locale
 import Domain.Participation as Participation
 import Domain.Problem as Problem
 import I18n.Dates as Dates
@@ -21,6 +22,7 @@ import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.Moment as Moment
 import View.Components.People as People
+import View.Components.Weather as Weather
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -85,17 +87,36 @@ fn saveForm(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 }
 
 /// Category, title, schedule, and place.
+/// For English readers of a Spanish listing: its automatic English title and summary, labelled as such.
+fn englishOf(frame: &Frame.Frame, card: &Event.Card) -> H.Node {
+  if frame.locale != Locale.En { return H.nothing() }
+  match card.english {
+    case Some(found) => match found.summary {
+      case Some(summary) => H.div().class("event-english").at("lang", "en").holding([
+          H.p().class("event-english-label").says(Frame.t(frame, "event.auto_translation")),
+          H.p().class("event-english-title").says(Option.unwrapOr(found.title, "")),
+          H.p().says(summary)
+        ])
+      case None => H.nothing()
+    }
+    case None => H.nothing()
+  }
+}
+
 fn heading(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let card = detail.card
   H.header().class("event-head").holding([
       H.a().class("chip chip-small").href(Routes.CATEGORY_PREFIX + card.category.slug).holding([Icons.sized(card.category.icon, 16), H.span().says(Format.categoryName(&frame.locale, &card.category))]),
       H.h1().class("event-title").says(card.title),
       H.p().class("event-summary").says(card.summary),
+      englishOf(frame, &card),
       H.ul().class("event-lines").holding([
           H.li().holding([Icons.sized("calendar", 18), H.span().holding([Moment.schedule(frame, card.startsAt, card.endsAt)])]),
           H.li().holding([Icons.sized("pin", 18), H.span().holding([H.a().class("text-link").href(Routes.TOWN_PREFIX + card.municipality.slug).says(card.municipality.name), H.span().says(" · " + card.venueName)])]),
           H.li().holding([Icons.sized("ticket", 18), H.span().says(Format.price(&frame.locale, card.priceCents) + " · " + Frame.t(frame, if detail.source == "curated" { "event.official_source" } else if Event.needsApproval(&card) { "event.policy_approval" } else { "event.policy_open" }))])
-        ])
+        ]),
+      Weather.card(card.municipality.slug, card.municipality.name, card.startsAt, card.outdoor),
+      Weather.labels(frame)
     ])
 }
 
@@ -219,6 +240,14 @@ fn facts(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
             case None => H.nothing()
           },
           if detail.accessible { H.nothing().holding([H.dt().says(Frame.t(frame, "event.declared_access")), H.dd().says(Frame.t(frame, "event.step_free"))]) } else { H.nothing() },
+          match card.parking {
+            case Some(found) => H.nothing().holding([H.dt().says(Frame.t(frame, "event.parking")), H.dd().says(Frame.t(frame, if found { "event.parking_yes" } else { "event.parking_no" }))])
+            case None => H.nothing()
+          },
+          match card.cashOnly {
+            case Some(true) => H.nothing().holding([H.dt().says(Frame.t(frame, "event.payment")), H.dd().says(Frame.t(frame, "event.cash_only"))])
+            case _ => H.nothing()
+          },
           if detail.source == "curated" { H.nothing() } else { H.dt().says(Frame.t(frame, "event.attendance")) }, if detail.source == "curated" { H.nothing() } else { H.dd().says(capacity) },
           H.dt().says(Frame.t(frame, "event.joining")), H.dd().says(Frame.t(frame, if detail.source == "curated" { "event.external_body" } else if Event.needsApproval(&card) { "event.policy_approval_long" } else { "event.policy_open_long" })),
           H.dt().says(Frame.t(frame, "event.visibility")), H.dd().says(Frame.t(frame, "visibility." + card.visibility))

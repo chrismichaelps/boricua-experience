@@ -50,3 +50,8 @@ export fn routeOptions(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[
   if slugs.length() < 2 { return Ok(Json.object(&[("legs", Json.list(&[]))])) }
   PlansApi.routeOptions(&runtime.gateway, slugs)
 }
+
+/// The island's next 48 hours of weather by town.
+export fn weather(runtime: &Runtime.Runtime) -> Result[Json.Json, Problem.Problem] {
+  PlansApi.weather(&runtime.gateway)
+}

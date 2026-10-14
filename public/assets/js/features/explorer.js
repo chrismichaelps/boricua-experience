@@ -1,17 +1,17 @@
-import { mapSurface } from './mapSurface.js?v=74';
-import { clusterPins } from './mapClusters.js?v=74';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=74';
-import { message } from '../constants/messages.js?v=74';
-import { getJson } from '../net/http.js?v=74';
-import { $, $$, create } from '../utils/dom.js?v=74';
-import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=74';
-import { toast } from './toast.js?v=74';
-import { createMap } from './mapLoader.js?v=74';
-import { buildings3d } from './map3d.js?v=74';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=74';
-import * as live from './live.js?v=74';
-import { localizeMoment } from './localTime.js?v=74';
-import { distanceM } from '../utils/geo.js?v=74';
+import { mapSurface } from './mapSurface.js?v=75';
+import { clusterPins } from './mapClusters.js?v=75';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=75';
+import { message } from '../constants/messages.js?v=75';
+import { getJson } from '../net/http.js?v=75';
+import { $, $$, create } from '../utils/dom.js?v=75';
+import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=75';
+import { toast } from './toast.js?v=75';
+import { createMap } from './mapLoader.js?v=75';
+import { buildings3d } from './map3d.js?v=75';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=75';
+import * as live from './live.js?v=75';
+import { localizeMoment } from './localTime.js?v=75';
+import { distanceM } from '../utils/geo.js?v=75';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
@@ -269,7 +269,7 @@ export async function explorer(page) {
     me.getElement().setAttribute('aria-label', coarse ? `${message('you')} (±${Math.round(accuracy)} m)` : message('you'));
     if (coarse && !warnedCoarse) {
       warnedCoarse = true;
-      toast(message('locationApproximate').replace(':distance', accuracy >= 1000 ? `${(accuracy / 1000).toFixed(1)} km` : `${Math.round(accuracy)} m`));
+      toast(message('locationApproximate').replace(':distance', accuracy >= 1000 ? (document.documentElement.lang.startsWith('en') ? `${(accuracy / 1609.344).toFixed(1)} mi` : `${(accuracy / 1000).toFixed(1)} km`) : `${Math.round(accuracy)} m`));
     }
     const first = centerRequested;
     if (centerRequested) {

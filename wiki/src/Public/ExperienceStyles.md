@@ -104,3 +104,11 @@ Radios outside region chips are drawn as ink rings with a filled centre when che
 
 ## Phone map
 Below 700px the sheet is a rounded native-style panel (46% default, full height raised, eased height change) of full-width 4:3 photo cards with 28px gaps; filters are compact chips and the list link is hidden; map buttons are icon circles with visually hidden text; map overlays hide while the list is raised; the dark Map pill floats above the tab bar.
+
+## Visitor release browser correction · #107
+Resolved: trip panel implicit rows use max-content so a forecast card cannot collapse into a strip under the mobile sheet height limit. The panel keeps independent scrolling and map framing; hourly rows remain readable on desktop. CSS/asset revision76. Real390px/1280px checks required.
+
+## Compact forecast and desktop map · #107
+Compact weather: two-column temperature/condition header, smaller44px temperature, and native44px hourly disclosure closed initially. Daily range stays in the header; official alerts and relevant heat/rain advice are never hidden by disclosure. Animate only layers relevant to the active sky; clear-night stars cannot bleed into other skies. Reduced motion disables every scene animation. Resolved Grill Log: independent sheet scrolling preserves actions and natural-height content; details is keyboard operable on desktop/phone.
+
+Resolved final asset contract · #107: compact forecast/disclosure and desktop map accessibility use entry/styles/worker77; changed Weather77 and Trip77 share one import identity. No private test scenario enters the build.

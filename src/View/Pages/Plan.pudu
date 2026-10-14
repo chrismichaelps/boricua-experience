@@ -9,6 +9,8 @@ import Std.Option as Option
 import Std.Time as StdTime
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Event as Event
+import Domain.Locale as Locale
 import Domain.Plan as Plan
 import I18n.Dates as Dates
 import I18n.Format as Format
@@ -17,6 +19,7 @@ import Utils.Time as Time
 import View.Components.EventCard as EventCard
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
+import View.Components.Weather as Weather
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -50,15 +53,13 @@ export fn duration(frame: &Frame.Frame, seconds: Int) -> Str {
   Frame.tf(frame, "plan.hours", &[("hours", show(minutes / 60)), ("minutes", show(minutes % 60))])
 }
 
-/// Kilometres with one decimal.
-export fn kilometres(meters: Int) -> Str { show(meters / 1000) + "." + show((meters % 1000) / 100) }
-
 /// The drive to a stop: measured on roads, or an estimate from the straight line.
 fn legLine(frame: &Frame.Frame, leg: &Option[Plan.Leg], first: Bool) -> H.Node {
   match leg {
     case Some(found) => {
+      if found.ferry { return H.p().class("plan-leg plan-leg-ferry").holding([Icons.sized("wave", 16), H.span().says(Frame.t(frame, "plan.leg_ferry"))]) }
       let minutes = show((found.seconds + 59) / 60)
-      let text = Frame.tf(frame, if found.road && !first { "plan.leg_road" } else { "plan.leg_estimate" }, &[("minutes", minutes), ("km", kilometres(found.meters))])
+      let text = Frame.tf(frame, if found.road && !first { "plan.leg_road" } else { "plan.leg_estimate" }, &[("minutes", minutes), ("distance", Format.measure(&frame.locale, found.meters))])
       H.p().class("plan-leg").holding([Icons.sized("car", 16), H.span().says(text)])
     }
     case None => H.p().class("plan-leg").holding([Icons.sized("pin", 16), H.span().says(Frame.t(frame, "plan.leg_start"))])
@@ -75,20 +76,21 @@ fn stop(frame: &Frame.Frame, item: &Plan.Stop, number: Int) -> H.Node {
           H.img().class("plan-stop-cover").src(EventCard.coverOf(&card)).alt("").at("loading", "lazy").at("width", "96").at("height", "72"),
           H.span().class("plan-stop-body").holding([
               H.time().class("plan-stop-time").at("datetime", item.arrive).says(Frame.tf(frame, "plan.stay", &[("start", clock(item.arrive)), ("end", clock(item.leave))])),
-              H.strong().class("plan-stop-title").says(card.title),
+              H.strong().class("plan-stop-title").says(Event.titleFor(&card, frame.locale == Locale.En)),
               H.span().class("plan-stop-place").says(card.venueName + " · " + card.municipality.name),
               H.span().class("pill pill-light plan-stop-price").says(Format.price(&frame.locale, card.priceCents))
             ])
-        ])
+        ]),
+      Weather.slot(card.municipality.slug, item.arrive, card.outdoor)
     ])
 }
 
 /// The pins a plan's map draws, in order.
-export fn pins(plan: &Plan.Plan) -> Str {
+export fn pins(frame: &Frame.Frame, plan: &Plan.Plan) -> Str {
   var listed: Array[Json.Json] = []
   for i in 0..plan.stops.length() {
     let item = plan.stops[i]
-    listed = listed.push(Json.object(&[("order", Json.Number(i + 1)), ("slug", Json.Text(item.card.slug)), ("title", Json.Text(item.card.title)), ("lat", Json.Fractional(show(item.card.lat))), ("lng", Json.Fractional(show(item.card.lng)))]))
+    listed = listed.push(Json.object(&[("order", Json.Number(i + 1)), ("slug", Json.Text(item.card.slug)), ("title", Json.Text(Event.titleFor(&item.card, frame.locale == Locale.En))), ("lat", Json.Fractional(show(item.card.lat))), ("lng", Json.Fractional(show(item.card.lng)))]))
   }
   Json.encode(&Json.list(&listed))
 }
@@ -109,7 +111,7 @@ export fn mapTools(frame: &Frame.Frame) -> H.Node {
 fn planCard(frame: &Frame.Frame, plan: &Plan.Plan, number: Int) -> H.Node {
   let slugs = Plan.slugsOf(plan).join(",")
   let link = frame.siteUrl + Routes.PLAN + Query.render(&[("e", slugs), ("from", "share")])
-  let titles = plan.stops.map(|item: Plan.Stop| item.card.title).join(" → ")
+  let titles = plan.stops.map(|item: Plan.Stop| Event.titleFor(&item.card, frame.locale == Locale.En)).join(" → ")
   let message = Frame.t(frame, "plan.share_text") + " " + titles + " " + link
   let summary = if plan.stops.length() == 1 { Frame.t(frame, "plan.summary_one") } else { Frame.tf(frame, "plan.summary", &[("stops", show(plan.stops.length())), ("drive", duration(frame, plan.travelSeconds))]) }
   var stops: Array[H.Node] = []
@@ -123,7 +125,7 @@ fn planCard(frame: &Frame.Frame, plan: &Plan.Plan, number: Int) -> H.Node {
             ])
         ]),
       H.div().class("plan-map-wrap").holding([
-          H.div().class("plan-map").data("pins", pins(plan)).role("img").label(Frame.tf(frame, "plan.map_label", &[("number", show(number))])),
+          H.div().class("plan-map").data("pins", pins(frame, plan)).role("img").label(Frame.tf(frame, "plan.map_label", &[("number", show(number))])),
           mapTools(frame)
         ]),
       H.ol().class("plan-stops").holding(stops),
@@ -219,6 +221,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choic
             H.p().class("lead").says(Frame.t(frame, "plan.lead"))
           ]),
         choicesPanel(frame, catalog, choices, match shown { case Found(outings) => !outings.plans.isEmpty() case _ => false }),
-        results(frame, shown)
+        results(frame, shown),
+        Weather.labels(frame)
       ]))
 }

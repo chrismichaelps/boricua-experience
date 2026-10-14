@@ -81,7 +81,9 @@ export fn check(draft: &Draft.Draft) -> Result[Draft.Ready, Problem.Problem] {
       capacity: valid.capacity.trim().toInt(),
       priceCents: if valid.price.trim().isEmpty() { None } else { Money.parseCents(valid.price) },
       minAge: valid.minAge.trim().toInt(),
-      accessible: valid.accessible
+      accessible: valid.accessible,
+      parking: Draft.factOf(valid.parking),
+      cashOnly: Draft.factOf(valid.cashOnly)
     })
 }
 

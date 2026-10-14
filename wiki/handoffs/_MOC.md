@@ -18,3 +18,5 @@ tags: [moc, handoff]
 - [[handoffs/production-release]] — pending production configuration and feature verification.
 
 - [[handoffs/quick-filters]] — quick traits, organizer facts and explicit search arrival; both database migrations verified.
+
+- [[handoffs/visitor-release]] — active visitor release, reviewed guards and verification ledger.

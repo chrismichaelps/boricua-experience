@@ -7,6 +7,7 @@ import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Json as Json
 import Std.Option as Option
+import Api.Supabase.Gateway as Gateway
 import App.Assembly as Assembly
 import Constants.Assistant as Limits
 import Constants.Routes as Routes
@@ -35,7 +36,14 @@ export fn signedBody(key: &Bytes, body: Str, operation: Str, signature: Str) -> 
 fn answer(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let body = visitor.request.message.body
   let operation = Option.unwrapOr(Route.header(&visitor.request, "x-assistant-operation"), "prepare")
-  if !(operation == "prepare" || operation == "tool") || body.length() > Limits.BODY_MAX || !signedBody(&app.runtime.sessionKey, body, operation, Option.unwrapOr(Route.header(&visitor.request, "x-assistant-signature"), "")) { return Respond.problem(app, visitor, &Problem.Forbidden) }
+  if !(operation == "prepare" || operation == "tool" || operation == "provider") || body.length() > Limits.BODY_MAX || !signedBody(&app.runtime.sessionKey, body, operation, Option.unwrapOr(Route.header(&visitor.request, "x-assistant-signature"), "")) { return Respond.problem(app, visitor, &Problem.Forbidden) }
+  if operation == "provider" {
+    let allowed: Bool = match Gateway.query(&app.runtime.gateway, "reserve_assistant_provider", &[], Some(app.runtime.gateway.serviceKey), Gateway.Write) {
+      case Ok(value) => value
+      case Err(_) => { return Respond.json(503, &Json.object(&[("error", Json.Text("assistant_unavailable"))])) }
+    }
+    return Respond.json(200, &Json.object(&[("allowed", Json.Boolean(allowed))]))
+  }
   let result = if operation == "tool" {
     let asked: Conversation.Tool = match Wire.parse(body) { case Ok(found) => found case Err(_) => { return Respond.problem(app, visitor, &Problem.Refused("assistant_invalid")) } }
     Serve.ask(app, &app.kinds.assistantTool, Serve.signed(session, asked))
