@@ -20,7 +20,7 @@ import View.Frame as Frame
 import View.Seo as Seo
 
 /** @View.Layout.Section — the part of the app a page belongs to, marked in navigation */
-export type Section = Explore | MapView | Create | Activity | Me | Elsewhere
+export type Section = Explore | MapView | Journey | Create | Activity | Me | Elsewhere
 
 /// A page in the app shell.
 export fn page(frame: &Frame.Frame, meta: &Seo.Meta, section: Section, content: H.Node) -> Html.Html {
@@ -55,6 +55,7 @@ fn achievementToasts(frame: &Frame.Frame) -> H.Node {
 fn bodyClass(section: &Section) -> Str {
   match section {
     case MapView => "app app-full"
+    case Journey => "app app-full app-trip"
     case _ => "app"
   }
 }

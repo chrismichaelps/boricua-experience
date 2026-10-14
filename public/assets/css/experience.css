@@ -462,15 +462,95 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
   .plan-card-head { grid-area: head; } .plan-stops { grid-area: stops; } .plan-actions { grid-area: actions; }
   .plan-map { grid-area: map; height: 100%; min-height: 280px; }
 }
+/* A plan's map tools: the 3D switch, and the camera turns while 3D is on. */
+.plan-map-wrap { position: relative; }
+.plan-map-tools { position: absolute; top: 10px; right: 10px; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.plan-map-tools .map-button { width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0; justify-content: center; font-size: 13px; }
+/* On a route map the camera turns stay out of the route's way: one narrow column with the compass,
+   the turn arrows only where a pointer can use them and there is room. */
+.plan-map-tools .map-turn { flex-direction: column; padding: 0; border-radius: 20px; }
+.plan-map-tools .map-turn-button { width: 40px; height: 40px; }
+@media (pointer: coarse), (max-width: 759px) { .plan-map-tools .map-turn-button:not(.map-compass) { display: none; } }
+.plan-map-tools .map-button[aria-pressed="true"] { background: var(--color-ocean); color: white; }
+.plan-map-wrap .plan-map { height: 240px; }
+.plan-trip { background: var(--color-ink); border-color: var(--color-ink); }
+@media (min-width: 760px) { .plan-map-wrap { grid-area: map; height: 100%; min-height: 280px; } .plan-map-wrap .plan-map { height: 100%; } }
+/* A plan followed live: the map fills the screen above a panel with the next stop and every stop. */
+.trip-page { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: calc(100dvh - var(--appbar) - var(--tabbar) - var(--safe-bottom)); background: var(--color-cloud); }
+.trip-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--color-white); border-bottom: 1px solid var(--color-divider); }
+.trip-title { margin: 0; font-size: 18px; font-weight: 800; flex: 1; }
+.trip-progress { font-weight: 700; font-variant-numeric: tabular-nums; }
+.trip-stage { position: relative; min-height: 0; }
+.trip-map { width: 100%; height: 100%; background: #e8eef3; }
+.trip-map-tools { position: absolute; top: 12px; left: 12px; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.trip-map-tools .plan-map-tools { position: static; }
+.trip-follow { width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0; justify-content: center; color: var(--color-ocean-deep); }
+.trip-follow.is-active { background: var(--color-ocean); color: white; }
+.trip-follow[hidden] { display: none; }
+.trip-panel { display: grid; gap: 10px; max-height: 40dvh; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 16px; background: var(--color-white); border-radius: 22px 22px 0 0; box-shadow: 0 -6px 24px rgb(28 43 55 / 12%); }
+.trip-next { display: grid; gap: 2px; }
+.trip-page.is-done .trip-next-label { display: none; }
+.trip-next-label { margin: 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.trip-next-title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.25; }
+.trip-status { margin: 0; color: var(--color-graphite); min-height: 1.4em; }
+/* The ways to the next stop: a short list of choices, the chosen one outlined like the next stop. */
+.trip-routes { margin: 0; padding: 0; border: 0; display: grid; gap: 6px; }
+.trip-routes[hidden] { display: none; }
+.trip-routes-label { padding: 0; font-size: 13px; font-weight: 700; color: var(--color-graphite); }
+.trip-route-options { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.trip-route { position: relative; flex: none; display: grid; gap: 1px; min-width: 112px; padding: 8px 12px; border: 1px solid #e1e6ea; border-radius: 14px; background: var(--color-white); cursor: pointer; }
+.trip-route input { position: absolute; opacity: 0; pointer-events: none; }
+.trip-route:has(input:checked) { border-color: var(--color-ocean); background: var(--color-ocean-tint); }
+.trip-route:has(input:focus-visible) { outline: 2px solid var(--color-ocean); outline-offset: 2px; }
+.trip-route-name { font-weight: 700; font-size: 14px; }
+.trip-route-detail { font-size: 12px; color: var(--color-graphite); font-variant-numeric: tabular-nums; }
+.trip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.trip-actions .button { gap: 6px; }
+.trip-actions [hidden], .trip-restart[hidden] { display: none; }
+.trip-begin { flex: 1 1 100%; justify-content: center; }
+.trip-privacy { display: flex; gap: 6px; align-items: flex-start; margin: 0; font-size: 12px; }
+.trip-privacy .icon { flex: none; margin-top: 2px; }
+.trip-signin { margin: 0; font-size: 13px; }
+.trip-stops-title { margin: 4px 0 0; font-size: 15px; }
+.trip-stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.trip-stop { display: grid; grid-template-columns: 28px 64px minmax(0, 1fr); align-items: center; gap: 10px; padding: 8px; border-radius: 14px; border: 1px solid var(--color-divider); }
+.trip-stop[data-state="next"] { border-color: var(--color-ocean); background: var(--color-ocean-tint); }
+.trip-stop[data-state="done"], .trip-stop[data-state="skipped"] { opacity: .7; }
+.trip-stop-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--color-ocean); color: white; font-weight: 800; font-size: 13px; }
+.trip-stop[data-state="done"] .trip-stop-number { background: var(--color-green); }
+.trip-stop-cover { width: 64px; height: 48px; border-radius: 10px; object-fit: cover; }
+.trip-stop-body { display: grid; gap: 2px; min-width: 0; }
+.trip-stop-title { font-weight: 700; color: inherit; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trip-stop-time { font-size: 13px; color: var(--color-graphite); }
+.trip-stop-state { font-size: 12px; font-weight: 700; color: var(--color-ocean-deep); }
+.trip-stop[data-state="done"] .trip-stop-state { color: var(--color-green); }
+.plan-pin.is-done { background: var(--color-green); }
+.plan-pin.is-next { transform: scale(1.18); box-shadow: 0 0 0 4px rgb(24 120 236 / 25%), 0 2px 6px rgb(28 43 55 / 30%); }
+.trip-you { position: relative; display: block; width: 22px; height: 22px; border-radius: 50%; background: #1878ec; border: 3px solid white; box-shadow: 0 0 0 8px rgb(24 120 236 / 18%), 0 2px 6px rgb(28 43 55 / 35%); }
+.trip-you::after { content: ""; position: absolute; inset: -11px; border-radius: 50%; border: 2px solid rgb(24 120 236 / 40%); animation: trip-pulse 2.4s ease-out infinite; }
+.trip-you-heading { position: absolute; left: 50%; top: -15px; width: 0; height: 0; margin-left: -7px; border: 7px solid transparent; border-bottom: 10px solid #1878ec; opacity: 0; }
+.trip-you.has-heading .trip-you-heading { opacity: 1; }
+@keyframes trip-pulse { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .trip-you::after { animation: none; } .plan-pin.is-next { transform: none; } }
+/* On a phone the trip takes the whole screen below the top bar: the tab bar steps aside. */
+@media (max-width: 959px) { .app-trip { --tabbar: 0px; } .app-trip .tabbar { display: none; } }
+@media (min-width: 960px) {
+  .trip-page { grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "head head" "stage panel"; height: calc(100dvh - var(--appbar)); }
+  .trip-head { grid-area: head; } .trip-stage { grid-area: stage; }
+  .trip-panel { grid-area: panel; max-height: none; border-radius: 0; box-shadow: none; border-left: 1px solid var(--color-divider); align-content: start; }
+}
 @media (prefers-reduced-motion: reduce) { .plan-results, .interest-button { transition: none; } }
 /* The home invitation to plans. */
-.plan-tile { display: grid; grid-template-columns: 48px minmax(0, 1fr) 20px; align-items: center; gap: 14px; margin: 4px 16px 0; padding: 14px 16px; border-radius: 22px; background: linear-gradient(120deg, #1878ec, #1b5fc4); color: white; text-decoration: none; box-shadow: 0 8px 22px rgb(24 120 236 / 25%); }
-.plan-tile-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 16px; background: rgb(255 255 255 / 18%); }
-.plan-tile .icon { color: white; }
+/* The home invitation to plans: a plain card like the rest of the page, a line icon without a badge. */
+.plan-tile { display: grid; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 14px; margin: 4px 16px 0; padding: 14px 16px; border-radius: 18px; border: 1px solid #e1e6ea; background: var(--color-white); color: var(--color-ink); text-decoration: none; }
+.plan-tile:hover { border-color: #cfd8df; background: #fafcfd; }
+.plan-tile-icon { display: grid; place-items: center; color: var(--color-ink); }
+.plan-tile .icon { color: currentColor; }
+.plan-tile > .icon { color: var(--color-graphite); }
 .plan-tile-copy { display: grid; gap: 2px; }
-.plan-tile-copy strong { font-size: 17px; }
-.plan-tile-copy span { font-size: 14px; opacity: .92; }
-.plan-tile:focus-visible { outline: 3px solid #0d3f86; outline-offset: 3px; }
+.plan-tile-copy strong { font-size: 16px; font-weight: 700; }
+.plan-tile-copy span { font-size: 14px; color: var(--color-graphite); }
+.plan-tile:focus-visible { outline: 2px solid var(--color-ocean); outline-offset: 2px; }
 @media (min-width: 960px) { .plan-tile { max-width: 1120px; margin-inline: auto; width: calc(100% - 40px); } }
 .plan-choices { border: 1px solid #e1e6ea; border-radius: 20px; background: white; }
 .plan-choices[open] { padding-bottom: 4px; }

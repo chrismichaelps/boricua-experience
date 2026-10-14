@@ -6,6 +6,7 @@ import Api.Plans as PlansApi
 import Domain.Plan as Plan
 import Domain.Problem as Problem
 import Domain.Search as Search
+import Domain.Session as Session
 import Services.Discovery as Discovery
 import Services.Runtime as Runtime
 import Utils.Time as Time
@@ -36,4 +37,16 @@ export fn shared(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[Plan.O
 export fn route(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[Json.Json, Problem.Problem] {
   if slugs.length() < 2 { return Ok(Json.object(&[("legs", Json.list(&[]))])) }
   PlansApi.route(&runtime.gateway, slugs)
+}
+
+/// Confirms a trip stop the member reached; a malformed arrival is refused before the database.
+export fn arrive(runtime: &Runtime.Runtime, arrival: &Plan.Arrival, locale: Str, session: &Session.Session) -> Result[Plan.Arrived, Problem.Problem] {
+  if !Plan.validArrival(arrival) { return Err(Problem.Refused("invalid_arrival")) }
+  PlansApi.arrive(&runtime.gateway, arrival, locale, session.accessToken)
+}
+
+/// The ways to reach each stop of a trip after the first, fastest first.
+export fn routeOptions(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[Json.Json, Problem.Problem] {
+  if slugs.length() < 2 { return Ok(Json.object(&[("legs", Json.list(&[]))])) }
+  PlansApi.routeOptions(&runtime.gateway, slugs)
 }

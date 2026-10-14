@@ -3,7 +3,7 @@
 // sharing, calendars and the assistant — and shows each new unlock as a toast whose badge pops in
 // with a short chime. On the board it draws badges inline so they animate (and pause while locked)
 // and opens an achievement's detail in a dialog. Every unlock rule lives in the database.
-import { postJson } from '../net/http.js?v=69';
+import { postJson } from '../net/http.js?v=74';
 
 const ENDPOINT = '/api/achievements/signals';
 const DAY_KEY = 'bx-ach-day';
@@ -12,7 +12,7 @@ const LAST_KEY = 'bx-ach-last';
 // Without a new signal, unlocks from server-side actions are checked at most this often.
 const RECHECK_MS = 5 * 60 * 1000;
 const TOAST_MS = 4800;
-const ACTIONS = new Set(['map_rotate', 'map_3d', 'share', 'calendar_add', 'ai_chat']);
+const ACTIONS = new Set(['map_rotate', 'map_3d', 'share', 'calendar_add', 'ai_chat', 'plan_share', 'trip_start']);
 
 const store = {
   get(area, key) { try { return window[area].getItem(key); } catch { return null; } },
@@ -185,6 +185,15 @@ export function announce(root, unlocked, view = window) {
   }
 }
 
+/** The signals a plans page carries: plans were built for the member, by surprise or not. A shared
+ * plan someone sent is not one the member built. */
+export function planSignals(doc, location) {
+  if (!doc.querySelector('[data-feature="plan"] .plan-card') || doc.querySelector('.plan-shared')) return [];
+  const signals = [{ metric: 'plan_build', key: 'today' }];
+  if (new URLSearchParams(location.search).get('surprise') === '1') signals.push({ metric: 'plan_surprise', key: 'today' });
+  return signals;
+}
+
 /** Records signals for a member and announces what they unlocked. */
 export function achievements(root, view = window) {
   primeAudio(view);
@@ -211,7 +220,7 @@ export function achievements(root, view = window) {
     store.set('localStorage', DAY_KEY, day);
     pending.push({ metric: 'login_day', key: day });
   }
-  pending.push(...pageSignals(view.location));
+  pending.push(...pageSignals(view.location), ...planSignals(view.document, view.location));
   const last = Number(store.get('sessionStorage', LAST_KEY) || 0);
   const due = pending.length || store.get('sessionStorage', CHECK_KEY) === '1' || Date.now() - last > RECHECK_MS;
   if (due) timer = view.setTimeout(() => flush(), 400);
@@ -222,6 +231,11 @@ export function achievements(root, view = window) {
     const { action, key } = event.detail || {};
     if (!ACTIONS.has(action)) return;
     queue({ metric: action, key: typeof key === 'string' ? key : 'today' });
+  });
+  // Unlocks answered by other requests, such as a trip stop confirmed on the server.
+  view.document.addEventListener('bx:unlocked', (event) => {
+    const items = event.detail?.items;
+    if (Array.isArray(items) && items.length) announce(root, items, view);
   });
   view.addEventListener('pagehide', () => { if (pending.length) flush(true); });
 }

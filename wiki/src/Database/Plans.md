@@ -47,3 +47,24 @@ member and activity) with counts kept on the activity by trigger; `set_interest`
 ## Referenced by
 
 [[src/Domain/Plan]] · [[CHANGELOG]]
+
+## Grounded chat plans · #103 · Resolved Grill Log
+Provider control tags are quarantined across chunk boundaries and retried within the existing budget, never displayed or executed as prose. Structured allowlisted calls remain authoritative. Public quick traits, places, itineraries and route results use typed database reads. Public map cards show supplied anchors and road geometry, explicitly label estimated travel and missing paths, and release maps on close/reset. No model coordinates, arbitrary SQL, fake data or paid fallback. Town routing is service-only, catalog-bounded, cached by directed town pair and transactionally locked; no per-user position is sent or stored. Every changed schema is verified in both environments.
+
+## Trips and ways to a stop
+
+Private migrations `20261014180100_trip_achievements` and `20261014180200_route_options`.
+
+`record_trip_arrival` confirms a trip stop for a signed-in member: within 500 m of the activity's
+public point or 400 m of its exact place, from two hours before it starts to two hours after it ends.
+The position is compared and discarded. Reaching every stop of a plan within the same day's trip
+completes it. At most 40 arrivals a day per member are considered.
+
+`plan_route_options` answers, per leg, the fastest road route and, when they exist, another route that
+shares less than 70% of its length with the fastest and takes at most 40% longer (routed again with
+the fastest route's roads made 80% costlier), a route without expressways when the fastest uses them
+(at most 80% longer), and walking for stops under 2 km apart. Options are worked out once per pair of
+road junctions, on the part of the network around them (about half a second), and kept; a short lock
+per pair and a ceiling of 40 pairs a minute across the site keep a crowd from routing at once, and the
+answer is cached for five minutes at the edge. Options follow their legs in the nightly clean-up. No
+public transport is offered: there is no timetable data to plan it honestly.

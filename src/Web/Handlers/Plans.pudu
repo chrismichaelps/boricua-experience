@@ -3,20 +3,26 @@ module Web.Handlers.Plans
 
 import Std.Http as Http
 import Std.Http.Server.Route as Route
+import Std.Json as Json
 import Std.Option as Option
 import App.Assembly as Assembly
 import Constants.Cookies as Cookies
 import Constants.Http as HttpConstants
 import Constants.Routes as Routes
+import Domain.Achievement as Achievement
 import Domain.Catalog as Catalog
+import Domain.Locale as Locale
 import Domain.Plan as Plan
 import Domain.Problem as Problem
 import Domain.Search as Search
+import Domain.Session as Session
 import Utils.Geo as Geo
 import Utils.Time as Time
+import Utils.Wire as Wire
 import View.Calendar as Calendar
 import View.Frame as Frame
 import View.Pages.Plan as PlanPage
+import View.Pages.Trip as TripPage
 import Web.Context as Context
 import Web.Respond as Respond
 import Web.Serve as Serve
@@ -27,7 +33,10 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
   [
     Route.get(Routes.PLAN, Serve.page(app, |visitor: Context.Visitor| page(&held, &visitor))),
     Route.get(Routes.PLAN_CALENDAR, Serve.page(app, |visitor: Context.Visitor| calendar(&held, &visitor))),
-    Route.get(Routes.API_PLAN_ROUTE, Serve.api(app, |visitor: Context.Visitor| route(&held, &visitor)))
+    Route.get(Routes.API_PLAN_ROUTE, Serve.api(app, |visitor: Context.Visitor| route(&held, &visitor))),
+    Route.get(Routes.API_PLAN_ROUTES, Serve.api(app, |visitor: Context.Visitor| routeOptions(&held, &visitor))),
+    Route.get(Routes.PLAN_TRIP, Serve.page(app, |visitor: Context.Visitor| trip(&held, &visitor))),
+    Route.post(Routes.API_TRIP_ARRIVE, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| arrive(&held, &visitor, &session)))
   ]
 }
 
@@ -110,6 +119,43 @@ fn calendar(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
 fn route(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.planRoute, Plan.sharedSlugs(Serve.query(visitor, "e"))) {
     case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_SHARED_PINS))}
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A plan's trip: the map that follows the visitor and the stops in order. A plan without stops is missing.
+fn trip(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let slugs = Plan.sharedSlugs(Serve.query(visitor, "e"))
+  match Serve.ask(app, &app.kinds.planShared, slugs) {
+    case Ok(found) => match Option.fromArray(&found.plans) {
+      case Some(plan) => Respond.page(200, &TripPage.render(&Context.frame(app, visitor), &plan))
+      case None => Respond.problem(app, visitor, &Problem.Missing)
+    }
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// A trip stop the member reached: confirmed on the server, answered with what it unlocked.
+fn arrive(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let arrival: Plan.Arrival = match Wire.parse(visitor.request.message.body) {
+    case Ok(found) => found
+    case Err(_) => { return Respond.problem(app, visitor, &Problem.Refused("invalid_arrival")) }
+  }
+  match Serve.ask(app, &app.kinds.tripArrival, Serve.signed(session, (arrival, Locale.code(&visitor.locale)))) {
+    case Ok(answer) => Respond.json(200, &Json.object(&[
+        ("arrived", Json.Boolean(answer.arrived)),
+        ("completed", Json.Boolean(answer.completed)),
+        ("unlocked", Json.list(&answer.unlocked.map(|found: Achievement.Unlocked| found.encode())))
+      ]))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The ways to reach each stop of a trip. Shared caches keep them briefly: a leg still being worked out
+/// answers with its fastest route only, and its other options appear on a later visit.
+fn routeOptions(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match Serve.ask(app, &app.kinds.planRouteOptions, Plan.sharedSlugs(Serve.query(visitor, "e"))) {
+    case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_ROUTE_OPTIONS))}
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }

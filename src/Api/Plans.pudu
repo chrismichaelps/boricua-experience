@@ -27,6 +27,22 @@ export fn shared(gateway: &Gateway.Gateway, slugs: &Array[Str]) -> Result[Plan.O
   Gateway.query(gateway, Supabase.PLAN_OF, &[("p_slugs", Json.list(&slugs.map(|slug: Str| Json.Text(slug))))], None, Gateway.Read)
 }
 
+/// The ways to reach each stop after the first, fastest first; working out a leg's options may write them.
+export fn routeOptions(gateway: &Gateway.Gateway, slugs: &Array[Str]) -> Result[Json.Json, Problem.Problem] {
+  Gateway.call(gateway, Supabase.PLAN_ROUTE_OPTIONS, &[("p_slugs", Json.list(&slugs.map(|slug: Str| Json.Text(slug))))], None, Gateway.Write)
+}
+
+/// Confirms a trip stop for the member and answers what it unlocked; the position is not stored.
+export fn arrive(gateway: &Gateway.Gateway, arrival: &Plan.Arrival, locale: Str, token: Str) -> Result[Plan.Arrived, Problem.Problem] {
+  Gateway.query(gateway, Supabase.RECORD_TRIP_ARRIVAL, &[
+      ("p_slug", Gateway.text(arrival.slug)),
+      ("p_lat", Gateway.fraction(Some(arrival.lat))),
+      ("p_lng", Gateway.fraction(Some(arrival.lng))),
+      ("p_plan", Json.list(&arrival.plan.map(|slug: Str| Json.Text(slug)))),
+      ("p_locale", Gateway.text(locale))
+    ], Some(token), Gateway.Write)
+}
+
 /// The road route between the activities in order, as drawing coordinates per leg.
 export fn route(gateway: &Gateway.Gateway, slugs: &Array[Str]) -> Result[Json.Json, Problem.Problem] {
   Gateway.call(gateway, Supabase.PLAN_ROUTE, &[("p_slugs", Json.list(&slugs.map(|slug: Str| Json.Text(slug))))], None, Gateway.Read)

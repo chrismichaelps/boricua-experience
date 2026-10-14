@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {checkedVisual} from '../public/assets/js/features/assistantMaps.js';
+const a={title:'San Juan',lat:18.46,lng:-66.1},b={title:'Ponce',lat:18,lng:-66.6};
+const value={kind:'route',pins:[a,b],legs:[{order:1,coordinates:[[-66.1,18.46],[-66.6,18]]}]};
+assert.equal(checkedVisual(value).legs.length,1);
+assert.equal(checkedVisual({...value,legs:[]}).legs.length,0,'missing roads remain missing, never invented');
+for(const pins of [[],[...Array(5).fill(a)],[{...a,lat:NaN},b],[{...a,lng:'-66.1'},b],[{...a,lat:90},b]])assert.equal(checkedVisual({...value,pins}),null);
+assert.equal(checkedVisual({...value,legs:[{order:1,coordinates:[[-66.1,18.46],[500,90]]}]}).legs.length,0);
+assert.equal(checkedVisual({...value,href:'https://evil.test/plan'}).href,'');
+assert.equal(checkedVisual({...value,href:'/plan?e=first-event,second-event'}).href,'/plan?e=first-event,second-event');
+console.log('PASS: database map coordinate/path bounds, absent roads and trusted shared-plan links');
