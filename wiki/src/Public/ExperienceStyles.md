@@ -101,3 +101,6 @@ Resolved: enhance canonical native selects through the shared dialog, retaining 
 
 ## Radios and auth on small screens
 Radios outside region chips are drawn as ink rings with a filled centre when checked, matching the checkbox style. Below 1000px the sign-in and sign-up pages are a plain full-width sheet: no photo behind the form and no floating card; the photo panel appears only beside the form on wide screens.
+
+## Phone map
+Below 700px the sheet is a rounded native-style panel (46% default, full height raised, eased height change) of full-width 4:3 photo cards with 28px gaps; filters are compact chips and the list link is hidden; map buttons are icon circles with visually hidden text; map overlays hide while the list is raised; the dark Map pill floats above the tab bar.

@@ -111,3 +111,6 @@ Explicit exploration refinement: list focus that moves the camera and activated 
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Visible loading state follows the current request ticket, cached/error/no-area branches and pagehide. MapSurface owns expansion; expanded camera coverage is zero, resizing updates bounds without event refit or GPS recenter.
+
+## Phone sheet behavior
+Below 700px, scrolling the list past 24px raises the sheet and the Map pill lowers it. While raised, viewport refreshes are skipped so the list keeps what it showed; lowering re-reads the visible map.

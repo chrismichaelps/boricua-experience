@@ -274,6 +274,8 @@ export async function explorer(page) {
   map.on('click', () => select(''));
   const resizeViewport = () => {
     if (!ready) return;
+    // A phone sheet raised over the map keeps the list it showed; lowering it re-reads the visible map.
+    if (innerWidth < 700 && sheet.classList.contains('is-expanded')) return;
     map.setPadding({ top: 80, right: 40, left: 40, bottom: (page.dataset.mapExpanded === '1' || matchMedia('(min-width: 960px)').matches) ? 40 : sheet.getBoundingClientRect().height + 24 });
     schedule();
   };
@@ -362,6 +364,12 @@ export async function explorer(page) {
     page.classList.toggle('is-sheet-expanded', expanded);
     resizeViewport();
   });
+  // Phones: the floating Map pill lowers a raised list, and scrolling the list raises it, like a native sheet.
+  $('[data-sheet-collapse]', page)?.addEventListener('click', () => { if (sheet.classList.contains('is-expanded')) handle?.click(); });
+  const sheetList = $('.sheet-list', page);
+  sheetList?.addEventListener('scroll', () => {
+    if (innerWidth < 700 && !sheet.classList.contains('is-expanded') && sheetList.scrollTop > 24) handle?.click();
+  }, { passive: true });
 
   const feedback = $('#map-location-status', page);
   const reflectStatus = (state) => {

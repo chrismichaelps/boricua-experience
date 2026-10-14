@@ -75,6 +75,7 @@ export fn render(frame: &Frame.Frame, cards: &Array[Event.Card], limited: Bool, 
             H.p().class("map-limit" + (if limited { "" } else { " is-hidden" })).id("map-limit").role("status").says(Frame.t(frame, "map.limited")),
             H.div().class("sheet-list").id("map-list").holding(cards.map(|card: Event.Card| H.div().class("sheet-item").data("slug", card.slug).holding([EventCard.card(frame, &card)])))
           ]),
+        H.button().kind("button").class("sheet-map-pill").data("sheet-collapse", "1").at("aria-controls", "map-list").holding([Icons.sized("map", 18), H.span().says(Frame.t(frame, "nav.map"))]),
         H.p().class("sr-only").id("map-location-status").role("status").at("aria-live", "polite"),
         H.p().class("sr-only").id("map-location-help").says(Frame.t(frame, "map.location_help"))
       ]))

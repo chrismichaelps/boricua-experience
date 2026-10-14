@@ -83,3 +83,6 @@ Resolved: a 3D switch sits beside Near me; its label names the action for assist
 
 ## Discovery surfaces Grill Log · #88
 Resolved: Render a translated44px expand/close control, initially hidden until enhancement, and a hidden accessible three-dot loading status. Expansion preserves the existing map instance, filters and card sheet; no popups are added.
+
+## Phone sheet
+A `sheet-map-pill` button (map icon + `nav.map`) follows the sheet; phones show it only while the list is raised, and it lowers the list.

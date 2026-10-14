@@ -338,3 +338,35 @@ input[type="radio"]:disabled { opacity: .55; cursor: default; }
 
 .privacy-switch input:checked + .privacy-switch-track { background: #25343b; }
 .review-report select { min-height: 48px; padding: 10px 14px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; }
+
+/* Phone map, native-sheet style: map behind, a rounded sheet of full-width cards, chip filters, icon map buttons. */
+.sheet-map-pill { display: none; }
+@media (max-width: 699px) {
+  .map-page { --sheet-footprint: min(max(46%,300px),calc(100% - 96px)); }
+  .map-page.is-sheet-expanded { --sheet-footprint: calc(100% - 8px); }
+  .map-page.is-sheet-expanded .map-sheet { max-height: calc(100% - 8px); }
+  .map-page.is-sheet-expanded .map-expand, .map-page.is-sheet-expanded .map-controls { visibility: hidden; }
+  .map-sheet, .map-sheet.is-expanded { border: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -8px 28px rgb(20 35 45 / 14%); transition: height .32s cubic-bezier(.22,1,.36,1); }
+  .map-sheet .sheet-title { text-align: center; font-size: 15px; font-weight: 700; padding: 2px 16px 10px; }
+  .map-filters { gap: 8px; padding: 2px 16px 10px; }
+  .map-filters .picker-trigger, .map-filters .filter select, .map-filters .filter-toggle { min-height: 36px; padding: 6px 14px; border: 1px solid #d5dbe0; border-radius: 999px; font-size: 13px; font-weight: 600; background: white; }
+  .map-filters .map-list-link { display: none; }
+  .map-sheet .sheet-list, .map-sheet.is-expanded .sheet-list { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: minmax(0,1fr); scroll-snap-type: none; gap: 28px; padding: 6px 20px calc(88px + env(safe-area-inset-bottom)); }
+  .map-sheet .card { border: 0; background: transparent; }
+  .map-sheet .card-link { grid-template-columns: minmax(0,1fr); gap: 10px; padding: 0; }
+  .map-sheet .card-media { aspect-ratio: 4 / 3; min-height: 0; height: auto; border-radius: 20px; }
+  .map-sheet .card-media .pill:not(.card-price) { display: inline-flex; }
+  .map-sheet .card-price { top: 12px; bottom: auto; left: 12px; font-size: 13px; padding: 5px 10px; }
+  .map-sheet .card-title { font-size: 16px; }
+  .map-sheet .card-when { font-size: 13px; }
+  .map-sheet .card-place, .map-sheet .card-meta { font-size: 14px; }
+  .sheet-item.is-active .card { background: transparent; }
+  .sheet-item.is-active .card-media { outline: 3px solid #25343b; outline-offset: 3px; }
+  .map-page .map-controls { top: 12px; left: 12px; right: auto; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .map-page .map-controls .map-button { min-width: 44px; min-height: 44px; padding: 0 12px; justify-content: center; border-radius: 999px; }
+  .map-page .map-controls .map-button > span:not(.live-dot):not(.map-3d-mark) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .map-page.is-sheet-expanded .sheet-map-pill { position: absolute; z-index: 7; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 20px; border: 0; border-radius: 999px; background: #222; color: white; font: inherit; font-size: 15px; font-weight: 700; box-shadow: 0 8px 22px rgb(0 0 0 / 28%); cursor: pointer; }
+  .sheet-map-pill .icon { color: white; }
+  .sheet-map-pill:focus-visible { outline: 3px solid #1875f0; outline-offset: 3px; }
+}
+@media (max-width: 699px) and (prefers-reduced-motion: reduce) { .map-sheet, .map-sheet.is-expanded { transition: none; } }
