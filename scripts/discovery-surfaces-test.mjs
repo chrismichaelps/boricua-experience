@@ -24,6 +24,7 @@ assert(prevented && control.focused); assert.equal(page.dataset.mapExpanded, '0'
 control.handlers.click(); control.handlers.click(); assert.equal(page.dataset.mapExpanded, '0', 'repeat expansion remains reversible');
 surface.busy(true); winEvents.pagehide(); assert.equal(indicator.hidden, true, 'exit clears loading');
 const bootSource = readFileSync('public/assets/js/home-readiness.js', 'utf8');
+assert(bootSource.includes('disabled'), 'initial skeleton app loading is disabled');
 function boot({ path = '/', home = true, decode, cached = false, font = Promise.resolve() } = {}) {
   const classList = classes(), events = {}, lifecycle = {}, timers = new Map();
   const root = { classList };
@@ -31,26 +32,14 @@ function boot({ path = '/', home = true, decode, cached = false, font = Promise.
   vm.runInNewContext(bootSource, context);
   return { classList, events, lifecycle, timers };
 }
-const tick = async () => { for (let i = 0; i < 8; i++) await Promise.resolve(); };
-let photoReady, fontReady;
-const pending = boot({ decode: () => new Promise(resolve => photoReady = resolve), font: new Promise(resolve => fontReady = resolve) });
-assert(pending.classList.contains('home-pending'));
-pending.events.DOMContentLoaded(); photoReady(); await tick(); assert(pending.classList.contains('home-pending'), 'font still pending');
-fontReady(); await tick(); assert(!pending.classList.contains('home-pending')); assert.equal(pending.timers.size, 0);
-const failed = boot({ decode: () => Promise.reject(new Error('image unavailable')) }); failed.events.DOMContentLoaded(); await tick(); assert(!failed.classList.contains('home-pending'));
-const errorPage = boot({ home: false }); errorPage.events.DOMContentLoaded(); assert(!errorPage.classList.contains('home-pending'));
-const elsewhere = boot({ path: '/map' }); assert(!elsewhere.classList.contains('home-pending')); assert.equal(elsewhere.timers.size, 0);
-for (const signal of ['focusin', 'pointerdown']) { const current = boot(); current.events[signal](); assert(!current.classList.contains('home-pending')); }
-for (const signal of ['wheel', 'touchmove', 'scroll', 'keydown']) { const current = boot(); assert.equal(typeof current.lifecycle[signal], 'function', `${signal} reveals`); current.lifecycle[signal](); assert(!current.classList.contains('home-pending'), `${signal} reveals the rendered page`); }
-const css = readFileSync('public/assets/css/home.css', 'utf8');
-assert(/\.home \.home-skeleton \{[^}]*opacity: 0;[^}]*transition: opacity/.test(css), 'skeleton fades out instead of disappearing');
-const timeout = boot(); timeout.timers.get(4000)(); assert(!timeout.classList.contains('home-pending'));
-const slow = boot({ decode: () => new Promise(() => {}) }); slow.events.DOMContentLoaded();
-assert(!slow.classList.contains('home-waiting'), 'a fast page never shows the placeholder');
-slow.timers.get(450)(); assert(slow.classList.contains('home-waiting'), 'a slow page shows the placeholder after the delay');
-slow.lifecycle.scroll(); assert(!slow.classList.contains('home-waiting') && !slow.classList.contains('home-pending'));
-const warm = boot({ decode: () => new Promise(() => {}), cached: true }); warm.events.DOMContentLoaded();
-assert(!warm.classList.contains('home-pending') && warm.timers.size === 0, 'a cached hero photograph reveals at once');
-assert(/\.home-waiting \.home \.home-skeleton \{[^}]*opacity: 1/.test(css), 'only the delayed state shows the skeleton');
-const restored = boot(); restored.lifecycle.pageshow({ persisted: true }); assert(!restored.classList.contains('home-pending'));
-console.log('PASS: map loading/expansion/Escape/focus/dialog precedence/exit; home resource readiness/failure/timeout/interaction/scroll intent/fade/BFCache; placeholder only when slow');
+// Disabled: running the readiness script never marks the page pending or waiting,
+// schedules no timers, and registers no reveal handlers.
+for (const args of [{}, { path: '/map' }, { home: false }]) {
+  const state = boot(args);
+  assert(!state.classList.contains('home-pending'), 'no pending class while disabled');
+  assert(!state.classList.contains('home-waiting'), 'no waiting class while disabled');
+  assert.equal(state.timers.size, 0, 'no timers while disabled');
+  assert.equal(Object.keys(state.events).length, 0, 'no document handlers while disabled');
+  assert.equal(Object.keys(state.lifecycle).length, 0, 'no window handlers while disabled');
+}
+console.log('PASS: map loading/expansion/Escape/focus/dialog precedence/exit; initial skeleton loading disabled');

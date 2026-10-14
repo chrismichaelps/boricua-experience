@@ -9,7 +9,7 @@ import { getJson, postJson } from '../net/http.js?v=75';
 import { legLines, pinsOf } from './plan.js?v=75';
 import { haptic } from './haptics.js?v=75';
 import { toast } from './toast.js?v=75';
-import { refreshSlot } from './weather.js?v=77';
+import { refreshSlot } from './weather.js?v=78';
 import { distanceText } from '../utils/units.js?v=75';
 
 // Public activity points are snapped to a grid of about 550 m, so a stop counts as reached within

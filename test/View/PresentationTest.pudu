@@ -199,7 +199,7 @@ fn main() -> Int {
       Test.that("accessibility language switch names the language it switches to", results.contains("<span lang=\"es\">ESPAÑOL</span>") && !results.contains(">ENGLISH<")),
       Test.equals("map expansion is named", &map.contains("Expand map"), &true),
       Test.equals("map loading is named", &map.contains("Loading activities"), &true),
-      Test.equals("home has decorative loading skeleton", &homePage.contains("home-skeleton"), &true),
+      Test.equals("home skeleton is disabled", &homePage.contains("home-skeleton"), &false),
       Test.equals("home nearby uses shared picker", &homePage.contains("class=\"near-form\" data-feature=\"search-pickers\""), &true),
       Test.that("menu renders distinct unknown, free and paid facts", menuReader.contains("Ask for price") && menuReader.contains("Free") && menuReader.contains("$12.50")),
       Test.that("menu unavailable and declared allergens are readable", menuReader.contains("Currently unavailable") && menuReader.contains("Declared allergens: milk")),
