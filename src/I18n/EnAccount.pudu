@@ -273,7 +273,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("account.discovery_body", "Choose how far to look and your favorite towns. We use them for the near-you rail and your recommendations."),
     ("account.radius", "Preferred distance"),
     ("account.radius_none", "No preference"),
-    ("account.radius_km", "Within :km km"),
+    ("account.radius_km", "Within :distance"),
     ("account.towns", "Favorite towns"),
     ("account.towns_hint", "Up to 5 towns."),
     ("form.radius_invalid", "Choose one of the offered distances."),

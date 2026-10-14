@@ -32,6 +32,11 @@ export fn routeOptions(gateway: &Gateway.Gateway, slugs: &Array[Str]) -> Result[
   Gateway.call(gateway, Supabase.PLAN_ROUTE_OPTIONS, &[("p_slugs", Json.list(&slugs.map(|slug: Str| Json.Text(slug))))], None, Gateway.Write)
 }
 
+/// The island's next 48 hours of weather by town, from the stored forecasts.
+export fn weather(gateway: &Gateway.Gateway) -> Result[Json.Json, Problem.Problem] {
+  Gateway.call(gateway, Supabase.ISLAND_WEATHER, &[], None, Gateway.Read)
+}
+
 /// Confirms a trip stop for the member and answers what it unlocked; the position is not stored.
 export fn arrive(gateway: &Gateway.Gateway, arrival: &Plan.Arrival, locale: Str, token: Str) -> Result[Plan.Arrived, Problem.Problem] {
   Gateway.query(gateway, Supabase.RECORD_TRIP_ARRIVAL, &[

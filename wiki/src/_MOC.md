@@ -345,6 +345,10 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/View/Pages/Trip]] — a plan followed live: location, route choices, arrivals.
 
+- [[src/Database/Weather]] · [[src/Public/Weather]] — island forecast and official alerts at a fixed cost.
+
+- [[src/Database/VisitorFacts]] — islands and ferries, tolls, parking and cash, English listings, units.
+
 - [[src/Api/AssistantRoutes]] — grounded chat itinerary/routing boundary.
 
 - [[src/Test/AssistantMaps]] — grounded chat itinerary/routing boundary.

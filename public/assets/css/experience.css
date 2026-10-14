@@ -503,6 +503,7 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .trip-route:has(input:checked) { border-color: var(--color-ocean); background: var(--color-ocean-tint); }
 .trip-route:has(input:focus-visible) { outline: 2px solid var(--color-ocean); outline-offset: 2px; }
 .trip-route-name { font-weight: 700; font-size: 14px; }
+.trip-route-toll { justify-self: start; margin-top: 2px; padding: 1px 6px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--color-amber-tint); color: #7a4b00; }
 .trip-route-detail { font-size: 12px; color: var(--color-graphite); font-variant-numeric: tabular-nums; }
 .trip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .trip-actions .button { gap: 6px; }
@@ -559,3 +560,74 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .plan-choices-summary span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .plan-choices-edit { color: var(--color-ocean); text-decoration: underline; }
 .plan-choices .plan-form { border: 0; box-shadow: none; padding-top: 4px; }
+/* The forecast where an activity happens: a quiet line, and a warning only for outdoor plans at risk. */
+.weather-slot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 13px; color: var(--color-graphite); }
+.weather-slot[hidden], .event-weather[hidden] { display: none; }
+.weather-slot .icon { flex: none; color: var(--color-ocean-deep); }
+.weather-line { font-variant-numeric: tabular-nums; }
+.weather-warning { flex-basis: 100%; padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 600; background: var(--color-amber-tint); color: #7a4b00; }
+.weather-warning-storm { background: var(--color-coral-tint); color: #8c2a20; }
+.plan-stop > .weather-slot { margin: 6px 0 0 42px; }
+.trip-stop-body .weather-slot { font-size: 12px; }
+/* The weather card: the sky moves behind the temperature like a weather app. The scene is a few
+   layers moved with transforms and opacity only, so it costs the phone almost nothing, and it rests
+   for people who ask for less motion. */
+.wx-slot[hidden] { display: none; }
+.wx { position: relative; isolation: isolate; overflow: hidden; display: grid; gap: 12px; margin: 16px 0; padding: 18px 18px 14px; border-radius: 22px; color: #fff; background: linear-gradient(180deg, #3f87d6, #7ab7ee); box-shadow: 0 8px 24px rgb(20 40 70 / 18%); }
+.wx-day.wx-clear { background: linear-gradient(180deg, #2f7fd3 0%, #6fb3ef 100%); }
+.wx-night.wx-clear { background: linear-gradient(180deg, #0b1a35 0%, #233d66 100%); }
+.wx-day.wx-cloudy, .wx-day.wx-fog { background: linear-gradient(180deg, #6f8191 0%, #a6b5c3 100%); }
+.wx-night.wx-cloudy, .wx-night.wx-fog { background: linear-gradient(180deg, #2b3646 0%, #4f5d6e 100%); }
+.wx-day.wx-showers { background: linear-gradient(180deg, #56677a 0%, #8394a5 100%); }
+.wx-night.wx-showers { background: linear-gradient(180deg, #222c3a 0%, #3e4b5c 100%); }
+.wx-storm { background: linear-gradient(180deg, #2e3542 0%, #4f5866 100%); }
+.wx-scene { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.wx-scene > span { position: absolute; display: block; }
+.wx-glow { top: -60px; right: -40px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgb(255 236 170 / 75%) 0%, rgb(255 214 110 / 25%) 40%, transparent 70%); opacity: 0; animation: wx-glow 7s ease-in-out infinite; }
+.wx-day.wx-clear .wx-glow { opacity: 1; }
+.wx-stars { inset: 0; opacity: 0; background-image: radial-gradient(1.5px 1.5px at 12% 22%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 34% 12%, #fff 50%, transparent 52%), radial-gradient(1.5px 1.5px at 58% 30%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 76% 16%, #fff 50%, transparent 52%), radial-gradient(1px 1px at 88% 40%, #fff 50%, transparent 52%), radial-gradient(1.5px 1.5px at 22% 48%, #fff 50%, transparent 52%); animation: wx-twinkle 4s ease-in-out infinite; }
+.wx-night.wx-clear .wx-stars { opacity: .9; }
+.wx-cloud { top: 10%; left: -40%; width: 70%; height: 46%; border-radius: 50%; background: radial-gradient(ellipse at center, rgb(255 255 255 / 55%) 0%, rgb(255 255 255 / 18%) 45%, transparent 70%); filter: blur(6px); opacity: 0; animation: wx-drift 38s linear infinite; }
+.wx-cloud-2 { top: 34%; width: 90%; animation-duration: 52s; animation-delay: -20s; }
+.wx-cloud-3 { top: 56%; width: 60%; animation-duration: 44s; animation-delay: -34s; }
+.wx-cloudy .wx-cloud, .wx-fog .wx-cloud, .wx-showers .wx-cloud, .wx-storm .wx-cloud { opacity: 1; }
+.wx-day.wx-clear .wx-cloud-2 { opacity: .5; }
+.wx-night .wx-cloud { background: radial-gradient(ellipse at center, rgb(200 210 225 / 30%) 0%, rgb(200 210 225 / 10%) 45%, transparent 70%); }
+.wx-rain { left: 0; right: 0; top: -100%; height: 200%; opacity: 0; background-image: repeating-linear-gradient(104deg, transparent 0 14px, rgb(255 255 255 / 16%) 14px 15px, transparent 15px 28px); background-size: 40px 26px; animation: wx-rain .6s linear infinite; }
+.wx-showers .wx-rain, .wx-storm .wx-rain { opacity: 1; }
+.wx-flash { inset: 0; background: rgb(255 255 255 / 70%); opacity: 0; }
+.wx-storm .wx-flash { animation: wx-flash 7s linear infinite; }
+.wx-head { display: grid; gap: 0; }
+.wx-place { margin: 0; font-size: 14px; font-weight: 700; opacity: .92; }
+.wx-temp { margin: 0; font-size: 64px; font-weight: 300; line-height: 1; letter-spacing: -2px; }
+.wx-sky { margin: 2px 0 0; font-size: 17px; font-weight: 600; }
+.wx-range { margin: 0; font-size: 14px; opacity: .9; font-variant-numeric: tabular-nums; }
+.wx-hours { list-style: none; margin: 0; padding: 10px 4px 2px; display: flex; justify-content: space-between; gap: 6px; border-top: 1px solid rgb(255 255 255 / 25%); overflow-x: auto; scrollbar-width: none; }
+.wx-hours li { display: grid; grid-template-rows: 18px 22px 20px 14px; align-items: center; justify-items: center; gap: 2px; min-width: 40px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.wx-hours li.is-start .wx-hour { font-weight: 800; }
+.wx-hours .icon { color: #fff; }
+.wx-hour-temp { font-weight: 700; font-size: 15px; }
+.wx-hour-rain { color: #bfe3ff; font-size: 11px; font-weight: 700; }
+.wx-notes { display: grid; gap: 8px; }
+.wx-alert, .wx-heat { display: grid; gap: 2px; margin: 0; padding: 10px 12px; border-radius: 14px; font-size: 13px; line-height: 1.4; background: rgb(0 0 0 / 22%); backdrop-filter: blur(6px); }
+.wx-alert strong { font-size: 13px; }
+.wx-alert-heat, .wx-heat-danger, .wx-heat-extremedanger { background: rgb(176 52 32 / 78%); }
+.wx-heat-extreme { background: rgb(196 104 18 / 75%); }
+.wx-heat-caution { background: rgb(150 112 20 / 55%); }
+.wx-alert-flood, .wx-alert-surf, .wx-alert-storm { background: rgb(18 46 92 / 70%); }
+.wx-source { margin: 0; font-size: 11px; opacity: .8; }
+.trip-panel .wx { margin: 0; }
+@keyframes wx-drift { from { transform: translateX(0); } to { transform: translateX(260%); } }
+@keyframes wx-rain { from { transform: translateY(0); } to { transform: translateY(104px); } }
+@keyframes wx-flash { 0%, 90%, 92%, 95%, 100% { opacity: 0; } 91%, 94% { opacity: .55; } }
+@keyframes wx-glow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes wx-twinkle { 0%, 100% { opacity: .9; } 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .wx-scene > span { animation: none !important; } .wx-cloud { transform: translateX(60%); } }
+.trip-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.trip-tag { padding: 1px 6px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--color-cloud); color: var(--color-graphite); }
+.trip-tag-cash { background: var(--color-green-tint); color: #1f6a35; }
+/* An automatic English title and summary for a Spanish listing, labelled as such. */
+.event-english { display: grid; gap: 2px; margin-top: 8px; padding: 10px 12px; border-radius: 14px; background: var(--color-cloud); font-size: 15px; }
+.event-english p { margin: 0; }
+.event-english-label { font-size: 12px; font-weight: 700; color: var(--color-graphite); text-transform: uppercase; letter-spacing: .3px; }
+.event-english-title { font-weight: 700; }

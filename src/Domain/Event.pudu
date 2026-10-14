@@ -48,8 +48,27 @@ export type Card = {
   @json("distance_m") distanceM: Option[Int],
   @json("organizer_name") organizerName: Option[Str],
   @default("0") @json("more_dates") moreDates: Int,
-  @json("pending_count") pendingCount: Option[Int]
+  @json("pending_count") pendingCount: Option[Int],
+  /// Whether the activity is outdoors: the organizer's answer, else its category; weather warnings use it.
+  @default("false") outdoor: Bool,
+  /// Practical facts the organizer answered; none means not said, never "no".
+  @default("null") parking: Option[Bool],
+  @default("null") @json("cash_only") cashOnly: Option[Bool],
+  /// An automatic English title and summary when the listing is written in Spanish.
+  @default("null") english: Option[CardEnglish]
 } derives Json.Decode
+
+/** @Domain.Event.CardEnglish — an automatic English title and summary for a Spanish listing */
+export type CardEnglish = { @default("null") title: Option[Str], @default("null") summary: Option[Str] } derives Json.Decode
+
+/// The title a reader sees: the automatic English one for English readers when there is one.
+export fn titleFor(card: &Card, english: Bool) -> Str {
+  if !english { return card.title }
+  match card.english {
+    case Some(found) => Option.unwrapOr(found.title, card.title)
+    case None => card.title
+  }
+}
 
 /** @Domain.Event.Page — one page of cards and the cursor of the next */
 export type Page = { items: Array[Card], next: Option[Str] } derives Json.Decode

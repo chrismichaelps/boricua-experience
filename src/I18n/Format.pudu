@@ -31,7 +31,7 @@ export fn seats(locale: &Locale.Locale, card: &Event.Card) -> Str {
 /// `A 3.2 km` / `3.2 km away`, or nothing without a distance.
 export fn distance(locale: &Locale.Locale, meters: Option[Int]) -> Str {
   match meters {
-    case Some(found) => Translate.fill(locale, "event.distance", &[("distance", Geo.distanceLabel(found))])
+    case Some(found) => Translate.fill(locale, "event.distance", &[("distance", match locale { case Locale.En => measure(locale, found) case _ => Geo.distanceLabel(found) })])
     case None => ""
   }
 }
@@ -43,3 +43,23 @@ export fn categoryName(locale: &Locale.Locale, category: &Event.CategoryRef) -> 
     case Locale.En => category.nameEn
   }
 }
+
+/// A distance as people read it: kilometres in Spanish, miles in English, with one decimal.
+export fn measure(locale: &Locale.Locale, meters: Int) -> Str {
+  match locale {
+    case Locale.En => {
+      let tenths = (meters * 10 + 804) / 1609
+      show(tenths / 10) + "." + show(tenths % 10) + " mi"
+    }
+    case _ => show(meters / 1000) + "." + show((meters % 1000) / 100) + " km"
+  }
+}
+
+/// A radius of whole kilometres as people read it: "25 km" in Spanish, "16 mi" in English.
+export fn radius(locale: &Locale.Locale, km: Int) -> Str {
+  match locale {
+    case Locale.En => show((km * 1000 + 804) / 1609) + " mi"
+    case _ => show(km) + " km"
+  }
+}
+

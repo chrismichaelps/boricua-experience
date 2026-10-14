@@ -12,6 +12,17 @@ export class ChatFailure extends Error {
   constructor(code = 'assistant_unavailable', status = 503) { super(code); this.code = code; this.status = status; }
 }
 
+const SKIES = ['clear', 'cloudy', 'showers', 'thunderstorms', 'haze'];
+/** The forecast for an activity's town and start from the island document, in the model's words. */
+export function weatherFor(doc, activity) {
+  const hours = doc?.towns?.[activity?.town_slug];
+  const start = Date.parse(doc?.start || ''), when = Date.parse(activity?.starts_at || '');
+  if (!Array.isArray(hours) || !Number.isFinite(start) || !Number.isFinite(when)) return null;
+  const hour = hours[Math.floor((when - start) / 3600000)];
+  if (!Array.isArray(hour) || hour.length < 4) return null;
+  return { sky: SKIES[hour[3]] || 'clear', temp_f: hour[0], feels_like_f: hour[1], rain_chance_pct: hour[2] };
+}
+
 export function signature(key, body, operation = 'prepare') {
   if (!/^[a-f\d]{64}$/i.test(key || '')) throw new ChatFailure('assistant_not_configured');
   return createHmac('sha256', Buffer.from(key, 'hex')).update('boricua-assistant:' + operation + ':' + body).digest('hex');
@@ -131,6 +142,8 @@ export async function runConversation(context, bridge, key, signal, emit, fetche
       const format = new Intl.DateTimeFormat(context.locale === 'en' ? 'en-US' : 'es-PR', { timeZone: 'America/Puerto_Rico', dateStyle: 'full', timeStyle: 'short' });
       const dated = activity => {
         const start = new Date(activity.starts_at), end = activity.ends_at ? new Date(activity.ends_at) : null;
+        const weather = weatherFor(context.weather, activity);
+        if (weather) activity = { ...activity, weather_pr: weather };
         return Number.isNaN(start.getTime()) ? activity : { ...activity, schedule_pr: format.format(start) + (end && !Number.isNaN(end.getTime()) ? ' – ' + format.format(end) : context.locale === 'en' ? ' · End time not provided' : ' · Hora de fin no informada') + ' AST' };
       };
       const data = { ...result.result };
@@ -198,7 +211,9 @@ export default async function assistant(req, res) {
       }
       return response.json();
     };
-    const context = await bridge(input);
+    // The island forecast, shared from the edge cache; a question never waits on the weather service.
+    const weather = fetch(config.bridge + '/api/weather', { signal: abort.signal, headers: { accept: 'application/json' } }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    const context = { ...(await bridge(input)), weather: await weather };
     res.setHeader('content-type', 'text/event-stream; charset=utf-8');
     res.setHeader('x-accel-buffering', 'no');
     res.flushHeaders?.();

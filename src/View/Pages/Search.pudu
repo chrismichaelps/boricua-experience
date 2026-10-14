@@ -12,6 +12,7 @@ import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Place as Place
 import Domain.Search as Search
+import I18n.Format as Format
 import Utils.Geo as Geo
 import Utils.Query as Query
 import View.Components.EventCard as EventCard
@@ -69,7 +70,7 @@ export fn label(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search
     case None => {}
   }
   match Catalog.municipality(catalog, filters.near) {
-    case Some(town) => { parts = parts.push(Frame.tf(frame, "search.around_town", &[("town", town.name), ("km", show(Search.radiusKm(filters)))])) }
+    case Some(town) => { parts = parts.push(Frame.tf(frame, "search.around_town", &[("town", town.name), ("distance", Format.radius(&frame.locale, Search.radiusKm(filters)))])) }
     case None => {}
   }
   if filters.window != Search.Anytime { parts = parts.push(SearchControls.windowLabel(frame, &filters.window)) }
@@ -193,6 +194,6 @@ fn neighbors(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: &Catalog.Muni
   if near.isEmpty() { return H.nothing() }
   H.nav().class("neighbors").label(Frame.t(frame, "search.nearby_towns")).holding([
       H.h2().class("neighbors-title").says(Frame.t(frame, "search.nearby_towns")),
-      H.a().class("chip chip-active").href(Routes.SEARCH + Query.render(&[("cerca", town.slug), ("radio", show(Search.DEFAULT_RADIUS_KM))])).holding([Icons.sized("crosshair", 16), H.span().says(Frame.tf(frame, "search.around_town", &[("town", town.name), ("km", show(Search.DEFAULT_RADIUS_KM))]))])
+      H.a().class("chip chip-active").href(Routes.SEARCH + Query.render(&[("cerca", town.slug), ("radio", show(Search.DEFAULT_RADIUS_KM))])).holding([Icons.sized("crosshair", 16), H.span().says(Frame.tf(frame, "search.around_town", &[("town", town.name), ("distance", Format.radius(&frame.locale, Search.DEFAULT_RADIUS_KM))]))])
     ].concat(near.map(|found: Catalog.Neighbor| H.a().class("chip").href(Routes.TOWN_PREFIX + found.town.slug).holding([H.span().says(found.town.name), H.small().says(Geo.distanceLabel(found.meters))]))))
 }

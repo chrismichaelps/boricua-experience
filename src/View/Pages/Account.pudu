@@ -10,6 +10,7 @@ import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Problem as Problem
 import Domain.Profile as Profile
+import I18n.Format as Format
 import View.Components.Avatar as Avatar
 import View.Components.Form as Form
 import View.Components.Icons as Icons
@@ -163,7 +164,7 @@ fn photoEditor(frame: &Frame.Frame, me: &Profile.MyProfile) -> H.Node {
 /// rail on the home page and lift recommendations from those towns.
 fn discoveryPanel(frame: &Frame.Frame, me: &Profile.MyProfile, catalog: &Catalog.Catalog) -> H.Node {
   let chosenRadius = match me.preferredRadiusKm { case Some(km) => show(km) case None => "" }
-  let radii = [("", Frame.t(frame, "account.radius_none"))].concat(Profile.DISCOVERY_RADII.map(|km: Int| (show(km), Frame.tf(frame, "account.radius_km", &[("km", show(km))]))))
+  let radii = [("", Frame.t(frame, "account.radius_none"))].concat(Profile.DISCOVERY_RADII.map(|km: Int| (show(km), Frame.tf(frame, "account.radius_km", &[("distance", Format.radius(&frame.locale, km))]))))
   var groups: Array[H.Node] = []
   for region in Catalog.regions(catalog) {
     var boxes: Array[H.Node] = []

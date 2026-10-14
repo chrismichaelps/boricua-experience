@@ -5,8 +5,8 @@ import Std.Json as Json
 import Domain.Achievement as Achievement
 import Domain.Event as Event
 
-/** @Domain.Plan.Leg — the drive to a stop: seconds, metres, and whether it was measured on roads */
-export type Leg = { seconds: Int, meters: Int, road: Bool } derives Json.Decode
+/** @Domain.Plan.Leg — the way to a stop: seconds, metres, whether it was measured on roads, and whether it crosses to or from Vieques or Culebra by ferry */
+export type Leg = { seconds: Int, meters: Int, road: Bool, @default("false") ferry: Bool } derives Json.Decode
 
 /** @Domain.Plan.Stop — one activity in a plan, with when to arrive and leave and the drive to it */
 export type Stop = { card: Event.Card, arrive: Str, leave: Str, leg: Option[Leg] } derives Json.Decode

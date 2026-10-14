@@ -17,6 +17,7 @@ import Utils.Time as Time
 import View.Components.EventCard as EventCard
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
+import View.Components.Weather as Weather
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -50,15 +51,13 @@ export fn duration(frame: &Frame.Frame, seconds: Int) -> Str {
   Frame.tf(frame, "plan.hours", &[("hours", show(minutes / 60)), ("minutes", show(minutes % 60))])
 }
 
-/// Kilometres with one decimal.
-export fn kilometres(meters: Int) -> Str { show(meters / 1000) + "." + show((meters % 1000) / 100) }
-
 /// The drive to a stop: measured on roads, or an estimate from the straight line.
 fn legLine(frame: &Frame.Frame, leg: &Option[Plan.Leg], first: Bool) -> H.Node {
   match leg {
     case Some(found) => {
+      if found.ferry { return H.p().class("plan-leg plan-leg-ferry").holding([Icons.sized("wave", 16), H.span().says(Frame.t(frame, "plan.leg_ferry"))]) }
       let minutes = show((found.seconds + 59) / 60)
-      let text = Frame.tf(frame, if found.road && !first { "plan.leg_road" } else { "plan.leg_estimate" }, &[("minutes", minutes), ("km", kilometres(found.meters))])
+      let text = Frame.tf(frame, if found.road && !first { "plan.leg_road" } else { "plan.leg_estimate" }, &[("minutes", minutes), ("distance", Format.measure(&frame.locale, found.meters))])
       H.p().class("plan-leg").holding([Icons.sized("car", 16), H.span().says(text)])
     }
     case None => H.p().class("plan-leg").holding([Icons.sized("pin", 16), H.span().says(Frame.t(frame, "plan.leg_start"))])
@@ -79,7 +78,8 @@ fn stop(frame: &Frame.Frame, item: &Plan.Stop, number: Int) -> H.Node {
               H.span().class("plan-stop-place").says(card.venueName + " · " + card.municipality.name),
               H.span().class("pill pill-light plan-stop-price").says(Format.price(&frame.locale, card.priceCents))
             ])
-        ])
+        ]),
+      Weather.slot(card.municipality.slug, item.arrive, card.outdoor)
     ])
 }
 
@@ -219,6 +219,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choic
             H.p().class("lead").says(Frame.t(frame, "plan.lead"))
           ]),
         choicesPanel(frame, catalog, choices, match shown { case Found(outings) => !outings.plans.isEmpty() case _ => false }),
-        results(frame, shown)
+        results(frame, shown),
+        Weather.labels(frame)
       ]))
 }

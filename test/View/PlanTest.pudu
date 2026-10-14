@@ -6,8 +6,11 @@ import Std.Io as Io
 import Std.Test as Test
 import Domain.Build as Build
 import Domain.Catalog as Catalog
+import Domain.Draft as Draft
+import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Plan as Plan
+import I18n.Format as Format
 import Support.Fixtures as Fixtures
 import Utils.Wire as Wire
 import View.Calendar as Calendar
@@ -35,6 +38,10 @@ fn main() -> Int {
   let first = outings.plans[0]
   let shared = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Shared(Plan.Outings{plans: [first]})))
   let trip = Html.render(&TripPage.render(&visitor(Locale.Es), &first))
+  let ferryStop = Plan.Stop{..first.stops[1], leg: Some(Plan.Leg{seconds: 7200, meters: 51000, road: false, ferry: true})}
+  let ferryPlan = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Shared(Plan.Outings{plans: [Plan.Plan{..first, stops: [first.stops[0], ferryStop]}]})))
+  let factsCard = Event.Card{..first.stops[0].card, parking: Some(true), cashOnly: Some(true), outdoor: true, english: Some(Event.CardEnglish{title: Some("Coffee route"), summary: Some("Visit farms.")})}
+  let factsTrip = Html.render(&TripPage.render(&visitor(Locale.Es), &Plan.Plan{..first, stops: [Plan.Stop{..first.stops[0], card: factsCard}, first.stops[1]]}))
   let arrival = Plan.Arrival{slug: "a-one", lat: 18.4, lng: -66.1, plan: ["a-one", "b-two"]}
   let ics = Calendar.plan("https://boricuaexperience.com", "Plan", &first.stops.map(|stop: Plan.Stop| (stop.card, stop.arrive, stop.leave)))
   let checks = Test.suite("Plan", &[
@@ -63,6 +70,14 @@ fn main() -> Int {
       Test.that("the trip carries its messages and says the position stays on the phone", trip.contains("data-say-off-route=") && trip.contains("data-say-done-title=") && trip.contains("solo en este teléfono")),
       Test.that("the trip is not indexed and leads back to its plan", trip.contains("noindex") && trip.contains("href=\"/plan?e=")),
       Test.that("a well-formed arrival is accepted", Plan.validArrival(&arrival)),
+      Test.equals("distances read in kilometres in Spanish and miles in English", &[Format.measure(&Locale.Es, 9500), Format.measure(&Locale.En, 9500), Format.measure(&Locale.En, 1609)], &["9.5 km", "5.9 mi", "1.0 mi"]),
+      Test.that("English plans show miles", en.contains(" mi") && !en.contains(" km")),
+      Test.that("a crossing to an island is a ferry, never a drive", ferryPlan.contains("Cruce en ferry desde Ceiba") && ferryPlan.contains("plan-leg-ferry")),
+      Test.that("trip stops say parking and cash only when the organizer did", factsTrip.contains("Hay estacionamiento") && factsTrip.contains("Solo efectivo")),
+      Test.that("plan stops and trip stops carry their town's forecast slot", es.contains("data-weather-town=") && factsTrip.contains("data-weather-outdoor=\"1\"") && factsTrip.contains("data-weather-card=\"1\"")),
+      Test.equals("English readers see the automatic English title", &[Event.titleFor(&factsCard, true), Event.titleFor(&factsCard, false)], &["Coffee route", first.stops[0].card.title]),
+      Test.equals("practical facts read yes, no or not said", &[Draft.factOf("yes"), Draft.factOf("no"), Draft.factOf(""), Draft.factOf("maybe")], &[Some(true), Some(false), None, None]),
+      Test.equals("and write back the same way", &[Draft.answerOf(Some(true)), Draft.answerOf(Some(false)), Draft.answerOf(None)], &["yes", "no", ""]),
       Test.that("an arrival outside Puerto Rico is refused", !Plan.validArrival(&Plan.Arrival{..arrival, lat: 40.7})),
       Test.that("an arrival with a malformed address is refused", !Plan.validArrival(&Plan.Arrival{..arrival, slug: "../x"}) && !Plan.validArrival(&Plan.Arrival{..arrival, plan: ["a-one", "B"]})),
       Test.that("an arrival's plan holds at most six stops", !Plan.validArrival(&Plan.Arrival{..arrival, plan: ["aaa", "bbb", "ccc", "ddd", "eee", "fff", "ggg"]}))

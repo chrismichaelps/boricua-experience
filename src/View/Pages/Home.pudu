@@ -10,6 +10,7 @@ import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Search as Search
+import I18n.Format as Format
 import Services.Discovery as Discovery
 import Utils.Query as Query
 import View.Components.EventCard as EventCard
@@ -95,7 +96,7 @@ fn nearTile(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
 /// The rail of events around the visitor's remembered town, as markup the home page script inserts.
 export fn nearRail(frame: &Frame.Frame, town: Str, filters: &Search.Filters, cards: &Array[Event.Card]) -> Str {
   let more = Routes.SEARCH + Query.render(&[("cerca", filters.near), ("radio", show(Search.radiusKm(filters)))])
-  let title = Frame.tf(frame, "home.near_town", &[("town", town), ("km", show(Search.radiusKm(filters)))])
+  let title = Frame.tf(frame, "home.near_town", &[("town", town), ("distance", Format.radius(&frame.locale, Search.radiusKm(filters)))])
   HtmlText.render(&EventCard.rail(frame, "rail-near", title, &cards.slice(0, if cards.length() < 10 { cards.length() } else { 10 }), more).html())
 }
 
