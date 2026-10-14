@@ -136,6 +136,14 @@ html.a11y-focus :focus, html.a11y-focus :focus-visible { outline: 4px solid #ff8
 .a11y-overlays.has-mask .a11y-mask-top { display: block; top: 0; height: max(0px, calc(var(--a11y-y) - 70px)); background: rgb(0 0 0 / 62%); }
 .a11y-overlays.has-mask .a11y-mask-bottom { display: block; top: calc(var(--a11y-y) + 70px); bottom: 0; background: rgb(0 0 0 / 62%); }
 
-/* Phones open the panel from the menu row, so nothing floats over the page or the tab bar. */
-@media (max-width: 699px) { .a11y-launch { display: none; } }
-@media (max-width: 699px) { .a11y-pill[data-a11y="hide"] { display: none; } }
+/* Phones keep the launcher in reach too: a smaller button above the tab bar (and above an activity's
+   join bar), and on the map a round button under the zoom buttons, away from the header icons. It can
+   still be tucked to the screen edge. */
+@media (max-width: 699px) {
+  .a11y-launch { left: 12px; bottom: calc(var(--tabbar) + var(--safe-bottom) + 12px); width: 48px; height: 48px; }
+  .a11y-figure { width: 28px; height: 28px; }
+  .app:has(.join-panel) .a11y-launch { bottom: calc(var(--tabbar) + var(--safe-bottom) + var(--join-panel, 150px) + 12px); }
+  .app-full .a11y-launch { top: calc(var(--appbar) + 160px); right: 16px; left: auto; bottom: auto; width: 44px; height: 44px; }
+  .app-full .a11y.is-tucked .a11y-launch { right: 0; top: calc(var(--appbar) + 160px); }
+  .app-full:has(.is-sheet-expanded) .a11y-launch, .app-full:has(.is-map-expanded) .a11y-launch { visibility: hidden; }
+}

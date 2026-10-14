@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 
 // The browser module's pure parts: which signals an address carries, and the server's day.
 globalThis.window = globalThis;
-const { pageSignals, today } = await import('../public/assets/js/features/achievements.js');
+const { pageSignals, today, keeps, filterBoard, primeAudio } = await import('../public/assets/js/features/achievements.js');
 const at = (href) => new URL(href, 'https://boricuaexperience.com');
 
 assert.deepEqual(pageSignals(at('/pueblo/loiza')), [{ metric: 'town_view', key: 'loiza' }], 'a town page is a town view');
@@ -46,3 +46,36 @@ for (const name of files) {
   assert.ok(svg.length < 12000, `${badge} stays small (${svg.length} bytes)`);
 }
 console.log(`PASS: page signals and Puerto Rico day; ${files.length} unique, safe, versioned-id badges with gentle motion and reduced-motion rest`);
+
+// Filters switch in place: every tile is on the page, the empty notice and the chosen chip follow.
+const tile = (category, unlocked) => ({ dataset: { category, unlocked: unlocked ? '1' : '0' }, hidden: false });
+const tiles = [tile('discovery', true), tile('discovery', false), tile('hosting', false)];
+assert.deepEqual(tiles.map((t) => keeps('', t)), [true, true, true]);
+assert.deepEqual(tiles.map((t) => keeps('unlocked', t)), [true, false, false]);
+assert.deepEqual(tiles.map((t) => keeps('hosting', t)), [false, false, true]);
+const chipOf = (filter) => ({ dataset: { filter }, attrs: {}, classList: { on: false, toggle(_name, on) { this.on = on; } }, setAttribute(k, v) { this.attrs[k] = v; }, removeAttribute(k) { delete this.attrs[k]; } });
+const chips = [chipOf(''), chipOf('unlocked'), chipOf('hosting')];
+const empty = { hidden: true };
+const board = { querySelectorAll: (q) => (q.includes('li') ? tiles : chips), querySelector: () => empty };
+const replaced = [];
+const view = { URL, location: { href: 'https://boricuaexperience.com/achievements' }, history: { state: null, replaceState: (_s, _t, url) => replaced.push(url) } };
+assert.equal(filterBoard(board, 'unlocked', view), 1);
+assert.deepEqual(tiles.map((t) => t.hidden), [false, true, true]);
+assert.equal(chips[1].attrs['aria-current'], 'page'); assert.equal(chips[0].attrs['aria-current'], undefined);
+assert.equal(replaced.at(-1), '/achievements?c=unlocked', 'the address keeps the filter without a reload');
+const noneLeft = [tile('hosting', false)];
+assert.equal(filterBoard({ ...board, querySelectorAll: (q) => (q.includes('li') ? noneLeft : chips) }, 'unlocked', view), 0);
+assert.equal(empty.hidden, false, 'an empty filter shows the empty notice');
+filterBoard(board, '', view); assert.equal(replaced.at(-1), '/achievements');
+
+// A phone's first tap wakes the audio so a later unlock can chime.
+const listeners = new Map();
+let resumed = 0, played = 0;
+class FakeContext { constructor() { this.state = 'suspended'; this.destination = {}; } resume() { resumed++; this.state = 'running'; return Promise.resolve(); } createBuffer() { return {}; } createBufferSource() { return { connect() {}, start() { played++; } }; } }
+const phone = { AudioContext: FakeContext, addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: (type) => listeners.delete(type), document: { hidden: false, addEventListener() {} } };
+primeAudio(phone);
+assert.ok(listeners.has('touchend') && listeners.has('click'), 'the first touch or click is awaited');
+listeners.get('touchend')();
+assert.equal(resumed, 1); assert.equal(played, 1, 'one silent sample plays inside the tap');
+assert.equal(listeners.size, 0, 'once awake, nothing more is awaited');
+console.log('PASS: in-place board filters with address and empty notice; audio woken by the first tap');

@@ -3,7 +3,7 @@
 // sharing, calendars and the assistant — and shows each new unlock as a toast whose badge pops in
 // with a short chime. On the board it draws badges inline so they animate (and pause while locked)
 // and opens an achievement's detail in a dialog. Every unlock rule lives in the database.
-import { postJson } from '../net/http.js?v=67';
+import { postJson } from '../net/http.js?v=68';
 
 const ENDPOINT = '/api/achievements/signals';
 const DAY_KEY = 'bx-ach-day';
@@ -41,17 +41,49 @@ export function pageSignals(location) {
 
 // A short rising chime in four notes, its brightest note landing as the badge reaches full size.
 let audio = null;
+function audioContext(view) {
+  const Context = view.AudioContext || view.webkitAudioContext;
+  if (!Context) return null;
+  audio = audio || new Context();
+  return audio;
+}
+
+/** Phones only let a page make sound once a tap has started its audio. The first touch, click or key
+ * press therefore wakes the audio with one silent sample, so a later unlock can chime on its own. */
+export function primeAudio(view = window) {
+  const events = ['touchend', 'pointerup', 'click', 'keydown'];
+  const wake = () => {
+    try {
+      const context = audioContext(view);
+      if (!context) return;
+      if (context.state === 'suspended') context.resume().catch(() => {});
+      const silence = context.createBuffer(1, 1, 22050);
+      const source = context.createBufferSource();
+      source.buffer = silence;
+      source.connect(context.destination);
+      source.start(0);
+      if (context.state === 'running') for (const type of events) view.removeEventListener(type, wake, true);
+    } catch { /* silent where audio is unavailable */ }
+  };
+  for (const type of events) view.addEventListener(type, wake, { capture: true, passive: true });
+  // A page restored from the back-forward cache or brought back to the front may find its audio suspended.
+  view.document.addEventListener('visibilitychange', () => {
+    if (!view.document.hidden && audio?.state !== 'running') for (const type of events) view.addEventListener(type, wake, { capture: true, passive: true });
+  });
+}
+
 function chime(view) {
   if (view.document.documentElement.classList.contains('a11y-mute')) return;
-  const Context = view.AudioContext || view.webkitAudioContext;
-  if (!Context) return;
   try {
-    audio = audio || new Context();
+    if (!audioContext(view)) return;
     if (audio.state === 'suspended') audio.resume().catch(() => {});
     const start = audio.currentTime + 0.08;
     const master = audio.createGain();
     master.gain.value = 0.18;
     master.connect(audio.destination);
+    // Notes scheduled while a phone's audio still sleeps play when the first tap wakes it; once the
+    // toast is gone that would be a stray chime, so an untouched page drops it instead.
+    view.setTimeout(() => { if (audio.state !== 'running') master.disconnect(); }, TOAST_MS);
     [[784, 0, 0.32], [1047, 0.12, 0.32], [1319, 0.24, 0.36], [1568, 0.38, 0.7]].forEach(([frequency, at, length]) => {
       const tone = audio.createOscillator();
       const shine = audio.createOscillator();
@@ -104,11 +136,12 @@ async function drawing(badge, view) {
 
 /** Replaces each badge image inside a container with its inline drawing. */
 export async function inline(container, view = window) {
-  const slots = [...container.querySelectorAll('.ach-art[data-badge]')].filter((slot) => !slot.dataset.drawn);
+  const slots = [...container.querySelectorAll('.ach-art[data-badge]')].filter((slot) => !slot.dataset.drawing);
   await Promise.all(slots.map(async (slot) => {
-    slot.dataset.drawn = '1';
+    slot.dataset.drawing = '1';
     const svg = await drawing(slot.dataset.badge, view);
     if (svg) slot.replaceChildren(svg);
+    slot.dataset.drawn = '1';
   }));
 }
 
@@ -154,6 +187,7 @@ export function announce(root, unlocked, view = window) {
 
 /** Records signals for a member and announces what they unlocked. */
 export function achievements(root, view = window) {
+  primeAudio(view);
   const pending = [];
   let timer = 0;
   const flush = async (keepalive = false) => {
@@ -192,9 +226,44 @@ export function achievements(root, view = window) {
   view.addEventListener('pagehide', () => { if (pending.length) flush(true); });
 }
 
-/** The board: badges inline, and a tile's detail in a dialog. */
+/** Which tiles a filter keeps: every one, the unlocked ones, or one category's. */
+export function keeps(filter, tile) {
+  if (!filter) return true;
+  if (filter === 'unlocked') return tile.dataset.unlocked === '1';
+  return tile.dataset.category === filter;
+}
+
+/** Switches the board's filter in place: every tile is already on the page, so nothing waits on the network. */
+export function filterBoard(board, filter, view = window) {
+  let shown = 0;
+  for (const tile of board.querySelectorAll('.ach-grid > li')) {
+    const keep = keeps(filter, tile);
+    tile.hidden = !keep;
+    if (keep) shown += 1;
+  }
+  const empty = board.querySelector('[data-ach-empty]');
+  if (empty) empty.hidden = shown > 0;
+  for (const chip of board.querySelectorAll('.ach-filters [data-filter]')) {
+    const on = chip.dataset.filter === filter;
+    chip.classList.toggle('is-on', on);
+    if (on) chip.setAttribute('aria-current', 'page'); else chip.removeAttribute('aria-current');
+  }
+  const address = new view.URL(view.location.href);
+  if (filter) address.searchParams.set('c', filter); else address.searchParams.delete('c');
+  view.history.replaceState(view.history.state, '', address.pathname + address.search);
+  return shown;
+}
+
+/** The board: badges inline, filters that switch at once, and a tile's detail in a dialog. */
 export function achievementBoard(board, view = window) {
   inline(board, view);
+  board.querySelector('.ach-filters')?.addEventListener('click', (event) => {
+    const chip = event.target.closest('[data-filter]');
+    if (!chip || event.metaKey || event.ctrlKey || event.shiftKey || event.button > 0) return;
+    event.preventDefault();
+    filterBoard(board, chip.dataset.filter, view);
+    chip.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  });
   const dialog = board.querySelector('.ach-dialog');
   const body = dialog?.querySelector('.ach-dialog-body');
   if (!dialog || !body || typeof dialog.showModal !== 'function') return;

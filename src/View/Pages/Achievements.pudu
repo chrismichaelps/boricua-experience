@@ -88,11 +88,13 @@ fn progress(frame: &Frame.Frame, item: &Achievement.Item, label: Bool) -> H.Node
 }
 
 /// One tile: the badge, its name, and progress while locked. Opens the detail.
-fn tile(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
+fn tile(frame: &Frame.Frame, item: &Achievement.Item, visible: Bool) -> H.Node {
   let done = Achievement.unlocked(item)
   let state = if done { "is-unlocked" } else { "is-locked" }
   let status = if done { Frame.t(frame, "achievements.unlocked_label") } else { Frame.t(frame, "achievements.locked_label") }
-  H.li().holding([
+  let entry = H.li().data("category", item.category).data("unlocked", if done { "1" } else { "0" })
+  // Every tile is on the page so the filters switch at once; the others wait hidden.
+  (if visible { entry } else { entry.at("hidden", "hidden") }).holding([
       H.a().class("ach-tile " + state + " rarity-" + item.rarity).href(detailPath(item.slug)).data("achievement", item.slug).holding([
           art(item, 96),
           H.span().class("ach-name").says(title(frame, item)),
@@ -132,7 +134,7 @@ fn detailTemplate(frame: &Frame.Frame, item: &Achievement.Item) -> H.Node {
 /// The filters: every category, the seasonal ones, and what the member has unlocked.
 fn filters(frame: &Frame.Frame, board: &Achievement.Board, chosen: Str) -> H.Node {
   let chip = |value: Str, label: Str| {
-    let link = H.a().class("chip" + (if value == chosen { " is-on" } else { "" })).href(if value.isEmpty() { Routes.ACHIEVEMENTS } else { Routes.ACHIEVEMENTS + "?c=" + value }).says(label)
+    let link = H.a().class("chip" + (if value == chosen { " is-on" } else { "" })).data("filter", value).href(if value.isEmpty() { Routes.ACHIEVEMENTS } else { Routes.ACHIEVEMENTS + "?c=" + value }).says(label)
     H.li().holding([if value == chosen { link.at("aria-current", "page") } else { link }])
   }
   H.nav().class("ach-filters").label(Frame.t(frame, "achievements.filters")).holding([
@@ -165,9 +167,8 @@ export fn render(frame: &Frame.Frame, board: &Achievement.Board, chosen: Str) ->
               ])
           ]),
         filters(frame, board, chosen),
-        if items.isEmpty() { Notice.empty("star", Frame.t(frame, "achievements.empty_title"), Frame.t(frame, "achievements.empty_body"), H.nothing()) } else {
-          H.ul().class("ach-grid").holding(items.map(|item: Achievement.Item| tile(frame, &item)))
-        },
+        (if items.isEmpty() { H.div() } else { H.div().at("hidden", "hidden") }).class("ach-empty").data("ach-empty", "1").holding([Notice.empty("star", Frame.t(frame, "achievements.empty_title"), Frame.t(frame, "achievements.empty_body"), H.nothing())]),
+        H.ul().class("ach-grid").holding(board.items.map(|item: Achievement.Item| tile(frame, &item, items.filter(|kept: Achievement.Item| kept.slug == item.slug).length() > 0))),
         H.dialog().class("ach-dialog").id("ach-dialog").at("aria-labelledby", "ach-dialog-title").holding([
             H.button().kind("button").class("ach-dialog-close").data("close", "dialog").label(Frame.t(frame, "achievements.close")).holding([Icons.sized("x", 22)]),
             H.div().class("ach-dialog-body")

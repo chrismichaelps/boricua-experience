@@ -91,3 +91,9 @@
 }
 @keyframes ach-toast-fade { 0%, 100% { opacity: 0; } 4%, 90% { opacity: 1; } }
 html.a11y-still .ach-art svg * { animation: none !important; }
+
+/* Filtered-out tiles wait hidden; a badge shimmers softly until its drawing arrives. */
+.ach-grid > li[hidden], .ach-empty[hidden] { display: none; }
+.ach-art:not([data-drawn]) { border-radius: 50%; background: linear-gradient(90deg, #eef1f3 0%, #f7f8f9 40%, #eef1f3 80%) 0 0 / 300% 100%; animation: ach-loading 1.3s linear infinite; }
+@keyframes ach-loading { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+@media (prefers-reduced-motion: reduce) { .ach-art:not([data-drawn]) { animation: none; } }

@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-14 · [[src/Database/Achievements]] · achievement filters switch in place without a reload; the board reads the calendar only for seasonal achievements and works out the open edition once (about 10 ms in the database, same answer); badges shimmer until drawn; a phone's first tap wakes its audio so unlock chimes play on iOS; the accessibility button is shown on phones and on the map; the map credit starts folded into its "i" button; asset version 68 · issue #96. Production needs migration 20261014090000_achievement_board_speed.
+
 - 2026-10-14 · [[src/Public/Explorer]] · phone map: cluster taps and fits respect the visible map instead of failing silently, selected pins stay in place, "near me" frames the closest activities, zoom buttons sit under the full-screen button, the loading pill waits at the top of the map, the sheet heading drags the sheet, only the visitor's own scrolling raises it, lowering it returns the list to the top, filter chips share one height, the date sheet keeps its buttons in reach, and the page no longer rubber-bands; the home placeholder only appears when loading is slow and a cached hero reveals at once; asset version 67.
 
 - 2026-10-14 · release 0.7.0 · [[src/Domain/Build]] build fingerprint: reproducible SHA-256 over every deployed file with version, commit and time at /build.json and /version, x-build header, page meta, footer label, refresh notice for open tabs, and scripts/verify-build.sh; home skeleton reveals on scroll intent and fades; asset version 66.

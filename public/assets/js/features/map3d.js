@@ -1,4 +1,4 @@
-import { MAP, STORAGE } from '../constants/config.js?v=67';
+import { MAP, STORAGE } from '../constants/config.js?v=68';
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
