@@ -2,13 +2,13 @@
 // as they move (turning with their heading in 3D), says how far the next stop is, and notices when they
 // reach a stop. The position stays in this browser: only when a signed-in member reaches a stop is it
 // sent, once, so the server can confirm the arrival; the server compares it and keeps nothing.
-import { create } from '../utils/dom.js?v=73';
-import { createMap } from './mapLoader.js?v=73';
-import { buildings3d } from './map3d.js?v=73';
-import { getJson, postJson } from '../net/http.js?v=73';
-import { legLines, pinsOf } from './plan.js?v=73';
-import { haptic } from './haptics.js?v=73';
-import { toast } from './toast.js?v=73';
+import { create } from '../utils/dom.js?v=74';
+import { createMap } from './mapLoader.js?v=74';
+import { buildings3d } from './map3d.js?v=74';
+import { getJson, postJson } from '../net/http.js?v=74';
+import { legLines, pinsOf } from './plan.js?v=74';
+import { haptic } from './haptics.js?v=74';
+import { toast } from './toast.js?v=74';
 
 // Public activity points are snapped to a grid of about 550 m, so a stop counts as reached within
 // ARRIVE_M of its public point; the server then checks the exact place.
@@ -56,6 +56,40 @@ export function directionsUrl(stop, apple = /iPhone|iPad|Macintosh/.test(navigat
   return apple
     ? `https://maps.apple.com/?daddr=${encodeURIComponent(place)}&dirflg=${walk ? 'w' : 'd'}`
     : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}&travelmode=${walk ? 'walking' : 'driving'}`;
+}
+
+/** Where a point stands against a route line ([lng, lat] pairs): metres left along the road from the
+ * nearest point on it to its end, and how far the point is from the line. Each fix is snapped to the
+ * route the way a navigation app does, on a flat local projection that is exact enough on the island. */
+export function along(point, line) {
+  const rad = Math.PI / 180, metresPerDeg = 111320, cos = Math.cos(point.lat * rad);
+  const xy = ([lng, lat]) => [(lng - point.lng) * metresPerDeg * cos, (lat - point.lat) * metresPerDeg];
+  const lengths = [];
+  let offset = Infinity, at = 0, part = 0;
+  for (let i = 0; i < line.length - 1; i += 1) {
+    const [ax, ay] = xy(line[i]), [bx, by] = xy(line[i + 1]);
+    const dx = bx - ax, dy = by - ay, squared = dx * dx + dy * dy, length = Math.sqrt(squared);
+    const t = squared ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / squared)) : 0;
+    const gap = Math.hypot(ax + t * dx, ay + t * dy);
+    lengths.push(length);
+    if (gap < offset) { offset = gap; at = i; part = t; }
+  }
+  if (!lengths.length) return { remaining: 0, offset: Infinity };
+  let remaining = lengths[at] * (1 - part);
+  for (let i = at + 1; i < lengths.length; i += 1) remaining += lengths[i];
+  return { remaining, offset };
+}
+
+/** An option's figures from where the visitor is now: metres to rejoin the route (with the island's road
+ * detour) plus metres left along it, and the time at the route's pace, or a pace blended with the
+ * visitor's own measured speed when there is one. */
+export function liveFigures(option, point, measuredPace = 0) {
+  const { remaining, offset } = along(point, option.coordinates || []);
+  if (!Number.isFinite(offset)) return { meters: option.meters, seconds: option.seconds };
+  const routePace = option.meters > 0 ? option.seconds / option.meters : PACE;
+  const pace = measuredPace > 0 && option.kind !== 'walk' ? Math.min(routePace * 2.5, Math.max(routePace * 0.5, 0.6 * routePace + 0.4 * measuredPace)) : routePace;
+  const rejoin = offset > 60 ? offset * DETOUR : 0;
+  return { meters: rejoin + remaining, seconds: rejoin * routePace + remaining * pace };
 }
 
 /** The option a leg uses: the one chosen for it, else the fastest. */
@@ -139,6 +173,9 @@ export function trip(page) {
   let progress = loadProgress(plan);
   let map, maplibregl, you, watch = null, lock = null, here = null, following = true, routeLines = [], retry = 0;
   let lastStatus = '';
+  // The visitor's own driving pace on the route (seconds per metre), smoothed: free live traffic.
+  let measuredPace = 0, paceSamples = 0, lastFix = null;
+  const details = new Map();
   const confirming = new Map();
 
   const settled = (stop) => progress.done.includes(stop.slug) || progress.skipped.includes(stop.slug);
@@ -158,10 +195,26 @@ export function trip(page) {
       const input = create('input', { type: 'radio', name: 'trip-route', value: option.kind });
       input.checked = option === picked;
       input.addEventListener('change', () => choose(upcoming.order - 1, option.kind));
-      label.append(input, create('span', { class: 'trip-route-name' }, text('option-' + option.kind.replace('_', '-'))),
-        create('span', { class: 'trip-route-detail' }, say(text('option-detail'), { minutes: String(Math.max(1, Math.round(option.seconds / 60))), km: (option.meters / 1000).toFixed(1) })));
+      const detail = create('span', { class: 'trip-route-detail' }, figuresText(option));
+      details.set(option, detail);
+      label.append(input, create('span', { class: 'trip-route-name' }, text('option-' + option.kind.replace('_', '-'))), detail);
       return label;
     }));
+    refreshFigures();
+  };
+
+  // Minutes and kilometres for an option, from where the visitor is once the trip has a position.
+  const figuresOf = (option) => (here ? liveFigures(option, here, paceSamples >= 6 ? measuredPace : 0) : option);
+  const figuresText = (option) => {
+    const figures = figuresOf(option);
+    return say(text('option-detail'), { minutes: String(Math.max(1, Math.round(figures.seconds / 60))), km: (figures.meters / 1000).toFixed(1) });
+  };
+  const refreshFigures = () => {
+    for (const [option, node] of details) {
+      if (!node.isConnected) { details.delete(option); continue; }
+      const written = figuresText(option);
+      if (node.textContent !== written) node.textContent = written;
+    }
   };
 
   // The chosen ways drawn as the route, the others in grey; tapping a grey one chooses it.
@@ -176,6 +229,7 @@ export function trip(page) {
   };
 
   function choose(order, kind) {
+    measuredPace = 0; paceSamples = 0;
     progress = { ...progress, routes: { ...progress.routes, [order]: kind } };
     saveProgress(plan, progress);
     drawRoutes(); paintRoutes(); paint(); guide();
@@ -242,11 +296,15 @@ export function trip(page) {
   const guide = () => {
     const upcoming = next();
     if (!upcoming || !here) return;
+    refreshFigures();
     const metres = distance(here, upcoming);
     if (metres <= NEAR_M) { setStatus(text('near')); return; }
+    // Along the chosen road route when there is one, else from the straight line at the island's pace.
     const way = wayTo(upcoming);
-    const pace = way ? { legSeconds: way.seconds, legMeters: way.meters } : upcoming;
-    let message = say(text('distance'), { km: (metres / 1000).toFixed(1), minutes: String(minutesFor(metres, pace)) });
+    const live = way ? figuresOf(way) : { meters: metres * DETOUR, seconds: minutesFor(metres, upcoming) * 60 };
+    const minutes = Math.max(1, Math.round(live.seconds / 60));
+    const arrival = new Intl.DateTimeFormat(document.documentElement.lang.startsWith('en') ? 'en-US' : 'es-PR', { timeZone: 'America/Puerto_Rico', hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + live.seconds * 1000));
+    let message = say(text('distance'), { km: ((way ? live.meters : metres) / 1000).toFixed(1), minutes: String(minutes) }) + ' · ' + say(text('eta'), { time: arrival });
     // The route starts at the first stop, so being away from it only matters once the trip is under way.
     const underway = progress.done.length + progress.skipped.length > 0;
     if (underway && routeLines.length && distanceToLines(here, routeLines) > OFF_ROUTE_M) message += ' ' + text('off-route');
@@ -256,6 +314,18 @@ export function trip(page) {
   const moved = (position) => {
     const { latitude: lat, longitude: lng, heading, speed } = position.coords;
     here = { lat, lng };
+    // The pace actually driven on the chosen route, from consecutive fixes while moving.
+    const now = position.timestamp || Date.now();
+    if (lastFix && now - lastFix.at >= 4000) {
+      const travelled = distance(lastFix, here), seconds = (now - lastFix.at) / 1000;
+      const upcoming = next(), way = upcoming && wayTo(upcoming);
+      if (way && way.kind !== 'walk' && travelled / seconds > 2 && along(here, way.coordinates).offset < 120) {
+        const pace = seconds / travelled;
+        measuredPace = paceSamples ? 0.8 * measuredPace + 0.2 * pace : pace;
+        paceSamples += 1;
+      }
+      lastFix = { lat, lng, at: now };
+    } else if (!lastFix) lastFix = { lat, lng, at: now };
     if (!you) {
       const element = create('span', { class: 'trip-you', role: 'img', 'aria-label': text('you') });
       element.append(create('span', { class: 'trip-you-heading', 'aria-hidden': 'true' }));

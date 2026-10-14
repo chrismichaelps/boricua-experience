@@ -152,5 +152,6 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("assistant.see_map", "Ver en el mapa"),
     ("assistant.near", "Usar mi ubicación en esta conversación"),
     ("assistant.near_on", "Usaremos el pueblo más cercano a ti; tu ubicación exacta no se comparte."),
-    ("assistant.near_off", "No pudimos usar tu ubicación. Dime el pueblo y sigo.")
+    ("assistant.near_off", "No pudimos usar tu ubicación. Dime el pueblo y sigo."),
+    ("plan.trip_eta", "llegada ~:time")
   ])

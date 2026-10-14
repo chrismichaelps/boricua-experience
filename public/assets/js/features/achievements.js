@@ -3,7 +3,7 @@
 // sharing, calendars and the assistant — and shows each new unlock as a toast whose badge pops in
 // with a short chime. On the board it draws badges inline so they animate (and pause while locked)
 // and opens an achievement's detail in a dialog. Every unlock rule lives in the database.
-import { postJson } from '../net/http.js?v=73';
+import { postJson } from '../net/http.js?v=74';
 
 const ENDPOINT = '/api/achievements/signals';
 const DAY_KEY = 'bx-ach-day';

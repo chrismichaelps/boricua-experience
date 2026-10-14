@@ -952,6 +952,7 @@ plan.trip_directions
 plan.trip_distance
 plan.trip_done_body
 plan.trip_done_title
+plan.trip_eta
 plan.trip_follow
 plan.trip_following
 plan.trip_intro

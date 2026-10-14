@@ -13,12 +13,17 @@ drew. The page and its script follow the plan live.
   arrow while moving, the map recenters on them, and in 3D the camera turns with the direction of
   travel so the road ahead points up. Moving the map by hand stops following until "follow" is tapped.
   The screen is kept awake during the trip where the browser allows it.
-- **Next stop** shows the distance and a drive estimate (at the chosen route's own pace), "almost there"
-  near it, and, once the trip is under way, a note when the visitor is far from the route.
+- **Next stop** shows the road distance and time still ahead and the arrival time, "almost there" near
+  it, and, once the trip is under way, a note when the visitor is far from the route.
 - **Ways to the next stop**: the fastest road route and, where they exist, another route that really
   differs, a route without expressways and, for close stops, walking ([[src/Database/Plans]]). The
   chosen one is drawn in blue and the others in grey; tapping either chooses. "Directions" hands the
   next stop to the phone's own maps app, by car or on foot.
+- **Live figures**: every fix is snapped onto each route's line, as navigation apps do; the distance is
+  what is left along the road (plus the way back to it when away from it), and the time is the route's
+  own pace blended 60/40 with the pace the visitor is actually driving on it, measured from their own
+  fixes (bounded to half and two and a half times the route pace). The chips for every way update the
+  same way. All of it runs on the phone: no request per position and nothing stored.
 - **Arrival**: a stop counts as reached within 450 m of its public point (public points are snapped to a
   grid of about 550 m); "I'm here" and "Skip stop" cover poor reception. For a signed-in member the
   position is sent once per stop so the server can confirm it, and is never stored; confirmed stops and
