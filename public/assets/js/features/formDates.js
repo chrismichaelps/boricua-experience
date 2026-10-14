@@ -1,5 +1,5 @@
-import { dateCalendar } from './dateCalendar.js?v=67';
-import { searchPickers } from './searchPickers.js?v=67';
+import { dateCalendar } from './dateCalendar.js?v=68';
+import { searchPickers } from './searchPickers.js?v=68';
 
 const DAY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const pad = number => String(number).padStart(2, '0');

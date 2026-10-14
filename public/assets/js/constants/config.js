@@ -7,7 +7,7 @@ export const ENDPOINTS = {
   locationStop: '/api/location/stop',
 };
 export const MAP = { minViewportPx: 8,
-  style: '/assets/map/style.json?v=67',
+  style: '/assets/map/style.json?v=68',
   script: '/assets/vendor/maplibre-gl.js',
   stylesheet: '/assets/vendor/maplibre-gl.css',
   center: [-66.4, 18.22],

@@ -185,7 +185,7 @@ fn main() -> Int {
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let checks = Test.suite("Presentation", &[
-      Test.equals("map omits accessibility launcher", &map.contains("a11y-launch"), &false),
+      Test.equals("map keeps the accessibility launcher in reach", &map.contains("a11y-launch"), &true),
       Test.that("every page names its build and links to the live version", results.contains("<meta name=\"build\" content=\"development\"") && results.contains("href=\"/version\"") && results.contains("data-refresh=")),
       Test.that("phone map offers a Map pill that lowers the list", map.contains("class=\"sheet-map-pill\"") && map.contains("data-sheet-collapse=\"1\"")),
       Test.that("map keeps the accessibility panel for the menu row", map.contains("id=\"a11y-panel\"") && map.contains("data-a11y-open")),

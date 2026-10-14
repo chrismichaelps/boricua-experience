@@ -1,4 +1,4 @@
-import { postJson } from '../net/http.js?v=67';
+import { postJson } from '../net/http.js?v=68';
 
 const SIDE = 320;
 const QUALITY = 0.86;

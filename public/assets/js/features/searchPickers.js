@@ -1,4 +1,4 @@
-import { dateCalendar } from './dateCalendar.js?v=67';
+import { dateCalendar } from './dateCalendar.js?v=68';
 
 const fold = (value) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
 

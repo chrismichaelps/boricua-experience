@@ -1,4 +1,4 @@
-import { CAROUSEL } from '../constants/config.js?v=67';
+import { CAROUSEL } from '../constants/config.js?v=68';
 
 export function heroCarousel(hero) {
   const slides = [...hero.querySelectorAll('.hero-slide')];
