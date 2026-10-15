@@ -3,6 +3,7 @@ import { getJson } from '../net/http.js?v=80';
 export function loadMore(link) {
   link.addEventListener('click', async (event) => {
     event.preventDefault();
+    if (link.getAttribute('aria-busy') === 'true') return;
     link.setAttribute('aria-busy', 'true');
     try {
       const { html, next } = await getJson(link.href);
@@ -14,6 +15,19 @@ export function loadMore(link) {
     } finally {
       link.removeAttribute('aria-busy');
     }
+  });
+}
+
+export function cardScroll(root = document) {
+  root.addEventListener('keydown', event => {
+    const link = event.target.closest?.('.card-link');
+    if (!link || event.target !== link || event.altKey || event.ctrlKey || event.metaKey) return;
+    const body = link.querySelector('.card-body');
+    if (!body || body.scrollHeight <= body.clientHeight) return;
+    const step = { ArrowDown: 40, ArrowUp: -40, PageDown: body.clientHeight, PageUp: -body.clientHeight }[event.key];
+    if (!step || (step < 0 && body.scrollTop <= 0) || (step > 0 && body.scrollTop + body.clientHeight >= body.scrollHeight - 1)) return;
+    event.preventDefault();
+    body.scrollBy({ top: step, behavior: 'instant' });
   });
 }
 

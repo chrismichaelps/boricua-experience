@@ -50,3 +50,11 @@ Reviewed refinement #120: place search preserves anchored nearby coordinates/rad
 
 ## Business identity refinement Grill Log · #120
 Resolved user refinement: a nullable map_icon_url comes from the database public place projection and holds official business artwork for identification. A missing or failed image falls back once to the category icon. Keep the circular44px button, accessible branch/category label, map positioning and selection contract. No category/brand slug guessing in browser logic. Branded marks do not establish verified ownership or affiliation; provenance remains recorded.
+
+## Map distance origin Grill Log · #120
+Resolved: camera-center distance orders a viewport internally, but is never presented as distance from a visitor. Return distance_m only for an explicit search origin; otherwise null. Use geodesic distance for the public origin distance. Keep viewport ordering and limits intact.
+
+## Complete place pagination Grill Log · #124
+Resolved: place listings return a bounded24-item Results page and retain its next cursor. Activity and place cursors remain separate query parameters; progressive links request only their own source, no-script links render a full page. Filters and explicit sort are preserved. Activity-only constraints return an empty place page. Failure to read places is reported rather than silently presented as completeness. Database pages use deterministic score/count/name/id keysets bound to normalized filters and sort, without an offset ceiling. Canonicalize McDonald/Macdonald/apostrophe-s variants and use indexed full-text prefixes for plain partial queries; map uses the same normalization. Never infer missing branches or municipality facts. Invalid or wrong-scope cursors fail before reads. Matching indexes support name/category/town, ranked and spatial/text paths. No table/API grant expansion or private data in source.
+
+Performance refinement #124: force custom query plans for the whitelisted sort branches so repeated calls cannot regress to a generic CASE sort. Name continuations use an explicit(name,id) seek predicate; rating retains its indexed score/count/name/id tuple. Nearby distance remains exact geodesic and the spatial radius narrows candidates. No extra public function or permission. Resolved.

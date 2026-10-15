@@ -130,7 +130,7 @@ export type Kinds = {
   cancel: Request.Kind[Signed[Str], (), Problem.Problem],
   place: Request.Kind[Visit[Str], Listing.Detail, Problem.Problem],
   placesMapped: Request.Kind[Search.Filters, Listing.MapResults, Problem.Problem],
-  placesListed: Request.Kind[Search.Filters, Array[Listing.Listing], Problem.Problem],
+  placesListed: Request.Kind[Search.Filters, Listing.Results, Problem.Problem],
   publishPlace: Request.Kind[Signed[Listing.Draft], Listing.Published, Problem.Problem],
   editablePlace: Request.Kind[Signed[Str], (Listing.Detail, Listing.Draft), Problem.Problem],
   updatePlace: Request.Kind[Signed[PlaceEdit], Listing.Published, Problem.Problem],

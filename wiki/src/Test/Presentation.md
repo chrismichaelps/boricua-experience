@@ -124,3 +124,6 @@ Resolved: publish source-reviewed branches as permanent places, never dated or f
 
 ## Business identity refinement Grill Log · #120
 Resolved user refinement: a nullable map_icon_url comes from the database public place projection and holds official business artwork for identification. A missing or failed image falls back once to the category icon. Keep the circular44px button, accessible branch/category label, map positioning and selection contract. No category/brand slug guessing in browser logic. Branded marks do not establish verified ownership or affiliation; provenance remains recorded.
+
+## Complete discovery pages · #124
+Resolved: render place Results with a continuation, assert independent escaped cursor/filter links, a real place-card grid and no false activity-empty notice. Test progressive double-click locking separately. Database rollback tests cover all sort paths beyond300rows and malformed/wrong-scope cursors.

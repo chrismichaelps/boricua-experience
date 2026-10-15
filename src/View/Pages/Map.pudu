@@ -46,7 +46,7 @@ export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json
 fn turnControls(frame: &Frame.Frame) -> H.Node {
   H.div().class("map-turn").role("group").label(Frame.t(frame, "map.turn_group")).at("hidden", "hidden").holding([
       H.button().kind("button").class("map-turn-button").data("turn", "-1").label(Frame.t(frame, "map.turn_left")).holding([Icons.sized("chevron-left", 20)]),
-      H.button().kind("button").class("map-turn-button map-compass").data("turn", "north").label(Frame.t(frame, "map.turn_north")).at("aria-pressed", "true").holding([H.span().class("map-compass-needle").at("aria-hidden", "true")]),
+      H.button().kind("button").class("map-turn-button map-compass").data("turn", "north").label(Frame.t(frame, "map.turn_joystick")).at("aria-pressed", "true").holding([H.span().class("map-compass-needle").at("aria-hidden", "true")]),
       H.button().kind("button").class("map-turn-button").data("turn", "1").label(Frame.t(frame, "map.turn_right")).holding([Icons.sized("chevron-right", 20)])
     ])
 }

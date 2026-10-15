@@ -44,3 +44,6 @@ Green/red-on-photo, green/red-on-white, 32px header, 16px favicon, 192/512px ins
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** One green body/deep-green wing/red forehead/ivory bill/white eye-ring SVG master replaces monochrome/blue marks across header, footer, favicon and install assets. No recoloring filters. Original curves; deterministic PNG exports. Resolved.
+
+## Exact-header social export · #124
+Resolved: social.png is a1200×630 deterministic browser raster of the actual cotorra SVG and homepage brand markup, using local Pacifico and Nunito Sans through existing styles. Scale the whole lockup uniformly, retain white homepage text and green/red master, use the existing attributed Culebra photo with a contrast overlay. No generated or redrawn brand artwork; header source remains unchanged. Shared asset83 refreshes OG/Twitter links. Verify pixel dimensions, fonts loaded, absolute production URLs and live asset bytes.

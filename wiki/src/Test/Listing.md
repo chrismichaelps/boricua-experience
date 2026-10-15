@@ -9,3 +9,5 @@ tags: [module, tests, discovery]
 
 ## Referenced by
 [[src/_MOC]] · [[src/Public/Listing]]
+
+Resolved dynamic-card refinement #124: one delegated keyboard listener covers initial cards and later load-more/nearby-rail insertions. Busy-lock test proves one page append on repeated activation; overflow tests preserve native scrolling at boundaries and include a card inserted after listener setup. No per-card initialization or nested tab stops.

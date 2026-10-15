@@ -108,14 +108,24 @@ fn listingWith(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPag
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
   let anchored = Search.anchored(&filters, &catalog)
+  let placeFilters = Search.Filters{..anchored, after: Serve.query(visitor, "places_after")}
+  if Context.wantsJson(visitor) && !placeFilters.after.isEmpty() {
+    return match Serve.ask(app, &app.kinds.placesListed, placeFilters) {
+      case Ok(places) => Respond.json(200, &Json.object(&[
+            ("html", Json.Text(SearchPage.placeCards(&Context.frame(app, visitor), &catalog, &places.items))),
+            ("next", match places.next { case Some(cursor) => Json.Text(visitor.request.path + SearchPage.placeQueryOf(&anchored, &landing, cursor)) case None => Json.Null })
+          ]))
+      case Err(problem) => Respond.problem(app, visitor, &problem)
+    }
+  }
   match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, anchored)) {
     case Ok(page) => {
       if Context.wantsJson(visitor) { return Respond.json(200, &pageJson(app, visitor, &anchored, &landing, &page)) }
-      // Places are a landing's extra: a failure to read them leaves the activities listed.
-      let places = if !filters.after.isEmpty() || anchored.window != Search.Anytime || anchored.freeOnly || !anchored.traits.isEmpty() { [] } else {
-        Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, anchored), [])
+      let places = match Serve.ask(app, &app.kinds.placesListed, placeFilters) {
+        case Ok(found) => found
+        case Err(problem) => { return Respond.problem(app, visitor, &problem) }
       }
-      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places)))
+      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.renderResults(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places, !placeFilters.after.isEmpty())))
     }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
