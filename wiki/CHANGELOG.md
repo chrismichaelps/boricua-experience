@@ -231,3 +231,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - #120: map place distances now require an explicit visitor origin; camera ordering stays internal. Applied and checked in both environments.
 
 - #124: complete keyset-paged place discovery and McDonald spelling variants; visible expanded-map previews, clear gesture hit areas and44px rotation joystick; consistent scrollable card copy and exact-header social branding. Matching database migrations verified in both environments; production app verification follows release.
+
+- #124: move shared link feedback after script-owned click handlers; keep pagination locking local and regress listener checkpoint order plus repeated pages.

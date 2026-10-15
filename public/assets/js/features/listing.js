@@ -1,9 +1,11 @@
 import { getJson } from '../net/http.js?v=80';
 
 export function loadMore(link) {
+  let loading = false;
   link.addEventListener('click', async (event) => {
     event.preventDefault();
-    if (link.getAttribute('aria-busy') === 'true') return;
+    if (loading) return;
+    loading = true;
     link.setAttribute('aria-busy', 'true');
     try {
       const { html, next } = await getJson(link.href);
@@ -13,6 +15,7 @@ export function loadMore(link) {
     } catch {
       location.href = link.href;
     } finally {
+      loading = false;
       link.removeAttribute('aria-busy');
     }
   });

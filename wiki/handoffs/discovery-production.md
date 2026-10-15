@@ -24,3 +24,8 @@ Full gate18/18suites662assertions and all browser harnesses pass. Changed Pudu m
 Codex browser: phone expanded pin reveals132px selected-card link; gesture control width shrank383→46px before final44px normalization. Joystick44×44 on phone/desktop; actual drag0→120degrees and tap-to-north. Home cards all385px desktop/all375px phone, copy208px, no horizontal overflow. Exact-brand PNG dimensions and loaded Pacifico/Nunito verified.
 
 Exact next action: commit/release this reviewed slice and verify the deployed search continuations, map selection/joystick, cards and social metadata/assets. Remaining Starbucks/mall import staging belongs to the separate permanent-places handoff.
+
+## Live integration correction
+Release0.11.1 was deployed, then rolled back to the verified0.11.0 deployment when actual Show more activation exposed a shared navigation-loader ordering bug. Its capture-phase microtask marked the link before the target pagination listener, leaving it busy without a read. The bounded correction moves shared click feedback to bubbling and gives pagination its own closure lock. Actual-module integration now reproduces capture/target/bubble checkpoints and successive pages; the old shared implementation fails the new aria-disabled assertion. Independent review is clear. Asset84/patch0.11.2 must pass browser continuation checks on a protected staged deployment before promotion. Database migrations remain valid and unchanged.
+
+Exact next action: release0.11.2 and use Vercel temporary staging access for successive browser load-more checks before promotion.

@@ -65,3 +65,30 @@ const passwords = await fs.readFile(new URL('../public/assets/js/features/passwo
 vm.runInContext(passwords.replaceAll('export function', 'function') + '\nglobalThis.progress = passwordProgress;', context);
 assert.equal(context.progress(''), 0); assert.equal(context.progress('abc'), 3); assert.equal(context.progress('x'.repeat(40)), 20);
 console.log('PASS: native/canceled/AJAX feedback with real click listener ordering, duplicate prevention, named submitter values, hidden filter restoration, BFCache reset and bounded local password guidance');
+
+const listing = await fs.readFile(new URL('../public/assets/js/features/listing.js', import.meta.url), 'utf8');
+vm.runInContext(listing.replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nglobalThis.attachMore=loadMore;', context);
+let reply, fetches=0, appended='';
+context.getJson=()=>{fetches++;return new Promise(resolve=>reply=resolve);};
+const more=control();more.href='https://boricuaexperience.com/search?places_after=next';more.dataset={};
+more.addEventListener=(_name,fn)=>{more.ownClick=fn;};
+more.closest=selector=>selector==='.results'?{querySelector:()=>({insertAdjacentHTML:(_where,html)=>{appended+=html;}})}:more;
+context.attachMore(more);
+function clickEvent(link){return {target:link,button:0,defaultPrevented:false,preventDefault(){this.defaultPrevented=true;}};}
+async function dispatchClick(event, own=()=>{}) {
+  handlers.get('click:capture')?.(event);await flush();
+  const pending=own(event);await flush();
+  handlers.get('click:bubble')?.(event);await flush();
+  return {pending};
+}
+const firstMore=await dispatchClick(clickEvent(more),event=>more.ownClick(event));
+assert.equal(fetches,1,'shared feedback must not preempt progressive pagination');
+assert.equal(more.getAttribute('aria-busy'),'true');assert.equal(more.getAttribute('aria-disabled'),null,'script owns the control lifetime');
+await dispatchClick(clickEvent(more),event=>more.ownClick(event));assert.equal(fetches,1,'own pending lock prevents duplicate reads');
+reply({html:'<article>next</article>',next:'https://boricuaexperience.com/search?places_after=last'});await firstMore.pending;
+assert.equal(appended,'<article>next</article>');assert.equal(more.getAttribute('aria-busy'),null);assert.equal(more.getAttribute('aria-disabled'),null);
+const nextMore=await dispatchClick(clickEvent(more),event=>more.ownClick(event));assert.equal(fetches,2,'the next page remains actionable');
+reply({html:'',next:'https://boricuaexperience.com/search?places_after=last'});await nextMore.pending;
+const nativeLink=control();nativeLink.href='https://boricuaexperience.com/signin';nativeLink.closest=()=>nativeLink;
+await dispatchClick(clickEvent(nativeLink));assert.equal(nativeLink.getAttribute('aria-busy'),'true','native links keep loading feedback');lifecycle.get('pageshow')();
+console.log('PASS: actual navigation feedback plus pagination respect capture/target/bubble microtasks, completion and repeated pages');
