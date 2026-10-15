@@ -62,12 +62,12 @@ export function submitFeedback(root = document, lifecycle = window) {
   });
   root.addEventListener('click', event => {
     const link = event.target.closest('a.button, a.pill-submit');
-    if (!link || link.target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.defaultPrevented || !link || link.target || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const url = new URL(link.href, location.href);
     if (url.origin !== location.origin || url.pathname === location.pathname && url.hash) return;
     if (busy.has(link)) { event.preventDefault(); return; }
-    queueMicrotask(() => { if (!event.defaultPrevented) mark(link); });
-  }, true);
+    mark(link);
+  });
   lifecycle.addEventListener('pageshow', reset);
   return reset;
 }
