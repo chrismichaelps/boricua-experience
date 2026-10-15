@@ -1,6 +1,6 @@
 # Changelog
 
-- 2026-10-15 · [[src/Database/Places]] · Shopping place catalogue/profile and fast-food cuisine; bounded permanent-place map queries, category-icon pins, distinct place/event identity, nearby-aware search rails and bilingual result counts. Schema applied to both environments; real source data remains private and production-only. Asset81 · issue #120.
+- 2026-10-15 · [[src/Database/Places]] · Shopping place catalogue/profile and fast-food cuisine; bounded permanent-place map queries, category-icon pins, distinct place/event identity, nearby-aware search rails and bilingual result counts. Schema applied to both environments; real source data remains private and production-only. Business-logo pins use nullable database artwork with category/error fallback; asset82 · issue #120.
 
 - 2026-10-15 · release 0.10.3 · assistant: tool or reasoning markup under any name (such as <dots_function_call> or <|tool_call|>) is kept from the page and answered from the verified results, and answers follow the language of the page the visitor reads · issue #117.
 

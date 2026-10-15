@@ -16,6 +16,7 @@ export type Listing = {
   category: Event.CategoryRef,
   municipality: Event.TownRef,
   @json("cover_url") coverUrl: Option[Str],
+  @default("null") @json("map_icon_url") mapIconUrl: Option[Str],
   lat: Float64,
   lng: Float64,
   @default("null") @json("distance_m") distanceM: Option[Int],

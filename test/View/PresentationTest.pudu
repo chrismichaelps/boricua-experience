@@ -163,7 +163,7 @@ fn main() -> Int {
   let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
   let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.blank(), &None))
   let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
-  let placePinJson = Json.encode(&MapPage.combinedPins(&en, &[], &[fonda.card]))
+  let placePinJson = Json.encode(&MapPage.combinedPins(&en, &[], &[Place.Listing{..fonda.card, mapIconUrl: Some("/assets/listings/example.png")}]))
   let placeMap = Html.render(&MapPage.renderPlaces(&en, &[], &[fonda.card], false, false, &profiled, &Search.everything(), "/search"))
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
@@ -252,6 +252,7 @@ fn main() -> Int {
       Test.that("a place page shows hours, open now and contact", placePage.contains("Abierto ahora") && placePage.contains("18:00–02:00") && placePage.contains("tel:787-555-0100")),
       Test.that("a place page links facts that are web addresses without trusting them", placePage.contains("href=\"https://reservas.example.org\"") && placePage.contains("rel=\"noopener nofollow\"")),
       Test.that("only the owner sees management", placePage.contains("/lugar/la-fonda-4f1c7a/edit") && !guestPlace.contains("/lugar/la-fonda-4f1c7a/edit")),
+      Test.that("place pin business artwork comes from database", placePinJson.contains("/assets/listings/example.png")),
       Test.that("place pins have explicit kind and unknown dates", placePinJson.contains("\"kind\":\"place\"") && placePinJson.contains("\"starts\":null") && placePinJson.contains("\"ends\":null") && !placePinJson.contains("Free")),
       Test.that("initial map place card links to permanent detail", placeMap.contains("href=\"/lugar/la-fonda-4f1c7a\"") && placeMap.contains("1 result")),
       Test.that("permanent places never imply dated or free suitability", PlacesService.eligible(&Search.everything()) && !PlacesService.eligible(&Search.Filters{..Search.everything(), freeOnly: true}) && !PlacesService.eligible(&Search.Filters{..Search.everything(), window: Search.Today}) && !PlacesService.eligible(&Search.Filters{..Search.everything(), traits: ["family"]})),

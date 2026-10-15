@@ -645,3 +645,5 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .event-english-title { font-weight: 700; }
 
 .place-marker{display:grid;place-items:center;min-width:44px;min-height:44px;padding:10px;border-radius:50%;}.place-marker img{display:block;width:20px;height:20px}.place-marker.is-active img{filter:brightness(0) invert(1)}
+
+.place-marker-brand img{width:24px;height:24px;object-fit:contain}.place-marker-brand.is-active{background:#fff;border-color:var(--color-ocean);box-shadow:0 0 0 2px var(--color-ocean)}.place-marker-brand.is-active img{filter:none}

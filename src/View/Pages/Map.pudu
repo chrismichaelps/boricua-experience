@@ -92,6 +92,7 @@ export fn combinedPins(frame: &Frame.Frame, cards: &Array[Event.Card], places: &
   let events = Option.unwrapOr(Json.asList(&pinsValue(frame, cards)), [])
   Json.list(&events.concat(places.map(|place: Place.Listing| Json.object(&[
             ("kind", Json.Text("place")), ("slug", Json.Text(place.slug)),
+            ("map_icon", match place.mapIconUrl { case Some(url) => Json.Text(url) case None => Json.Null }),
             ("title", Json.Text(place.name)), ("when", Json.Text(Format.categoryName(&frame.locale, &place.category))),
             ("starts", Json.Null), ("ends", Json.Null),
             ("price", Json.Text(Format.categoryName(&frame.locale, &place.category))),
