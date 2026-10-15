@@ -15,3 +15,10 @@ Exact next action: publish the reviewed app build and verify the actual producti
 
 ## User refinement: business-logo pins
 The user superseded the category-only choice: prefer the business mark on its pins, use category artwork only when no logo exists or loading fails. Nullable database map_icon_url is applied to both projects; initial112production records reference official marks. Independent schema/source review and200presentation assertions plus logo-failure harness pass. New requested source batch159BurgerKing +32Burlington is staged privately; Starbucks and shopping-center source/coordinate checking is in progress. No release/deployment has occurred yet; PR121 remains open and needs the business-logo refinement commit. Asset82 supersedes unreleased81.
+
+## Release and origin-distance verification
+Release0.11.0 (main b2913df) is live on Vercel deployment dpl_8W4iESLwLpVF3sqPm4B4wGP3Bv3u; production build fingerprint ab4733aa1ac7 matches the merged release. Production has297published places (94McDonald’s,18Walmart,153BurgerKing,32Burlington). Six BurgerKing source coordinates remain held after conflicting branch-address checks. Starbucks/shopping-center staging remains private and unpublished.
+
+Architect → Implementer → independent reviewer: the map RPC now projects distance only when the caller supplied an origin. Both projects passed null-origin/geodesic-origin assertions and share function hash60ce6b36b88a8e16bcfc81fcfcc6b628. Live Codex browser confirms the McDonald’s logo pin and no unsolicited visitor distance. No records or permissions changed.
+
+Exact next action: finish the active seven-issue production audit (search pagination/spelling, expanded map interactions/gestures, circular controls, consistent cards and social branding), then resume remaining source-reviewed listing imports.
