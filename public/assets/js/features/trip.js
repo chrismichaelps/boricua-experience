@@ -2,15 +2,15 @@
 // as they move (turning with their heading in 3D), says how far the next stop is, and notices when they
 // reach a stop. The position stays in this browser: only when a signed-in member reaches a stop is it
 // sent, once, so the server can confirm the arrival; the server compares it and keeps nothing.
-import { create } from '../utils/dom.js?v=79';
-import { createMap } from './mapLoader.js?v=79';
-import { buildings3d } from './map3d.js?v=79';
-import { getJson, postJson } from '../net/http.js?v=79';
-import { legLines, pinsOf } from './plan.js?v=79';
-import { haptic } from './haptics.js?v=79';
-import { toast } from './toast.js?v=79';
-import { refreshSlot } from './weather.js?v=79';
-import { distanceText } from '../utils/units.js?v=79';
+import { create } from '../utils/dom.js?v=80';
+import { createMap } from './mapLoader.js?v=80';
+import { buildings3d } from './map3d.js?v=80';
+import { getJson, postJson } from '../net/http.js?v=80';
+import { legLines, pinsOf } from './plan.js?v=80';
+import { haptic } from './haptics.js?v=80';
+import { toast } from './toast.js?v=80';
+import { refreshSlot } from './weather.js?v=80';
+import { distanceText } from '../utils/units.js?v=80';
 
 // Public activity points are snapped to a grid of about 550 m, so a stop counts as reached within
 // ARRIVE_M of its public point; the server then checks the exact place.
