@@ -39,11 +39,48 @@ export function turn(map, step) {
   map.easeTo({ bearing, duration: reduced() ? 0 : 350 });
 }
 
+// A compact discovery compass doubles as a captured drag control; a tap still faces north.
+function joystick(map, group, button) {
+  let drag = null, suppressClick = false;
+  const exploring = () => group.dispatchEvent(new CustomEvent('bx:map-explore', { bubbles: true }));
+  button.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || event.isPrimary === false || drag) return;
+    suppressClick = false;
+    drag = { id: event.pointerId, x: event.clientX, bearing: map.getBearing(), moved: false };
+    button.setPointerCapture(event.pointerId);
+  });
+  button.addEventListener('pointermove', event => {
+    if (!drag || event.pointerId !== drag.id) return;
+    const delta = event.clientX - drag.x;
+    if (!drag.moved && Math.abs(delta) < 4) return;
+    if (!drag.moved) exploring();
+    drag.moved = true;
+    map.easeTo({ bearing: drag.bearing + delta * 2, duration: 0 });
+  });
+  const finish = event => {
+    if (!drag || event.pointerId !== drag.id) return;
+    suppressClick = event.type === 'pointerup' && drag.moved;
+    drag = null;
+    if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+  };
+  for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(name, finish);
+  button.addEventListener('click', event => {
+    if (suppressClick && event.detail !== 0) { suppressClick = false; event.preventDefault(); event.stopImmediatePropagation(); }
+    else { suppressClick = false; exploring(); }
+  }, true);
+  button.addEventListener('keydown', event => {
+    if (event.altKey || event.ctrlKey || event.metaKey || !['ArrowLeft', 'ArrowRight', 'Home'].includes(event.key)) return;
+    event.preventDefault(); exploring();
+    turn(map, event.key === 'Home' ? null : (event.key === 'ArrowLeft' ? -MAP.turnStep : MAP.turnStep));
+  });
+}
+
 // The turn buttons and compass shown while 3D is on; the compass needle follows the bearing.
 function rotationControls(map, group) {
   if (!group) return () => {};
   const compass = group.querySelector('[data-turn="north"]');
   const needle = compass?.querySelector('.map-compass-needle');
+  if (compass && group.closest?.('.map-page')) joystick(map, group, compass);
   const paint = () => {
     const bearing = map.getBearing();
     if (needle) needle.style.transform = `rotate(${-bearing}deg)`;

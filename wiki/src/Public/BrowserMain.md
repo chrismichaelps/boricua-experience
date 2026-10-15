@@ -142,3 +142,11 @@ Resolved final asset contract · #107: compact forecast/disclosure and desktop m
 Resolved: advance only the changed module import chain, static stylesheet and worker shell to81. The offline shell never caches private pages. Place pins have a distinct route and no date/free label; tests execute actual projection and marker selection.
 
 Business artwork revision82 supersedes the unreleased81 category-only pin change. Official logo assets live under /assets/listings/, while record-to-logo references remain database data. Cached changed imports advance together; no new live-location module identity. Resolved.
+
+## Discovery corrections cache contract · #124
+Resolved: entry/style/worker revision83 refreshes the changed listing and explorer modules. Unchanged shared location/network modules keep their existing single identities. No personalized HTML or database data enters the offline shell.
+
+## Consistent card copy Grill Log · #124
+Resolved: standard rail/search cards keep a shared13rem copy track, matching cover proportions and title/metadata alignment. Long text remains present in a native vertical scroll area rather than clipped; page scroll can chain at its boundaries. The focusable card link supports Arrow/Page keys for overflow without extra nested tab stops; directional keys are intercepted only when the body can scroll that direction. A single delegated listener covers initial and asynchronously inserted cards. Horizontal activity rows keep their distinct128px copy/media tracks on wide screens. Map cards remain compact and unaffected. Place article uses card-venue rather than the paragraph-only card-place class to avoid inherited flex/ellipsis rules.
+
+Resolved dynamic-card refinement #124: one delegated keyboard listener covers initial cards and later load-more/nearby-rail insertions. Busy-lock test proves one page append on repeated activation; overflow tests preserve native scrolling at boundaries and include a card inserted after listener setup. No per-card initialization or nested tab stops.

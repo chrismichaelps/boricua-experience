@@ -453,6 +453,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("map.count", ":count results"),
     ("map.show_list", "Show as list"),
     ("map.location_help", "Near me centers the map privately. Live location shares with authorized participants while this page is visible."),
+    ("map.turn_joystick", "Rotate map: drag or use arrow keys; tap to face north"),
     ("map.turn_group", "Camera rotation"),
     ("map.turn_left", "Turn left"),
     ("map.turn_north", "Face north"),

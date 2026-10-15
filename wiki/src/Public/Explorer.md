@@ -130,3 +130,9 @@ Resolved: publish source-reviewed branches as permanent places, never dated or f
 Reviewed refinement #120: place search preserves anchored nearby coordinates/radius. Camera refresh intentionally removes nearby-origin restrictions and queries its new bounded viewport; dates/category/text/traits remain intact. Anonymous map projection never includes hidden/removed rows. Cross-kind selection identity is distinct.
 
 Business artwork revision82 supersedes the unreleased81 category-only pin change. Official logo assets live under /assets/listings/, while record-to-logo references remain database data. Cached changed imports advance together; no new live-location module identity. Resolved.
+
+## Expanded map interaction Grill Log · #124
+Resolved: expanded pin activation keeps the map expanded and reveals only the selected existing card in a compact bottom panel; no hover popup. Empty-canvas click clears it. Reapply the selected item after bounded viewport redraw; omit previews no longer in the visible batch. Resize never refits or restarts geolocation. Control containers have no pointer hit area outside actual controls; canvas owns pan/pinch, including touches started on marker buttons. Circular rotation controls retain44px square geometry with no flex stretching. Preserve keyboard controls and reduced motion.
+
+## Compact joystick refinement · #124
+Resolved user sizing: discovery rotation is one44px circular compass, equal to the map buttons. Hide the former side buttons only on discovery; pointer drag rotates continuously, tap resets north, Left/Right keys step rotation and Home resets. Capture one primary pointer, ignore secondary pointers, cancel safely, suppress a drag's synthetic reset click and detach location-follow on explicit rotation. Existing trip controls remain unchanged. Localized label explains drag and north action. This supersedes the96px pad.
