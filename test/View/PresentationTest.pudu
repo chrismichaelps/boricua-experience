@@ -119,7 +119,8 @@ fn main() -> Int {
   let singleCard = Html.render(&EventCard.card(&es, &detail.card).html())
   let seriesPage = Html.render(&EventPage.render(&en, &Event.Detail{..detail, otherDates: [Event.Occurrence{slug: "plaza-2026-11-21", startsAt: "2026-11-21T22:00:00+00:00", endsAt: None}]}, &None))
   let singlePage = Html.render(&EventPage.render(&en, &detail, &None))
-  let homePage = Html.render(&HomePage.render(&en, &catalog, &Discovery.Home{recommended: [], soon: [], weekend: [], free: [], gems: [detail.card]}))
+  let homePage = Html.render(&HomePage.render(&en, &catalog, &Discovery.Home{recommended: [], soon: [], weekend: [], free: [], gems: [detail.card, Event.Card{..detail.card, slug: "another-gem"}]}))
+  let singleGem = Html.render(&HomePage.render(&en, &catalog, &Discovery.Home{recommended: [], soon: [], weekend: [], free: [], gems: [detail.card]}))
   let nearListing = Html.render(&SearchPage.render(&es, &catalog, &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000), lat: Some(18.011), lng: Some(-66.614), sort: Search.Near}, &SearchPage.Open, &Event.Page{items: [], next: Some("24")}, &[]))
   let nearRailMarkup = HomePage.nearRail(&es, "Ponce", &Search.Filters{..Search.everything(), near: "ponce", radiusM: Some(10000)}, &[detail.card])
   let profiled = Catalog.Catalog{..catalog, categories: Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), []), municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}]}
@@ -252,6 +253,8 @@ fn main() -> Int {
       Test.that("home offers a town and radius without location permission", homePage.contains("action=\"/search\"") && homePage.contains("name=\"cerca\"") && homePage.contains("name=\"radio\"")),
       Test.that("home keeps a slot for the remembered-town rail", homePage.contains("data-feature=\"near-rail\"") && homePage.contains("/api/home/near")),
       Test.that("home shows hidden gems", homePage.contains("rail-gems") && homePage.contains("Hidden gems")),
+      Test.that("a home row of a single activity is left out", !singleGem.contains("rail-gems")),
+      Test.that("categories, plans and quick filters sit together under the search", homePage.contains("class=\"home-discover\"")),
       Test.that("a near-town listing keeps town and radius, not coordinates, in its links", nearListing.contains("cerca=ponce") && nearListing.contains("radio=10") && !nearListing.contains("lat=18.011")),
       Test.that("a near-town listing offers the radius choice", nearListing.contains("name=\"radio\"") && nearListing.contains("A 10 km o menos")),
       Test.that("the remembered-town rail names the town and links its search", nearRailMarkup.contains("Cerca de Ponce · 10 km") && nearRailMarkup.contains("/search?cerca=ponce&amp;radio=10")),

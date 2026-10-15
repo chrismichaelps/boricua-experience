@@ -1,17 +1,17 @@
-import { mapSurface } from './mapSurface.js?v=79';
-import { clusterPins } from './mapClusters.js?v=79';
-import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=79';
-import { message } from '../constants/messages.js?v=79';
-import { getJson } from '../net/http.js?v=79';
-import { $, $$, create } from '../utils/dom.js?v=79';
-import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=79';
-import { toast } from './toast.js?v=79';
-import { createMap } from './mapLoader.js?v=79';
-import { buildings3d } from './map3d.js?v=79';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=79';
-import * as live from './live.js?v=79';
-import { localizeMoment } from './localTime.js?v=79';
-import { distanceM } from '../utils/geo.js?v=79';
+import { mapSurface } from './mapSurface.js?v=80';
+import { clusterPins } from './mapClusters.js?v=80';
+import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=80';
+import { message } from '../constants/messages.js?v=80';
+import { getJson } from '../net/http.js?v=80';
+import { $, $$, create } from '../utils/dom.js?v=80';
+import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=80';
+import { toast } from './toast.js?v=80';
+import { createMap } from './mapLoader.js?v=80';
+import { buildings3d } from './map3d.js?v=80';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=80';
+import * as live from './live.js?v=80';
+import { localizeMoment } from './localTime.js?v=80';
+import { distanceM } from '../utils/geo.js?v=80';
 
 function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });

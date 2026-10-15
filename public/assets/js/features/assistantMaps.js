@@ -1,5 +1,5 @@
-import { tripHref } from './assistantNext.js?v=79';
-import { distanceText } from '../utils/units.js?v=79';
+import { tripHref } from './assistantNext.js?v=80';
+import { distanceText } from '../utils/units.js?v=80';
 const finite = n => typeof n === 'number' && Number.isFinite(n);
 const point = p => Array.isArray(p) && p.length === 2 && finite(p[0]) && finite(p[1]) && p[0] >= -67.6 && p[0] <= -65 && p[1] >= 17.4 && p[1] <= 18.8;
 export function checkedVisual(value) {
@@ -55,7 +55,7 @@ export function assistantMaps(section, raw, labels) {
   let closed=false,map,observer;
   const draw=async()=>{
     try {
-      const {createMap}=await import('./mapLoader.js?v=79');
+      const {createMap}=await import('./mapLoader.js?v=80');
       if(closed)return;
       const built=await createMap(canvas,{cooperative:true,controls:false,center:[value.pins[0].lng,value.pins[0].lat],zoom:11});
       map=built.map;
