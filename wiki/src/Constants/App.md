@@ -151,3 +151,6 @@ Resolved: entry/style/worker revision83 refreshes the changed listing and explor
 
 ## Pagination feedback ordering · #124
 Resolved: the production browser exposed click-capture microtasks running before the target load-more listener. Shared navigation feedback now decides in the bubbling phase and never owns a canceled/script-handled click. Pagination uses its own closure lock rather than interpreting another component's aria-busy flag. Test actual shared feedback plus actual loadMore with a microtask checkpoint between capture and target, then completion/repeat activation. Asset revision84 refreshes both changed modules and entry; no database change.
+
+## Social transport format correction · #124
+Resolved: browser screenshot bytes must be converted to true PNG before storing social.png; the browser capture API can return JPEG despite a chosen filename. Preserve the visual raster; verify PNG signature, IHDR1200×630 and bounded bytes rather than relying on filename or a format-agnostic image viewer. Revision85 refreshes sharing URLs and the shell.
