@@ -29,3 +29,10 @@ Exact next action: commit/release this reviewed slice and verify the deployed se
 Release0.11.1 was deployed, then rolled back to the verified0.11.0 deployment when actual Show more activation exposed a shared navigation-loader ordering bug. Its capture-phase microtask marked the link before the target pagination listener, leaving it busy without a read. The bounded correction moves shared click feedback to bubbling and gives pagination its own closure lock. Actual-module integration now reproduces capture/target/bubble checkpoints and successive pages; the old shared implementation fails the new aria-disabled assertion. Independent review is clear. Asset84/patch0.11.2 must pass browser continuation checks on a protected staged deployment before promotion. Database migrations remain valid and unchanged.
 
 Exact next action: release0.11.2 and use Vercel temporary staging access for successive browser load-more checks before promotion.
+
+## Verified replacement and final image transport
+Protected0.11.2 staging browser traversed24→48→72→94unique McDonald places and all247food places through bounded pages, with no remaining load-more control at the end. Production0.11.2 (8c59753,1efea6887794) is promoted and public-domain successive clicks independently reached72unique cards with no stuck busy state.
+
+All four tested crawler user agents receive absolute OG/Twitter image URLs. Final byte validation found the screenshot transport had JPEG bytes under the.png filename; patch0.11.3 converts the unchanged raster to genuine PNG1200×630/502656bytes and advances sharing URLs to85. Independent decoded-BMP comparison proves identical pixels. Signature/IHDR/size and service-worker tests pass; no other runtime behavior or database changes.
+
+Exact next action: promote0.11.3 after checking actual PNG bytes and final production map/card/metadata behavior; record deployment identity and close #124.

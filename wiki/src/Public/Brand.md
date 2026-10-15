@@ -47,3 +47,6 @@ Green/red-on-photo, green/red-on-white, 32px header, 16px favicon, 192/512px ins
 
 ## Exact-header social export · #124
 Resolved: social.png is a1200×630 deterministic browser raster of the actual cotorra SVG and homepage brand markup, using local Pacifico and Nunito Sans through existing styles. Scale the whole lockup uniformly, retain white homepage text and green/red master, use the existing attributed Culebra photo with a contrast overlay. No generated or redrawn brand artwork; header source remains unchanged. Shared asset83 refreshes OG/Twitter links. Verify pixel dimensions, fonts loaded, absolute production URLs and live asset bytes.
+
+## Social transport format correction · #124
+Resolved: browser screenshot bytes must be converted to true PNG before storing social.png; the browser capture API can return JPEG despite a chosen filename. Preserve the visual raster; verify PNG signature, IHDR1200×630 and bounded bytes rather than relying on filename or a format-agnostic image viewer. Revision85 refreshes sharing URLs and the shell.
