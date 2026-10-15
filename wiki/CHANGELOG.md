@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-15 · release 0.10.3 · assistant: tool or reasoning markup under any name (such as <dots_function_call> or <|tool_call|>) is kept from the page and answered from the verified results, and answers follow the language of the page the visitor reads · issue #117.
+
 - 2026-10-15 · release 0.10.2 · home layout: categories, "plan your day" and quick filters sit together under the search on one shared edge (16 px apart instead of a full section gap each), the section rhythm is 56 px on desktop and 40 px on phones instead of 72 and 48, and rows with a single activity are left out instead of leaving a near-empty band; asset version 80 · issue #114.
 
 - 2026-10-14 · release 0.10.1 · trips show the road route and its choices from where the visitor is to the next stop (the first stop included), so single-stop plans — the usual case with production's activities — no longer fall back to a straight line; routed once per pair of road junctions, cached at the edge by a position rounded to about 110 m, at most 10 new routings a minute site-wide; every asset reference moves to version 79 so no browser keeps an earlier trip script · issue #111. Production needs the private migration 20261014233000_approach_routes.

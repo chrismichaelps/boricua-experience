@@ -2,7 +2,9 @@ import { createHmac } from 'node:crypto';
 
 const MODEL = 'openrouter/free';
 const TOOL_NAMES = ['search_activities', 'activity_details', 'my_preferences', 'organizer_details', 'browse_catalog', 'search_places', 'build_itinerary', 'route_activities', 'route_towns'];
-const CONTROL_TEXT = /<\s*\/?(?:tool_call|tool_response|function(?:\s|=|>)|parameter(?:\s|=|>)|think(?:\s|>)|analysis(?:\s|>))/i;
+// Tool or reasoning markup some free models write as text instead of structured calls, under any name:
+// <tool_call>, <function=…>, <dots_function_call>, <|tool_call|>, <invoke …>, <think>, <analysis>.
+const CONTROL_TEXT = /<\s*\/?\s*(?:\|[a-z_]+\||[a-z_:-]*(?:tool|function|invoke|parameter|think|analysis)[a-z_:-]*(?=[\s=>\/|]))/i;
 const MAX_BODY = 24000, MAX_ANSWER = 6000, DEADLINE = 90000;
 // Model rounds per question: searching, reading details, a second search, then the answer.
 const ROUNDS = 4, LAST = ROUNDS - 1;
@@ -194,6 +196,8 @@ export default async function assistant(req, res) {
       const bridgeOrigin = req.headers['x-vercel-protection-bypass'] && process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : config.bridge;
       const response = await fetch(bridgeOrigin + '/api/assistant', { method: 'POST', signal: abort.signal,
         headers: { 'content-type': 'application/json', accept: 'application/json', 'x-requested-with': 'boricua',
+          // The visitor's language, so the answer and its fallback match the page they are reading.
+          ...(req.headers['accept-language'] ? { 'accept-language': String(req.headers['accept-language']).slice(0, 200) } : {}),
           origin: config.origin, cookie: bridgeCookie, 'x-csrf-token': req.headers['x-csrf-token'] || '',
           ...(req.headers['x-vercel-protection-bypass'] ? { 'x-vercel-protection-bypass': req.headers['x-vercel-protection-bypass'] } : {}),
           'x-assistant-operation': operation, 'x-assistant-signature': signature(config.session, encoded, operation) }, body: encoded });
