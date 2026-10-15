@@ -235,3 +235,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - #124: move shared link feedback after script-owned click handlers; keep pagination locking local and regress listener checkpoint order plus repeated pages.
 
 - #124: store actual PNG bytes for the sharing image and validate its signature/IHDR dimensions; refresh social metadata to asset85.
+
+- 2026-10-15 · release0.11.3 · #124 production verification complete: build f58dd6b8ea38/asset85,44px map joystick, bounded complete discovery and real PNG sharing image.18suites/662assertions pass; both database environments match. Physical multitouch remains a stated testing limitation.
