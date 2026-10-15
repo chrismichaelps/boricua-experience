@@ -2,6 +2,18 @@ import { create } from '../utils/dom.js?v=80';
 
 export function priceMarker(maplibregl, pin, onSelect) {
   const element = create('button', { type: 'button', class: 'price-marker', 'data-count': '1', 'aria-label': `${pin.title}, ${pin.price}` }, pin.price);
+  if (pin.kind === 'place') {
+    element.classList.add('place-marker');
+    const icon = ['food', 'shopping'].includes(pin.icon) ? pin.icon : 'pin';
+    const fallback = `/assets/icons/${icon}.svg`;
+    const logo = typeof pin.map_icon === 'string' && (pin.map_icon.startsWith('/assets/listings/') || pin.map_icon.startsWith('https://')) ? pin.map_icon : null;
+    const image = create('img', { src: logo ?? fallback, alt: '', width: '24', height: '24' });
+    if (logo) {
+      element.classList.add('place-marker-brand');
+      image.addEventListener('error', () => { image.setAttribute('src', fallback); element.classList.remove('place-marker-brand'); }, { once: true });
+    }
+    element.replaceChildren(image);
+  }
   element.addEventListener('click', (event) => {
     event.stopPropagation();
     onSelect(pin.slug);

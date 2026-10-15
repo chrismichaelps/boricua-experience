@@ -24,6 +24,9 @@ export const MARK_NOTIFICATIONS_READ: Str = "mark_notifications_read"
 export const EVENT_REQUESTS: Str = "event_requests"
 export const CREATE_EVENT: Str = "create_event"
 /// Places (ADR-0010).
+export const MAP_PLACES: Str = "map_places"
+
+/// The paginated permanent-place search.
 export const SEARCH_PLACES: Str = "search_places"
 export const PLACE_DETAIL: Str = "place_detail"
 export const CREATE_PLACE: Str = "create_place"

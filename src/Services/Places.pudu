@@ -3,10 +3,12 @@ module Services.Places
 
 import Std.Option as Option
 import Api.Places as PlacesApi
+import Constants.App as App
 import Constants.Limits as Limits
 import Domain.Catalog as Catalog
 import Domain.Place as Place
 import Domain.Problem as Problem
+import Domain.Search as Search
 import Domain.Session as Session
 import Services.Catalog as CatalogService
 import Services.Runtime as Runtime
@@ -18,8 +20,9 @@ export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.S
 }
 
 /// Published places of a category or town, for a landing page; empty when the category takes no places.
-export fn listed(runtime: &Runtime.Runtime, category: Str, municipality: Str) -> Result[Array[Place.Listing], Problem.Problem] {
-  let page = PlacesApi.search(&runtime.gateway, &PlacesApi.SearchArgs{query: "", category: category, municipality: municipality, lat: None, lng: None, radiusM: None, sort: "rating", limit: Limits.RAIL_COUNT, after: ""}) ?
+export fn listed(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[Array[Place.Listing], Problem.Problem] {
+  if !eligible(filters) { return Ok([]) }
+  let page = PlacesApi.search(&runtime.gateway, &PlacesApi.SearchArgs{query: filters.query, category: filters.category, municipality: filters.municipality, lat: filters.lat, lng: filters.lng, radiusM: filters.radiusM, sort: if filters.lat != None { "near" } else if !filters.query.isEmpty() { "relevant" } else { "rating" }, limit: Limits.RAIL_COUNT, after: ""}) ?
   Ok(page.items)
 }
 
@@ -63,4 +66,16 @@ export fn takesPlaces(catalog: &Catalog.Catalog, slug: Str) -> Bool {
     case Some(found) => Catalog.takes(&found, Catalog.PLACE)
     case None => false
   }
+}
+
+/// Activity-only constraints never establish a permanent place's schedule, price or suitability.
+export fn eligible(filters: &Search.Filters) -> Bool {
+  filters.window == Search.Anytime && !filters.freeOnly && filters.maxPriceCents == None && filters.traits.isEmpty()
+}
+
+/// Visible places only; the database bounds and caps the read before projection.
+export fn mapped(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[Place.MapResults, Problem.Problem] {
+  if !eligible(filters) { return Ok(Place.MapResults{items: [], limited: false}) }
+  let box = Option.unwrapOr(filters.viewport, Search.Viewport{south: App.BOUNDS_SOUTH, west: App.BOUNDS_WEST, north: App.BOUNDS_NORTH, east: App.BOUNDS_EAST})
+  PlacesApi.mapped(&runtime.gateway, filters, &box)
 }

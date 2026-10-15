@@ -57,3 +57,6 @@ Resolved: search matches home viewport height, minimum640px and rounded corners 
 
 ## Release0.5.0 Grill Log
 Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.
+
+## Location-data attribution · #120
+Resolved: no brand artwork/photos are copied. One building coordinate derives from OSM; retain ODbL attribution in that public listing and notices, with official address corroboration. Other coordinates are supplied by the official locator/map links.

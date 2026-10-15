@@ -17,6 +17,7 @@ import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Event as Event
 import Domain.Locale as Locale
+import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Search as Search
 import Domain.Session as Session
@@ -111,8 +112,8 @@ fn listingWith(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPag
     case Ok(page) => {
       if Context.wantsJson(visitor) { return Respond.json(200, &pageJson(app, visitor, &anchored, &landing, &page)) }
       // Places are a landing's extra: a failure to read them leaves the activities listed.
-      let places = if (placesOf[0].isEmpty() && placesOf[1].isEmpty()) || !filters.after.isEmpty() { [] } else {
-        Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, placesOf), [])
+      let places = if !filters.after.isEmpty() || anchored.window != Search.Anytime || anchored.freeOnly || !anchored.traits.isEmpty() { [] } else {
+        Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, anchored), [])
       }
       remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.render(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places)))
     }
@@ -247,7 +248,13 @@ fn map(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   let located = Search.anchored(&filtersOf(visitor), &catalog)
   let filters = Search.Filters{..located, viewport: Some(Search.Viewport{south: App.BOUNDS_SOUTH, west: App.BOUNDS_WEST, north: App.BOUNDS_NORTH, east: App.BOUNDS_EAST})}
   match Serve.ask(app, &app.kinds.pins, filters) {
-    case Ok(cards) => Respond.page(200, &MapPage.render(&Context.frame(app, visitor), &cards.items, cards.limited, Serve.query(visitor, "near") == "1", &catalog, &located, Routes.SEARCH + SearchPage.queryOf(&located, &SearchPage.Open, "")))
+    case Ok(cards) => {
+      let places = match Serve.ask(app, &app.kinds.placesMapped, filters) {
+        case Ok(found) => found
+        case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+      }
+      Respond.page(200, &MapPage.renderPlaces(&Context.frame(app, visitor), &cards.items, &places.items, cards.limited || places.limited, Serve.query(visitor, "near") == "1", &catalog, &located, Routes.SEARCH + SearchPage.queryOf(&located, &SearchPage.Open, "")))
+    }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
@@ -271,7 +278,13 @@ fn nearby(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   let requested = Option.unwrapOr(Serve.query(visitor, "radius").toInt(), Limits.NEARBY_RADIUS_M)
   let radius = if requested <= 0 { Limits.NEARBY_RADIUS_M } else if requested > Limits.RADIUS_MAX_M { Limits.RADIUS_MAX_M } else { requested }
   match Serve.ask(app, &app.kinds.pins, Search.Filters{..filters, sort: Search.Near, radiusM: Some(radius)}) {
-    case Ok(cards) => Respond.json(200, &MapPage.pinsValue(&Context.frame(app, visitor), &cards.items))
+    case Ok(cards) => {
+      let places = match Serve.ask(app, &app.kinds.placesMapped, Search.Filters{..filters, radiusM: Some(radius)}) {
+        case Ok(found) => found
+        case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+      }
+      Respond.json(200, &MapPage.combinedPins(&Context.frame(app, visitor), &cards.items, &places.items))
+    }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }
 }
@@ -287,11 +300,15 @@ fn viewport(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
     case _ => { return Respond.problem(app, visitor, &Problem.Refused("invalid_coordinates")) }
   }
   if box.north < App.BOUNDS_SOUTH || box.south > App.BOUNDS_NORTH || box.east < App.BOUNDS_WEST || box.west > App.BOUNDS_EAST { return Respond.json(200, &Json.object(&[("items", Json.list(&[])), ("limited", Json.Boolean(false))])) }
-  let filters = Search.Filters{..filtersOf(visitor), viewport: Some(box), after: ""}
+  let filters = Search.Filters{..filtersOf(visitor), viewport: Some(box), after: "", near: "", lat: None, lng: None, radiusM: None}
   match Serve.ask(app, &app.kinds.pins, filters) {
     case Ok(cards) => {
       let frame = Context.frame(app, visitor)
-      let answer = Respond.json(200, &Json.object(&[("items", MapPage.pinsValue(&frame, &cards.items)), ("limited", Json.Boolean(cards.limited))]))
+      let places = match Serve.ask(app, &app.kinds.placesMapped, filters) {
+        case Ok(found) => found
+        case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+      }
+      let answer = Respond.json(200, &Json.object(&[("items", MapPage.combinedPins(&frame, &cards.items, &places.items)), ("limited", Json.Boolean(cards.limited || places.limited))]))
       // Pins depend only on the address once it names the language they are rendered in.
       if Serve.query(visitor, "hl") == Locale.code(&frame.locale) { Http.Response{..answer, headers: answer.headers.push(("cache-control", HttpConstants.CACHE_SHARED_PINS))} } else { answer }
     }

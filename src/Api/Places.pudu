@@ -6,6 +6,7 @@ import Api.Supabase.Gateway as Gateway
 import Constants.Supabase as Supabase
 import Domain.Place as Place
 import Domain.Problem as Problem
+import Domain.Search as Search
 
 /** @Api.Places.SearchArgs — the arguments `search_places` reads */
 export type SearchArgs = {
@@ -81,4 +82,16 @@ export fn update(gateway: &Gateway.Gateway, placeId: Str, ready: &Place.Ready, t
 export fn setStatus(gateway: &Gateway.Gateway, placeId: Str, status: Str, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.SET_PLACE_STATUS, &[("p_place_id", Gateway.text(placeId)), ("p_status", Gateway.text(status))], Some(token), Gateway.Write) ?
   Ok(())
+}
+
+/// Published places within a validated viewport and optional nearby radius.
+export fn mapped(gateway: &Gateway.Gateway, filters: &Search.Filters, box: &Search.Viewport) -> Result[Place.MapResults, Problem.Problem] {
+  Gateway.query(gateway, Supabase.MAP_PLACES, &[
+      ("p_south", Json.Fractional(show(box.south))), ("p_west", Json.Fractional(show(box.west))),
+      ("p_north", Json.Fractional(show(box.north))), ("p_east", Json.Fractional(show(box.east))),
+      ("p_query", Gateway.textOrNull(filters.query)), ("p_category", Gateway.textOrNull(filters.category)),
+      ("p_municipality", Gateway.textOrNull(filters.municipality)),
+      ("p_lat", Gateway.fraction(filters.lat)), ("p_lng", Gateway.fraction(filters.lng)),
+      ("p_radius_m", Gateway.whole(filters.radiusM))
+    ], None, Gateway.Read)
 }

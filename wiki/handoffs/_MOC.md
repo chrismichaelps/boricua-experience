@@ -20,3 +20,5 @@ tags: [moc, handoff]
 - [[handoffs/quick-filters]] — quick traits, organizer facts and explicit search arrival; both database migrations verified.
 
 - [[handoffs/visitor-release]] — active visitor release, reviewed guards and verification ledger.
+
+- [[handoffs/permanent-places]] — source-reviewed restaurants/shops and bounded category-icon map pins.
