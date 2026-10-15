@@ -122,3 +122,11 @@ Resolved: Visible loading state follows the current request ticket, cached/error
 Below 700px, scrolling the list past 24px raises the sheet and the Map pill lowers it. While raised, viewport refreshes are skipped so the list keeps what it showed; lowering re-reads the visible map.
 
 Programmatic list scrolls (selecting a pin) are ignored for 900ms so they never raise the sheet.
+
+
+## Permanent place discovery Grill Log · #120
+Resolved: publish source-reviewed branches as permanent places, never dated or free activities. Shopping is a database catalogue category with a store-type profile; fast food is an explicit cuisine option. The public map_places RPC validates and clamps bounds, filters indexed geography before a bounded nearest-first limit, excludes unpublished places, and returns a limited flag. Activity date/price/trait filters exclude places rather than invent facts. Typed place projections retain a distinct kind and place route. Icons use the app category geometry, with branch names as labels; no third-party brand artwork or hover popup. Existing clustering, cancellation, camera and sharing behavior remain unchanged. Unknown facts stay unknown. Source data and SQL remain ignored; apply matching schema changes to both environments, real imports only to production.
+
+Reviewed refinement #120: place search preserves anchored nearby coordinates/radius. Camera refresh intentionally removes nearby-origin restrictions and queries its new bounded viewport; dates/category/text/traits remain intact. Anonymous map projection never includes hidden/removed rows. Cross-kind selection identity is distinct.
+
+Business artwork revision82 supersedes the unreleased81 category-only pin change. Official logo assets live under /assets/listings/, while record-to-logo references remain database data. Cached changed imports advance together; no new live-location module identity. Resolved.
