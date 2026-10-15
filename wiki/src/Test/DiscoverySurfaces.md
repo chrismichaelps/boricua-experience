@@ -23,3 +23,6 @@ Resolved: test behavior rather than matching source text; synthetic coverage com
 
 ## Scroll intent
 Asserts wheel, touch-move, scroll and key presses reveal the page and that the skeleton fades.
+
+## Expanded selection regression · #124
+Resolved: execute actual Explorer selection callbacks, asserting the selected-card class is exposed and cleared by canvas click. Real browser geometry checks cover control gaps and circular controls; simulated harnesses do not prove physical-device gestures.

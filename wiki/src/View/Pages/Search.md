@@ -22,7 +22,7 @@ Results with the pill, chips, filter bar, grid, and load-more; landing pages for
 
 ```pudu
 export type Landing = Open | ForCategory(Catalog.Category) | ForTown(Catalog.Municipality)
-export fn queryOf, cards, render
+export fn queryOf, placeQueryOf, cards, placeCards, render, renderResults
 ```
 
 ### Linkage
@@ -74,3 +74,6 @@ Resolved: preserve canonical known traits through chips, forms, map/list, pagina
 
 ## Search arrival resolved contract
 Explicit discovery actions scroll to the results heading through the progressive listing module; direct entry/history retain their position, cancelled actions are ignored and reduced motion is respected. The entry and changed listing module use asset version71. Resolved.
+
+## Complete place pagination Grill Log · #124
+Resolved: place listings return a bounded24-item Results page and retain its next cursor. Activity and place cursors remain separate query parameters; progressive links request only their own source, no-script links render a full page. Filters and explicit sort are preserved. Activity-only constraints return an empty place page. Failure to read places is reported rather than silently presented as completeness. Database pages use deterministic score/count/name/id keysets bound to normalized filters and sort, without an offset ceiling. Canonicalize McDonald/Macdonald/apostrophe-s variants and use indexed full-text prefixes for plain partial queries; map uses the same normalization. Never infer missing branches or municipality facts. Invalid or wrong-scope cursors fail before reads. Matching indexes support name/category/town, ranked and spatial/text paths. No table/API grant expansion or private data in source.

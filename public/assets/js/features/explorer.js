@@ -7,7 +7,7 @@ import { $, $$, create } from '../utils/dom.js?v=80';
 import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=80';
 import { toast } from './toast.js?v=80';
 import { createMap } from './mapLoader.js?v=80';
-import { buildings3d } from './map3d.js?v=80';
+import { buildings3d } from './map3d.js?v=83';
 import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=82';
 import * as live from './live.js?v=80';
 import { localizeMoment } from './localTime.js?v=80';
@@ -87,6 +87,7 @@ export async function explorer(page) {
     for (const entry of markers.values()) entry.element.classList.toggle('is-active', entry.slugs.includes(slug));
     for (const item of $$('.sheet-item', list)) item.classList.toggle('is-active', item.dataset.slug === slug);
     const pin = pins.find((candidate) => pinKey(candidate) === slug);
+    page.classList.toggle('has-map-selection', Boolean(pin));
     if (!pin) return;
     if (fromList && !restoringFocus) {
       detachFollow();
@@ -143,6 +144,9 @@ export async function explorer(page) {
     list.replaceChildren(...(shown.length ? shown.map(sheetItem) : [create('p', { class: 'map-empty' }, message('mapEmpty'))]));
     count.textContent = shown.length === 1 && page.dataset.countOne ? page.dataset.countOne : countTemplate.replace(/\d+/, String(shown.length));
     bindList();
+    const selected = shown.some(pin => pinKey(pin) === selectedSlug);
+    page.classList.toggle('has-map-selection', selected);
+    for (const item of $$('.sheet-item', list)) item.classList.toggle('is-active', selected && item.dataset.slug === selectedSlug);
     if (focused) {
       restoringFocus = true;
       list.querySelector(`[data-slug="${focused}"] a`)?.focus({ preventScroll: true });
@@ -295,6 +299,7 @@ export async function explorer(page) {
     followZoom = null;
     $('[data-feature="locate"]', page)?.classList.add('is-detached');
   };
+  page.addEventListener?.('bx:map-explore', detachFollow);
   // Only visitor gestures detach; location easing must not cancel its own follow mode.
   for (const type of ['dragstart', 'zoomstart', 'rotatestart']) {
     map.on(type, (event) => { if (event.originalEvent) detachFollow(); });

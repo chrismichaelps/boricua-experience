@@ -19,11 +19,16 @@ export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.S
   PlacesApi.detail(&runtime.gateway, slug, tokenOf(&session))
 }
 
-/// Published places of a category or town, for a landing page; empty when the category takes no places.
-export fn listed(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[Array[Place.Listing], Problem.Problem] {
-  if !eligible(filters) { return Ok([]) }
-  let page = PlacesApi.search(&runtime.gateway, &PlacesApi.SearchArgs{query: filters.query, category: filters.category, municipality: filters.municipality, lat: filters.lat, lng: filters.lng, radiusM: filters.radiusM, sort: if filters.lat != None { "near" } else if !filters.query.isEmpty() { "relevant" } else { "rating" }, limit: Limits.RAIL_COUNT, after: ""}) ?
-  Ok(page.items)
+/// One bounded page of published places, retaining its database continuation cursor.
+export fn listed(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[Place.Results, Problem.Problem] {
+  if !eligible(filters) { return Ok(Place.Results{items: [], next: None}) }
+  let sort = match filters.sort {
+    case Search.Near => if filters.lat != None { "near" } else { "name" }
+    case Search.Top => "rating"
+    case Search.Relevant => "relevant"
+    case Search.Soon => "name"
+  }
+  PlacesApi.search(&runtime.gateway, &PlacesApi.SearchArgs{query: filters.query, category: filters.category, municipality: filters.municipality, lat: filters.lat, lng: filters.lng, radiusM: filters.radiusM, sort: sort, limit: Limits.PAGE_SIZE, after: filters.after})
 }
 
 /// Publishes a draft against its category's profile; answers the new place, or `Invalid`.

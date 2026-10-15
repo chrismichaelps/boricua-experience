@@ -647,3 +647,32 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .place-marker{display:grid;place-items:center;min-width:44px;min-height:44px;padding:10px;border-radius:50%;}.place-marker img{display:block;width:20px;height:20px}.place-marker.is-active img{filter:brightness(0) invert(1)}
 
 .place-marker-brand img{width:24px;height:24px;object-fit:contain}.place-marker-brand.is-active{background:#fff;border-color:var(--color-ocean);box-shadow:0 0 0 2px var(--color-ocean)}.place-marker-brand.is-active img{filter:none}
+
+/* Only actual controls intercept map gestures; transparent control gaps belong to the map. */
+.map-page .map-controls, .map-page.is-map-expanded .map-controls { width: max-content; max-width: calc(100% - 104px); right: auto; pointer-events: none; }
+.map-page .map-controls > * { pointer-events: auto; }
+.map-page .map-turn { display: block; flex: none; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; }
+.map-page .map-turn[hidden], .map-page .map-turn-button:not(.map-compass) { display: none; }
+.map-page .map-turn-button.map-compass { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-divider); border-radius: 50%; background: white; cursor: grab; touch-action: none; }
+.map-page .map-turn-button.map-compass:active { cursor: grabbing; }
+.map-page button.price-marker, .map-page button.map-cluster { touch-action: none; }
+.map-page.is-map-expanded.has-map-selection .map-sheet { display: block; top: auto; left: 16px; right: auto; bottom: 16px; width: min(360px, calc(100% - 32px)); height: auto; max-height: min(220px, calc(100% - 120px)); padding: 0; border: 1px solid var(--color-divider); border-radius: 20px; overflow: auto; }
+.map-page.is-map-expanded .map-sheet > :not(.sheet-list), .map-page.is-map-expanded .sheet-item:not(.is-active) { display: none; }
+.map-page.is-map-expanded .sheet-list { display: block; padding: 0; overflow: visible; }
+.map-page.is-map-expanded .sheet-item { margin: 0; }
+.map-page.is-map-expanded .sheet-item .card-link { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 0; }
+.map-page.is-map-expanded .sheet-item .card-media { width: 112px; height: 100%; min-height: 132px; aspect-ratio: auto; border-radius: 0; }
+.map-page.is-map-expanded .sheet-item .card-body { padding: 14px; gap: 8px; }
+.map-page.is-map-expanded .sheet-item .card-title { font-size: 16px; }
+
+@media (max-width: 699px) { .map-page .map-controls > .map-button { flex: none; width: 44px; min-width: 44px; height: 44px; padding: 0; aspect-ratio: 1; } }
+
+:root { --card-copy-height: 13rem; }
+.rail-track .card, .card-grid > .card:not(.activity .card) { height: 100%; min-width: 0; }
+.rail-track .card-link, .card-grid > .card:not(.activity .card) > .card-link { height: 100%; grid-template-rows: auto var(--card-copy-height); align-content: start; }
+.rail-track .card-body, .card-grid > .card:not(.activity .card) .card-body, .activity .card-body { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: var(--card-copy-height); overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: stable; }
+.rail-track .card-body > *, .card-grid .card-body > * { flex-shrink: 0; }
+.rail-track .card-title, .card-grid .card-title { display: block; min-height: 2.6em; overflow: visible; -webkit-line-clamp: unset; overflow-wrap: anywhere; }
+.rail-track .card-meta, .card-grid .card-meta { margin-top: auto; }
+.activity .card, .activity .card-link { height: 100%; }
+@media (min-width: 700px) { .activity .card-body { height: 128px; } }

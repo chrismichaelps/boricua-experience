@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Std.Option as Option
+import Std.Url as Url
 import Constants.Limits as Limits
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
@@ -48,13 +49,24 @@ export fn queryOf(filters: &Search.Filters, landing: &Landing, after: Str) -> St
         }),
       ("free", if filters.freeOnly { "1" } else { "" }),
       ("t", Search.traitsValue(&filters.traits)),
-      ("sort", if filters.sort == Search.Soon { "" } else { Search.sortName(&filters.sort) }),
+      ("sort", if filters.sort == Search.Soon && filters.query.isEmpty() && filters.lat == None && filters.near.isEmpty() { "" } else { Search.sortName(&filters.sort) }),
       ("cerca", filters.near),
       ("radio", if filters.near.isEmpty() && filters.lat == None { "" } else { show(Search.radiusKm(filters)) }),
       ("lat", if filters.near.isEmpty() { coordinate(filters.lat) } else { "" }),
       ("lng", if filters.near.isEmpty() { coordinate(filters.lng) } else { "" }),
       ("after", after)
     ])
+}
+
+/// A place continuation keeps its cursor separate from activity pagination.
+export fn placeQueryOf(filters: &Search.Filters, landing: &Landing, after: Str) -> Str {
+  let query = queryOf(filters, landing, "")
+  query + (if query.isEmpty() { "?" } else { "&" }) + "places_after=" + Url.encodeComponent(after)
+}
+
+/// Escaped place cards for the progressive results grid.
+export fn placeCards(frame: &Frame.Frame, catalog: &Catalog.Catalog, items: &Array[Place.Listing]) -> Str {
+  Html.render(&H.nothing().holding(items.map(|place: Place.Listing| PlaceCard.card(frame, catalog, &place))).html())
 }
 
 /// A short name for a listing, from its filters, for a saved search.
@@ -133,8 +145,13 @@ export fn cards(frame: &Frame.Frame, items: &Array[Event.Card]) -> Str {
 
 /// The results page.
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Array[Place.Listing]) -> Html.Html {
+  renderResults(frame, catalog, filters, landing, page, &Place.Results{items: *places, next: None})
+}
+
+/// Independent activity and place pages share the same canonical filters.
+export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Place.Results, continuingPlaces: Bool = false) -> Html.Html {
   let (title, description, path) = identity(frame, landing, filters)
-  let indexable = match landing {
+  let indexable = !continuingPlaces && match landing {
     case Open => !Search.isNarrowed(filters)
     case _ => filters.after.isEmpty()
   }
@@ -175,12 +192,21 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
           case ForTown(town) => neighbors(frame, catalog, &town)
           case _ => H.nothing()
         },
-        PlaceCard.rail(frame, catalog, "rail-places", match landing {
-            case ForCategory(category) => Frame.tf(frame, "place.rail_category", &[("category", SearchControls.categoryName(frame, &category))])
-            case ForTown(town) => Frame.tf(frame, "place.rail_town", &[("town", town.name)])
-            case Open => Frame.t(frame, "place.rail")
-          }, places, ""),
-        if page.items.isEmpty() {
+        if places.items.isEmpty() { H.nothing() } else {
+          H.section().class("results place-results").at("aria-labelledby", "place-results-title").holding([
+              H.h2().id("place-results-title").class("section-title").says(match landing {
+                  case ForCategory(category) => Frame.tf(frame, "place.rail_category", &[("category", SearchControls.categoryName(frame, &category))])
+                  case ForTown(town) => Frame.tf(frame, "place.rail_town", &[("town", town.name)])
+                  case Open => Frame.t(frame, "place.rail")
+                }),
+              H.div().class("card-grid").holding(places.items.map(|place: Place.Listing| PlaceCard.card(frame, catalog, &place))),
+              match places.next {
+                case Some(cursor) => H.a().class("button button-ghost load-more").href(path + placeQueryOf(filters, landing, cursor)).data("feature", "load-more").says(Frame.t(frame, "search.load_more"))
+                case None => H.nothing()
+              }
+            ])
+        },
+        if page.items.isEmpty() && places.items.isEmpty() {
           Notice.empty("search", Frame.t(frame, "search.empty_title"), Frame.t(frame, "search.empty_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action")))
         } else {
           H.div().class("results").data("feature", "results").holding([EventCard.grid(frame, &page.items), more])

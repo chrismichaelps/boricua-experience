@@ -22,3 +22,5 @@ tags: [moc, handoff]
 - [[handoffs/visitor-release]] — active visitor release, reviewed guards and verification ledger.
 
 - [[handoffs/permanent-places]] — source-reviewed restaurants/shops and bounded category-icon map pins.
+
+- [[handoffs/discovery-production]] — seven production discovery corrections and release evidence.

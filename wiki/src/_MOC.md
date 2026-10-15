@@ -362,3 +362,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Public/PlacePinAssets]]
 - [[src/Test/PlacePins]]
+
+- [[src/Test/Map3d]] — compact joystick pointer/keyboard lifecycle regressions.

@@ -145,3 +145,6 @@ Resolved final asset contract · #107: compact forecast/disclosure and desktop m
 Resolved: advance only the changed module import chain, static stylesheet and worker shell to81. The offline shell never caches private pages. Place pins have a distinct route and no date/free label; tests execute actual projection and marker selection.
 
 Business artwork revision82 supersedes the unreleased81 category-only pin change. Official logo assets live under /assets/listings/, while record-to-logo references remain database data. Cached changed imports advance together; no new live-location module identity. Resolved.
+
+## Discovery corrections cache contract · #124
+Resolved: entry/style/worker revision83 refreshes the changed listing and explorer modules. Unchanged shared location/network modules keep their existing single identities. No personalized HTML or database data enters the offline shell.

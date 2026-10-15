@@ -12,7 +12,7 @@ import { bell } from './features/bell.js?v=80';
 import { localizeMoments } from './features/localTime.js?v=80';
 import { $$ } from './utils/dom.js?v=80';
 import { back, joinPanel, registerServiceWorker, retry } from './features/app.js?v=80';
-import { filters, loadMore, searchArrival } from './features/listing.js?v=80';
+import { cardScroll, filters, loadMore, searchArrival } from './features/listing.js?v=83';
 import { disclosures, share } from './features/share.js?v=80';
 import { suggest } from './features/suggest.js?v=80';
 import { reactToggle, saveToggle } from './features/toggle.js?v=80';
@@ -22,6 +22,7 @@ buildCheck();
 passwordControls();
 submitFeedback();
 searchArrival();
+cardScroll();
 interactionFeedback();
 localizeMoments();
 disclosures();
@@ -45,7 +46,7 @@ const FEATURES = {
   back,
   'join-panel': joinPanel,
   retry,
-  explorer: (node) => import('./features/explorer.js?v=82').then((module) => module.explorer(node)),
+  explorer: (node) => import('./features/explorer.js?v=83').then((module) => module.explorer(node)),
   achievements: (node) => import('./features/achievements.js?v=80').then((module) => module.achievements(node)).catch(() => {}),
   'achievement-board': (node) => import('./features/achievements.js?v=80').then((module) => module.achievementBoard(node)).catch(() => {}),
   a11y: (node) => import('./features/a11y.js?v=80').then((module) => module.a11y(node)).catch(() => {}),

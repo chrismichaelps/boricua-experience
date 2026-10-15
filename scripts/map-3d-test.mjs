@@ -66,3 +66,25 @@ assert.equal(events.at(-1).detail.action, 'map_rotate', 'a visible turn is repor
 switch3d.click(); assert.equal(group.hidden, true, 'turn controls hide in 2D');
 console.log('PASS: 3D rotation gestures/keyboard enabled only in 3D, turn steps, north reset, turn controls visibility and turn report');
 console.log('PASS: 3D off by default, remembered choice keeps framing, explicit switch zooms and restores flat north-up, style wait, blocked storage and reduced motion');
+
+const joystickHandlers={}, captured=new Set(), exploration=[];
+const compass={dataset:{turn:'north'},style:{},setAttribute(){},querySelector:()=>({style:{}}),
+ addEventListener(name,fn,capture=false){joystickHandlers[name+':'+Boolean(capture)]=fn;},
+ setPointerCapture:id=>captured.add(id),hasPointerCapture:id=>captured.has(id),releasePointerCapture:id=>captured.delete(id)};
+const joystickGroup={hidden:false,closest:()=>({}),querySelector:()=>compass,querySelectorAll:()=>[compass],dispatchEvent:e=>exploration.push(e)};
+stored='1';const joystickMap=fakeMap(16);joystickMap.bearing=10;
+scope.api.buildings3d(joystickMap,fakeButton(),joystickGroup);
+const send=(name,event={})=>joystickHandlers[name+':false']({type:name,button:0,isPrimary:true,pointerId:1,clientX:100,...event});
+const beforeDrag=joystickMap.eases.length;
+send('pointerdown',{isPrimary:false});send('pointermove',{clientX:130});assert.equal(joystickMap.eases.length,beforeDrag,'ignore secondary pointer');
+send('pointerdown');send('pointermove',{clientX:102});assert.equal(joystickMap.eases.length,beforeDrag,'jitter remains a tap');
+send('pointermove',{clientX:120});assert.equal(joystickMap.eases.at(-1).bearing,50);assert.equal(joystickMap.eases.at(-1).duration,0);
+assert.equal(exploration.at(-1).type,'bx:map-explore','rotation detaches location follow');
+send('pointerup');let suppressed=false;
+joystickHandlers['click:true']({detail:1,preventDefault(){},stopImmediatePropagation(){suppressed=true;}});assert(suppressed,'drag click cannot reset north');
+assert.equal(captured.size,0);
+send('click');assert.equal(joystickMap.eases.at(-1).bearing,0,'a plain tap still faces north');
+send('keydown',{key:'ArrowLeft',preventDefault(){}});assert.equal(joystickMap.eases.at(-1).bearing,-20,'keyboard turns left');
+send('keydown',{key:'Home',preventDefault(){}});assert.equal(joystickMap.eases.at(-1).bearing,0,'Home faces north');
+send('pointerdown');send('pointercancel');const canceledAt=joystickMap.eases.length;send('pointermove',{clientX:180});assert.equal(joystickMap.eases.length,canceledAt);
+console.log('PASS: compact joystick pointer capture, threshold, drag/click distinction, keyboard and cancellation');

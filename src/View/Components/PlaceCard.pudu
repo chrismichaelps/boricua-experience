@@ -28,7 +28,7 @@ export fn card(frame: &Frame.Frame, catalog: &Catalog.Catalog, place: &Place.Lis
   let category = Catalog.category(catalog, place.category.slug)
   let facts = Facts.highlightTexts(frame, &category, Catalog.PLACE, &place.highlights)
   let distance = Format.distance(&frame.locale, place.distanceM)
-  H.article().class("card card-place").holding([
+  H.article().class("card card-venue").holding([
       H.a().class("card-link").href(Routes.PLACE_PREFIX + place.slug).holding([
           H.div().class("card-media").holding([
               H.img().src(coverOf(place)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),

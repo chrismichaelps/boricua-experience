@@ -34,3 +34,30 @@ const near = setup(); near.listeners.submit({target:{...form,matches: selector =
 for (const options of [{event:{ctrlKey:true}}, {event:{button:1}}, {event:{defaultPrevented:true}}, {link:{target:'_blank'}}, {link:{href:'https://external.test/search'}}, {link:{href:'https://example.test/map?near=1'}}]) assert.equal(click(options).values.size,0);
 assert.equal(setup({blocked:true}).scrolls.length,0);
 console.log('PASS: explicit one-shot search arrival, smooth/reduced motion, native submission, cancellation, history, expiry and private-storage failure');
+
+let finishPage, calls=0, inserted='', removed=false;
+const attributes=new Map();
+const more={href:'/search?category=comida&places_after=next',addEventListener(_name,fn){this.click=fn;},getAttribute:k=>attributes.get(k),setAttribute:(k,v)=>attributes.set(k,v),removeAttribute:k=>attributes.delete(k),closest:()=>({querySelector:()=>({querySelectorAll:()=>[],insertAdjacentHTML:(_position,html)=>{inserted+=html;}})}),remove:()=>{removed=true;}};
+const paging={getJson:()=>{calls++;return new Promise(resolve=>finishPage=resolve);},location:{href:''}};
+vm.runInNewContext(source+'\nthis.attach=loadMore;',paging);
+paging.attach(more);
+const first=more.click({preventDefault(){}});
+await more.click({preventDefault(){}});
+assert.equal(calls,1,'repeat activation while loading cannot append duplicate pages');
+finishPage({html:'<article>next</article>',next:null});await first;
+assert.equal(inserted,'<article>next</article>');assert(removed);assert(!attributes.has('aria-busy'));
+console.log('PASS: independent place load-more locks duplicate activations and appends once');
+
+const copy={scrollTop:0,clientHeight:100,scrollHeight:250,scrollBy({top}){this.scrollTop+=top;}};
+const card={querySelector:()=>copy,closest(){return this;}};const delegated={addEventListener(_name,fn){this.key=fn;}};
+vm.runInNewContext(source+'\nthis.attachCard=cardScroll;',paging);paging.attachCard(delegated);let intercepted=0;
+const key=(name,extra={})=>delegated.key({target:card,key:name,preventDefault(){intercepted++;},...extra});
+key('ArrowDown');assert.equal(copy.scrollTop,40);key('ArrowUp');assert.equal(copy.scrollTop,0);
+key('ArrowUp');assert.equal(intercepted,2,'top boundary lets native page scrolling continue');
+key('PageDown');assert.equal(copy.scrollTop,100);key('ArrowRight');assert.equal(intercepted,3,'horizontal rail keys remain native');
+key('ArrowDown',{ctrlKey:true});assert.equal(intercepted,3,'modified keyboard actions stay native');
+copy.scrollTop=150;key('ArrowDown');assert.equal(intercepted,3,'bottom boundary lets the page continue');
+console.log('PASS: overflowing card copy is keyboard-scrollable without trapping the page');
+
+const dynamicallyInserted={...card,closest(){return this;}};copy.scrollTop=0;
+delegated.key({target:dynamicallyInserted,key:'ArrowDown',preventDefault(){}});assert.equal(copy.scrollTop,40,'delegated handler covers cards inserted after initialization, including near rails');
