@@ -89,3 +89,16 @@ console.log('PASS: split textual tool/reasoning quarantine, bounded retry/refusa
   assert.equal(found.at(-1)[0],'done');
   console.log('PASS: verified results answered when the model cannot finish');
 }
+// Markup under unusual names is quarantined too, and never shown before the fallback.
+{
+  for (const tag of ['<dots_function_call>{"name":"x"}</dots_function_call>', '<|tool_call|>x', '<invoke name="x">', '<function_calls>x']) {
+    const seen=[];
+    const real={slug:'bomba-en-loiza',href:'/e/bomba-en-loiza',title:'Bomba en Loíza'};
+    await runConversation({...context,locale:'en'},async()=>({result:{searched:true,activities:[]},sources:[real]}),'fixture',signal,async(name,value)=>seen.push([name,value]),provider([tool('search_activities'),markup(tag),markup(tag),markup(tag)]));
+    const text=seen.filter(([name])=>name==='delta').map(([,value])=>value.text).join('');
+    assert.ok(!text.includes('<'), `no markup shown for ${tag}: ${text}`);
+    assert.match(text,/^Here/,'the English fallback for an English page');
+  }
+  console.log('PASS: markup under any tool or reasoning name is quarantined; fallback in the page language');
+}
+
