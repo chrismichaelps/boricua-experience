@@ -28,19 +28,25 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, home: &Discover
         H.section().class("hero").holding([
             Hero.render(frame, catalog)
           ]),
-        SearchControls.chips(frame, catalog, ""),
-        planTile(frame),
-        quickLinks(frame),
-        EventCard.rail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, Routes.SEARCH),
-        EventCard.rail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
+        // The search's companions read as one group: categories, plans near you, and quick filters.
+        H.div().class("home-discover").holding([SearchControls.chips(frame, catalog, ""), planTile(frame), quickLinks(frame)]),
+        homeRail(frame, "rail-for-you", Frame.t(frame, if Frame.signedIn(frame) { "home.for_you" } else { "home.popular" }), &home.recommended, Routes.SEARCH),
+        homeRail(frame, "rail-weekend", Frame.t(frame, "home.weekend"), &home.weekend, Routes.SEARCH + "?when=weekend"),
         H.div().class("near-slot").data("feature", "near-rail").data("src", Routes.API_HOME_NEAR),
         nearTile(frame, catalog),
-        EventCard.rail(frame, "rail-soon", Frame.t(frame, "home.soon"), &home.soon, Routes.SEARCH),
-        EventCard.rail(frame, "rail-free", Frame.t(frame, "home.free"), &home.free, Routes.SEARCH + "?free=1&when=week"),
-        EventCard.rail(frame, "rail-gems", Frame.t(frame, "home.gems"), &home.gems, ""),
+        homeRail(frame, "rail-soon", Frame.t(frame, "home.soon"), &home.soon, Routes.SEARCH),
+        homeRail(frame, "rail-free", Frame.t(frame, "home.free"), &home.free, Routes.SEARCH + "?free=1&when=week"),
+        homeRail(frame, "rail-gems", Frame.t(frame, "home.gems"), &home.gems, ""),
         createTile(frame),
         directory(frame, catalog)
       ]))
+}
+
+/// A home row of activities. A row of a single activity reads as a gap on the page, so a row needs two;
+/// its activities still appear in the other rows and in the full listing.
+fn homeRail(frame: &Frame.Frame, id: Str, title: Str, cards: &Array[Event.Card], more: Str) -> H.Node {
+  if cards.length() < 2 { return H.nothing() }
+  EventCard.rail(frame, id, title, cards, more)
 }
 
 /// One-tap listings for the most asked-for moments and kinds: today, the weekend, free, family, night,

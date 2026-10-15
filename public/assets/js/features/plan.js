@@ -1,13 +1,13 @@
 // Plans near the visitor: the location button fills the start and builds the plans, any choice
 // rebuilds them at once with a placeholder while the page loads, and each plan's map draws its
 // numbered stops and the road route between them (a dashed line where no road route is known).
-import { $, $$, create } from '../utils/dom.js?v=79';
-import { requestLocation } from '../utils/locate.js?v=79';
-import { message } from '../constants/messages.js?v=79';
-import { toast } from './toast.js?v=79';
-import { createMap } from './mapLoader.js?v=79';
-import { getJson } from '../net/http.js?v=79';
-import { buildings3d } from './map3d.js?v=79';
+import { $, $$, create } from '../utils/dom.js?v=80';
+import { requestLocation } from '../utils/locate.js?v=80';
+import { message } from '../constants/messages.js?v=80';
+import { toast } from './toast.js?v=80';
+import { createMap } from './mapLoader.js?v=80';
+import { getJson } from '../net/http.js?v=80';
+import { buildings3d } from './map3d.js?v=80';
 
 const ROUTE_COLOR = '#1878ec';
 // Room kept clear for the map tools on the right, so the route is never drawn under them.

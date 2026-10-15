@@ -84,3 +84,10 @@ Resolved: Render an aria-hidden layout skeleton only for root home; external rea
 
 ## Quick-filter continuation Grill Log
 Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.
+
+## Layout rhythm
+The categories, the plans card and the quick filters form one group under the search (`home-discover`):
+one shared edge, 14–16 px apart, chip rows scrolling edge to edge on phones. Sections after it are 56 px
+apart on desktop and 40 px on phones. A row of activities needs two to show (a single card read as an
+empty band); the "near you" row keeps a single nearby activity.
+
