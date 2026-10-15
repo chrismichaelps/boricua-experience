@@ -30,3 +30,6 @@ Accepted AJAX submissions are recognized only while the existing feature’s nea
 
 ## Script-owned submit ordering Grill Log · #76
 Resolved: the navigation-or-script decision runs in a bubbling submit listener, after the form's own listeners. A capture-phase microtask is not final: on a real click browsers drain microtasks between listeners, so the old check ran before the save toggle called preventDefault, marked the form as navigating, and the toggle then refused to send because the form looked busy. Capture keeps only the double-submit guard. The harness now drains microtasks between capture, the form listener and bubbling. Rejected: setTimeout deferral (still racy against slow listeners and visible as a flash).
+
+## Pagination feedback ordering · #124
+Resolved: the production browser exposed click-capture microtasks running before the target load-more listener. Shared navigation feedback now decides in the bubbling phase and never owns a canceled/script-handled click. Pagination uses its own closure lock rather than interpreting another component's aria-busy flag. Test actual shared feedback plus actual loadMore with a microtask checkpoint between capture and target, then completion/repeat activation. Asset revision84 refreshes both changed modules and entry; no database change.

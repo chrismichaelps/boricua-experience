@@ -24,3 +24,6 @@ Resolved: assertions protect user-visible state and successful form values rathe
 
 ## Referenced by
 [[src/Public/SubmitFeedback]] · [[src/Public/Passwords]] · [[src/_MOC]]
+
+## Pagination feedback ordering · #124
+Resolved: the production browser exposed click-capture microtasks running before the target load-more listener. Shared navigation feedback now decides in the bubbling phase and never owns a canceled/script-handled click. Pagination uses its own closure lock rather than interpreting another component's aria-busy flag. Test actual shared feedback plus actual loadMore with a microtask checkpoint between capture and target, then completion/repeat activation. Asset revision84 refreshes both changed modules and entry; no database change.
