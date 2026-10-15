@@ -227,3 +227,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - 2026-10-14 · visitor release guards · #107: preserve English titles across refreshed pins, trip labels and assistant sources; keep mobile forecast rows at their natural height; leave missing rain probability unknown; exclude multiday spans without daily hours from timed plans; reserve each provider call atomically across chat and translations with separate dev/prod allocations. Asset76. Both databases passed rollback guard tests and23-function/ACL parity; production publications preserved.
 
 - 2026-10-14 · #107 UI verification: compact173px default weather card with optional hourly forecast, always-visible official alerts, idempotent refresh, active-sky-only animations and reduced-motion fallback; desktop map accessibility moved away from zoom/expansion, trip widget clear of the sidebar header. Asset77.
+
+- #120: map place distances now require an explicit visitor origin; camera ordering stays internal. Applied and checked in both environments.
