@@ -1,7 +1,7 @@
 // "Interested" and "Going" marks: a tap updates both buttons and the counts in place; without
 // scripts the form posts and the page reloads with the same result.
-import { postForm } from '../net/http.js?v=75';
-import { haptic } from './haptics.js?v=75';
+import { postForm } from '../net/http.js?v=79';
+import { haptic } from './haptics.js?v=79';
 
 /** The summary line for counts, in the page's own singular and plural wording. */
 export function summary(line, going, interested) {

@@ -1,6 +1,7 @@
 /** @Services.Plans.Outings — plans near a visitor, a shared plan, and its road route */
 module Services.Plans
 
+import Std.Math.Float as Float
 import Std.Json as Json
 import Api.Plans as PlansApi
 import Domain.Plan as Plan
@@ -54,4 +55,11 @@ export fn routeOptions(runtime: &Runtime.Runtime, slugs: &Array[Str]) -> Result[
 /// The island's next 48 hours of weather by town.
 export fn weather(runtime: &Runtime.Runtime) -> Result[Json.Json, Problem.Problem] {
   PlansApi.weather(&runtime.gateway)
+}
+
+/// The ways from where the visitor is to an activity. The position is rounded to about 110 m before it
+/// leaves the server, and only a well-formed activity address in Puerto Rico is asked about.
+export fn approach(runtime: &Runtime.Runtime, lat: Float64, lng: Float64, slug: Str) -> Result[Json.Json, Problem.Problem] {
+  if lat < 17.5 || lat > 18.7 || lng < -67.5 || lng > -65.1 || Plan.sharedSlugs(slug) != [slug] { return Err(Problem.Refused("invalid_approach")) }
+  PlansApi.approach(&runtime.gateway, Float.round(lat * 1000.0) / 1000.0, Float.round(lng * 1000.0) / 1000.0, slug)
 }

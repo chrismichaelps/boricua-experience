@@ -37,6 +37,11 @@ export fn weather(gateway: &Gateway.Gateway) -> Result[Json.Json, Problem.Proble
   Gateway.call(gateway, Supabase.ISLAND_WEATHER, &[], None, Gateway.Read)
 }
 
+/// The ways from a rounded position to an activity; working them out may write the route between junctions.
+export fn approach(gateway: &Gateway.Gateway, lat: Float64, lng: Float64, slug: Str) -> Result[Json.Json, Problem.Problem] {
+  Gateway.call(gateway, Supabase.APPROACH_OPTIONS, &[("p_lat", Gateway.fraction(Some(lat))), ("p_lng", Gateway.fraction(Some(lng))), ("p_slug", Gateway.text(slug))], None, Gateway.Write)
+}
+
 /// Confirms a trip stop for the member and answers what it unlocked; the position is not stored.
 export fn arrive(gateway: &Gateway.Gateway, arrival: &Plan.Arrival, locale: Str, token: Str) -> Result[Plan.Arrived, Problem.Problem] {
   Gateway.query(gateway, Supabase.RECORD_TRIP_ARRIVAL, &[

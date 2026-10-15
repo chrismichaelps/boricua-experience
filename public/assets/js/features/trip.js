@@ -2,15 +2,15 @@
 // as they move (turning with their heading in 3D), says how far the next stop is, and notices when they
 // reach a stop. The position stays in this browser: only when a signed-in member reaches a stop is it
 // sent, once, so the server can confirm the arrival; the server compares it and keeps nothing.
-import { create } from '../utils/dom.js?v=75';
-import { createMap } from './mapLoader.js?v=75';
-import { buildings3d } from './map3d.js?v=75';
-import { getJson, postJson } from '../net/http.js?v=75';
-import { legLines, pinsOf } from './plan.js?v=75';
-import { haptic } from './haptics.js?v=75';
-import { toast } from './toast.js?v=75';
-import { refreshSlot } from './weather.js?v=78';
-import { distanceText } from '../utils/units.js?v=75';
+import { create } from '../utils/dom.js?v=79';
+import { createMap } from './mapLoader.js?v=79';
+import { buildings3d } from './map3d.js?v=79';
+import { getJson, postJson } from '../net/http.js?v=79';
+import { legLines, pinsOf } from './plan.js?v=79';
+import { haptic } from './haptics.js?v=79';
+import { toast } from './toast.js?v=79';
+import { refreshSlot } from './weather.js?v=79';
+import { distanceText } from '../utils/units.js?v=79';
 
 // Public activity points are snapped to a grid of about 550 m, so a stop counts as reached within
 // ARRIVE_M of its public point; the server then checks the exact place.
@@ -193,13 +193,22 @@ export function trip(page) {
 
   const settled = (stop) => progress.done.includes(stop.slug) || progress.skipped.includes(stop.slug);
   const next = () => stops.find((stop) => !settled(stop));
-  // The way chosen to reach a stop, when its leg has options.
-  const wayTo = (stop) => (stop.order > 1 ? chosenOption(legOptions.get(stop.order - 1), progress.routes[stop.order - 1]) : null);
+  // The ways to a stop: from where the visitor is when they are known (the approach), else from the
+  // previous stop; and the key their choice is remembered by.
+  let approach = { slug: '', options: [], at: 0, busy: false };
+  const waysFor = (stop) => {
+    if (!stop) return [];
+    if (approach.slug === stop.slug && approach.options.length) return approach.options;
+    return stop.order > 1 ? legOptions.get(stop.order - 1) || [] : [];
+  };
+  const routeKey = (stop) => (approach.slug === stop.slug && approach.options.length ? 'a:' + stop.slug : String(stop.order - 1));
+  // The way chosen to reach a stop, when it has options.
+  const wayTo = (stop) => (stop ? chosenOption(waysFor(stop), progress.routes[routeKey(stop)]) : null);
 
   // The choices for the leg to the next stop, when there is more than one way.
   const paintRoutes = () => {
     const upcoming = next();
-    const options = upcoming && upcoming.order > 1 ? legOptions.get(upcoming.order - 1) || [] : [];
+    const options = waysFor(upcoming);
     routeBox.hidden = options.length < 2;
     if (options.length < 2) { routeChoices.replaceChildren(); return; }
     const picked = wayTo(upcoming);
@@ -207,7 +216,7 @@ export function trip(page) {
       const label = create('label', { class: 'trip-route' });
       const input = create('input', { type: 'radio', name: 'trip-route', value: option.kind });
       input.checked = option === picked;
-      input.addEventListener('change', () => choose(upcoming.order - 1, option.kind));
+      input.addEventListener('change', () => choose(routeKey(upcoming), option.kind));
       const detail = create('span', { class: 'trip-route-detail' }, figuresText(option));
       details.set(option, detail);
       label.append(input, create('span', { class: 'trip-route-name' }, text('option-' + option.kind.replace('_', '-'))), detail);
@@ -236,6 +245,15 @@ export function trip(page) {
     if (!map?.getSource('trip-road')) return;
     const layers = routeLayers(legOptions, progress.routes);
     const lines = legLines(pinsOf(page), layers.chosen);
+    // The way from where the visitor is to the next stop is drawn like the others.
+    const upcoming = next();
+    if (upcoming && approach.slug === upcoming.slug && approach.options.length) {
+      const key = 'a:' + upcoming.slug, pick = chosenOption(approach.options, progress.routes[key]);
+      if (pick?.coordinates?.length > 1) lines.road.geometry.coordinates.push(pick.coordinates);
+      for (const option of approach.options) {
+        if (option !== pick && option.kind !== 'walk' && option.coordinates?.length > 1) layers.others.features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: option.coordinates }, properties: { order: key, kind: option.kind } });
+      }
+    }
     routeLines = [...lines.road.geometry.coordinates, ...lines.straight.geometry.coordinates];
     map.getSource('trip-road').setData(lines.road);
     map.getSource('trip-straight').setData(lines.straight);
@@ -323,9 +341,32 @@ export function trip(page) {
     const arrival = new Intl.DateTimeFormat(document.documentElement.lang.startsWith('en') ? 'en-US' : 'es-PR', { timeZone: 'America/Puerto_Rico', hour: 'numeric', minute: '2-digit' }).format(new Date(Date.now() + live.seconds * 1000));
     let message = say(text('distance'), { distance: distanceText(way ? live.meters : metres), minutes: String(minutes) }) + ' · ' + say(text('eta'), { time: arrival }) + (way?.highways ? ' · ' + text('tolls') : '');
     // The route starts at the first stop, so being away from it only matters once the trip is under way.
-    const underway = progress.done.length + progress.skipped.length > 0;
+    const underway = progress.done.length + progress.skipped.length > 0 || (approach.slug === upcoming.slug && approach.options.length > 0);
     if (underway && routeLines.length && distanceToLines(here, routeLines) > OFF_ROUTE_M) message += ' ' + text('off-route');
     setStatus(message);
+  };
+
+  // Asks for the ways from here to the next stop: when the trip starts, when the next stop changes, and
+  // again only after two minutes away from the chosen way. The position is rounded to about 110 m and
+  // the answer is shared at the edge by that rounded position; a busy answer keeps the straight estimate.
+  const APPROACH_EVERY_MS = 120000;
+  let asking = false;
+  const askApproach = async () => {
+    const upcoming = next();
+    if (!upcoming || !here || asking || upcoming.ferry) return;
+    const way = wayTo(upcoming);
+    const fresh = approach.slug === upcoming.slug && Date.now() - approach.at < APPROACH_EVERY_MS;
+    const onWay = approach.slug === upcoming.slug && approach.options.length > 0 && along(here, way?.coordinates || []).offset < OFF_ROUTE_M;
+    if (onWay || fresh) return;
+    asking = true;
+    try {
+      const found = await getJson(`/api/plan/approach?lat=${here.lat.toFixed(3)}&lng=${here.lng.toFixed(3)}&e=${encodeURIComponent(upcoming.slug)}`);
+      approach = { slug: upcoming.slug, options: Array.isArray(found?.options) ? found.options : [], at: Date.now(), busy: Boolean(found?.busy) };
+      measuredPace = 0; paceSamples = 0;
+      drawRoutes(); paintRoutes(); paint(); guide();
+    } catch {
+      approach = { ...approach, slug: upcoming.slug, at: Date.now() };
+    } finally { asking = false; }
   };
 
   const moved = (position) => {
@@ -363,6 +404,7 @@ export function trip(page) {
       else if (progress.done.includes(stop.slug) && distance(here, stop) <= ARRIVE_M * 1.5) confirm(stop, here);
     }
     guide();
+    askApproach();
   };
 
   const lost = (error) => {
@@ -454,7 +496,7 @@ export function trip(page) {
       map.addLayer({ id: 'trip-straight', type: 'line', source: 'trip-straight', paint: { 'line-color': '#1878ec', 'line-width': 3, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.7 } });
       map.on('click', 'trip-alts', (event) => {
         const picked = event.features?.[0]?.properties;
-        if (picked) choose(Number(picked.order), picked.kind);
+        if (picked) choose(String(picked.order), picked.kind);
       });
       map.on('mouseenter', 'trip-alts', () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', 'trip-alts', () => { map.getCanvas().style.cursor = ''; });

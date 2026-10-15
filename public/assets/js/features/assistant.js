@@ -1,7 +1,7 @@
-import { assistantMaps } from './assistantMaps.js?v=75';
-import { renderMarkdown } from './assistantMarkdown.js?v=75';
-import { followUps } from './assistantNext.js?v=75';
-import { requestLocation } from '../utils/locate.js?v=75';
+import { assistantMaps } from './assistantMaps.js?v=79';
+import { renderMarkdown } from './assistantMarkdown.js?v=79';
+import { followUps } from './assistantNext.js?v=79';
+import { requestLocation } from '../utils/locate.js?v=79';
 
 export async function consumeChat(stream, receive) {
   const reader = stream.getReader(), decoder = new TextDecoder();

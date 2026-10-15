@@ -68,3 +68,8 @@ road junctions, on the part of the network around them (about half a second), an
 per pair and a ceiling of 40 pairs a minute across the site keep a crowd from routing at once, and the
 answer is cached for five minutes at the edge. Options follow their legs in the nightly clean-up. No
 public transport is offered: there is no timetable data to plan it honestly.
+
+`approach_options(lat, lng, slug)` (private migration `20261014233000_approach_routes`) answers the same
+choices from the junction nearest a rounded position to an activity: routed once per junction pair on the
+part of the network around it (about 0.4–2.6 s, then about 80 ms), kept two days, at most 10 new routings
+a minute across the site ("busy" beyond), never across water and never beyond 60 km.
