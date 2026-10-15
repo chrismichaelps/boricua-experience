@@ -137,3 +137,6 @@ Provider control tags are quarantined across chunk boundaries and retried within
 Resolved Grill Log: entry76 imports Trip76 and Weather76; Trip76 also imports Weather76. Unchanged location and map modules retain their single existing identities. Worker76 and document assets advance together, preserving private HTML network-only.
 
 Resolved final asset contract · #107: compact forecast/disclosure and desktop map accessibility use entry/styles/worker77; changed Weather77 and Trip77 share one import identity. No private test scenario enters the build.
+
+## Place pin release Grill Log · #120
+Resolved: advance only the changed module import chain, static stylesheet and worker shell to81. The offline shell never caches private pages. Place pins have a distinct route and no date/free label; tests execute actual projection and marker selection.

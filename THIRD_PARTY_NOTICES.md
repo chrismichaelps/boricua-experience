@@ -26,3 +26,6 @@ El Morro flags, Old San Juan — Mario Roberto Durán Ortiz (Mariordo), 21 June 
 /private/tmp/boricua-morro-original.jpg: 909a75ff25f86f108011a33cd41bf588b974a7a4749a6ed83ba866ef417becfd
 public/assets/img/el-morro-flags-photo-1300.webp: c10d7aa57854ddceba81ed08417b07a1444588c727bb904bc549a49a372692b1
 public/assets/img/el-morro-flags-photo.webp: eb1f418302dbd819e31e9ab15c45ed6d601c7350f06d7feef735e71ab64b8c2b
+
+### Permanent-place location data
+The Walmart Toa Baja building coordinate is derived from [OpenStreetMap way515329455](https://www.openstreetmap.org/way/515329455), © OpenStreetMap contributors, licensed under [ODbL1.0](https://www.openstreetmap.org/copyright). Its public listing retains attribution. Store facts are checked against the [official Walmart Puerto Rico locator](https://www.walmartpr.com/tiendas); McDonald’s branches use its [official Puerto Rico locator](https://www.mcdonalds.com.pr/restaurantes). No third-party business photographs or logos are reproduced. The category icon geometry uses the existing pinned Lucide ISC licence described above.

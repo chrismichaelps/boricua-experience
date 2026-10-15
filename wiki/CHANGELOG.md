@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-15 · [[src/Database/Places]] · Shopping place catalogue/profile and fast-food cuisine; bounded permanent-place map queries, category-icon pins, distinct place/event identity, nearby-aware search rails and bilingual result counts. Schema applied to both environments; real source data remains private and production-only. Asset81 · issue #120.
+
 - 2026-10-15 · release 0.10.3 · assistant: tool or reasoning markup under any name (such as <dots_function_call> or <|tool_call|>) is kept from the page and answered from the verified results, and answers follow the language of the page the visitor reads · issue #117.
 
 - 2026-10-15 · release 0.10.2 · home layout: categories, "plan your day" and quick filters sit together under the search on one shared edge (16 px apart instead of a full section gap each), the section rhythm is 56 px on desktop and 40 px on phones instead of 72 and 48, and rows with a single activity are left out instead of leaving a near-empty band; asset version 80 · issue #114.

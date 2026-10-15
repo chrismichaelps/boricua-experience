@@ -1,26 +1,28 @@
 import { mapSurface } from './mapSurface.js?v=80';
 import { clusterPins } from './mapClusters.js?v=80';
 import { ENDPOINTS, LIVE, MAP } from '../constants/config.js?v=80';
-import { message } from '../constants/messages.js?v=80';
+import { message } from '../constants/messages.js?v=81';
 import { getJson } from '../net/http.js?v=80';
 import { $, $$, create } from '../utils/dom.js?v=80';
 import { snapArea, visiblePins, viewportBounds } from './mapViewport.js?v=80';
 import { toast } from './toast.js?v=80';
 import { createMap } from './mapLoader.js?v=80';
 import { buildings3d } from './map3d.js?v=80';
-import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=80';
+import { accuracyCircle, meMarker, priceMarker, clusterMarker } from './markers.js?v=81';
 import * as live from './live.js?v=80';
 import { localizeMoment } from './localTime.js?v=80';
 import { distanceM } from '../utils/geo.js?v=80';
 
+function pinKey(pin) { return pin.kind === 'place' ? `place:${pin.slug}` : pin.slug; }
+
 function sheetItem(pin) {
-  const item = create('div', { class: 'sheet-item', 'data-slug': pin.slug });
-  const link = create('a', { class: 'card-link', href: `/e/${pin.slug}` });
+  const item = create('div', { class: 'sheet-item', 'data-slug': pinKey(pin) });
+  const link = create('a', { class: 'card-link', href: `${pin.kind === 'place' ? '/lugar/' : '/e/'}${encodeURIComponent(pin.slug)}` });
   const media = create('div', { class: 'card-media' });
   media.append(create('img', { src: pin.cover, alt: '', loading: 'lazy' }), create('span', { class: 'pill pill-light card-price' }, pin.price));
   const body = create('div', { class: 'card-body' });
-  const when = create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends ?? '' }, pin.when);
-  localizeMoment(when);
+  const when = pin.kind === 'place' ? create('span', {}, pin.when) : create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends ?? '' }, pin.when);
+  if (pin.kind !== 'place') localizeMoment(when);
   const date = create('p', { class: 'card-when' });
   date.append(when);
   body.append(date, create('h3', { class: 'card-title' }, pin.title), create('p', { class: 'card-place' }, pin.place));
@@ -84,7 +86,7 @@ export async function explorer(page) {
     selectedSlug = slug;
     for (const entry of markers.values()) entry.element.classList.toggle('is-active', entry.slugs.includes(slug));
     for (const item of $$('.sheet-item', list)) item.classList.toggle('is-active', item.dataset.slug === slug);
-    const pin = pins.find((candidate) => candidate.slug === slug);
+    const pin = pins.find((candidate) => pinKey(candidate) === slug);
     if (!pin) return;
     if (fromList && !restoringFocus) {
       detachFollow();
@@ -109,12 +111,12 @@ export async function explorer(page) {
         for (const member of group) bounds.extend([member.lng, member.lat]);
         fitTo(bounds, Math.max(Math.min(map.getZoom() + 2, MAP.clusterMaxZoom), map.getZoom() + 1), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 350);
       };
-      const entry = group.length === 1 ? priceMarker(maplibregl, pin, (slug) => select(slug)) : clusterMarker(maplibregl, group, label, expand);
-      entry.slugs = group.map((member) => member.slug);
+      const entry = group.length === 1 ? priceMarker(maplibregl, pin, () => select(pinKey(pin))) : clusterMarker(maplibregl, group, label, expand);
+      entry.slugs = group.map((member) => pinKey(member));
       entry.marker.addTo(map);
       entry.element.setAttribute('aria-label', label);
       entry.element.classList.toggle('is-active', entry.slugs.includes(selectedSlug));
-      return [pin.slug, entry];
+      return [pinKey(pin), entry];
     }));
     if (focused.length) {
       const next = [...markers.values()].find((entry) => entry.slugs.some((slug) => focused.includes(slug)));
@@ -161,7 +163,7 @@ export async function explorer(page) {
     query.set('hl', (document.documentElement.lang || 'es').slice(0, 2));
     query.delete('lat'); query.delete('lng'); query.delete('radius');
     query.delete('after');
-    query.delete('near');
+    query.delete('near'); query.delete('cerca'); query.delete('radio');
     const key = query.toString();
     const cached = queryCache.get(key);
     if (cached && Date.now() - cached.at < MAP.viewportCacheMs) {

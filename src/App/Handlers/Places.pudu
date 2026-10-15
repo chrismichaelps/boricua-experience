@@ -3,6 +3,7 @@ module App.Handlers.Places
 
 import App.Messages as Messages
 import Domain.Place as Place
+import Domain.Search as Search
 import PuduLangMediator.Context as Context
 import PuduLangMediator as Messaging
 import PuduLangMediator.Registration as Registration
@@ -17,7 +18,8 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
   let held = *runtime
   [
     Registration.handler(&kinds.place, |asked: Messages.Visit[Str], _context: Context.Context| Messaging.lift(Places.detail(&held, asked.input, asked.session))),
-    Registration.handler(&kinds.placesListed, |asked: (Str, Str), _context: Context.Context| Messaging.lift(Places.listed(&held, asked[0], asked[1]))),
+    Registration.handler(&kinds.placesListed, |asked: Search.Filters, _context: Context.Context| Messaging.lift(Places.listed(&held, &asked))),
+    Registration.handler(&kinds.placesMapped, |asked: Search.Filters, _context: Context.Context| Messaging.lift(Places.mapped(&held, &asked))),
     Registration.handler(&kinds.publishPlace, |asked: Messages.Signed[Place.Draft], _context: Context.Context| Messaging.lift(Places.publish(&held, &asked.input, &asked.session))),
     Registration.handler(&kinds.editablePlace, |asked: Messages.Signed[Str], _context: Context.Context| Messaging.lift(Places.editable(&held, asked.input, &asked.session))),
     Registration.handler(&kinds.updatePlace, |asked: Messages.Signed[Messages.PlaceEdit], _context: Context.Context| Messaging.lift(Places.update(&held, asked.input.placeId, &asked.input.draft, &asked.session))),

@@ -48,3 +48,6 @@ Resolved: Publishing regression tests exercise first-fix success, CoreLocation f
 
 ## Map lifecycle regression Grill Log
 Resolved: bounded acquisition and writes, immediate stop plus late-update cleanup, stop/restart barrier, separate control subscriptions, no automatic sharing restoration and map-only assistant omission.
+
+## Place pin release Grill Log · #120
+Resolved: advance only the changed module import chain, static stylesheet and worker shell to81. The offline shell never caches private pages. Place pins have a distinct route and no date/free label; tests execute actual projection and marker selection.

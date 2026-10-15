@@ -133,3 +133,6 @@ Provider control tags are quarantined across chunk boundaries and retried within
 Resolved: trip panel implicit rows use max-content so a forecast card cannot collapse into a strip under the mobile sheet height limit. The panel keeps independent scrolling and map framing; hourly rows remain readable on desktop. CSS/asset revision76. Real390px/1280px checks required.
 
 Resolved final asset contract · #107: compact forecast/disclosure and desktop map accessibility use entry/styles/worker77; changed Weather77 and Trip77 share one import identity. No private test scenario enters the build.
+
+## Place pin release Grill Log · #120
+Resolved: advance only the changed module import chain, static stylesheet and worker shell to81. The offline shell never caches private pages. Place pins have a distinct route and no date/free label; tests execute actual projection and marker selection.

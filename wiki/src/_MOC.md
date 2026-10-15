@@ -359,3 +359,6 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/Web/Handlers/Plans]] — plans, routes, weather and arrival boundaries.
 - [[src/Test/Achievements]] — board and safe-signal regressions.
+
+- [[src/Public/PlacePinAssets]]
+- [[src/Test/PlacePins]]

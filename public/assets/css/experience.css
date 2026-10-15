@@ -643,3 +643,5 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .event-english p { margin: 0; }
 .event-english-label { font-size: 12px; font-weight: 700; color: var(--color-graphite); text-transform: uppercase; letter-spacing: .3px; }
 .event-english-title { font-weight: 700; }
+
+.place-marker{display:grid;place-items:center;min-width:44px;min-height:44px;padding:10px;border-radius:50%;}.place-marker img{display:block;width:20px;height:20px}.place-marker.is-active img{filter:brightness(0) invert(1)}

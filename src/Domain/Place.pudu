@@ -30,6 +30,9 @@ export type Listing = {
 /** @Domain.Place.Results — one page of place cards and the cursor of the next */
 export type Results = { items: Array[Listing], next: Option[Str] } derives Json.Decode
 
+/** @Domain.Place.MapResults — bounded visible places with an explicit truncation flag */
+export type MapResults = { items: Array[Listing], limited: Bool } derives Json.Decode
+
 /** @Domain.Place.Owner — who manages a place */
 export type Owner = { id: Str, @json("display_name") displayName: Str, @json("avatar_url") avatarUrl: Option[Str] } derives Json.Decode
 

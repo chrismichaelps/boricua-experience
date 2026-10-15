@@ -61,3 +61,6 @@ Resolved: grid, speed-zoom bands, 3D pitch and building zoom, and the 3D prefere
 
 ## Release0.5.0 Grill Log
 Resolved: advance the linked local asset/cache graph from56to57together for the activity-cover release; no policy versions or third-party vendor bundles change.
+
+## Place pin release Grill Log · #120
+Resolved: advance only the changed module import chain, static stylesheet and worker shell to81. The offline shell never caches private pages. Place pins have a distinct route and no date/free label; tests execute actual projection and marker selection.
