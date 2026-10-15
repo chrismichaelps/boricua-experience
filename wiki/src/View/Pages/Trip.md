@@ -24,6 +24,14 @@ drew. The page and its script follow the plan live.
   own pace blended 60/40 with the pace the visitor is actually driving on it, measured from their own
   fixes (bounded to half and two and a half times the route pace). The chips for every way update the
   same way. All of it runs on the phone: no request per position and nothing stored.
+- **From where you are**: once the trip has a position, the way to the next stop starts at the visitor,
+  not at the previous stop: the same choices (fastest, another real route, no expressways, walking when
+  close) from the road junction nearest the visitor ([[src/Database/Plans]], `approach_options`). It is
+  asked when the trip starts, when the next stop changes, and again only after two minutes away from the
+  chosen way; the position is rounded to about 110 m and the answer is cached at the edge by it. Under
+  load (more than 10 new routings a minute across the site) the trip keeps its straight-line estimate and
+  the hand-off to the phone's maps app. Single-stop plans, the most common in production, now show a road
+  route and its choices.
 - **Arrival**: a stop counts as reached within 450 m of its public point (public points are snapped to a
   grid of about 550 m); "I'm here" and "Skip stop" cover poor reception. For a signed-in member the
   position is sent once per stop so the server can confirm it, and is never stored; confirmed stops and

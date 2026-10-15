@@ -34,6 +34,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.PLAN, Serve.page(app, |visitor: Context.Visitor| page(&held, &visitor))),
     Route.get(Routes.PLAN_CALENDAR, Serve.page(app, |visitor: Context.Visitor| calendar(&held, &visitor))),
     Route.get(Routes.API_PLAN_ROUTE, Serve.api(app, |visitor: Context.Visitor| route(&held, &visitor))),
+    Route.get(Routes.API_PLAN_APPROACH, Serve.api(app, |visitor: Context.Visitor| approach(&held, &visitor))),
     Route.get(Routes.API_PLAN_ROUTES, Serve.api(app, |visitor: Context.Visitor| routeOptions(&held, &visitor))),
     Route.get(Routes.API_WEATHER, Serve.api(app, |visitor: Context.Visitor| weather(&held, &visitor))),
     Route.get(Routes.PLAN_TRIP, Serve.page(app, |visitor: Context.Visitor| trip(&held, &visitor))),
@@ -166,5 +167,17 @@ fn weather(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   match Serve.ask(app, &app.kinds.weather, ()) {
     case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_WEATHER))}
     case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// The ways from a rounded position to the next stop. Cached at the edge by that rounded position, so
+/// visitors starting from the same place share one answer.
+fn approach(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  match (Geo.parseDegrees(Serve.query(visitor, "lat")), Geo.parseDegrees(Serve.query(visitor, "lng"))) {
+    case (Some(lat), Some(lng)) => match Serve.ask(app, &app.kinds.planApproach, (lat, lng, Serve.query(visitor, "e"))) {
+      case Ok(found) => Http.Response{..Respond.json(200, &found), headers: Respond.json(200, &found).headers.push(("cache-control", HttpConstants.CACHE_ROUTE_OPTIONS))}
+      case Err(problem) => Respond.problem(app, visitor, &problem)
+    }
+    case _ => Respond.problem(app, visitor, &Problem.Refused("invalid_approach"))
   }
 }
