@@ -9,7 +9,7 @@ Card contract: smaller photos and natural-height copy, no nested scrolling or hi
 
 Forum contract: public reads and active-member contributions; database-owned content and town/category catalogs, bounded keyset pagination/search, original topics/replies, editing/soft deletion, reporting/admin moderation, posting limits serialized per user. No copied discussions or artificial community seed in production. No automatic emails. Account erasure must anonymize or remove content per existing policy; no private email/location exposure. Both databases receive reviewed migrations. Each application module gets a complete mirror and resolved Grill before implementation; separate database-contract and application PRs stay reviewable. Independent review required.
 
-Next action: land the independently reviewed forum slices, complete responsive browser QA and promote the bundled release.
+Original delivery sequence (completed): land the independently reviewed forum slices, complete responsive browser QA and promote the bundled release.
 
 #136 validation:390px discovery cards measure171×269px with natural-height visible copy;1280px search has four285px columns, home rail cards286.5×328px and no page overflow. Map retains94px thumbnail columns; organizer cards retain the pre-existing160px thumbnail/128px desktop copy tracks and full-title overflow behavior. Independent review caught and corrected an accidental organizer-rule removal before merge.
 
