@@ -27,3 +27,6 @@ Resolved dynamic-card refinement #124: one delegated keyboard listener covers in
 
 ## Pagination feedback ordering · #124
 Resolved: the production browser exposed click-capture microtasks running before the target load-more listener. Shared navigation feedback now decides in the bubbling phase and never owns a canceled/script-handled click. Pagination uses its own closure lock rather than interpreting another component's aria-busy flag. Test actual shared feedback plus actual loadMore with a microtask checkpoint between capture and target, then completion/repeat activation. Asset revision84 refreshes both changed modules and entry; no database change.
+
+## Compact discovery supersession · #136
+Resolved: discovery grids and rails now use smaller photos and natural-height fully visible copy, superseding #124’s13rem internally scrolling track. Delegated keyboard overflow support remains available for specialized organizer contexts; map cards keep their existing composition. See [[handoffs/community-forum]].

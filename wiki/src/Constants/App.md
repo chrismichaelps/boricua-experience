@@ -157,3 +157,6 @@ Resolved: browser screenshot bytes must be converted to true PNG before storing 
 
 ## Place discovery Grill Log · #132
 Resolved: Asset version86 invalidates changed place composition and stylesheet.
+
+## Compact discovery · #136
+Resolved: asset87 refreshes the changed card stylesheet; policy versions remain unchanged.

@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-16 · compact discovery cards · natural-height visible copy replaces internally scrolling13rem panels; two phone/three tablet/four wide grid columns. Organizer and map geometry preserved;320/390/1280px browser checks, profile/home/search/activity/map and worker regressions pass. Asset87 · issue #136.
+
 - 2026-10-15 · release0.12.0 · permanent-place photo galleries, recent review previews, full-width reviews and hidden orphan review protection; both database migrations applied, asset86. Feature PR #133.
 
 - 2026-10-15 · [[handoffs/place-discovery]] · original place photo mosaic and accessible viewer, recent published-review rail across all ratings, full-width reviews, bilingual navigation and labeled no-photo state. Bounded latest-six database projection and hidden orphan review guard applied to both environments. Real licensed Castillo Serrallés photograph with public attribution; asset86 · issue #132.
