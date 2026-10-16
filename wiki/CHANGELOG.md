@@ -250,3 +250,6 @@ Bounded public question/reply reads and full-text search; ownership, moderation,
 #137 presentation: compact discussion rows, original responsive board, native composers, threaded reply pages and private moderation UI; no fake images or discussions. Held-parent actions and draft fallback match database visibility.
 
 #137 integration: bilingual community navigation, guarded routes, public board sitemap, factual forum privacy disclosures and asset/cache88. Full gate19suites/696assertions plus browser harnesses; independent review and real browser contribution/moderation/pagination checks pass.
+
+## v0.13.0
+Promote reviewed compact discovery cards (#138) and original bilingual community forum (#139–141). Matching forum migrations are applied to both databases; production discussions remain empty. Validation:19suites/696assertions plus browser harnesses, independent review, controlled contribution/moderation/paging flows at desktop and phone widths. Deployment verification pending.
