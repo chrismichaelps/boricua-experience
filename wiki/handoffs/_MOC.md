@@ -26,3 +26,5 @@ tags: [moc, handoff]
 - [[handoffs/discovery-production]] — seven production discovery corrections and release evidence.
 
 - [[handoffs/place-discovery]] — photo mosaic and genuine visitor reviews.
+
+- [[handoffs/community-forum]] — compact discovery cards and a moderated public forum.

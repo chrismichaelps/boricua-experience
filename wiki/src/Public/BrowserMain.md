@@ -156,3 +156,6 @@ Resolved: the production browser exposed click-capture microtasks running before
 
 ## Place discovery Grill Log · #132
 Resolved: Register photo-gallery progressive enhancement. Existing listing carousel remains unchanged. Module loads only when a gallery exists.
+
+## Compact discovery supersession · #136
+Resolved: discovery grids and rails now use smaller photos and natural-height fully visible copy, superseding #124’s13rem internally scrolling track. Delegated keyboard overflow support remains available for specialized organizer contexts; map cards keep their existing composition. See [[handoffs/community-forum]].
