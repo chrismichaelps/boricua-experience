@@ -382,3 +382,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/View/Components/Forum]]
 - [[src/View/Pages/Forum]]
 - [[src/Public/ForumStyles]]
+- [[src/I18n/EnForum]] · [[src/I18n/EsForum]]
+- [[src/Web/Handlers/Forum]] · [[src/Test/Forum]]

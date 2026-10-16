@@ -160,3 +160,7 @@ Resolved: Asset version86 invalidates changed place composition and stylesheet.
 
 ## Compact discovery · #136
 Resolved: asset87 refreshes the changed card stylesheet; policy versions remain unchanged.
+
+
+## Forum navigation Grill Log · #137
+Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.

@@ -54,3 +54,7 @@ MEDIUM: callers name a use case; validation, calls, and composition stay inside.
 ## Referenced by
 
 [[src/_MOC]]
+
+
+## Community discovery Grill Log · #137
+Resolved: include the public forum index in the sitemap. Thread links are discoverable from keyset board pages; composer, held content and moderation remain noindex. No arbitrary private thread enumeration.
