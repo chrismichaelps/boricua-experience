@@ -6,6 +6,7 @@ import App.Handlers.Achievements as AchievementHandlers
 import App.Handlers.Admin as AdminHandlers
 import App.Handlers.Discover as DiscoverHandlers
 import App.Handlers.Events as EventHandlers
+import App.Handlers.Forum as ForumHandlers
 import App.Handlers.Identity as IdentityHandlers
 import App.Handlers.Location as LocationHandlers
 import App.Handlers.Participation as ParticipationHandlers
@@ -29,6 +30,7 @@ export fn assemble(runtime: &Runtime.Runtime, logs: &Logging.Logs) -> Result[App
     .concat(DiscoverHandlers.registrations(&kinds, runtime))
     .concat(EventHandlers.registrations(&kinds, runtime))
     .concat(PlaceHandlers.registrations(&kinds, runtime))
+    .concat(ForumHandlers.registrations(&kinds, runtime))
     .concat(ParticipationHandlers.registrations(&kinds, runtime))
     .concat(LocationHandlers.registrations(&kinds, runtime))
     .concat(AccountHandlers.registrations(&kinds, runtime))

@@ -1,0 +1,27 @@
+/** @Services.Forum.Community — questions, replies and moderation */
+module Services.Forum
+
+import Std.Option as Option
+import Api.Forum as ForumApi
+import Domain.Forum as Forum
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Services.Runtime as Runtime
+import Validation.Forum as Rules
+
+/// A bounded topic search.
+export fn board(runtime: &Runtime.Runtime, filters: &Forum.Filters, session: Option[Session.Session]) -> Result[Forum.Board, Problem.Problem] {
+  if filters.query.length() > 120 || filters.after.length() > 200 { return Err(Problem.Invalid([Problem.FieldError{field: "q", key: "forum.query_length"}])) }
+  ForumApi.board(&runtime.gateway, filters, Option.map(session, |found: Session.Session| found.accessToken))
+}
+/// A question as the viewer may see it.
+export fn thread(runtime: &Runtime.Runtime, read: &Forum.Read, session: Option[Session.Session]) -> Result[Forum.Thread, Problem.Problem] {
+  ForumApi.thread(&runtime.gateway, read, Option.map(session, |found: Session.Session| found.accessToken))
+}
+/// A validated contribution or moderation operation.
+export fn write(runtime: &Runtime.Runtime, given: &Forum.Command, session: &Session.Session) -> Result[Forum.Written, Problem.Problem] {
+  let ready = Rules.check(given) ?
+  ForumApi.write(&runtime.gateway, &ready, session.accessToken)
+}
+/// Administrator-only reported targets.
+export fn moderation(runtime: &Runtime.Runtime, session: &Session.Session) -> Result[Array[Forum.Report], Problem.Problem] { ForumApi.moderation(&runtime.gateway, session.accessToken) }

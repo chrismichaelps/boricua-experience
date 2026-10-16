@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-16 · compact discovery cards · natural-height visible copy replaces internally scrolling13rem panels; two phone/three tablet/four wide grid columns. Organizer and map geometry preserved;320/390/1280px browser checks, profile/home/search/activity/map and worker regressions pass. Asset87 · issue #136.
+
 - 2026-10-15 · release0.12.0 · permanent-place photo galleries, recent review previews, full-width reviews and hidden orphan review protection; both database migrations applied, asset86. Feature PR #133.
 
 - 2026-10-15 · [[handoffs/place-discovery]] · original place photo mosaic and accessible viewer, recent published-review rail across all ratings, full-width reviews, bilingual navigation and labeled no-photo state. Bounded latest-six database projection and hidden orphan review guard applied to both environments. Real licensed Castillo Serrallés photograph with public attribution; asset86 · issue #132.
@@ -241,3 +243,13 @@ Organizer cover photographs for activities across all categories, trusted server
 - #124: store actual PNG bytes for the sharing image and validate its signature/IHDR dimensions; refresh social metadata to asset85.
 
 - 2026-10-15 · release0.11.3 · #124 production verification complete: build f58dd6b8ea38/asset85,44px map joystick, bounded complete discovery and real PNG sharing image.18suites/662assertions pass; both database environments match. Physical multitouch remains a stated testing limitation.
+
+## #137 · Original community discussions
+Bounded public question/reply reads and full-text search; ownership, moderation, report privacy and serialized posting budgets. Forum data included in personal exports across states; account cascades and paused export preserved. Matching reviewed migrations applied to both projects, with isolated development rollback and concurrent-write verification. No forum seed in production.
+
+#137 presentation: compact discussion rows, original responsive board, native composers, threaded reply pages and private moderation UI; no fake images or discussions. Held-parent actions and draft fallback match database visibility.
+
+#137 integration: bilingual community navigation, guarded routes, public board sitemap, factual forum privacy disclosures and asset/cache88. Full gate19suites/696assertions plus browser harnesses; independent review and real browser contribution/moderation/pagination checks pass.
+
+## v0.13.0
+Promote reviewed compact discovery cards (#138) and original bilingual community forum (#139–141). Matching forum migrations are applied to both databases; production discussions remain empty. Validation:19suites/696assertions plus browser harnesses, independent review, controlled contribution/moderation/paging flows at desktop and phone widths. Deployment verification pending.

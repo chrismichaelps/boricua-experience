@@ -63,3 +63,7 @@ Resolved: search matches home viewport height, minimum640px and rounded corners 
 
 ## Shared field focus and policy labels Grill Log · #39
 Resolved: search segments own one neutral2px inset focus indication; nested inputs/triggers do not add rings. Standard/picker fields use stronger neutral borders and a single focus stroke, with visible keyboard focus retained. Policy pages display effective dates without version numbers; internal agreement/version checks remain unchanged. Asset graph43 advances together.
+
+
+## Public community disclosure Grill Log · #137
+Resolved: clarify the existing content policy with observable forum behavior: stored topics/replies/catalog choices/timestamps/moderation/budget records; published discussions visible to guests and search engines; pause hides identity while retaining published text; soft removal hides stored contributions, account erasure cascades owned forum content and reports/actions. Reporter identities remain private. This is factual product disclosure, not a claim of legal compliance or a new email/consent dependency. Existing agreement controls and monthly policy versions remain intact.

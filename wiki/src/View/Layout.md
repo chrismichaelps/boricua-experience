@@ -120,3 +120,7 @@ Resolved: Omit the accessibility panel/launcher in MapView at server rendering, 
 
 ## Place discovery Grill Log · #132
 Resolved: Load a versioned place stylesheet; no change to page caching or authenticated controls.
+
+
+## Forum navigation Grill Log · #137
+Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.

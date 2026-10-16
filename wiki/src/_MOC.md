@@ -369,3 +369,20 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 
 - [[src/View/Components/PlaceGallery]] · [[src/Public/PlaceGallery]] · [[src/Public/PlaceStyles]]
+
+
+## Community discussions
+- [[src/Database/Forum]]
+- [[src/Constants/Forum]]
+- [[src/Domain/Forum]]
+- [[src/Api/Forum]]
+- [[src/Validation/Forum]]
+- [[src/Services/Forum]]
+- [[src/App/Handlers/Forum]]
+- [[src/View/Components/Forum]]
+- [[src/View/Pages/Forum]]
+- [[src/Public/ForumStyles]]
+- [[src/I18n/EnForum]] · [[src/I18n/EsForum]]
+- [[src/Web/Handlers/Forum]] · [[src/Test/Forum]]
+
+- [[src/Manifest]] — package and release version.

@@ -9,6 +9,7 @@ import Domain.Consent as Consent
 import Domain.Credentials as Credentials
 import Domain.Draft as Draft
 import Domain.Event as Event
+import Domain.Forum as Forum
 import Domain.Index as Index
 import Domain.Location as Location
 import Domain.Media as Media
@@ -114,6 +115,10 @@ export type Resolution = { reportId: Int, action: Str }
 
 /** @App.Messages.Kinds — every kind of request, made once and shared by the mediator and the routes */
 export type Kinds = {
+  forumBoard: Request.Kind[Visit[Forum.Filters], Forum.Board, Problem.Problem],
+  forumThread: Request.Kind[Visit[Forum.Read], Forum.Thread, Problem.Problem],
+  forumWrite: Request.Kind[Signed[Forum.Command], Forum.Written, Problem.Problem],
+  forumModeration: Request.Kind[Signed[()], Array[Forum.Report], Problem.Problem],
   assistant: Request.Kind[Signed[(Conversation.Input, Str)], Json.Json, Problem.Problem],
   assistantTool: Request.Kind[Signed[Conversation.Tool], Json.Json, Problem.Problem],
   home: Request.Kind[Visit[Place], Discovery.Home, Problem.Problem],
@@ -219,6 +224,10 @@ fn kind[Q, R](name: Str, tag: Str) -> Request.Kind[Q, R, Problem.Problem] { Requ
 /// Every kind, made once.
 export fn kinds() -> Kinds {
   Kinds {
+    forumBoard: kind("forum.board", READ),
+    forumThread: kind("forum.thread", READ),
+    forumWrite: kind("forum.write", COMMAND),
+    forumModeration: kind("forum.moderation", READ),
     assistant: kind("assistant.prepare", READ),
     assistantTool: kind("assistant.tool", READ),
     home: kind("discover.home", READ),

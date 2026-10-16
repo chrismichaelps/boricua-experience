@@ -60,3 +60,7 @@ Resolved: open search uses the first database-ordered featured scene, a local re
 
 ## Build label
 The footer bottom shows `Build.label` linking to `/version`.
+
+
+## Forum navigation Grill Log · #137
+Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.

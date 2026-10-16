@@ -95,3 +95,6 @@ Resolved: Home readiness skeleton matches the hero, filters and card rails, uses
 
 ## Skeleton shimmer
 `home.css` paints the home skeleton blocks with a shared gradient and animates its position while the page is pending.
+
+## Compact card sizing · #136
+Resolved: discovery grid and rails use compact, natural-height cards; image ratios and touch targets remain stable. Responsive browser checks must cover long titles, no horizontal page overflow and map/activity regression. This supersedes the fixed13rem discovery copy track from #124.

@@ -63,3 +63,7 @@ Resolved: Concatenate the dedicated menu reader routes beside the place routes; 
 
 ## Activity covers Grill Log · #82
 Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
+
+
+## Forum integration Grill Log · #137
+Resolved: register four typed forum messages and dedicated handlers/catalogues without changing existing contracts; preserve all session/CSRF wrappers and Spanish fallback. No HTTP below Web, no services in View.

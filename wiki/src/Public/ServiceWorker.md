@@ -150,3 +150,10 @@ Resolved: browser screenshot bytes must be converted to true PNG before storing 
 
 ## Place discovery Grill Log · #132
 Resolved: Anonymous shell version86 includes place.css and placeGallery.js; no place HTML or member reviews are persisted.
+
+## Compact discovery · #136
+Resolved: anonymous shell version87 invalidates discovery styles; no authenticated HTML caching.
+
+
+## Forum navigation Grill Log · #137
+Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.

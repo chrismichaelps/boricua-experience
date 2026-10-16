@@ -1,0 +1,21 @@
+/** @App.Handlers.Forum.Registrations — forum use cases */
+module App.Handlers.Forum
+
+import App.Messages as Messages
+import Domain.Forum as Forum
+import PuduLangMediator.Context as Context
+import PuduLangMediator as Messaging
+import PuduLangMediator.Registration as Registration
+import Services.Forum as Community
+import Services.Runtime as Runtime
+
+/// Forum handlers over the shared runtime.
+export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Array[Registration.Registration] {
+  let held = *runtime
+  [
+    Registration.handler(&kinds.forumBoard, |asked: Messages.Visit[Forum.Filters], _context: Context.Context| Messaging.lift(Community.board(&held, &asked.input, asked.session))),
+    Registration.handler(&kinds.forumThread, |asked: Messages.Visit[Forum.Read], _context: Context.Context| Messaging.lift(Community.thread(&held, &asked.input, asked.session))),
+    Registration.handler(&kinds.forumWrite, |asked: Messages.Signed[Forum.Command], _context: Context.Context| Messaging.lift(Community.write(&held, &asked.input, &asked.session))),
+    Registration.handler(&kinds.forumModeration, |asked: Messages.Signed[()], _context: Context.Context| Messaging.lift(Community.moderation(&held, &asked.session)))
+  ]
+}

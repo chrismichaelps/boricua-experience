@@ -667,12 +667,32 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 
 @media (max-width: 699px) { .map-page .map-controls > .map-button { flex: none; width: 44px; min-width: 44px; height: 44px; padding: 0; aspect-ratio: 1; } }
 
-:root { --card-copy-height: 13rem; }
+/* Discovery cards keep readable natural-height copy rather than nested scroll areas. */
 .rail-track .card, .card-grid > .card:not(.activity .card) { height: 100%; min-width: 0; }
-.rail-track .card-link, .card-grid > .card:not(.activity .card) > .card-link { height: 100%; grid-template-rows: auto var(--card-copy-height); align-content: start; }
-.rail-track .card-body, .card-grid > .card:not(.activity .card) .card-body, .activity .card-body { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: var(--card-copy-height); overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: stable; }
-.rail-track .card-body > *, .card-grid .card-body > * { flex-shrink: 0; }
-.rail-track .card-title, .card-grid .card-title { display: block; min-height: 2.6em; overflow: visible; -webkit-line-clamp: unset; overflow-wrap: anywhere; }
-.rail-track .card-meta, .card-grid .card-meta { margin-top: auto; }
+.rail-track .card-link, .card-grid > .card:not(.activity .card) > .card-link { height: 100%; grid-template-rows: auto 1fr; align-content: start; gap: 10px; }
+.rail-track .card-body, .card-grid > .card:not(.activity .card) .card-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; height: auto; overflow: visible; padding: 0 2px 8px; }
+.rail-track .card-title, .card-grid > .card:not(.activity .card) .card-title { display: block; font-size: 16px; line-height: 1.35; min-height: 2.7em; overflow: visible; -webkit-line-clamp: unset; overflow-wrap: anywhere; }
+.rail-track .card-media, .card-grid > .card:not(.activity .card) .card-media { aspect-ratio: 3 / 2; border-radius: 16px; }
+.rail-track .card-meta, .card-grid > .card:not(.activity .card) .card-meta { margin-top: auto; font-size: 12px; gap: 4px 8px; }
+.rail-track .card-when, .card-grid > .card:not(.activity .card) .card-when { font-size: 11px; }
+.rail-track .card-place, .card-grid > .card:not(.activity .card) .card-place { font-size: 13px; }
+.rail-track .card-place span, .card-grid > .card:not(.activity .card) .card-place span { white-space: normal; overflow: visible; }
+.app-home .rail-track .card { border: 0; border-radius: 0; box-shadow: none; overflow: visible; }
+.app-home .rail, .app-home .rail-track { gap: 18px; }
+.card-grid:not(.activity .card-grid) { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 24px 16px; }
+.rail-track { grid-auto-columns: minmax(210px, 64%); }
+@media (min-width: 700px) {
+  .card-grid:not(.activity .card-grid) { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 28px 20px; }
+  .rail-track { grid-auto-columns: 240px; }
+}
+@media (min-width: 1100px) { .card-grid:not(.activity .card-grid) { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+@media (max-width: 420px) {
+  .card-grid:not(.activity .card-grid) .card-media .pill { font-size: 10px; padding: 4px 7px; }
+  .card-grid:not(.activity .card-grid) .card-media .card-flag { max-width: calc(100% - 16px); right: 8px; top: auto; bottom: 8px; }
+}
+.activity .card-body { display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 13rem; overflow-y: auto; scrollbar-width: thin; scrollbar-gutter: stable; }
+.activity .card-body > * { flex-shrink: 0; }
+.activity .card-title { display: block; min-height: 2.6em; overflow: visible; -webkit-line-clamp: unset; overflow-wrap: anywhere; }
+.activity .card-meta { margin-top: auto; }
 .activity .card, .activity .card-link { height: 100%; }
 @media (min-width: 700px) { .activity .card-body { height: 128px; } }

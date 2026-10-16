@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
 import Constants.App as App
+import Constants.Forum as ForumRoutes
 import Constants.Routes as Routes
 import Domain.Build as Build
 import Domain.Locale as Locale
@@ -85,6 +86,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
     H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
     H.link().rel("stylesheet").href("/assets/css/place.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/forum.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
     H.link().rel("stylesheet").href("/assets/css/a11y.css" + version),
     H.link().rel("stylesheet").href("/assets/css/achievements.css" + version),
@@ -115,7 +117,8 @@ fn appBar(frame: &Frame.Frame, section: &Section) -> H.Node {
           navLink(Routes.HOME, "search", Frame.t(frame, "nav.explore"), *section == Explore, "topnav-link"),
           navLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), *section == MapView, "topnav-link"),
           navLink(Routes.CREATE, "plus", Frame.t(frame, "nav.create"), *section == Create, "topnav-link"),
-          navLink(Routes.ACTIVITY, "ticket", Frame.t(frame, "nav.activity"), *section == Activity, "topnav-link")
+          navLink(Routes.ACTIVITY, "ticket", Frame.t(frame, "nav.activity"), *section == Activity, "topnav-link"),
+          navLink(ForumRoutes.ROOT, "message", Frame.t(frame, "forum.name"), frame.path == ForumRoutes.ROOT || frame.path.startsWith(ForumRoutes.ROOT + "/"), "topnav-link")
         ]),
       H.div().class("appbar-actions").holding([
           languageSwitch(frame),
@@ -197,6 +200,7 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
           ]),
         H.div().class("menu-group").holding([
             menuLink(Routes.ACCOUNT, "settings", Frame.t(frame, "nav.account_settings"), H.nothing()),
+            menuLink(ForumRoutes.ROOT, "message", Frame.t(frame, "forum.name"), H.nothing()),
             languageRow(frame),
             accessibilityRow(frame)
           ]),
@@ -214,6 +218,7 @@ fn accountMenu(frame: &Frame.Frame) -> H.Node {
           ]),
         H.div().class("menu-group").holding([
             menuLink(Routes.MAP, "map", Frame.t(frame, "nav.map"), H.nothing()),
+            menuLink(ForumRoutes.ROOT, "message", Frame.t(frame, "forum.name"), H.nothing()),
             languageRow(frame),
             accessibilityRow(frame)
           ]),
