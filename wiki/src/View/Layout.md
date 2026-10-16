@@ -117,3 +117,6 @@ Resolved: Omit the accessibility panel/launcher in MapView at server rendering, 
 
 ## Build meta
 `<meta name="build" content="<hash>">` with the short form and the localized update notice texts for [[src/Public/BuildCheck]].
+
+## Place discovery Grill Log · #132
+Resolved: Load a versioned place stylesheet; no change to page caching or authenticated controls.

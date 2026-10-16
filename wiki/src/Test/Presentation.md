@@ -127,3 +127,7 @@ Resolved user refinement: a nullable map_icon_url comes from the database public
 
 ## Complete discovery pages · #124
 Resolved: render place Results with a continuation, assert independent escaped cursor/filter links, a real place-card grid and no false activity-empty notice. Test progressive double-click locking separately. Database rollback tests cover all sort paths beyond300rows and malformed/wrong-scope cursors.
+
+## Place discovery Grill Log · #132
+Resolved: Cover real vs absent photos, gallery dialog controls, escaped bilingual labels and content, highlight counts and negative ratings, independent pagination links and empty-state omission.
+Browser lifecycle harness: scripts/place-gallery-test.mjs executes the actual module with seven photographs and exercises next/previous wrapping, modified clicks/keys, native Escape ownership, close/pagehide/reopen, focus/overflow restoration, single-photo and unsupported-dialog fallbacks. Private browser fixtures never enter source, storage or production.

@@ -43,3 +43,6 @@ export fn draftOf, routes, chooser
 
 ## Menu reader Grill Log · #69
 Resolved: Load the optional database menu board for the parent page. On dependency failure retain the place without fabricating an empty menu; render a reader link only when supported or owner menus remain.
+
+## Place discovery Grill Log · #132
+Resolved: Empty degraded review boards default highlights to empty; public details remain readable when optional review/media requests fail.

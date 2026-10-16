@@ -29,6 +29,7 @@ export type ReviewBoard = {
   average: Option[Float64],
   breakdown: Json.Json,
   items: Array[Review],
+  @default("[]") highlights: Array[Review],
   next: Option[Str],
   mine: Option[Review],
   @json("can_review") canReview: Bool,

@@ -1,5 +1,9 @@
 # Changelog
 
+- 2026-10-15 · release0.12.0 · permanent-place photo galleries, recent review previews, full-width reviews and hidden orphan review protection; both database migrations applied, asset86. Feature PR #133.
+
+- 2026-10-15 · [[handoffs/place-discovery]] · original place photo mosaic and accessible viewer, recent published-review rail across all ratings, full-width reviews, bilingual navigation and labeled no-photo state. Bounded latest-six database projection and hidden orphan review guard applied to both environments. Real licensed Castillo Serrallés photograph with public attribution; asset86 · issue #132.
+
 - 2026-10-15 · release0.11.0 · permanent restaurant/shop discovery with database business-logo map pins and category fallback, bounded viewport queries, nearby-aware search and shopping category. Both additive database migrations are applied in development and production; asset82.
 
 - 2026-10-15 · [[src/Database/Places]] · Shopping place catalogue/profile and fast-food cuisine; bounded permanent-place map queries, category-icon pins, distinct place/event identity, nearby-aware search rails and bilingual result counts. Schema applied to both environments; real source data remains private and production-only. Business-logo pins use nullable database artwork with category/error fallback; asset82 · issue #120.
@@ -235,3 +239,5 @@ Organizer cover photographs for activities across all categories, trusted server
 - #124: move shared link feedback after script-owned click handlers; keep pagination locking local and regress listener checkpoint order plus repeated pages.
 
 - #124: store actual PNG bytes for the sharing image and validate its signature/IHDR dimensions; refresh social metadata to asset85.
+
+- 2026-10-15 · release0.11.3 · #124 production verification complete: build f58dd6b8ea38/asset85,44px map joystick, bounded complete discovery and real PNG sharing image.18suites/662assertions pass; both database environments match. Physical multitouch remains a stated testing limitation.

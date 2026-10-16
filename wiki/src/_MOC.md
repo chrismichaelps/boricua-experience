@@ -366,3 +366,6 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/Map3d]] — compact joystick pointer/keyboard lifecycle regressions.
 
 - [[src/Test/SocialImage]] — actual PNG sharing-asset format and dimensions.
+
+
+- [[src/View/Components/PlaceGallery]] · [[src/Public/PlaceGallery]] · [[src/Public/PlaceStyles]]

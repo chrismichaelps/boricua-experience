@@ -60,3 +60,6 @@ Resolved: advance the linked local asset/cache graph from56to57together for the 
 
 ## Location-data attribution · #120
 Resolved: no brand artwork/photos are copied. One building coordinate derives from OSM; retain ODbL attribution in that public listing and notices, with official address corroboration. Other coordinates are supplied by the official locator/map links.
+
+## Place gallery photograph · #132
+Resolved: add the real street facade photograph of Castillo Serrallés by Mtmelendez, sourced from Wikimedia Commons and reused under CC BY-SA3.0. Resize to1600px and WebP only; preserve source/author/license in public credits and notices. Set the matching production place cover from the database after the asset is deployed; never substitute this photograph for another venue or overwrite an owner-uploaded cover.
