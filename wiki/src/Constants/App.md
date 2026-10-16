@@ -154,3 +154,6 @@ Resolved: the production browser exposed click-capture microtasks running before
 
 ## Social transport format correction · #124
 Resolved: browser screenshot bytes must be converted to true PNG before storing social.png; the browser capture API can return JPEG despite a chosen filename. Preserve the visual raster; verify PNG signature, IHDR1200×630 and bounded bytes rather than relying on filename or a format-agnostic image viewer. Revision85 refreshes sharing URLs and the shell.
+
+## Place discovery Grill Log · #132
+Resolved: Asset version86 invalidates changed place composition and stylesheet.

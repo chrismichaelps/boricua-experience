@@ -84,6 +84,7 @@ fn headTags(frame: &Frame.Frame) -> Array[H.Node] {
     H.link().rel("stylesheet").href("/assets/css/search.css" + version),
     H.link().rel("stylesheet").href("/assets/css/experience.css" + version),
     H.link().rel("stylesheet").href("/assets/css/menu.css" + version),
+    H.link().rel("stylesheet").href("/assets/css/place.css" + version),
     H.link().rel("stylesheet").href("/assets/css/assistant.css" + version),
     H.link().rel("stylesheet").href("/assets/css/a11y.css" + version),
     H.link().rel("stylesheet").href("/assets/css/achievements.css" + version),

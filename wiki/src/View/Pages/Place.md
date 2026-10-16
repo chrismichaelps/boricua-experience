@@ -46,3 +46,6 @@ Resolved: Accept optional MenuBoard and render a dedicated-menu entry only from 
 
 ## Place media Grill Log · #69
 Resolved: The single cover image became the shared photo header (cover first, then more photos) and owners get a link to photos and menu files. See [[decisions/ADR-0012-place-media]].
+
+## Place discovery Grill Log · #132
+Resolved: Title and rating precede the gallery. In-page anchors reach information, location and reviews. Contact stays beside facts; recent review previews and the complete review section span the reading width below. No-photo state is explicitly a category illustration, never a venue photograph.

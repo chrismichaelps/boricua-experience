@@ -41,3 +41,9 @@ One review per member and place. Refused: the owner's own place, accounts younge
 ## Referenced by
 
 [[src/_MOC]]
+
+## Place discovery Grill Log · #132
+Resolved: place_reviews adds highlights: latest six published reviews by created_at desc,id, independent of p_after, using the same visibility gate and private.review_item projection. Existing summary/page/mine/permissions are unchanged. Apply the additive function replacement to both projects and verify hashes, ACLs and hidden-place refusal.
+
+## Hidden orphan guard · #132
+Resolved: rollback testing exposed a pre-existing NULL-owner comparison: guests could read reviews of an unowned hidden place. Require a non-null viewer for hidden access, matching place_detail. Owned hidden places remain owner-only; removed/missing places still refuse. Follow-up migration preserves the additive projection and ACLs.

@@ -86,7 +86,7 @@ fn page(app: &Assembly.App, visitor: &Context.Visitor, draft: &Review.ReviewDraf
 }
 
 /// The reviews of a place that could not be read.
-const EMPTY_BOARD: Review.ReviewBoard = Review.ReviewBoard{count: 0, average: None, breakdown: Json.Null, items: [], next: None, mine: None, canReview: false, isOwner: false}
+const EMPTY_BOARD: Review.ReviewBoard = Review.ReviewBoard{count: 0, average: None, breakdown: Json.Null, items: [], highlights: [], next: None, mine: None, canReview: false, isOwner: false}
 
 /// The place a review action names, as the member may see it.
 fn placeOf(app: &Assembly.App, visitor: &Context.Visitor) -> Result[Place.Detail, Problem.Problem] {

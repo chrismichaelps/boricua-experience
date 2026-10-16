@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-15 · [[handoffs/place-discovery]] · original place photo mosaic and accessible viewer, recent published-review rail across all ratings, full-width reviews, bilingual navigation and labeled no-photo state. Bounded latest-six database projection and hidden orphan review guard applied to both environments. Real licensed Castillo Serrallés photograph with public attribution; asset86 · issue #132.
+
 - 2026-10-15 · release0.11.0 · permanent restaurant/shop discovery with database business-logo map pins and category fallback, bounded viewport queries, nearby-aware search and shopping category. Both additive database migrations are applied in development and production; asset82.
 
 - 2026-10-15 · [[src/Database/Places]] · Shopping place catalogue/profile and fast-food cuisine; bounded permanent-place map queries, category-icon pins, distinct place/event identity, nearby-aware search rails and bilingual result counts. Schema applied to both environments; real source data remains private and production-only. Business-logo pins use nullable database artwork with category/error fallback; asset82 · issue #120.

@@ -41,3 +41,6 @@ Type names are unique across domain modules so derived decoders do not collide.
 ## Referenced by
 
 [[src/_MOC]]
+
+## Place discovery Grill Log · #132
+Resolved: ReviewBoard adds optional default-empty highlights for backward-compatible decoding. The bounded independent projection uses the existing Review contract; no extra personal fields.

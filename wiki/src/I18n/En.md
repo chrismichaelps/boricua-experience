@@ -120,3 +120,6 @@ Resolved: publish source-reviewed branches as permanent places, never dated or f
 
 ## Compact joystick refinement · #124
 Resolved user sizing: discovery rotation is one44px circular compass, equal to the map buttons. Hide the former side buttons only on discovery; pointer drag rotates continuously, tap resets north, Left/Right keys step rotation and Home resets. Capture one primary pointer, ignore secondary pointers, cancel safely, suppress a drag's synthetic reset click and detach location-follow on explicit rotation. Existing trip controls remain unchanged. Localized label explains drag and north action. This supersedes the96px pad.
+
+## Place discovery Grill Log · #132
+Resolved: Match the Spanish place gallery/navigation/recent-review keys; user reviews remain in their original language.
