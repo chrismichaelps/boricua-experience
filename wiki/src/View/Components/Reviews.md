@@ -43,3 +43,6 @@ Average with a bar per star count; the composer for members who may review (pre-
 
 ## Report reason picker
 The report form declares `search-pickers`, so the reason select opens the shared picker instead of the native list.
+
+## Place discovery Grill Log · #132
+Resolved: Expose a horizontal, keyboard-scrollable rail of at most six recent published reviews supplied independently by the database. Include every rating, preserve escaped text and link to the first review page for full reading. The full section retains composer, responses, reports and pagination; author avatars and date metadata are visible. No positivity selection or generated summaries.

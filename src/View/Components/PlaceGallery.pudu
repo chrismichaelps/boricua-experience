@@ -1,0 +1,54 @@
+/** @View.Components.PlaceGallery.Photos — authentic place photos with a complete accessible gallery */
+module View.Components.PlaceGallery
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import View.Components.Icons as Icons
+import View.Frame as Frame
+
+/// A cover-first mosaic, a complete no-script album, and a progressively enhanced viewer.
+export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: Str) -> H.Node {
+  var unique: Array[Str] = []
+  for photo in *photos {
+    if !unique.contains(photo) { unique = unique.push(photo) }
+  }
+  if unique.isEmpty() {
+    return H.div().class("place-photo-empty").holding([
+        H.img().src(fallback).alt("").at("width", "160").at("height", "120"),
+        H.div().holding([H.strong().says(Frame.t(frame, "place.photos_pending")), H.p().class("muted small").says(Frame.t(frame, "place.photo_illustration"))])
+      ])
+  }
+  var mosaic: Array[H.Node] = []
+  var album: Array[H.Node] = []
+  for index in 0..unique.length() {
+    if index < 5 { mosaic = mosaic.push(tile(frame, unique[index], index, unique.length(), true)) }
+    album = album.push(tile(frame, unique[index], index, unique.length(), false))
+  }
+  let label = Frame.tf(frame, "media.photos_of", &[("name", name)])
+  H.section().class("place-gallery").data("feature", "photo-gallery").label(label).holding([
+      H.div().class("place-mosaic place-mosaic-" + show(if unique.length() > 5 { 5 } else { unique.length() })).holding(mosaic),
+      H.details().class("place-album").holding([
+          H.summary().class("button button-ghost").holding([Icons.sized("camera", 18), H.span().says(Frame.tf(frame, "place.all_photos", &[("count", show(unique.length()))]))]),
+          H.div().class("place-album-grid").holding(album)
+        ]),
+      H.dialog().class("photo-viewer").label(label).holding([
+          H.div().class("photo-viewer-bar").holding([
+              H.p().data("photo", "position").role("status").at("aria-live", "polite"),
+              H.button().kind("button").class("icon-button").data("photo", "close").label(Frame.t(frame, "search.close_picker")).holding([Icons.sized("x", 24)])
+            ]),
+          H.img().data("photo", "image").alt(label),
+          H.div().class("photo-viewer-controls").holding([
+              H.button().kind("button").class("button button-ghost").data("photo", "previous").says(Frame.t(frame, "place.photo_previous")),
+              H.button().kind("button").class("button button-ghost").data("photo", "next").says(Frame.t(frame, "place.photo_next"))
+            ])
+        ])
+    ])
+}
+
+/// A real photograph link remains usable when JavaScript is unavailable.
+fn tile(frame: &Frame.Frame, photo: Str, index: Int, total: Int, primary: Bool) -> H.Node {
+  let label = Frame.tf(frame, "media.slide", &[("number", show(index + 1)), ("total", show(total))])
+  H.a().class("place-photo").href(photo).data("photo-index", show(index)).label(label).holding([
+      H.img().src(photo).alt(label).at("width", "960").at("height", "720").at("loading", if primary && index == 0 { "eager" } else { "lazy" }).at("decoding", "async")
+    ])
+}

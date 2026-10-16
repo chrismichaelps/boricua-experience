@@ -24,3 +24,5 @@ tags: [moc, handoff]
 - [[handoffs/permanent-places]] — source-reviewed restaurants/shops and bounded category-icon map pins.
 
 - [[handoffs/discovery-production]] — seven production discovery corrections and release evidence.
+
+- [[handoffs/place-discovery]] — photo mosaic and genuine visitor reviews.

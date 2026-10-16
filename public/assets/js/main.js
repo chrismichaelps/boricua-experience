@@ -34,6 +34,7 @@ const FEATURES = {
   assistant: (node) => import('./features/assistant.js?v=80').then(module => module.assistant(node)).catch(() => {}),
   'privacy-controls': privacyControls,
   'hero-carousel': heroCarousel,
+  'photo-gallery': (node) => import('./features/placeGallery.js?v=86').then(module => module.placeGallery(node)).catch(() => {}),
   suggest,
   'search-pickers': searchPickers,
   filters: (form) => { searchPickers(form); filters(form); },

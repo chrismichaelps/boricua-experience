@@ -708,6 +708,7 @@ map.show_list
 map.sign_in_live
 map.title
 map.turn_group
+map.turn_joystick
 map.turn_left
 map.turn_north
 map.turn_right
@@ -862,6 +863,8 @@ notifications.today
 notifications.unread
 notifications.week
 notifications.yesterday
+place.about
+place.all_photos
 place.closed
 place.closed_now
 place.closes_on
@@ -889,6 +892,10 @@ place.open_link
 place.open_now
 place.opens_on
 place.owner_note
+place.photo_illustration
+place.photo_next
+place.photo_previous
+place.photos_pending
 place.publish_again
 place.publish_lead
 place.publish_submit
@@ -898,6 +905,7 @@ place.rail_category
 place.rail_town
 place.reviews.one
 place.reviews.other
+place.sections
 place.verified
 place.website
 place.yes
@@ -1193,12 +1201,16 @@ review.delete
 review.edit_answer
 review.edit_rating
 review.held_note
+review.highlights
+review.highlights_note
 review.more
 review.none
 review.owner_answer
 review.owner_note
 review.publish
 review.rating_required
+review.read_all
+review.read_full
 review.reason_conflict
 review.reason_fake
 review.reason_offensive
