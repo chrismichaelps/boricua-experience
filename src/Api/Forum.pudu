@@ -1,0 +1,22 @@
+/** @Api.Forum.Client — bounded community RPCs */
+module Api.Forum
+
+import Api.Supabase.Gateway as Gateway
+import Constants.Forum as Contract
+import Domain.Forum as Forum
+import Domain.Problem as Problem
+
+/// Topics matching the public filters.
+export fn board(gateway: &Gateway.Gateway, filters: &Forum.Filters, token: Option[Str]) -> Result[Forum.Board, Problem.Problem] {
+  Gateway.query(gateway, Contract.BOARD_RPC, &[("p_query", Gateway.text(filters.query)), ("p_town", Gateway.text(filters.town)), ("p_category", Gateway.text(filters.category)), ("p_after", Gateway.text(filters.after))], token, Gateway.Read)
+}
+/// One question and a bounded reply page.
+export fn thread(gateway: &Gateway.Gateway, read: &Forum.Read, token: Option[Str]) -> Result[Forum.Thread, Problem.Problem] {
+  Gateway.query(gateway, Contract.THREAD_RPC, &[("p_id", Gateway.text(read.id)), ("p_after", Gateway.textOrNull(read.after)), ("p_order", Gateway.text(read.order))], token, Gateway.Read)
+}
+/// A transaction checked by the database for ownership, state and budget.
+export fn write(gateway: &Gateway.Gateway, command: &Forum.Command, token: Str) -> Result[Forum.Written, Problem.Problem] {
+  Gateway.query(gateway, Contract.WRITE_RPC, &[("p_action", Gateway.text(command.action)), ("p_topic", Gateway.textOrNull(command.topic)), ("p_post", Gateway.textOrNull(command.post)), ("p_title", Gateway.text(command.title)), ("p_body", Gateway.text(command.body)), ("p_town", Gateway.text(command.town)), ("p_category", Gateway.text(command.category)), ("p_reason", Gateway.text(command.reason))], Some(token), Gateway.Write)
+}
+/// Private administrator queue.
+export fn moderation(gateway: &Gateway.Gateway, token: Str) -> Result[Array[Forum.Report], Problem.Problem] { Gateway.query(gateway, Contract.MODERATION_RPC, &[], Some(token), Gateway.Read) }

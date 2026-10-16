@@ -1,0 +1,31 @@
+/** @Domain.Forum.Discussions — public questions and replies */
+module Domain.Forum
+
+import Std.Json as Json
+
+/** @Domain.Forum.Author — an active member's public identity */
+export type Author = { id: Str, @json("display_name") displayName: Option[Str], @json("avatar_url") avatarUrl: Option[Str] } derives Json.Decode
+/** @Domain.Forum.Topic — a question and its published reply count */
+export type Topic = {
+  id: Str, title: Str, body: Str, author: Author, town: Option[Str], @json("town_slug") townSlug: Option[Str], category: Option[Str],
+  status: Str, @json("reply_count") replyCount: Int, @json("created_at") createdAt: Str, @json("updated_at") updatedAt: Str,
+  @json("last_at") lastAt: Str, locked: Bool, @json("is_author") isAuthor: Bool
+} derives Json.Decode
+/** @Domain.Forum.Post — one bounded reply */
+export type Post = { id: Str, body: Str, author: Author, status: Str, @json("created_at") createdAt: Str, @json("updated_at") updatedAt: Str, @json("is_author") isAuthor: Bool } derives Json.Decode
+/** @Domain.Forum.Board — a keyset page of topics */
+export type Board = { items: Array[Topic], next: Option[Str] } derives Json.Decode
+/** @Domain.Forum.Thread — the question and a page of replies */
+export type Thread = { topic: Topic, posts: Array[Post], next: Option[Str], @json("can_reply") canReply: Bool, @json("can_moderate") canModerate: Bool } derives Json.Decode
+/** @Domain.Forum.Report — an administrator's reported target, without reporter identity */
+export type Report = { @json("topic_id") topicId: Str, @json("post_id") postId: Option[Str], title: Str, body: Str, reports: Int, @json("reported_at") reportedAt: Str, reasons: Str } derives Json.Decode
+/** @Domain.Forum.Filters — board query and continuation */
+export type Filters = { query: Str, town: Str, category: Str, after: Str }
+/** @Domain.Forum.Read — thread continuation and reply order */
+export type Read = { id: Str, after: Str, order: Str }
+/** @Domain.Forum.Command — a contribution or moderation action */
+export type Command = { action: Str, topic: Str, post: Str, title: Str, body: Str, town: Str, category: Str, reason: Str }
+/** @Domain.Forum.Written — successful mutation identity */
+export type Written = { id: Str, @json("topic_id") topicId: Str } derives Json.Decode
+/// An empty draft for a fixed action.
+export fn draft(action: Str, topic: Str) -> Command { Command{action: action, topic: topic, post: "", title: "", body: "", town: "", category: "", reason: ""} }

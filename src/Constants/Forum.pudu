@@ -1,0 +1,23 @@
+/** @Constants.Forum.Contract — community routes, limits and RPC names */
+module Constants.Forum
+
+/// The public discussion board.
+export const ROOT: Str = "/forum"
+/// The question composer.
+export const NEW: Str = "/forum/new"
+/// The administrator queue.
+export const MODERATION: Str = "/forum/moderation"
+/// Database API names.
+export const BOARD_RPC: Str = "forum_board"
+/// Thread reader.
+export const THREAD_RPC: Str = "forum_thread"
+/// Transactional writer.
+export const WRITE_RPC: Str = "forum_write"
+/// Report queue reader.
+export const MODERATION_RPC: Str = "forum_moderation"
+/// Valid write operations.
+export const ACTIONS: Array[Str] = ["topic", "reply", "edit_topic", "edit_post", "remove_topic", "remove_post", "report", "moderate_keep", "moderate_remove", "lock", "unlock"]
+/// Report reasons.
+export const REASONS: Array[Str] = ["spam", "offensive", "unsafe", "other"]
+/// A topic's address.
+export fn thread(id: Str) -> Str { ROOT + "/" + id }
