@@ -65,3 +65,7 @@ Lookup reads the interface, account ([[src/I18n/EsAccount]], [[src/I18n/EnAccoun
 
 ## Formatting baseline Grill Log · #88
 Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow, authorization and output. Validate the token-preserving diff independently before commit.
+
+
+## Forum integration Grill Log · #137
+Resolved: register four typed forum messages and dedicated handlers/catalogues without changing existing contracts; preserve all session/CSRF wrappers and Spanish fallback. No HTTP below Web, no services in View.

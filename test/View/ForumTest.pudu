@@ -1,0 +1,101 @@
+/** @Test.View.Forum — community input and rendering boundaries */
+module View.ForumTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Html as Html
+import Std.Io as Io
+import Std.Json as Json
+import Std.Option as Option
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Test as Test
+import Api.Forum as ForumApi
+import Api.Supabase.Gateway as Gateway
+import Constants.Forum as Contract
+import Domain.Build as Build
+import Domain.Catalog as Catalog
+import Domain.Forum as Forum
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import I18n.EnForum as En
+import I18n.EsForum as Es
+import I18n.Translate as Translate
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
+import PuduLangHttpClient.Response as Response
+import Validation.Forum as Rules
+import View.Frame as Frame
+import View.Pages.Forum as Pages
+
+/// An unsigned visitor; no secrets or provider calls.
+fn visitor(locale: Locale.Locale) -> Frame.Frame { Frame.Frame{locale: locale, siteUrl: "https://example.test", path: Contract.ROOT, query: "", member: None, formToken: "test-token", consent: None, flash: "", nowMillis: 0, build: Build.development()} }
+/// Synthetic topic with hostile text to prove escaping.
+fn topic() -> Forum.Topic {
+  Forum.Topic{id: "00000000-0000-0000-0000-000000000001", title: "<script>alert(1)</script>", body: "A question with <img src=x onerror=alert(1)> and enough detail.", author: Forum.Author{id: "member", displayName: Some("<b>Member</b>"), avatarUrl: None}, town: None, townSlug: None, category: None, status: "published", replyCount: 1, createdAt: "2026-10-16T12:00:00Z", updatedAt: "2026-10-16T12:00:00Z", lastAt: "2026-10-16T12:00:00Z", locked: false, isAuthor: false}
+}
+/// Runs input, state and bilingual presentation checks.
+fn main() -> Int {
+  let en = visitor(Locale.En)
+  let es = visitor(Locale.Es)
+  let catalog = Catalog.Catalog{categories: [], municipalities: [], scenes: []}
+  let filters = Forum.Filters{query: "", town: "", category: "", after: ""}
+  let root = topic()
+  let found = Forum.Thread{topic: root, posts: [], next: Some("next-id"), canReply: false, canModerate: false}
+  let guest = Html.render(&Pages.thread(&en, &found, "newest", "", None))
+  let held = Html.render(&Pages.thread(&en, &Forum.Thread{..found, topic: Forum.Topic{..root, status: "held", isAuthor: true}}, "oldest", "", None))
+  let member = Html.render(&Pages.thread(&en, &Forum.Thread{..found, canReply: true}, "oldest", "a draft <tag>", Some(Problem.Invalid([Problem.FieldError{field: "body", key: "forum.reply_length"}]))))
+  let board = Html.render(&Pages.board(&en, &catalog, &filters, &Forum.Board{items: [root], next: Some("cursor|special")}))
+  let empty = Html.render(&Pages.board(&es, &catalog, &filters, &Forum.Board{items: [], next: None}))
+  let draft = Forum.Command{..Forum.draft("topic", ""), title: "  Question title  ", body: "  A complete question with enough detail.  "}
+  let accepted = Result.unwrapOr(Rules.check(&draft), Forum.draft("", ""))
+  let errors = match Rules.check(&Forum.draft("topic", "")) { case Err(Problem.Invalid(fields)) => fields.length() case _ => 0 }
+  let editor = Html.render(&Pages.editor(&en, &catalog, &Forum.Command{..draft, body: "<script>draft</script>"}, Some(Problem.Invalid([Problem.FieldError{field: "body", key: "forum.topic_length"}]))))
+  let post = Forum.Post{id: "post", body: "An owned published reply.", author: root.author, status: "published", createdAt: root.createdAt, updatedAt: root.updatedAt, isAuthor: true}
+  let heldParent = Html.render(&Pages.thread(&en, &Forum.Thread{..found, topic: Forum.Topic{..root, status: "held", isAuthor: true}, posts: [post]}, "oldest", "", None))
+  let fallback = Html.render(&Pages.replyFallback(&en, root.id, "A draft that must survive a deleted parent.", Problem.Missing))
+  let captures: Sync.Cell[Array[(Str, Str, Str)]] = Sync.cell([])
+  let gateway = Gateway.over(|request: Request.Request, _cancel: Cancel.Token| {
+      let payload = match request.content { case Some(content) => Result.unwrapOr(Bytes.toText(&content.payload), "") case None => "" }
+      let _recorded = Sync.set(&captures, Result.unwrapOr(Sync.get(&captures), []).push((request.uri, Option.unwrapOr(Request.header(&request, "authorization"), ""), payload)))
+      let response = if request.uri.contains("forum_write") { Json.object(&[("id", Json.Text("post")), ("topic_id", Json.Text("topic"))]) } else { Json.object(&[("items", Json.list(&[])), ("next", Json.Null)]) }
+      Ok(Response.answer(&request, 200).withJson(&response))
+    }, "https://example.test", "anon-fixture")
+  let readResult = ForumApi.board(&gateway, &Forum.Filters{..filters, query: "ferry", after: "cursor"}, None)
+  let writeResult = ForumApi.write(&gateway, &Forum.Command{..Forum.draft("reply", "topic"), body: "An actual reply."}, "member-fixture")
+  let calls = Result.unwrapOr(Sync.get(&captures), [])
+  let unavailableCatalog = Html.render(&Pages.editor(&en, &catalog, &Forum.Command{..draft, town: "culebra", category: "playa"}, Some(Problem.Unavailable("catalog unavailable"))))
+  let checks = Test.suite("Forum", &[
+      Test.that("recorded read and write decode typed replies", Result.isOk(&readResult) && Result.isOk(&writeResult)),
+      Test.that("public read uses anonymous bearer", calls.length() == 2 && calls[0][1] == "Bearer anon-fixture"),
+      Test.that("write uses member token and null optional post", calls.length() == 2 && calls[1][1] == "Bearer member-fixture" && calls[1][2].contains("\"p_post\":null")),
+      Test.that("search and cursor use named RPC parameters", calls.length() == 2 && calls[0][2].contains("\"p_query\":\"ferry\"") && calls[0][2].contains("\"p_after\":\"cursor\"")),
+      Test.that("catalog outage preserves selected town and topic", unavailableCatalog.contains("value=\"culebra\" selected") && unavailableCatalog.contains("value=\"playa\" selected")),
+      Test.that("held parent retains own delete but suppresses editing", heldParent.contains("/remove") && !heldParent.contains("/edit") && !heldParent.contains("/report")),
+      Test.that("unreadable parent fallback preserves draft and retry", fallback.contains("A draft that must survive a deleted parent.") && fallback.contains("/reply") && !fallback.contains("&lt;script&gt;alert(1)")),
+      Test.equals("topic trims surrounding whitespace", &accepted.title, &"Question title"),
+      Test.equals("topic reports title and body together", &errors, &2),
+      Test.that("unknown commands refused", Result.isErr(&Rules.check(&Forum.draft("escalate", "")))),
+      Test.that("short replies refused", Result.isErr(&Rules.check(&Forum.Command{..Forum.draft("reply", "topic"), body: "short"}))),
+      Test.that("long replies refused", Result.isErr(&Rules.check(&Forum.Command{..Forum.draft("reply", "topic"), body: "x".repeat(5001)}))),
+      Test.that("reply lower boundary accepted", Result.isOk(&Rules.check(&Forum.Command{..Forum.draft("reply", "topic"), body: "0123456789"}))),
+      Test.that("report reason allowlist", Result.isErr(&Rules.check(&Forum.Command{..Forum.draft("report", "topic"), reason: "forged"}))),
+      Test.that("hostile question title is escaped", guest.contains("&lt;script&gt;alert(1)&lt;/script&gt;") && !guest.contains("<script>alert(1)")),
+      Test.that("hostile body is escaped", guest.contains("&lt;img src=x onerror=alert(1)&gt;")),
+      Test.that("hostile author is escaped", guest.contains("&lt;b&gt;Member&lt;/b&gt;")),
+      Test.that("guest has sign-in return and no reply form", guest.contains("Sign in to join the conversation") && !guest.contains("action=\"/forum/" + root.id + "/reply\"")),
+      Test.that("newest reply order remains selected", guest.contains("value=\"newest\" selected")),
+      Test.that("reply continuation preserves order", guest.contains("?order=newest&amp;after=next-id#replies")),
+      Test.that("held owner sees review message and delete", held.contains("Your contribution is under review") && held.contains("/remove") && !held.contains("/reply\"")),
+      Test.that("reply error preserves draft and CSRF", member.contains("a draft &lt;tag&gt;") && member.contains("test-token") && member.contains("Use 10–5,000 characters.")),
+      Test.that("editor error preserves draft", editor.contains("&lt;script&gt;draft&lt;/script&gt;") && editor.contains("Use 20–5,000 characters.")),
+      Test.that("board continuation URL encodes cursor", board.contains("cursor%7Cspecial")),
+      Test.that("real empty state has no fake topics", empty.contains("La conversación empieza contigo") && !empty.contains("forum-topic-main")),
+      Test.that("Spanish and English forum keys match", Es.MESSAGES.keys().sortBy(|a: Str, b: Str| a < b) == En.MESSAGES.keys().sortBy(|a: Str, b: Str| a < b)),
+      Test.that("forum keys are registered in translator", Es.MESSAGES.keys().filter(|key: Str| !Translate.has(&Locale.Es, key) || !Translate.has(&Locale.En, key)).isEmpty()),
+      Test.that("no automatic email opt-in rendered", !guest.contains("name=\"subscribe\"") && !editor.contains("name=\"subscribe\""))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

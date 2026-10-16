@@ -2,6 +2,7 @@
 module Services.Seo
 
 import Api.Events as EventsApi
+import Constants.Forum as ForumRoutes
 import Constants.Routes as Routes
 import Domain.Index as Index
 import Domain.Problem as Problem
@@ -16,6 +17,7 @@ const PAGES: Array[(Str, Str)] = [
   (Routes.HOME, "1.0"),
   (Routes.SEARCH, "0.8"),
   (Routes.MAP, "0.6"),
+  (ForumRoutes.ROOT, "0.6"),
   (Routes.ABOUT, "0.4"),
   (Routes.CONTACT, "0.3"),
   (Routes.TERMS, "0.2"),

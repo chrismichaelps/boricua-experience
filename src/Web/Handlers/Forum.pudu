@@ -1,0 +1,113 @@
+/** @Web.Handlers.Forum.Routes — public discussions and protected contributions */
+module Web.Handlers.Forum
+
+import Std.Http as Http
+import Std.Http.Server.Route as Route
+import Std.Option as Option
+import Std.Url as Url
+import App.Assembly as Assembly
+import Constants.Forum as Contract
+import Domain.Catalog as Catalog
+import Domain.Forum as Forum
+import Domain.Problem as Problem
+import Domain.Session as Session
+import Utils.Form as Form
+import View.Pages.Forum as Pages
+import Web.Context as Context
+import Web.Respond as Respond
+import Web.Serve as Serve
+
+/// All forum routes, with literal pages before topic parameters.
+export fn routes(app: &Assembly.App) -> Array[Route.Route] {
+  let held = *app
+  [
+    Route.get(Contract.ROOT, Serve.page(app, |visitor: Context.Visitor| board(&held, &visitor))),
+    Route.get(Contract.NEW, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| editor(&held, &visitor, &Forum.draft("topic", ""), None))),
+    Route.get(Contract.MODERATION, Serve.memberPage(app, |visitor: Context.Visitor, session: Session.Session| moderation(&held, &visitor, &session))),
+    Route.get(Contract.ROOT + "/:id/edit", Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| edit(&held, &visitor))),
+    Route.get(Contract.ROOT + "/:id", Serve.page(app, |visitor: Context.Visitor| thread(&held, &visitor, "", None))),
+    Route.post(Contract.NEW, Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| write(&held, &visitor, &session, "topic"))),
+    Route.post(Contract.ROOT + "/:id/reply", Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| write(&held, &visitor, &session, "reply"))),
+    Route.post(Contract.ROOT + "/:id/edit", Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| write(&held, &visitor, &session, "edit"))),
+    Route.post(Contract.ROOT + "/:id/remove", Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| write(&held, &visitor, &session, "remove"))),
+    Route.post(Contract.ROOT + "/:id/report", Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| write(&held, &visitor, &session, "report"))),
+    Route.post(Contract.ROOT + "/:id/moderate", Serve.memberAction(app, |visitor: Context.Visitor, session: Session.Session| moderate(&held, &visitor, &session)))
+  ]
+}
+/// The database catalog used by forum forms.
+fn catalog(app: &Assembly.App) -> Result[Catalog.Catalog, Problem.Problem] { Serve.ask(app, &app.kinds.catalog, ()) }
+/// Board search with a bounded continuation.
+fn board(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let filters = Forum.Filters{query: Serve.query(visitor, "q").trim(), town: Serve.query(visitor, "town"), category: Serve.query(visitor, "category"), after: Serve.query(visitor, "after")}
+  let found = match Serve.ask(app, &app.kinds.forumBoard, Serve.visit(visitor, filters)) { case Ok(value) => value case Err(problem) => { return Respond.problem(app, visitor, &problem) } }
+  match catalog(app) { case Ok(choices) => Respond.page(200, &Pages.board(&Context.frame(app, visitor), &choices, &filters, &found)) case Err(problem) => Respond.problem(app, visitor, &problem) }
+}
+/// The thread query, preserving explicit ordering and page cursor.
+fn readOf(visitor: &Context.Visitor) -> Forum.Read {
+  Forum.Read{id: Serve.param(visitor, "id"), after: Serve.query(visitor, "after"), order: if Serve.query(visitor, "order").isEmpty() { "oldest" } else { Serve.query(visitor, "order") }}
+}
+/// Thread or refused reply, preserving the draft.
+fn thread(app: &Assembly.App, visitor: &Context.Visitor, draft: Str, problem: Option[Problem.Problem]) -> Http.Response {
+  let read = readOf(visitor)
+  match Serve.ask(app, &app.kinds.forumThread, Serve.visit(visitor, read)) {
+    case Ok(found) => Respond.page(match problem { case Some(failure) => Problem.status(&failure) case None => 200 }, &Pages.thread(&Context.frame(app, visitor), &found, read.order, draft, problem))
+    case Err(failure) => if draft.isEmpty() { Respond.problem(app, visitor, &failure) } else { Respond.page(Problem.status(&failure), &Pages.replyFallback(&Context.frame(app, visitor), read.id, draft, failure)) }
+  }
+}
+/// Form with its current values and field refusal.
+fn editor(app: &Assembly.App, visitor: &Context.Visitor, draft: &Forum.Command, problem: Option[Problem.Problem]) -> Http.Response {
+  match catalog(app) {
+    case Ok(choices) => Respond.page(match problem { case Some(failure) => Problem.status(&failure) case None => 200 }, &Pages.editor(&Context.frame(app, visitor), &choices, draft, problem))
+    case Err(failure) => if problem == None { Respond.problem(app, visitor, &failure) } else { Respond.page(Problem.status(&failure), &Pages.editor(&Context.frame(app, visitor), &Catalog.Catalog{categories: [], municipalities: [], scenes: []}, draft, Some(failure))) }
+  }
+}
+/// Load only an owned published contribution into an editor.
+fn edit(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let read = Forum.Read{..readOf(visitor), after: ""}
+  let found = match Serve.ask(app, &app.kinds.forumThread, Serve.visit(visitor, read)) { case Ok(value) => value case Err(problem) => { return Respond.problem(app, visitor, &problem) } }
+  let postId = Serve.query(visitor, "post")
+  if postId.isEmpty() {
+    if !found.topic.isAuthor || found.topic.status != "published" { return Respond.problem(app, visitor, &Problem.Forbidden) }
+    let topic = found.topic
+    return editor(app, visitor, &Forum.Command{..Forum.draft("edit_topic", topic.id), title: topic.title, body: topic.body, town: Option.unwrapOr(topic.townSlug, ""), category: Option.unwrapOr(topic.category, "")}, None)
+  }
+  Respond.problem(app, visitor, &Problem.Missing)
+}
+/// Construct a server-selected operation; posted commands never grant administrator powers.
+fn command(visitor: &Context.Visitor, action: Str) -> Forum.Command {
+  let fields = Serve.fields(visitor)
+  let post = Form.text(&fields, "post")
+  let operation = if action == "edit" { if post.isEmpty() { "edit_topic" } else { "edit_post" } } else if action == "remove" { if post.isEmpty() { "remove_topic" } else { "remove_post" } } else { action }
+  Forum.Command{action: operation, topic: Serve.param(visitor, "id"), post: post, title: Form.text(&fields, "title"), body: Form.paragraph(&fields, "body"), town: Form.text(&fields, "town"), category: Form.text(&fields, "category"), reason: Form.text(&fields, "reason")}
+}
+/// Contribute, redirecting after success and retaining text on failure.
+fn write(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session, action: Str) -> Http.Response {
+  let draft = command(visitor, action)
+  match Serve.ask(app, &app.kinds.forumWrite, Serve.signed(session, draft)) {
+    case Ok(saved) => {
+      let target = if draft.action == "remove_topic" { Contract.ROOT } else if action == "edit" && !draft.post.isEmpty() {
+        Contract.thread(saved.topicId) + "?order=" + (if Serve.query(visitor, "order") == "newest" { "newest" } else { "oldest" }) + "&after=" + Url.encodeComponent(Serve.query(visitor, "after")) + "#post-" + saved.id
+      } else { Contract.thread(saved.topicId) + (if action == "reply" { "?order=newest#post-" + saved.id } else { "" }) }
+      let flash = if action == "report" { "forum.reported" } else if action == "topic" { "forum.posted" } else if action == "reply" { "forum.replied" } else if action == "remove" { "forum.deleted" } else { "forum.saved" }
+      Respond.withFlash(app, Respond.redirect(target), flash)
+    }
+    case Err(problem) => if action == "topic" || action == "edit" { editor(app, visitor, &draft, Some(problem)) } else if action == "reply" { thread(app, visitor, draft.body, Some(problem)) } else { Respond.problem(app, visitor, &problem) }
+  }
+}
+/// The private moderation queue.
+fn moderation(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  match Serve.ask(app, &app.kinds.forumModeration, Serve.signed(session, ())) {
+    case Ok(found) => Respond.page(200, &Pages.moderation(&Context.frame(app, visitor), &found))
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+/// Only a bounded admin command set is accepted on the moderation endpoint.
+fn moderate(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
+  let operation = Form.text(&Serve.fields(visitor), "operation")
+  if !["moderate_keep", "moderate_remove", "lock", "unlock"].contains(operation) { return Respond.problem(app, visitor, &Problem.Forbidden) }
+  let draft = command(visitor, operation)
+  match Serve.ask(app, &app.kinds.forumWrite, Serve.signed(session, draft)) {
+    case Ok(_) => Respond.withFlash(app, Respond.redirect(if operation == "lock" || operation == "unlock" { Contract.thread(draft.topic) } else { Contract.MODERATION }), "forum.saved")
+    case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}

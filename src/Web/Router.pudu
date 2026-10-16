@@ -15,6 +15,7 @@ import Web.Handlers.Digest as Digest
 import Web.Handlers.Discover as Discover
 import Web.Handlers.EventCover as EventCover
 import Web.Handlers.Events as Events
+import Web.Handlers.Forum as Forum
 import Web.Handlers.Identity as Identity
 import Web.Handlers.Location as Location
 import Web.Handlers.Media as Media
@@ -33,6 +34,7 @@ export fn routes(app: &Assembly.App) -> Route.Router {
     .concat(Assistant.routes(app))
     .concat(Events.routes(app))
     .concat(Places.routes(app))
+    .concat(Forum.routes(app))
     .concat(Plans.routes(app))
     .concat(Menus.routes(app))
     .concat(Media.routes(app))
