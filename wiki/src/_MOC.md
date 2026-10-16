@@ -379,3 +379,6 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Validation/Forum]]
 - [[src/Services/Forum]]
 - [[src/App/Handlers/Forum]]
+- [[src/View/Components/Forum]]
+- [[src/View/Pages/Forum]]
+- [[src/Public/ForumStyles]]
