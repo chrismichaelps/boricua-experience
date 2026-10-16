@@ -9,8 +9,11 @@ Card contract: smaller photos and natural-height copy, no nested scrolling or hi
 
 Forum contract: public reads and active-member contributions; database-owned content and town/category catalogs, bounded keyset pagination/search, original topics/replies, editing/soft deletion, reporting/admin moderation, posting limits serialized per user. No copied discussions or artificial community seed in production. No automatic emails. Account erasure must anonymize or remove content per existing policy; no private email/location exposure. Both databases receive reviewed migrations. Each application module gets a complete mirror and resolved Grill before implementation; separate database-contract and application PRs stay reviewable. Independent review required.
 
-Next action: implement #136, then the forum database contract and complete vertical flow with browser and authorization tests.
+Next action: land the independently reviewed forum slices, complete responsive browser QA and promote the bundled release.
 
 #136 validation:390px discovery cards measure171×269px with natural-height visible copy;1280px search has four285px columns, home rail cards286.5×328px and no page overflow. Map retains94px thumbnail columns; organizer cards retain the pre-existing160px thumbnail/128px desktop copy tracks and full-title overflow behavior. Independent review caught and corrected an accidental organizer-rule removal before merge.
 
 Final #136 QA:320px search has128px cards and no page overflow; public profile has four desktop columns. Independent review cleared CSS after organizer rules were restored; four affected mirrors explicitly supersede the old discovery copy track.
+
+Role transition: Implementer (forum contracts and app) → independent Reviewer (/root/review_activity_covers, read-only source/DB contract review). All10 new/updated function hashes and ACL plus4 RLS flags match dev/prod. Production has0 seed rows,0 forum topics,380 places and125 curated events. SQL scripts remain ignored. Concurrent12 reply requests yielded10 successes/2PT429 with counters/budget10. Account deletion rollback, held lifecycle, export isolation and paused export pass.
+Browser QA:320px thread and1280px board, question/reply/edit/catalog selectors,27-reply newest redirect and second-page edit anchors, report/admin keep/lock/unlock/nonadmin denial. Temporary seed-user admin elevation was restoredfalse immediately after test. Final browser fixtures must be removed before delivery.

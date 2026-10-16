@@ -1,0 +1,22 @@
+/** @Validation.Forum.Contributions — community input rules */
+module Validation.Forum
+
+import Constants.Forum as Contract
+import Domain.Forum as Forum
+import Domain.Problem as Problem
+
+/// A trimmed command, or all content field errors.
+export fn check(given: &Forum.Command) -> Result[Forum.Command, Problem.Problem] {
+  let ready = Forum.Command{..*given, title: given.title.trim(), body: given.body.trim()}
+  var errors: Array[Problem.FieldError] = []
+  if !Contract.ACTIONS.contains(ready.action) { return Err(Problem.Forbidden) }
+  if ready.action == "topic" || ready.action == "edit_topic" {
+    if ready.title.length() < 8 || ready.title.length() > 140 { errors = errors.push(Problem.FieldError{field: "title", key: "forum.title_length"}) }
+    if ready.body.length() < 20 || ready.body.length() > 5000 { errors = errors.push(Problem.FieldError{field: "body", key: "forum.topic_length"}) }
+  }
+  if ready.action == "reply" || ready.action == "edit_post" {
+    if ready.body.length() < 10 || ready.body.length() > 5000 { errors = errors.push(Problem.FieldError{field: "body", key: "forum.reply_length"}) }
+  }
+  if ready.action == "report" && !Contract.REASONS.contains(ready.reason) { errors = errors.push(Problem.FieldError{field: "reason", key: "form.reason_required"}) }
+  if errors.isEmpty() { Ok(ready) } else { Err(Problem.Invalid(errors)) }
+}

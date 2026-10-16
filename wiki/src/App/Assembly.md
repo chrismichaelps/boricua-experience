@@ -54,3 +54,7 @@ MEDIUM.
 ## Referenced by
 
 [[src/_MOC]]
+
+
+## Forum integration Grill Log · #137
+Resolved: register four typed forum messages and dedicated handlers/catalogues without changing existing contracts; preserve all session/CSRF wrappers and Spanish fallback. No HTTP below Web, no services in View.
