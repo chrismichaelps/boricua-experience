@@ -246,3 +246,5 @@ Organizer cover photographs for activities across all categories, trusted server
 
 ## #137 · Original community discussions
 Bounded public question/reply reads and full-text search; ownership, moderation, report privacy and serialized posting budgets. Forum data included in personal exports across states; account cascades and paused export preserved. Matching reviewed migrations applied to both projects, with isolated development rollback and concurrent-write verification. No forum seed in production.
+
+#137 presentation: compact discussion rows, original responsive board, native composers, threaded reply pages and private moderation UI; no fake images or discussions. Held-parent actions and draft fallback match database visibility.

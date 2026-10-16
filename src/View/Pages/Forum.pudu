@@ -1,0 +1,135 @@
+/** @View.Pages.Forum.Community — questions, answers and moderation */
+module View.Pages.Forum
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Html as Html
+import Std.Option as Option
+import Std.Url as Url
+import Constants.Forum as Contract
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.Forum as Forum
+import Domain.Locale as Locale
+import Domain.Problem as Problem
+import View.Components.Form as Form
+import View.Components.Forum as Parts
+import View.Frame as Frame
+import View.Layout as Layout
+import View.Seo as Seo
+
+/// The shared community layout and metadata.
+fn page(frame: &Frame.Frame, title: Str, description: Str, path: Str, indexable: Bool, content: H.Node) -> Html.Html {
+  Layout.page(frame, &Seo.meta(title, description, path, indexable), Layout.Elsewhere, H.div().class("forum-page").holding([content]))
+}
+/// Board filters encoded for a continuation link.
+export fn boardUrl(filters: &Forum.Filters, after: Str) -> Str {
+  Contract.ROOT + "?q=" + Url.encodeComponent(filters.query) + "&town=" + Url.encodeComponent(filters.town) + "&category=" + Url.encodeComponent(filters.category) + "&after=" + Url.encodeComponent(after)
+}
+/// Catalog-backed topic and town choices, shared by filters and composer.
+fn choices(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: Str, category: Str, errors: &Array[Problem.FieldError]) -> Array[H.Node] {
+  var towns = [("", Frame.t(frame, "forum.all_towns"))].concat(catalog.municipalities.map(|found: Catalog.Municipality| (found.slug, found.name)))
+  var categories = [("", Frame.t(frame, "forum.all_categories"))].concat(catalog.categories.map(|found: Catalog.Category| (found.slug, if frame.locale == Locale.En { found.nameEn } else { found.nameEs })))
+  if !town.isEmpty() && Catalog.municipality(catalog, town) == None { towns = towns.push((town, town)) }
+  if !category.isEmpty() && Catalog.category(catalog, category) == None { categories = categories.push((category, category)) }
+  [Form.select(frame, &Form.field("town", Frame.t(frame, "forum.town"), town), &towns, errors), Form.select(frame, &Form.field("category", Frame.t(frame, "forum.category"), category), &categories, errors)]
+}
+/// Context beside the board, rather than made-up popular questions.
+fn guidance(frame: &Frame.Frame) -> H.Node {
+  H.aside().class("forum-guidance").holding([H.h2().says(Frame.t(frame, "forum.guidance")), H.p().says(Frame.t(frame, "forum.guidance_body")), H.p().class("small muted").says(Frame.t(frame, "forum.rules")), H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms"))])
+}
+/// The public discussion index, including genuine empty and filtered-empty states.
+export fn board(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Forum.Filters, found: &Forum.Board) -> Html.Html {
+  let filtered = !filters.query.isEmpty() || !filters.town.isEmpty() || !filters.category.isEmpty()
+  page(frame, Frame.t(frame, "forum.title"), Frame.t(frame, "forum.lead"), Contract.ROOT, filters.after.isEmpty() && !filtered,
+    H.div().holding([
+        H.header().class("forum-heading").holding([H.div().holding([H.p().class("eyebrow").says(Frame.t(frame, "forum.name")), H.h1().says(Frame.t(frame, "forum.title")), H.p().says(Frame.t(frame, "forum.lead"))]), H.a().href(Contract.NEW).class("button").says(Frame.t(frame, "forum.ask"))]),
+        H.form().method("get").action(Contract.ROOT).class("forum-filters").holding([
+            Form.input(frame, &Form.field("q", Frame.t(frame, "forum.search"), filters.query), &[], |control: H.Node| control.at("maxlength", "120").at("placeholder", Frame.t(frame, "forum.search_hint")))
+          ].concat(choices(frame, catalog, filters.town, filters.category, &[])).concat([H.button().submit().class("button button-ghost").says(Frame.t(frame, "forum.filter"))])),
+        H.div().class("forum-columns").holding([
+            H.section().label(Frame.t(frame, "forum.name")).holding([
+                if found.items.isEmpty() {
+                  H.div().class("forum-empty").holding([H.h2().says(Frame.t(frame, if filtered { "forum.no_matches" } else { "forum.empty" })), H.p().says(Frame.t(frame, if filtered { "forum.no_matches_body" } else { "forum.empty_body" })), H.a().href(Contract.NEW).class("button button-ghost").says(Frame.t(frame, "forum.ask"))])
+                } else { H.ul().class("forum-topics").holding(found.items.map(|topic: Forum.Topic| Parts.row(frame, catalog, &topic))) },
+                if let Some(next) = found.next { H.a().href(boardUrl(filters, next)).class("button button-ghost forum-more").says(Frame.t(frame, "forum.more")) } else { H.nothing() }
+              ]), guidance(frame)
+          ])
+      ]))
+}
+/// A topic or reply editor; invalid input remains in the form.
+export fn editor(frame: &Frame.Frame, catalog: &Catalog.Catalog, draft: &Forum.Command, problem: Option[Problem.Problem]) -> Html.Html {
+  let errors = match problem { case Some(found) => Problem.fieldErrors(&found) case None => [] }
+  let creating = draft.action == "topic"
+  let reply = draft.action == "edit_post" || draft.action == "reply"
+  let title = Frame.t(frame, if creating { "forum.ask" } else if draft.action == "reply" { "forum.reply" } else { "forum.edit_title" })
+  let target = if creating { Contract.NEW } else { Contract.thread(draft.topic) + (if draft.action == "reply" { "/reply" } else { "/edit" }) }
+  page(frame, title, Frame.t(frame, "forum.privacy"), if creating { Contract.NEW } else { Contract.thread(draft.topic) + "/edit" }, false,
+    H.div().class("forum-editor").holding([
+        H.a().href(if creating { Contract.ROOT } else { Contract.thread(draft.topic) }).class("forum-back").says(Frame.t(frame, "forum.back")), H.h1().says(title),
+        H.p().class("muted").says(Frame.t(frame, "forum.privacy")),
+        H.form().method("post").action(target).class("stack-form").holding([
+            Form.token(frame), Form.problemBanner(frame, &problem), H.input().kind("hidden").name("post").value(draft.post),
+            if reply { H.nothing() } else { Form.input(frame, &Form.Field{..Form.field("title", Frame.t(frame, "forum.subject"), draft.title), required: true}, &errors, |control: H.Node| control.at("minlength", "8").at("maxlength", "140")) },
+            Form.area(frame, &Form.Field{..Form.field("body", Frame.t(frame, if reply { "forum.reply_body" } else { "forum.body" }), draft.body), required: true, hint: Frame.t(frame, if reply { "forum.reply_length" } else { "forum.topic_length" })}, 8, &errors)
+          ].concat(if reply { [] } else { choices(frame, catalog, draft.town, draft.category, &errors) }).concat([
+              H.p().class("small muted").says(Frame.t(frame, "forum.rules")), H.button().submit().class("button").says(Frame.t(frame, if creating { "forum.publish" } else { "forum.save" }))
+            ]))
+      ]))
+}
+/// A native reply ordering option.
+fn orderChoice(frame: &Frame.Frame, value: Str, selected: Str) -> H.Node {
+  let option = H.option().value(value).says(Frame.t(frame, "forum." + value))
+  if value == selected { option.flag("selected") } else { option }
+}
+/// A topic with paginated replies and a protected contribution form.
+export fn thread(frame: &Frame.Frame, found: &Forum.Thread, order: Str, draft: Str, problem: Option[Problem.Problem]) -> Html.Html {
+  let topic = found.topic
+  let path = Contract.thread(topic.id)
+  let errors = match problem { case Some(failure) => Problem.fieldErrors(&failure) case None => [] }
+  page(frame, topic.title, topic.body.take(155), path, topic.status == "published",
+    H.div().class("forum-thread").holding([
+        H.a().href(Contract.ROOT).class("forum-back").says(Frame.t(frame, "forum.back")),
+        H.article().class("forum-question").holding([
+            H.p().class("eyebrow").says(Option.unwrapOr(topic.town, Frame.t(frame, "forum.all_towns"))),
+            H.h1().says(topic.title), H.div().class("forum-post-head").holding([Parts.author(frame, &topic.author), Parts.date(frame, topic.createdAt)]),
+            if topic.status == "held" { H.p().class("banner").says(Frame.t(frame, "forum.held")) } else { H.nothing() },
+            Parts.body(topic.body), Parts.controls(frame, topic.id, "", topic.isAuthor, topic.status, topic.body, topic.status == "published"),
+            if found.canModerate { H.div().class("forum-controls").holding([Parts.action(frame, path + "/moderate", if topic.locked { "unlock" } else { "lock" }, "", if topic.locked { "forum.unlock" } else { "forum.lock" }, "button button-small button-ghost"), H.a().href(Contract.MODERATION).says(Frame.t(frame, "forum.moderation"))]) } else { H.nothing() }
+          ]),
+        H.section().id("replies").class("forum-replies").holding([
+            H.div().class("forum-replies-heading").holding([H.h2().says(Parts.count(frame, topic.replyCount)), H.form().method("get").action(path + "#replies").class("forum-order").holding([
+                    H.labelFor().holding([H.span().class("sr-only").says(Frame.t(frame, "forum.order")), H.select().name("order").holding([orderChoice(frame, "oldest", order), orderChoice(frame, "newest", order)])]), H.button().submit().class("button button-small button-ghost").says(Frame.t(frame, "forum.apply"))
+                  ])]),
+            if found.posts.isEmpty() { H.p().class("muted").says(Frame.t(frame, "forum.first_reply")) } else { H.div().holding(found.posts.map(|post: Forum.Post| Parts.replyCard(frame, topic.id, topic.status == "published", &post))) },
+            if let Some(next) = found.next { H.a().href(path + "?order=" + order + "&after=" + Url.encodeComponent(next) + "#replies").class("button button-ghost forum-more").says(Frame.t(frame, "forum.more_replies")) } else { H.nothing() }
+          ]),
+        Form.problemBanner(frame, &problem),
+        if found.canReply {
+          H.form().method("post").action(path + "/reply").class("stack-form forum-reply-form").holding([
+              H.h2().says(Frame.t(frame, "forum.reply")), Form.token(frame), Form.area(frame, &Form.Field{..Form.field("body", Frame.t(frame, "forum.reply_body"), draft), required: true, hint: Frame.t(frame, "forum.reply_length")}, 5, &errors), H.p().class("small muted").says(Frame.t(frame, "forum.privacy")), H.button().submit().class("button").says(Frame.t(frame, "forum.reply"))
+            ])
+        } else if !Frame.signedIn(frame) { H.a().href(Routes.SIGN_IN + "?return=" + Url.encodeComponent(path)).class("button button-ghost").says(Frame.t(frame, "forum.signin")) }
+          else { H.p().class("muted").says(Frame.t(frame, if topic.locked { "forum.locked" } else { "forum.not_reply" })) }
+      ]))
+}
+/// The administrator's bounded queue, without private reporter details.
+export fn moderation(frame: &Frame.Frame, reports: &Array[Forum.Report]) -> Html.Html {
+  page(frame, Frame.t(frame, "forum.moderation"), "", Contract.MODERATION, false, H.div().class("forum-thread").holding([
+        H.a().href(Contract.ROOT).says(Frame.t(frame, "forum.back")), H.h1().says(Frame.t(frame, "forum.moderation")),
+        if reports.isEmpty() { H.p().says(Frame.t(frame, "forum.queue_empty")) } else {
+          H.div().holding(reports.map(|report: Forum.Report| H.article().class("forum-post").holding([
+                  H.h2().says(report.title), H.p().says(Frame.t(frame, "forum.reports") + ": " + show(report.reports) + " · " + report.reasons), Parts.body(report.body),
+                  H.div().class("forum-controls").holding([
+                      Parts.action(frame, Contract.thread(report.topicId) + "/moderate", "moderate_keep", Option.unwrapOr(report.postId, ""), "forum.keep", "button button-small button-ghost"),
+                      Parts.action(frame, Contract.thread(report.topicId) + "/moderate", "moderate_remove", Option.unwrapOr(report.postId, ""), "forum.remove_admin", "button button-small button-danger")
+                    ])
+                ])))
+        }
+      ]))
+}
+
+/// Preserve a refused reply without disclosing a parent that is no longer readable.
+export fn replyFallback(frame: &Frame.Frame, topic: Str, draft: Str, problem: Problem.Problem) -> Html.Html {
+  editor(frame, &Catalog.Catalog{categories: [], municipalities: [], scenes: []}, &Forum.Command{..Forum.draft("reply", topic), body: draft}, Some(problem))
+}

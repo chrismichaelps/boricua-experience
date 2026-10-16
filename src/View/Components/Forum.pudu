@@ -1,0 +1,93 @@
+/** @View.Components.Forum.Conversations — shared discussion presentation */
+module View.Components.Forum
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Std.Option as Option
+import Constants.Forum as Contract
+import Domain.Catalog as Catalog
+import Domain.Forum as Forum
+import Domain.Locale as Locale
+import I18n.Dates as Dates
+import I18n.Translate as Translate
+import Utils.Time as Time
+import View.Components.Avatar as Avatar
+import View.Components.Form as Form
+import View.Frame as Frame
+
+/// A database timestamp in the reader's language.
+export fn date(frame: &Frame.Frame, stamp: Str) -> H.Node {
+  let label = match Time.parseTimestamp(stamp) { case Some(found) => Dates.short(&frame.locale, &Time.local(&found)) case None => stamp.take(10) }
+  H.time().at("datetime", stamp).says(label)
+}
+/// Public author attribution; paused profiles do not reveal the stored name.
+export fn author(frame: &Frame.Frame, person: &Forum.Author) -> H.Node {
+  let name = Option.unwrapOr(person.displayName, Frame.t(frame, "forum.paused_author"))
+  H.div().class("forum-author").holding([Avatar.face(name, person.avatarUrl, "sm"), H.span().says(name)])
+}
+/// A plain-text contribution, escaped and preserving paragraph breaks.
+export fn body(text: Str) -> H.Node { H.div().class("forum-prose").says(text) }
+/// Published reply count.
+export fn count(frame: &Frame.Frame, amount: Int) -> Str { Translate.count(&frame.locale, "forum.reply_count", amount) }
+/// One compact board row, with no invented thumbnail or reputation score.
+export fn row(frame: &Frame.Frame, catalog: &Catalog.Catalog, topic: &Forum.Topic) -> H.Node {
+  H.li().class("forum-topic").holding([
+      H.div().class("forum-topic-main").holding([
+          H.div().class("forum-kicker").holding([
+              if let Some(town) = topic.town { H.span().says(town) } else { H.span().says(Frame.t(frame, "forum.all_towns")) },
+              if let Some(category) = topic.category { match Catalog.category(catalog, category) { case Some(found) => H.span().says(if frame.locale == Locale.En { found.nameEn } else { found.nameEs }) case None => H.nothing() } } else { H.nothing() }
+            ]),
+          H.h2().holding([H.a().href(Contract.thread(topic.id)).says(topic.title)]),
+          H.p().class("forum-excerpt").says(topic.body),
+          H.div().class("forum-topic-meta").holding([author(frame, &topic.author), H.span().holding([date(frame, topic.lastAt)])])
+        ]),
+      H.a().class("forum-reply-count").href(Contract.thread(topic.id) + "#replies").says(count(frame, topic.replyCount))
+    ])
+}
+/// A fixed operation with CSRF protection.
+export fn action(frame: &Frame.Frame, path: Str, actionName: Str, post: Str, label: Str, className: Str) -> H.Node {
+  H.form().method("post").action(path).holding([
+      Form.token(frame), H.input().kind("hidden").name("operation").value(actionName), H.input().kind("hidden").name("post").value(post),
+      H.button().submit().class(className).says(Frame.t(frame, label))
+    ])
+}
+/// Report disclosure; the member chooses a reason before sending.
+fn report(frame: &Frame.Frame, topic: Str, post: Str) -> H.Node {
+  H.details().class("forum-report").holding([
+      H.summary().says(Frame.t(frame, "forum.report")),
+      H.form().method("post").action(Contract.thread(topic) + "/report").class("stack-form").holding([
+          Form.token(frame), H.input().kind("hidden").name("post").value(post),
+          H.labelFor().holding([H.span().says(Frame.t(frame, "forum.report_reason")), H.select().name("reason").holding(Contract.REASONS.map(|reason: Str| H.option().value(reason).says(Frame.t(frame, "forum.reason." + reason))))]),
+          H.button().submit().class("button button-small button-ghost").says(Frame.t(frame, "forum.report_send"))
+        ])
+    ])
+}
+/// Owner actions are disclosures; deletion requires a separate deliberate submit.
+export fn controls(frame: &Frame.Frame, topic: Str, post: Str, own: Bool, status: Str, content: Str, parentPublished: Bool) -> H.Node {
+  let path = Contract.thread(topic)
+  H.div().class("forum-controls").holding([
+      if own {
+        H.div().class("forum-owner-actions").holding([
+            if status != "published" || !parentPublished { H.nothing() } else if post.isEmpty() { H.a().href(path + "/edit").says(Frame.t(frame, "forum.edit")) } else {
+              H.details().holding([H.summary().says(Frame.t(frame, "forum.edit")), H.form().method("post").action(path + "/edit" + (if frame.query.isEmpty() { "" } else { "?" + frame.query })).class("stack-form").holding([
+                      Form.token(frame), H.input().kind("hidden").name("post").value(post),
+                      H.labelFor().holding([H.span().says(Frame.t(frame, "forum.reply_body")), H.textarea().name("body").rows(5).required().at("minlength", "10").at("maxlength", "5000").says(content)]),
+                      H.button().submit().class("button button-small").says(Frame.t(frame, "forum.save"))
+                    ])])
+            },
+            H.details().holding([H.summary().says(Frame.t(frame, "forum.remove")), H.div().class("forum-delete-confirm").holding([
+                    H.p().says(Frame.t(frame, "forum.remove_confirm")),
+                    action(frame, path + "/remove", if post.isEmpty() { "remove_topic" } else { "remove_post" }, post, "forum.remove", "button button-small button-danger")
+                  ])])
+          ])
+      } else if Frame.signedIn(frame) && status == "published" && parentPublished { report(frame, topic, post) } else { H.nothing() }
+    ])
+}
+/// A reply with public attribution and ownership-aware actions.
+export fn replyCard(frame: &Frame.Frame, topic: Str, parentPublished: Bool, found: &Forum.Post) -> H.Node {
+  H.article().class("forum-post").id("post-" + found.id).holding([
+      H.header().class("forum-post-head").holding([author(frame, &found.author), date(frame, found.createdAt)]),
+      if found.status == "held" { H.p().class("banner").says(Frame.t(frame, "forum.held")) } else { H.nothing() },
+      body(found.body), controls(frame, topic, found.id, found.isAuthor, found.status, found.body, parentPublished)
+    ])
+}
