@@ -7,7 +7,7 @@ import Domain.Forum as Forum
 import Domain.Problem as Problem
 
 /// Topics matching the public filters.
-export fn board(gateway: &Gateway.Gateway, filters: &Forum.Filters, token: Option[Str]) -> Result[Forum.Board, Problem.Problem] {
+export fn board(gateway: &Gateway.Gateway, filters: &Forum.Filters, token: Option[Str]) -> Result[Forum.Topics, Problem.Problem] {
   Gateway.query(gateway, Contract.BOARD_RPC, &[("p_query", Gateway.text(filters.query)), ("p_town", Gateway.text(filters.town)), ("p_category", Gateway.text(filters.category)), ("p_after", Gateway.text(filters.after))], token, Gateway.Read)
 }
 /// One question and a bounded reply page.

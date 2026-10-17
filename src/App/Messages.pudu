@@ -115,7 +115,7 @@ export type Resolution = { reportId: Int, action: Str }
 
 /** @App.Messages.Kinds — every kind of request, made once and shared by the mediator and the routes */
 export type Kinds = {
-  forumBoard: Request.Kind[Visit[Forum.Filters], Forum.Board, Problem.Problem],
+  forumBoard: Request.Kind[Visit[Forum.Filters], Forum.Topics, Problem.Problem],
   forumThread: Request.Kind[Visit[Forum.Read], Forum.Thread, Problem.Problem],
   forumWrite: Request.Kind[Signed[Forum.Command], Forum.Written, Problem.Problem],
   forumModeration: Request.Kind[Signed[()], Array[Forum.Report], Problem.Problem],

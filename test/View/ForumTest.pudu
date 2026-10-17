@@ -45,8 +45,8 @@ fn main() -> Int {
   let guest = Html.render(&Pages.thread(&en, &found, "newest", "", None))
   let held = Html.render(&Pages.thread(&en, &Forum.Thread{..found, topic: Forum.Topic{..root, status: "held", isAuthor: true}}, "oldest", "", None))
   let member = Html.render(&Pages.thread(&en, &Forum.Thread{..found, canReply: true}, "oldest", "a draft <tag>", Some(Problem.Invalid([Problem.FieldError{field: "body", key: "forum.reply_length"}]))))
-  let board = Html.render(&Pages.board(&en, &catalog, &filters, &Forum.Board{items: [root], next: Some("cursor|special")}))
-  let empty = Html.render(&Pages.board(&es, &catalog, &filters, &Forum.Board{items: [], next: None}))
+  let board = Html.render(&Pages.board(&en, &catalog, &filters, &Forum.Topics{items: [root], next: Some("cursor|special")}))
+  let empty = Html.render(&Pages.board(&es, &catalog, &filters, &Forum.Topics{items: [], next: None}))
   let draft = Forum.Command{..Forum.draft("topic", ""), title: "  Question title  ", body: "  A complete question with enough detail.  "}
   let accepted = Result.unwrapOr(Rules.check(&draft), Forum.draft("", ""))
   let errors = match Rules.check(&Forum.draft("topic", "")) { case Err(Problem.Invalid(fields)) => fields.length() case _ => 0 }

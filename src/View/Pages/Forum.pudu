@@ -39,7 +39,7 @@ fn guidance(frame: &Frame.Frame) -> H.Node {
   H.aside().class("forum-guidance").holding([H.h2().says(Frame.t(frame, "forum.guidance")), H.p().says(Frame.t(frame, "forum.guidance_body")), H.p().class("small muted").says(Frame.t(frame, "forum.rules")), H.a().href(Routes.TERMS).says(Frame.t(frame, "footer.terms"))])
 }
 /// The public discussion index, including genuine empty and filtered-empty states.
-export fn board(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Forum.Filters, found: &Forum.Board) -> Html.Html {
+export fn board(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Forum.Filters, found: &Forum.Topics) -> Html.Html {
   let filtered = !filters.query.isEmpty() || !filters.town.isEmpty() || !filters.category.isEmpty()
   page(frame, Frame.t(frame, "forum.title"), Frame.t(frame, "forum.lead"), Contract.ROOT, filters.after.isEmpty() && !filtered,
     H.div().holding([
