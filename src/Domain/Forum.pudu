@@ -13,8 +13,8 @@ export type Topic = {
 } derives Json.Decode
 /** @Domain.Forum.Post — one bounded reply */
 export type Post = { id: Str, body: Str, author: Author, status: Str, @json("created_at") createdAt: Str, @json("updated_at") updatedAt: Str, @json("is_author") isAuthor: Bool } derives Json.Decode
-/** @Domain.Forum.Board — a keyset page of topics */
-export type Board = { items: Array[Topic], next: Option[Str] } derives Json.Decode
+/** @Domain.Forum.Topics — a keyset page of topics; named apart from Achievement.Board, whose derived decoder the 0.1.3 compiler otherwise picks for this field */
+export type Topics = { items: Array[Topic], next: Option[Str] } derives Json.Decode
 /** @Domain.Forum.Thread — the question and a page of replies */
 export type Thread = { topic: Topic, posts: Array[Post], next: Option[Str], @json("can_reply") canReply: Bool, @json("can_moderate") canModerate: Bool } derives Json.Decode
 /** @Domain.Forum.Report — an administrator's reported target, without reporter identity */

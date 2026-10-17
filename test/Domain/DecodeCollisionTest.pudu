@@ -1,0 +1,31 @@
+/** @Test.Domain.DecodeCollision — boards from different domains keep their own decoder in one build */
+module Domain.DecodeCollisionTest
+
+import Std.Json as Json
+import Std.Test as Test
+import Domain.Achievement as Achievement
+import Domain.Forum as Forum
+import Support.Fixtures as Fixtures
+import Utils.Wire as Wire
+
+/// Runs the checks with both domains in one module graph, the shape the server builds.
+fn main() -> Int {
+  let topicsPage = Json.object(&[
+      ("items", Json.list(&[Json.object(&[("id", Json.Text("t-1")), ("title", Json.Text("Título")), ("body", Json.Text("Cuerpo")), ("author", Json.object(&[("id", Json.Text("u-1"))])), ("town", Json.Null), ("town_slug", Json.Null), ("category", Json.Null), ("status", Json.Text("published")), ("reply_count", Json.Number(0)), ("created_at", Json.Text("2026-10-16T00:00:00Z")), ("updated_at", Json.Text("2026-10-16T00:00:00Z")), ("last_at", Json.Text("2026-10-16T00:00:00Z")), ("locked", Json.Boolean(false)), ("is_author", Json.Boolean(false))])])),
+      ("next", Json.Null)
+    ])
+  let achievements: Result[Achievement.Board, Json.DecodeError] = Wire.decode(&Fixtures.json("my-achievements.json"))
+  let topics: Result[Forum.Topics, Json.DecodeError] = Wire.decode(&topicsPage)
+  let checks = Test.suite("DecodeCollision", &[
+      Test.that("the achievements board decodes beside the forum board", match achievements {
+        case Ok(board) => board.total == 81 && board.items.length() == 5 && board.items[0].slug != ""
+        case Err(_) => false
+      }),
+      Test.that("the forum board decodes beside the achievements board", match topics {
+        case Ok(board) => board.items.length() == 1 && board.items[0].id == "t-1"
+        case Err(_) => false
+      })
+    ])
+  let ran = Test.run(&checks)
+  Test.report(&ran)
+}

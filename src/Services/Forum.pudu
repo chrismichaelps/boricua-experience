@@ -10,7 +10,7 @@ import Services.Runtime as Runtime
 import Validation.Forum as Rules
 
 /// A bounded topic search.
-export fn board(runtime: &Runtime.Runtime, filters: &Forum.Filters, session: Option[Session.Session]) -> Result[Forum.Board, Problem.Problem] {
+export fn board(runtime: &Runtime.Runtime, filters: &Forum.Filters, session: Option[Session.Session]) -> Result[Forum.Topics, Problem.Problem] {
   if filters.query.length() > 120 || filters.after.length() > 200 { return Err(Problem.Invalid([Problem.FieldError{field: "q", key: "forum.query_length"}])) }
   ForumApi.board(&runtime.gateway, filters, Option.map(session, |found: Session.Session| found.accessToken))
 }
