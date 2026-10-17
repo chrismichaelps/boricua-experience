@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-17 · release 0.13.1 · the member achievements board keeps its own decoder when the forum joins the build: the forum's page type is renamed Topics, because two Board decoders in one release let the forum's answer for the member board and every /achievements request failed since 0.13.0; a decode-collision test holds both apart · issue #137.
+
 - 2026-10-16 · compact discovery cards · natural-height visible copy replaces internally scrolling13rem panels; two phone/three tablet/four wide grid columns. Organizer and map geometry preserved;320/390/1280px browser checks, profile/home/search/activity/map and worker regressions pass. Asset87 · issue #136.
 
 - 2026-10-15 · release0.12.0 · permanent-place photo galleries, recent review previews, full-width reviews and hidden orphan review protection; both database migrations applied, asset86. Feature PR #133.
