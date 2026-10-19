@@ -876,6 +876,10 @@ notifications.week
 notifications.yesterday
 place.about
 place.all_photos
+place.area
+place.area_activities
+place.area_lead
+place.area_places
 place.closed
 place.closed_now
 place.closes_on
@@ -918,6 +922,7 @@ place.rank_label
 place.reviews.one
 place.reviews.other
 place.sections
+place.town_rank
 place.verified
 place.website
 place.yes

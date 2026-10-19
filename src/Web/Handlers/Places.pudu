@@ -14,6 +14,7 @@ import Domain.Media as Media
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Review as Review
+import Domain.Search as Search
 import Domain.Session as Session
 import Utils.Form as Form
 import View.Pages.Place as PlacePage
@@ -79,9 +80,37 @@ fn page(app: &Assembly.App, visitor: &Context.Visitor, draft: &Review.ReviewDraf
         case Some(found) => Problem.status(&found)
         case None => 200
       }
-      Respond.page(status, &PlacePage.render(&Context.frame(app, visitor), &catalog, &detail, &board, &menus, &gallery, draft, &problem))
+      Respond.page(status, &PlacePage.renderWith(&Context.frame(app, visitor), &catalog, &detail, &board, &menus, &gallery, draft, &problem, &area(app, visitor, &detail)))
     }
     case Err(found) => Respond.problem(app, visitor, &found)
+  }
+}
+
+/// How far "The area" looks around a place.
+const AREA_RADIUS_M: Int = 8000
+
+/// A rank in town means something only among at least this many places.
+const RANKED_TOWN_MIN: Int = 5
+
+/// The place's standing among its town's places, and the best places and next activities around it.
+/// Every part is optional: a failed read leaves that part empty and the page still answers.
+fn area(app: &Assembly.App, visitor: &Context.Visitor, detail: &Place.Detail) -> PlacePage.Area {
+  let card = detail.card
+  let around = Search.Filters{..Search.everything(), lat: Some(card.lat), lng: Some(card.lng), radiusM: Some(AREA_RADIUS_M)}
+  let town = Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, Search.Filters{..Search.everything(), municipality: card.municipality.slug}), Place.Results{items: [], next: None})
+  var rank = 0
+  var seen = 0
+  for listed in town.items {
+    seen = seen + 1
+    if listed.id == card.id { rank = seen }
+  }
+  PlacePage.Area {
+    townRank: if town.items.length() >= RANKED_TOWN_MIN { rank } else { 0 },
+    places: Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, around), Place.Results{items: [], next: None}).items,
+    activities: match Serve.ask(app, &app.kinds.search, Serve.visit(visitor, Search.Filters{..around, sort: Search.Soon})) {
+      case Ok(found) => found.items
+      case Err(_) => []
+    }
   }
 }
 
