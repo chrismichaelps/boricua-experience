@@ -31,6 +31,8 @@ export fn draftOf, routes, chooser
 
 ## Algorithm
 
+The place page also reads its town's best-ordered places (to find its rank, announced only among at least five) and the best places and next activities within 8 km. Each read is optional and falls back to empty (#150).
+
 `draftOf` keeps `d.` and `h.` fields only. A category switch carries shared fields in the query. A category that takes no places sends the visitor back to the chooser.
 
 ## Negative Logic (Prohibited Paths)
