@@ -23,6 +23,7 @@ import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Review as Review
 import Domain.Search as Search
+import Domain.TownGuide as TownGuide
 import Domain.Session as Session
 import PuduLangMediator.Request as Request
 import Services.Admin as AdminService
@@ -126,6 +127,7 @@ export type Kinds = {
   suggest: Request.Kind[Str, Array[Event.Card], Problem.Problem],
   pins: Request.Kind[Search.Filters, Search.Pins, Problem.Problem],
   catalog: Request.Kind[(), Catalog.Catalog, Problem.Problem],
+  townGuide: Request.Kind[Str, TownGuide.TownGuide, Problem.Problem],
   event: Request.Kind[Visit[Str], Event.Detail, Problem.Problem],
   eventPage: Request.Kind[Visit[(Str, Str)], Event.Detail, Problem.Problem],
   attendees: Request.Kind[Visit[Str], Event.Attendees, Problem.Problem],
@@ -235,6 +237,7 @@ export fn kinds() -> Kinds {
     suggest: kind("discover.suggest", READ),
     pins: kind("discover.pins", READ),
     catalog: kind("discover.catalog", READ),
+    townGuide: kind("discover.town_guide", READ),
     event: kind("events.detail", READ),
     eventPage: kind("events.page", READ),
     attendees: kind("events.attendees", READ),

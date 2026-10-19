@@ -24,6 +24,7 @@ import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Review as Review
 import Domain.Search as Search
+import Domain.TownGuide as TownGuide
 import I18n.Dates as Dates
 import I18n.Format as Format
 import Services.Discovery as Discovery
@@ -38,6 +39,7 @@ import View.Components.Hero as Hero
 import View.Components.Notice as Notice
 import View.Components.PhotoHeader as PhotoHeader
 import View.Components.PlaceCard as PlaceCard
+import View.Components.TownGuide as TownGuidePanel
 import View.Components.Search as Controls
 import View.Frame as Frame
 import View.Layout as Layout
@@ -178,6 +180,10 @@ fn main() -> Int {
   let filteredPage = Html.render(&PlacePage.renderWith(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &busyBoard, &None, &noMedia, &Review.blank(), &None, &PlacePage.NO_AREA, &Review.filterOf("4", "family")))
   let emptyFiltered = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &Review.ReviewBoard{..busyBoard, items: []}, &None, &noMedia, &Review.blank(), &None, &PlacePage.NO_AREA, &Review.filterOf("1", "")))
   let quietBoard = Html.render(&PlacePage.render(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None))
+  let rinconGuide: TownGuide.TownGuide = match Wire.decode(&Fixtures.json("town-guide.json")) { case Ok(found) => found case Err(_) => panic("town guide fixture") }
+  let rinconTown = Catalog.Municipality{slug: "rincon", name: "Rincón", region: "oeste", lat: 18.34, lng: -67.25}
+  let guidePanel = Html.render(&TownGuidePanel.panel(&en, &profiled, &rinconTown, &rinconGuide).html())
+  let islandPanel = Html.render(&TownGuidePanel.panel(&es, &profiled, &rinconTown, &TownGuide.TownGuide{..rinconGuide, island: true, airport: None}).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -214,6 +220,9 @@ fn main() -> Int {
   let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
   let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("a town guide gives the drive, the driest months and the year by month", guidePanel.contains("About 2 h 7 min by car from the main airport") && guidePanel.contains("Driest months: January, February, March") && guidePanel.contains("class=\"climate-strip\"") && guidePanel.contains("climate-month is-best")),
+      Test.that("a town guide cites its climate source and links categories to the town listing", guidePanel.contains("NOAA") && guidePanel.contains("/pueblo/rincon?category=")),
+      Test.that("an island's guide says how to get there instead of a drive", islandPanel.contains("lancha desde Ceiba") && !islandPanel.contains("en carro")),
       Test.that("busy reviews offer star and companion filters that find something", filteredPage.contains("class=\"review-filters chips\"") && filteredPage.contains("estrellas=4&amp;con=family#reviews") && filteredPage.contains(">Family<") && !filteredPage.contains("con=solo")),
       Test.that("the active filters are marked", filteredPage.contains("class=\"chip chip-active\" href=\"/lugar/") && filteredPage.contains("aria-current=\"true\"")),
       Test.that("a review says who the visit was with, and the form asks", filteredPage.contains("Went with family") && filteredPage.contains("name=\"companions\"") && filteredPage.contains("Who did you go with?")),

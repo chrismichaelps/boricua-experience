@@ -21,6 +21,7 @@ import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Resume as Resume
 import Domain.Search as Search
+import Domain.TownGuide as TownGuide
 import Services.Discovery as Discovery
 import Support.Fixtures as Fixtures
 import Utils.Time as Time
@@ -60,7 +61,11 @@ fn main() -> Int {
   let refilled = Place.fromDetail(&fonda)
   let dateNow = Option.unwrapOr(Time.parseTimestamp("2026-10-18T20:00:00Z"), Time.now())
   let release = Build.of(" 0.6.1 ", "0123456789abcdef0123456789abcdef01234567", "sha256:" + "0123456789abcdef".repeat(4), "2026-10-14T05:00:00Z")
+  let rincon: TownGuide.TownGuide = match Wire.decode(&Fixtures.json("town-guide.json")) { case Ok(found) => found case Err(why) => panic("town guide fixture: " + Json.explainDecode(&why)) }
   let checks = Test.suite("Domain", &[
+      Test.equals("a town guide names its three driest months in calendar order, the cooler first on a tie", &TownGuide.driestMonths(&rincon), &[1, 2, 3]),
+      Test.equals("the drive from the airport rounds up to whole minutes", &TownGuide.airportMinutes(&rincon), &Some(127)),
+      Test.equals("an island has no drive", &TownGuide.airportMinutes(&TownGuide.TownGuide{..rincon, island: true, airport: Some(TownGuide.AirportAccess{seconds: None, meters: None})}), &None),
       Test.equals("a guest's action rides inside the return path, before its fragment", &Resume.returning("/lugar/fonda#reviews", "review"), &"/lugar/fonda?resume=review#reviews"),
       Test.equals("an existing query gains the action as another pair", &Resume.returning("/e/plaza?from=share", "going"), &"/e/plaza?from=share&resume=going"),
       Test.equals("the sign-in address encodes the whole return path", &Resume.signIn("/signin", "/e/plaza", "like"), &"/signin?return=%2Fe%2Fplaza%3Fresume%3Dlike"),

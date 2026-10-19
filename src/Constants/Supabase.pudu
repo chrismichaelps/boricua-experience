@@ -38,6 +38,8 @@ export const PLACE_MENU: Str = "place_menu"
 export const SAVE_PLACE_MENU: Str = "save_place_menu"
 /// Reviews of places.
 export const PLACE_REVIEWS: Str = "place_reviews"
+/// A town's guide: climate, the drive from the airport, and what each category offers there.
+export const TOWN_GUIDE: Str = "town_guide"
 export const SAVE_REVIEW: Str = "save_review"
 export const DELETE_REVIEW: Str = "delete_review"
 export const RESPOND_REVIEW: Str = "respond_review"
