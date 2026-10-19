@@ -914,6 +914,7 @@ place.publish_title
 place.rail
 place.rail_category
 place.rail_town
+place.rank_label
 place.reviews.one
 place.reviews.other
 place.sections

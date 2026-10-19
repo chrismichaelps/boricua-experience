@@ -29,6 +29,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
 
     ("interest.group", "Interested in this activity?"),
     ("interest.interested_label", "Interested"),
+    ("place.rank_label", "Ranked number :rank"),
     ("interest.going_label", "Going"),
     ("interest.going.one", ":count person going"),
     ("interest.going.other", ":count people going"),
