@@ -79,3 +79,10 @@
 .place-area-block { display: grid; gap: 10px; }
 .place-area-title { font-size: 1.05rem; margin: 0; }
 .place-rank a { font-weight: 700; }
+.review-filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.companion-input { border: 0; padding: 0; margin: 0; min-width: 0; }
+.companion-input .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-choice input:checked + .chip { background: var(--color-ink); color: #fff; border-color: var(--color-ink); }
+.chip-choice input:focus-visible + .chip { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+.chip-choice .chip { cursor: pointer; }
+.review-companions { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; }

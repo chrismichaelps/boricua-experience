@@ -163,7 +163,7 @@ fn main() -> Int {
   let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
   let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.blank(), &None))
   let highlightsPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &Review.ReviewBoard{..board, highlights: board.items}, &None, &pictured, &Review.blank(), &None))
-  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
+  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: "", companions: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
   let placePinJson = Json.encode(&MapPage.combinedPins(&en, &[], &[Place.Listing{..fonda.card, mapIconUrl: Some("/assets/listings/example.png")}]))
   let placeMap = Html.render(&MapPage.renderPlaces(&en, &[], &[fonda.card], false, false, &profiled, &Search.everything(), "/search"))
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
@@ -172,8 +172,12 @@ fn main() -> Int {
   let secondPlace = Place.Listing{..fonda.card, id: "otra-fonda-id", slug: "otra-fonda", name: "Otra Fonda"}
   let rankedSearch = Html.render(&SearchPage.renderResults(&en, &profiled, &Search.everything(), &SearchPage.Open, &Event.Page{items: [detail.card], next: None}, &Place.Results{items: [fonda.card, secondPlace], next: None}))
   let laterPlaces = Html.render(&SearchPage.renderResults(&en, &profiled, &Search.everything(), &SearchPage.Open, &Event.Page{items: [], next: None}, &Place.Results{items: [fonda.card, secondPlace], next: None}, true))
-  let areaPage = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None, &PlacePage.Area{townRank: 2, places: [fonda.card, secondPlace], activities: [detail.card]}))
-  let lowRank = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None, &PlacePage.Area{townRank: 40, places: [fonda.card], activities: []}))
+  let areaPage = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None, &PlacePage.Area{townRank: 2, places: [fonda.card, secondPlace], activities: [detail.card]}, &Review.ALL_REVIEWS))
+  let lowRank = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None, &PlacePage.Area{townRank: 40, places: [fonda.card], activities: []}, &Review.ALL_REVIEWS))
+  let busyBoard = Review.ReviewBoard{..board, count: 5, companions: Json.object(&[("family", Json.Number(2)), ("solo", Json.Number(0))]), items: board.items.map(|r: Review.Review| Review.Review{..r, companions: Some("family")})}
+  let filteredPage = Html.render(&PlacePage.renderWith(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &busyBoard, &None, &noMedia, &Review.blank(), &None, &PlacePage.NO_AREA, &Review.filterOf("4", "family")))
+  let emptyFiltered = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &Review.ReviewBoard{..busyBoard, items: []}, &None, &noMedia, &Review.blank(), &None, &PlacePage.NO_AREA, &Review.filterOf("1", "")))
+  let quietBoard = Html.render(&PlacePage.render(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None))
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -210,6 +214,11 @@ fn main() -> Int {
   let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
   let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("busy reviews offer star and companion filters that find something", filteredPage.contains("class=\"review-filters chips\"") && filteredPage.contains("estrellas=4&amp;con=family#reviews") && filteredPage.contains(">Family<") && !filteredPage.contains("con=solo")),
+      Test.that("the active filters are marked", filteredPage.contains("class=\"chip chip-active\" href=\"/lugar/") && filteredPage.contains("aria-current=\"true\"")),
+      Test.that("a review says who the visit was with, and the form asks", filteredPage.contains("Went with family") && filteredPage.contains("name=\"companions\"") && filteredPage.contains("Who did you go with?")),
+      Test.that("a filter that finds nothing offers every review again", emptyFiltered.contains("No reviews match this filter.")),
+      Test.that("a place with few reviews shows no filters", !quietBoard.contains("review-filters")),
       Test.that("a place page shows the area with nearby places and activities, without itself", areaPage.contains("id=\"place-area\"") && areaPage.contains("Otra Fonda") && areaPage.contains("href=\"#place-area\"") && areaPage.contains(detail.card.title)),
       Test.that("a place in its town's top ten says so", areaPage.contains("#2 of places in")),
       Test.that("a lower rank and an area of only itself stay quiet", !lowRank.contains("of places in") && !lowRank.contains("id=\"place-area\"")),

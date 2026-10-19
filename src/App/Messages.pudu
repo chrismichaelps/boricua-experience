@@ -54,7 +54,7 @@ export type PlaceEdit = { placeId: Str, draft: Listing.Draft }
 export type PlaceStatus = { placeId: Str, visible: Bool }
 
 /** @App.Messages.ReviewRead — a page of a place's reviews */
-export type ReviewRead = { placeId: Str, after: Str }
+export type ReviewRead = { placeId: Str, after: Str, filter: Review.ReviewFilter }
 
 /** @App.Messages.MediaStart — an owner's declared upload for one place */
 export type MediaStart = { placeId: Str, request: Media.UploadRequest }

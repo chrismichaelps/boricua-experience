@@ -11,8 +11,8 @@ import Utils.Time as Time
 import Validation.ReviewForm as ReviewForm
 
 /// A place's reviews as the viewer may see them, from a cursor.
-export fn board(runtime: &Runtime.Runtime, placeId: Str, after: Str, session: Option[Session.Session]) -> Result[Review.ReviewBoard, Problem.Problem] {
-  ReviewsApi.board(&runtime.gateway, placeId, after, Option.map(session, |found: Session.Session| found.accessToken))
+export fn board(runtime: &Runtime.Runtime, placeId: Str, after: Str, filter: &Review.ReviewFilter, session: Option[Session.Session]) -> Result[Review.ReviewBoard, Problem.Problem] {
+  ReviewsApi.board(&runtime.gateway, placeId, after, filter, Option.map(session, |found: Session.Session| found.accessToken))
 }
 
 /// Writes or rewrites the member's review; `Invalid` names every refused field.
