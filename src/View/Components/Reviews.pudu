@@ -6,6 +6,7 @@ import Std.Html.Build as H
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Problem as Problem
+import Domain.Resume as Resume
 import Domain.Review as Review
 import I18n.Dates as Dates
 import I18n.Translate as Translate
@@ -96,7 +97,7 @@ fn roundStars(average: Float64) -> Int {
 /// The review form for a member who may review, the owner's note, or an invitation to sign in.
 fn composer(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> H.Node {
   if board.isOwner { return H.p().class("banner").says(Frame.t(frame, "review.owner_note")) }
-  if !Frame.signedIn(frame) { return H.a().class("button button-ghost").href(Routes.SIGN_IN + "?return=" + base + "%23reviews").says(Frame.t(frame, "review.sign_in")) }
+  if !Frame.signedIn(frame) { return H.a().class("button button-ghost").href(Resume.signIn(Routes.SIGN_IN, base + "#reviews", "review")).says(Frame.t(frame, "review.sign_in")) }
   if !board.canReview { return H.nothing() }
   let errors = match problem {
     case Some(found) => Problem.fieldErrors(&found)

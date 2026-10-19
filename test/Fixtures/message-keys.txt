@@ -261,6 +261,11 @@ auth.renew_lead
 auth.renew_title
 auth.reset_lead
 auth.reset_title
+auth.resume_going
+auth.resume_interested
+auth.resume_join
+auth.resume_like
+auth.resume_review
 auth.save_password
 auth.send_link
 auth.show_password
@@ -401,6 +406,12 @@ event.request_pending
 event.request_pending_body
 event.request_rejected
 event.request_to_join
+event.resume_dismiss
+event.resume_going
+event.resume_interested
+event.resume_join
+event.resume_like
+event.resume_title
 event.save
 event.share
 event.share_copy
