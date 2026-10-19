@@ -30,7 +30,7 @@ import Validation.ReviewForm as ReviewForm
 /// The catalogue of the recorded category profiles and two towns.
 fn profiles() -> Catalog.Catalog {
   let categories: Array[Catalog.Category] = Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), [])
-  Catalog.Catalog{categories: categories, municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}, Catalog.Municipality{slug: "luquillo", name: "Luquillo", region: "este", lat: 18.37, lng: -65.72}], scenes: []}
+  Catalog.Catalog{categories: categories, municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}, Catalog.Municipality{slug: "luquillo", name: "Luquillo", region: "este", lat: 18.37, lng: -65.72}], scenes: [], planStyles: []}
 }
 
 /// The recorded member profile, read before profiles carried their accepted versions.

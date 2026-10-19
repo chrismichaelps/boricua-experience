@@ -40,7 +40,7 @@ fn main() -> Int {
   let queue: Result[Array[Participation.IncomingRequest], Json.DecodeError] = Wire.decode(&Fixtures.json("event-requests.json"))
   let inbox: Result[Array[Notification.Notification], Json.DecodeError] = Wire.decode(&Fixtures.json("notifications.json"))
   let organized: Result[Array[Event.Card], Json.DecodeError] = Wire.decode(&Fixtures.json("my-events.json"))
-  let island = Catalog.Catalog{categories: [], municipalities: Result.unwrapOr(towns, []), scenes: []}
+  let island = Catalog.Catalog{categories: [], municipalities: Result.unwrapOr(towns, []), scenes: [], planStyles: []}
   let carolina = Option.unwrapOr(Catalog.municipality(&island, "carolina"), Catalog.Municipality{slug: "", name: "", region: "", lat: 0.0, lng: 0.0})
   let anchored = Search.anchored(&Search.Filters{..Search.everything(), near: "carolina"}, &island)
   let unknownTown = Search.anchored(&Search.Filters{..Search.everything(), near: "atlantis", radiusM: Some(5000)}, &island)

@@ -76,8 +76,24 @@ export fn regions(catalog: &Catalog) -> Array[Str] {
   found
 }
 
-/** @Domain.Catalog.Catalog — both reference lists, loaded together */
-export type Catalog = { categories: Array[Category], municipalities: Array[Municipality], scenes: Array[Scene] }
+/** @Domain.Catalog.PlanStyle — a kind of outing the plan page offers, as the database defines it */
+export type PlanStyle = { slug: Str, @json("name_es") nameEs: Str, @json("name_en") nameEn: Str, icon: Str } derives Json.Decode
+
+/** @Domain.Catalog.Catalog — the reference lists, loaded together */
+export type Catalog = { categories: Array[Category], municipalities: Array[Municipality], scenes: Array[Scene], @default("[]") planStyles: Array[PlanStyle] }
+
+/// The styles a plan may ask for: the database's, or the original five when it gave none.
+export fn styleSlugs(catalog: &Catalog) -> Array[Str] {
+  if catalog.planStyles.isEmpty() { ["mixed", "free", "family", "adventure", "culture"] } else { catalog.planStyles.map(|style: PlanStyle| style.slug) }
+}
+
+/// The plan style with a slug, when the database defines it.
+export fn planStyle(catalog: &Catalog, slug: Str) -> Option[PlanStyle] {
+  for style in catalog.planStyles {
+    if style.slug == slug { return Some(style) }
+  }
+  None
+}
 
 /// The category with a slug.
 export fn category(catalog: &Catalog, slug: Str) -> Option[Category] {

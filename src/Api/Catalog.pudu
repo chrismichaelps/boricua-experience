@@ -22,6 +22,11 @@ export fn townGuide(gateway: &Gateway.Gateway, slug: Str) -> Result[TownGuide.To
   Gateway.query(gateway, Supabase.TOWN_GUIDE, &[("p_slug", Gateway.text(slug))], None, Gateway.Read)
 }
 
+/// The active plan styles in form order.
+export fn planStyles(gateway: &Gateway.Gateway) -> Result[Array[Catalog.PlanStyle], Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLAN_STYLES, &[], None, Gateway.Read)
+}
+
 /// The active homepage destinations in their database display order.
 export fn scenes(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Scene], Problem.Problem] {
   Gateway.query(gateway, Supabase.FEATURED_DESTINATIONS, &[], None, Gateway.Read)

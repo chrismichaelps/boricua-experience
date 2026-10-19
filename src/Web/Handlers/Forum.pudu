@@ -58,7 +58,7 @@ fn thread(app: &Assembly.App, visitor: &Context.Visitor, draft: Str, problem: Op
 fn editor(app: &Assembly.App, visitor: &Context.Visitor, draft: &Forum.Command, problem: Option[Problem.Problem]) -> Http.Response {
   match catalog(app) {
     case Ok(choices) => Respond.page(match problem { case Some(failure) => Problem.status(&failure) case None => 200 }, &Pages.editor(&Context.frame(app, visitor), &choices, draft, problem))
-    case Err(failure) => if problem == None { Respond.problem(app, visitor, &failure) } else { Respond.page(Problem.status(&failure), &Pages.editor(&Context.frame(app, visitor), &Catalog.Catalog{categories: [], municipalities: [], scenes: []}, draft, Some(failure))) }
+    case Err(failure) => if problem == None { Respond.problem(app, visitor, &failure) } else { Respond.page(Problem.status(&failure), &Pages.editor(&Context.frame(app, visitor), &Catalog.Catalog{categories: [], municipalities: [], scenes: [], planStyles: []}, draft, Some(failure))) }
   }
 }
 /// Load only an owned published contribution into an editor.

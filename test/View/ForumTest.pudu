@@ -38,7 +38,7 @@ fn topic() -> Forum.Topic {
 fn main() -> Int {
   let en = visitor(Locale.En)
   let es = visitor(Locale.Es)
-  let catalog = Catalog.Catalog{categories: [], municipalities: [], scenes: []}
+  let catalog = Catalog.Catalog{categories: [], municipalities: [], scenes: [], planStyles: []}
   let filters = Forum.Filters{query: "", town: "", category: "", after: ""}
   let root = topic()
   let found = Forum.Thread{topic: root, posts: [], next: Some("next-id"), canReply: false, canModerate: false}

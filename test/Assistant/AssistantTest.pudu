@@ -41,7 +41,7 @@ fn main() -> Int {
       Reference.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.4655, lng: -66.1057},
       Reference.Municipality{slug: "caguas", name: "Caguas", region: "centro", lat: 18.2341, lng: -66.0485},
       Reference.Municipality{slug: "ponce", name: "Ponce", region: "sur", lat: 18.0111, lng: -66.6141}
-    ] }
+    ], planStyles: [] }
   let gateway = Gateway.over(|_request: Request.Request, _cancel: Cancel.Token| Err(HttpClient.Rejected("unexpected database call")), "https://example.test", "fixture")
   let key = Bytes.fromText("01234567890123456789012345678901")
   let runtime = Runtime.over(gateway, key, "https://example.test")
@@ -52,7 +52,7 @@ fn main() -> Int {
   let signature = Bytes.encodeHex(&Crypto.hmacSha256(&key, &Bytes.fromText("boricua-assistant:prepare:" + body)))
   let category = Reference.Category{slug: page.items[0].category.slug, nameEs: page.items[0].category.nameEs, nameEn: page.items[0].category.nameEn, icon: "music", upcoming: 1, places: 0, kinds: ["activity"], defaultKind: "activity", fields: []}
   let towns = [Reference.Municipality{slug: "fixture-town", name: "Fixture Town", region: "fixture", lat: 18.4, lng: -66.1}].concat(List.replicate(30, Reference.Municipality{slug: "other", name: "Other", region: "other", lat: 18.4, lng: -66.1}))
-  let _cached = Sync.set(&runtime.catalog, Some((Time.now().millis, Reference.Catalog{categories: [category], municipalities: towns, scenes: []})))
+  let _cached = Sync.set(&runtime.catalog, Some((Time.now().millis, Reference.Catalog{categories: [category], municipalities: towns, scenes: [], planStyles: []})))
   let catalogArgs = Json.object(&[("scope", Json.Text("categories")), ("query", Json.Text(""))])
   let catalogAnswer = Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: catalogArgs, known: [], locale: "en"})
   let townAnswer = Assistant.runTool(&runtime, &session, &Conversation.Tool{name: "browse_catalog", args: Json.object(&[("scope", Json.Text("towns"))]), known: [], locale: "es"})
@@ -73,7 +73,7 @@ fn main() -> Int {
   let outingsJson = Fixtures.json("plan-outings.json")
   let outings: Plan.Outings = match Wire.decode(&outingsJson) { case Ok(found) => found case Err(_) => panic("plan fixture") }
   let plansRuntime = Runtime.over(Gateway.over(|request: Request.Request, _cancel: Cancel.Token| Ok(Response.answer(&request, 200).withJson(&outingsJson)), "https://example.test", "fixture"), key, "https://example.test")
-  let _plansCatalog = Sync.set(&plansRuntime.catalog, Some((Time.now().millis, Reference.Catalog{categories: [category], municipalities: towns, scenes: []})))
+  let _plansCatalog = Sync.set(&plansRuntime.catalog, Some((Time.now().millis, Reference.Catalog{categories: [category], municipalities: towns, scenes: [], planStyles: []})))
   let itinerary = AssistantPlans.execute(&plansRuntime, "build_itinerary", &Json.object(&[("town", Json.Text(towns[0].slug)), ("when", Json.Text("today"))]), &[], "en")
   let checks = Test.suite("Assistant", &[
       Test.equals("place projection links to the real page", &Json.field(&Conversation.placeSource(&place, "en"), "href"), &Some(Json.Text("/lugar/" + place.slug))),
