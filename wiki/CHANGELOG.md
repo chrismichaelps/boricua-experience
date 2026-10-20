@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-19 · release0.14.1 · stable official cotorra raster favicon discovery and accurate multi-size ICO metadata. No schema changes.21 suites/752 assertions, binary format checks and browser icon decoding pass. [[handoffs/search-favicon]] · issue #167.
+
 - 2026-10-19 · stable search favicon · official cotorra ICO now contains six accurately declared raster sizes; homepage icon URLs stay stable across asset releases, with a192px PNG candidate. Crawler access verified; Google recrawl/display remains external. [[handoffs/search-favicon]] · issue #167.
 
 - 2026-10-19 · release0.14.0 · visitor guides, database plan styles, review companion filters, place quality/area ranking, resumed guest actions, shared UI polish and reviewed card themes; PRs154,156–163. Seven schema migrations are recorded in both environments. Live on production at main8284038; function/static/artifact fingerprints match. Release metadata synchronized to dev through PR165. Release validation and deployment receipt: [[handoffs/visitor-guide-completion]].
