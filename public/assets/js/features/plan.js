@@ -7,7 +7,8 @@ import { message } from '../constants/messages.js?v=80';
 import { toast } from './toast.js?v=80';
 import { createMap } from './mapLoader.js?v=80';
 import { getJson } from '../net/http.js?v=80';
-import { buildings3d } from './map3d.js?v=80';
+import { buildings3d } from './map3d.js?v=92';
+import { expandable } from './mapExpand.js?v=92';
 
 const ROUTE_COLOR = '#1878ec';
 // Room kept clear for the map tools on the right, so the route is never drawn under them.
@@ -47,6 +48,9 @@ async function drawMap(node) {
   const tools = node.parentElement?.querySelector('.plan-map-tools');
   if (tools) buildings3d(map, tools.querySelector('[data-map-3d]'), tools.querySelector('.map-turn'), { zoomIn: false });
   const bounds = pins.reduce((box, pin) => box.extend([pin.lng, pin.lat]), new maplibregl.LngLatBounds([pins[0].lng, pins[0].lat], [pins[0].lng, pins[0].lat]));
+  // Opening the map over the screen frames the whole route again at the larger size.
+  let framed = bounds;
+  expandable(map, tools?.querySelector('[data-map-expand]'), () => map.fitBounds(framed, { padding: FRAME, maxZoom: 14, duration: 0 }));
   for (const pin of pins) {
     const element = create('span', { class: 'plan-pin', 'aria-hidden': 'true' }, String(pin.order));
     new maplibregl.Marker({ element }).setLngLat([pin.lng, pin.lat]).addTo(map);
@@ -65,7 +69,8 @@ async function drawMap(node) {
     map.addLayer({ id: 'plan-road', type: 'line', source: 'plan-road', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ROUTE_COLOR, 'line-width': 4 } });
     map.addLayer({ id: 'plan-straight', type: 'line', source: 'plan-straight', paint: { 'line-color': ROUTE_COLOR, 'line-width': 3, 'line-dasharray': [1.5, 1.5], 'line-opacity': 0.7 } });
     const routed = lines.road.geometry.coordinates.flat();
-    if (routed.length) map.fitBounds(routed.reduce((box, point) => box.extend(point), bounds), { padding: FRAME, maxZoom: 14, duration: 0 });
+    if (routed.length) framed = routed.reduce((box, point) => box.extend(point), bounds);
+    map.fitBounds(framed, { padding: FRAME, maxZoom: 14, duration: 0 });
   });
 }
 

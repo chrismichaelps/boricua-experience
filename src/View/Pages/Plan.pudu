@@ -95,15 +95,15 @@ export fn pins(frame: &Frame.Frame, plan: &Plan.Plan) -> Str {
   Json.encode(&Json.list(&listed))
 }
 
-/// The 3D switch and the camera turns over a plan's or a trip's map; the turns show while 3D is on.
+/// The 3D switch, the compass (a drag turns the camera, a tap faces north) while 3D is on, and the
+/// switch that opens a plan's or a trip's map over the whole screen.
 export fn mapTools(frame: &Frame.Frame) -> H.Node {
   H.div().class("plan-map-tools").holding([
       H.button().kind("button").class("map-button plan-map-3d").data("map-3d", "1").at("aria-pressed", "false").label(Frame.t(frame, "map.view_3d_label")).holding([H.span().class("map-3d-mark").at("aria-hidden", "true").says("3D")]),
       H.div().class("map-turn").role("group").label(Frame.t(frame, "map.turn_group")).at("hidden", "hidden").holding([
-          H.button().kind("button").class("map-turn-button").data("turn", "-1").label(Frame.t(frame, "map.turn_left")).holding([Icons.sized("chevron-left", 20)]),
-          H.button().kind("button").class("map-turn-button map-compass").data("turn", "north").label(Frame.t(frame, "map.turn_north")).at("aria-pressed", "true").holding([H.span().class("map-compass-needle").at("aria-hidden", "true")]),
-          H.button().kind("button").class("map-turn-button").data("turn", "1").label(Frame.t(frame, "map.turn_right")).holding([Icons.sized("chevron-right", 20)])
-        ])
+          H.button().kind("button").class("map-turn-button map-compass").data("turn", "north").label(Frame.t(frame, "map.turn_north")).at("aria-pressed", "true").holding([H.span().class("map-compass-needle").at("aria-hidden", "true")])
+        ]),
+      H.button().kind("button").class("map-button plan-map-expand").data("map-expand", "1").data("expand-label", Frame.t(frame, "map.expand")).data("close-label", Frame.t(frame, "map.collapse")).at("aria-expanded", "false").label(Frame.t(frame, "map.expand")).holding([H.span().class("map-expand-glyph").at("aria-hidden", "true")])
     ])
 }
 

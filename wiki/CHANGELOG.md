@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · round route compass and full-screen route maps · plan and trip maps show one round drag compass instead of a tall arrow pill, and an expand button opens the route over the whole screen (Escape closes); asset92 · issue #175.
+
 - 2026-10-19 · release0.14.2 · unknown admission moves from narrow photo badges to card metadata; known/free badges are unchanged.21 suites/756 assertions and all browser harnesses pass. [[handoffs/admission-label]] · issue #171.
 
 - 2026-10-19 · card admission label · unknown prices render as quiet metadata instead of wrapping across map thumbnails; explicit free/paid image badges retain their existing appearance. [[handoffs/admission-label]] · issue #171.

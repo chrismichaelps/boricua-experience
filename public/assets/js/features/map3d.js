@@ -39,7 +39,7 @@ export function turn(map, step) {
   map.easeTo({ bearing, duration: reduced() ? 0 : 350 });
 }
 
-// A compact discovery compass doubles as a captured drag control; a tap still faces north.
+// A compact compass doubles as a captured drag control; a tap still faces north.
 function joystick(map, group, button) {
   let drag = null, suppressClick = false;
   const exploring = () => group.dispatchEvent(new CustomEvent('bx:map-explore', { bubbles: true }));
@@ -80,7 +80,7 @@ function rotationControls(map, group) {
   if (!group) return () => {};
   const compass = group.querySelector('[data-turn="north"]');
   const needle = compass?.querySelector('.map-compass-needle');
-  if (compass && group.closest?.('.map-page')) joystick(map, group, compass);
+  if (compass) joystick(map, group, compass);
   const paint = () => {
     const bearing = map.getBearing();
     if (needle) needle.style.transform = `rotate(${-bearing}deg)`;

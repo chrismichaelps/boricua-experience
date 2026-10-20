@@ -303,7 +303,7 @@ button[disabled] { cursor: wait; }
 .map-expand { position: absolute; top: 16px; right: 16px; z-index: 8; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #d8dddf; border-radius: 50%; background: white; color: #182c36; box-shadow: 0 2px 8px rgb(0 0 0 / 12%); cursor: pointer; }
 .map-expand[hidden], .map-loading[hidden] { display: none; }
 .map-expand-glyph { width: 18px; height: 18px; background: linear-gradient(currentColor,currentColor) top left/7px 2px,linear-gradient(currentColor,currentColor) top left/2px 7px,linear-gradient(currentColor,currentColor) bottom right/7px 2px,linear-gradient(currentColor,currentColor) bottom right/2px 7px; background-repeat: no-repeat; }
-.map-expand[aria-expanded="true"] .map-expand-glyph { background: linear-gradient(45deg,transparent 45%,currentColor 45% 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,currentColor 45% 55%,transparent 55%); }
+.map-expand[aria-expanded="true"] .map-expand-glyph, .plan-map-expand[aria-expanded="true"] .map-expand-glyph { background: linear-gradient(45deg,transparent 45%,currentColor 45% 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,currentColor 45% 55%,transparent 55%); }
 .map-expand:focus-visible { outline: 2px solid #25343b; outline-offset: 3px; }
 .map-page .map-controls { right: 76px; }
 .map-page.is-map-expanded .map-sheet { display: none; }
@@ -472,11 +472,23 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .plan-map-wrap { position: relative; }
 .plan-map-tools { position: absolute; top: 10px; right: 10px; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .plan-map-tools .map-button { width: 40px; min-width: 40px; height: 40px; min-height: 40px; padding: 0; justify-content: center; font-size: 13px; }
-/* On a route map the camera turns stay out of the route's way: one narrow column with the compass,
-   the turn arrows only where a pointer can use them and there is room. */
-.plan-map-tools .map-turn { flex-direction: column; padding: 0; border-radius: 20px; }
-.plan-map-tools .map-turn-button { width: 40px; height: 40px; }
-@media (pointer: coarse), (max-width: 759px) { .plan-map-tools .map-turn-button:not(.map-compass) { display: none; } }
+/* On a route map the camera turns stay out of the route's way: one round compass that turns the
+   camera when dragged and faces north when tapped. */
+.plan-map-tools .map-turn { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; overflow: hidden; }
+.plan-map-tools .map-turn[hidden] { display: none; }
+.plan-map-tools .map-turn-button { width: 40px; height: 40px; border-radius: 50%; }
+.plan-map-tools .map-compass { cursor: grab; touch-action: none; }
+.plan-map-tools .map-compass:active { cursor: grabbing; }
+.plan-map-expand { border-radius: 50%; color: var(--color-ocean-deep); }
+/* An expanded route map covers the screen, above the app bar and tab bar, until it is closed. */
+.has-expanded-map, .has-expanded-map body { overflow: hidden; }
+.plan-map-wrap.is-map-expanded, .trip-stage.is-map-expanded { position: fixed; inset: 0; z-index: 130; height: 100dvh; min-height: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: #e8eef3; }
+.plan-map-wrap.is-map-expanded .plan-map { height: 100%; border-radius: 0; }
+.plan-map-wrap.is-map-expanded .plan-map-tools { top: calc(env(safe-area-inset-top) + 16px); right: calc(env(safe-area-inset-right) + 16px); }
+.trip-stage.is-map-expanded .trip-map-tools { top: calc(env(safe-area-inset-top) + 16px); left: calc(env(safe-area-inset-left) + 16px); }
+.is-map-expanded .plan-map-tools .map-button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; box-shadow: 0 2px 10px rgb(28 43 55 / 18%); }
+.is-map-expanded .plan-map-tools .map-turn, .is-map-expanded .plan-map-tools .map-turn-button { width: 44px; height: 44px; }
+.has-expanded-map .a11y-launch, .has-expanded-map .build-update { visibility: hidden; }
 .plan-map-tools .map-button[aria-pressed="true"] { background: var(--color-ocean); color: white; }
 .plan-map-wrap .plan-map { height: 240px; }
 .plan-trip { background: var(--color-ink); border-color: var(--color-ink); }
