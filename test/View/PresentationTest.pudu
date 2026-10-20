@@ -220,6 +220,9 @@ fn main() -> Int {
   let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
   let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("search icons keep stable raster URLs across application revisions", home.contains("href=\"/favicon.ico\"") && home.contains("href=\"/assets/brand/icon-192.png\"") && !home.contains("/favicon.ico?v=") && !home.contains("/assets/brand/icon-192.png?v=")),
+      Test.that("favicon metadata declares the actual raster sizes", home.contains("sizes=\"16x16 32x32 48x48 96x96 192x192 256x256\"") && home.contains("type=\"image/png\" sizes=\"192x192\"")),
+      Test.that("search favicon candidates prefer raster formats while retaining touch icon", !home.contains("/assets/brand/icon.svg") && home.contains("rel=\"apple-touch-icon\"")),
       Test.that("a town guide gives the drive, the driest months and the year by month", guidePanel.contains("About 2 h 7 min by car from the main airport") && guidePanel.contains("Driest months: January, February, March") && guidePanel.contains("class=\"climate-strip\"") && guidePanel.contains("climate-month is-best")),
       Test.that("a town guide cites its climate source and links categories to the town listing", guidePanel.contains("NOAA") && guidePanel.contains("/pueblo/rincon?category=")),
       Test.that("an island's guide says how to get there instead of a drive", islandPanel.contains("lancha desde Ceiba") && !islandPanel.contains("en carro")),
