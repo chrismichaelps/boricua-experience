@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-19 · release0.14.0 · visitor guides, database plan styles, review companion filters, place quality/area ranking, resumed guest actions, shared UI polish and reviewed card themes; PRs154,156–163. Seven schema migrations are recorded in both environments. Release validation and deployment receipt: [[handoffs/visitor-guide-completion]].
+
 - 2026-10-19 · visitor guide completion · guest actions resume after authentication; quality-ranked permanent places and town standing; visit-companion review filters; database-backed plan styles and town access/climate/category guides; redesigned nearby home card and optional card backgrounds. Cover validation precedes publishing, partial saves produce bilingual warnings, category switches retain choices and artwork never counts as a photograph. Owned parent locks preserve concurrent uploads. Free plans require a known zero price; guide counts use canonical discovery windows and held exclusions. Seven reviewed private migrations are recorded in both environments. Independent review,21 suites/749 assertions, browser desktop/390px checks and real dev concurrency/permission regressions pass; asset91. [[handoffs/visitor-guide-completion]] · PR154.
 
 - 2026-10-17 · release 0.13.1 · the member achievements board keeps its own decoder when the forum joins the build: the forum's page type is renamed Topics, because two Board decoders in one release let the forum's answer for the member board and every /achievements request failed since 0.13.0; a decode-collision test holds both apart · issue #137.

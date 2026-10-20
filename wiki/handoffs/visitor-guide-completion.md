@@ -6,7 +6,7 @@ Role: Architect → Implementer. Recovered Claude session Web app automation and
 ## Cover completion Grill Log · #155 — resolved
 Reject unknown theme values before publishing. Successful listing saves carry an explicit coverSaved outcome; a subsequent theme failure keeps the saved listing and redirects once with a bilingual warning to retry through editing, never a duplicate publish. Theme updates lock the owned parent before reading its cover so a concurrent confirmed photograph cannot be overwritten. Theme/default artwork is illustration, never a gallery photograph. The fieldset retains keyboard radio semantics, selected state, linked validation errors and all category-switch draft state. Local artwork is asset-versioned; uploaded photographs remain authoritative.
 
-Next action: finish the remaining place browser save/reset checks, merge reviewed bounded PR slices, then release0.14.0 and verify the production fingerprint.
+Next action: stage release0.14.0 on Vercel, verify pages and its source fingerprint, then promote and verify the public domain.
 
 ## Review ownership transition
 review_homepage: Reviewer → Implementer for the isolated eligibility SQL correction and scoped contract mirrors; root independently reviews and applies it. Cover implementation remains root-owned, independently reviewed by review_activity_covers.
@@ -19,3 +19,6 @@ Desktop and390px browser: actual authenticated activity create/edit, checked sel
 Both environments record the five original migrations and two corrective migrations. All three affected function definitions and ACLs match exactly; no production seed users/events. The broader preexisting achievement helper differs only by a comment; no unrelated production definition was overwritten. Concurrent real confirmation/theme calls in all four listing/order combinations preserve the photo; guest/unrelated/paused denial, default reset and invalid theme assertions pass with disposable development data or rollback.
 
 Phone place create/save passed after supplying its category-required water condition; the saved theme reopens checked. Category switching preserves both name and theme. Browser default-reset and final publication verification follow in the release receipt. Disposable browser rows are development-only and removed after verification.
+
+## Release preparation
+All eight original feature slices merged through PRs156–163; completion PR154 is merged to dev. The resulting source tree equals the independently tested feature tree. Both browser-created activity and place themes were reset successfully and their checked defaults reopened; disposable rows were deleted. No production publication data was touched. Release metadata is the only pending source-tree delta.
