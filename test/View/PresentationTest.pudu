@@ -169,6 +169,9 @@ fn main() -> Int {
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let placeSearchFilters = Search.Filters{..Search.everything(), query: "Macdonald", category: "comida", municipality: "ponce"}
   let placeSearch = Html.render(&SearchPage.renderResults(&en, &profiled, &placeSearchFilters, &SearchPage.Open, &Event.Page{items: [], next: Some("event-cursor")}, &Place.Results{items: [fonda.card], next: Some("place&cursor")}))
+  let secondPlace = Place.Listing{..fonda.card, slug: "otra-fonda", name: "Otra Fonda"}
+  let rankedSearch = Html.render(&SearchPage.renderResults(&en, &profiled, &Search.everything(), &SearchPage.Open, &Event.Page{items: [detail.card], next: None}, &Place.Results{items: [fonda.card, secondPlace], next: None}))
+  let laterPlaces = Html.render(&SearchPage.renderResults(&en, &profiled, &Search.everything(), &SearchPage.Open, &Event.Page{items: [], next: None}, &Place.Results{items: [fonda.card, secondPlace], next: None}, true))
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -205,6 +208,9 @@ fn main() -> Int {
   let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
   let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("the first page of a ranked place listing numbers its places", rankedSearch.contains("class=\"card-rank\"") && rankedSearch.contains(">#1<") && rankedSearch.contains(">#2<")),
+      Test.that("activities come before the places on a search page", rankedSearch.indexOf("data-feature=\"results\"") < rankedSearch.indexOf("place-results-title")),
+      Test.that("a continued place page and a single place carry no rank", !laterPlaces.contains("card-rank") && !placeSearch.contains("card-rank")),
       Test.that("a guest's marks and join link carry the action through sign-in", guestPage.contains("%3Fresume%3Dgoing") && guestPage.contains("%3Fresume%3Dinterested") && guestPage.contains("%3Fresume%3Dlike") && guestPage.contains("%3Fresume%3Djoin")),
       Test.that("a member back from sign-in is offered to finish the action in one tap", resumedGoing.contains("resume-banner") && resumedGoing.contains("data-resume-action=\"going\"") && resumedGoing.contains("Mark as going")),
       Test.that("an action already done, or a guest, gets no resume offer", !alreadyGoing.contains("resume-banner") && !guestResume.contains("resume-banner")),
