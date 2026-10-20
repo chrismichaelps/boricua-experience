@@ -29,4 +29,4 @@ tags: [moc, handoff]
 
 - [[handoffs/community-forum]] — compact discovery cards and a moderated public forum.
 
-- [[handoffs/visitor-guide-completion]] — PR154 release completion.
+- [[handoffs/visitor-guide-completion]] — completed PR154, production0.14.0 and verified deployment receipt.
