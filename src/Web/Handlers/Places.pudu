@@ -37,7 +37,8 @@ export fn draftOf(fields: &Map[Str, Str]) -> Place.Draft {
     phone: Form.text(fields, "phone"),
     website: Form.text(fields, "website"),
     facts: Maps.mapValues(&Maps.filterKeys(fields, |name: Str| name.startsWith("d.")), |value: Str| value.replace("\r\n", "\n").trim()),
-    hours: Maps.mapValues(&Maps.filterKeys(fields, |name: Str| name.startsWith("h.")), |value: Str| value.trim())
+    hours: Maps.mapValues(&Maps.filterKeys(fields, |name: Str| name.startsWith("h.")), |value: Str| value.trim()),
+    coverTheme: Form.text(fields, "coverTheme")
   }
 }
 

@@ -42,6 +42,8 @@ export const PLACE_REVIEWS: Str = "place_reviews"
 export const TOWN_GUIDE: Str = "town_guide"
 /// The active plan styles.
 export const PLAN_STYLES: Str = "plan_styles"
+/// A card's background theme, for an activity or place without an uploaded photograph.
+export const SET_COVER_THEME: Str = "set_cover_theme"
 export const SAVE_REVIEW: Str = "save_review"
 export const DELETE_REVIEW: Str = "delete_review"
 export const RESPOND_REVIEW: Str = "respond_review"

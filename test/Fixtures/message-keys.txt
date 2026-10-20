@@ -557,7 +557,9 @@ home.headline
 home.near_action
 home.near_body
 home.near_go
+home.near_or
 home.near_pick_town
+home.near_popular
 home.near_title
 home.near_town
 home.pause_slides
@@ -1141,6 +1143,16 @@ publish.cash_yes
 publish.choose
 publish.choose_lead
 publish.choose_title
+publish.cover_atardecer
+publish.cover_bosque
+publish.cover_ciudad
+publish.cover_default
+publish.cover_fiesta
+publish.cover_hint
+publish.cover_mar
+publish.cover_montana
+publish.cover_noche
+publish.cover_title
 publish.description
 publish.edit_title
 publish.fact_unsaid

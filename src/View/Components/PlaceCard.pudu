@@ -8,6 +8,7 @@ import Std.Time as StdTime
 import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Cover as Cover
 import Domain.Place as Place
 import I18n.Format as Format
 import I18n.Translate as Translate
@@ -17,7 +18,7 @@ import View.Components.Icons as Icons
 import View.Frame as Frame
 
 /// The cover a place shows, its own or its category's illustration.
-export fn coverOf(place: &Place.Listing) -> Str { Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg?v=" + App.ASSET_VERSION) }
+export fn coverOf(place: &Place.Listing) -> Str { Cover.served(Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg"), App.ASSET_VERSION) }
 
 /// Whether the place is open now in Puerto Rico, or none when its hours are unknown.
 export fn openNow(frame: &Frame.Frame, place: &Place.Listing) -> Option[Bool] {

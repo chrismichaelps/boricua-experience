@@ -10,6 +10,7 @@ import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Draft as Draft
 import Domain.Problem as Problem
+import View.Components.CoverPicker as CoverPicker
 import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.Search as SearchControls
@@ -54,7 +55,8 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, mode: &Mode, dr
                 Form.input(frame, &field("title", "publish.field_title", draft.title), &errors, |c: H.Node| c.at("maxlength", "120")),
                 Form.input(frame, &Form.Field{..field("summary", "publish.field_summary", draft.summary), hint: Frame.t(frame, "publish.hint_summary")}, &errors, |c: H.Node| c.at("maxlength", "200")),
                 Form.select(frame, &field("category", "publish.field_category", draft.category), &categories, &errors),
-                Form.area(frame, &Form.Field{..Form.field("description", Frame.t(frame, "publish.field_description"), draft.description), hint: Frame.t(frame, "publish.hint_description")}, 6, &errors)
+                Form.area(frame, &Form.Field{..Form.field("description", Frame.t(frame, "publish.field_description"), draft.description), hint: Frame.t(frame, "publish.hint_description")}, 6, &errors),
+                CoverPicker.picker(frame, draft.coverTheme, "/assets/covers/" + (if draft.category.isEmpty() { "social" } else { draft.category }) + ".svg")
               ]),
             H.section().class("form-section").holding([
                 H.h2().class("section-title").says(Frame.t(frame, "publish.when")),

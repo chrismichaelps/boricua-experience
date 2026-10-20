@@ -215,12 +215,6 @@ ul { padding: 0; list-style: none; }
 .card-cancelled .card-media img { filter: grayscale(.8); opacity: .7; }
 
 /* Promotional tiles and bands */
-.promo { display: grid; gap: 18px; padding: 28px 24px; border-radius: var(--radius-image); background: var(--color-ocean); color: var(--color-white); }
-.promo h2 { font-size: 24px; line-height: 32px; font-weight: 800; }
-.promo p { opacity: .92; }
-.promo-actions { display: grid; gap: 12px; justify-items: start; }
-.near-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.near-form select { min-height: 44px; max-width: 100%; padding: 8px 12px; border: 0; border-radius: var(--radius-pill); background: var(--color-white); color: var(--color-ink, #1b2833); font: inherit; font-weight: 600; }
 .neighbors { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 16px; }
 .neighbors-title { flex-basis: 100%; font-size: 15px; font-weight: 800; }
 .neighbors .chip small { color: var(--color-graphite); font-weight: 600; }
@@ -516,7 +510,7 @@ ul { padding: 0; list-style: none; }
   .card-grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .rail-track { grid-auto-flow: row; grid-template-columns: repeat(4, 1fr); overflow: visible; margin: 0; padding: 0; }
   .rail-track .rail-item:nth-child(n + 9) { display: none; }
-  .promo, .create-tile { grid-template-columns: 1fr auto; align-items: center; padding: 40px 48px; }
+  .create-tile { grid-template-columns: 1fr auto; align-items: center; padding: 40px 48px; }
   .directory { margin: 0 -24px; padding: 48px; }
   .event-cover { margin: 0; border-radius: var(--radius-image); aspect-ratio: 21 / 8; }
   .event-layout { grid-template-columns: minmax(0, 1fr) 360px; gap: 40px; align-items: start; }

@@ -44,7 +44,8 @@ export fn draftOf(fields: &Map[Str, Str]) -> Draft.Draft {
     minAge: Form.text(fields, "minAge"),
     accessible: Form.text(fields, "accessible") == "on",
     parking: Form.text(fields, "parking"),
-    cashOnly: Form.text(fields, "cashOnly")
+    cashOnly: Form.text(fields, "cashOnly"),
+    coverTheme: Form.text(fields, "coverTheme")
   }
 }
 
