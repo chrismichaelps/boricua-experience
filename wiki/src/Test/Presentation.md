@@ -131,3 +131,6 @@ Resolved: render place Results with a continuation, assert independent escaped c
 ## Place discovery Grill Log · #132
 Resolved: Cover real vs absent photos, gallery dialog controls, escaped bilingual labels and content, highlight counts and negative ratings, independent pagination links and empty-state omission.
 Browser lifecycle harness: scripts/place-gallery-test.mjs executes the actual module with seven photographs and exercises next/previous wrapping, modified clicks/keys, native Escape ownership, close/pagehide/reopen, focus/overflow restoration, single-photo and unsupported-dialog fallbacks. Private browser fixtures never enter source, storage or production.
+
+## Visitor guide and guest intent Grill Log · #148 — resolved
+Current presentation assertions cover mainland/island guides, climate provenance/category links, independent review star/companion filter links and filtered-empty reset, surrounding place/activity cards and self-exclusion, visible town ranks, ranked first-page versus continuation/single-card omission, activity-before-place order, and guest resume links/banner suppression/like actions/auth encoding. Existing checks preserve shared nearby picker markup. These are pure rendered-output tests, not a claim of end-to-end OAuth or database verification.

@@ -146,3 +146,10 @@ export fn discardPending(gateway: &Gateway.Gateway, mediaId: Str, token: Str) ->
 export fn discardPendingEvent(gateway: &Gateway.Gateway, mediaId: Str, eventId: Str, token: Str) -> Result[Media.Discarded, Problem.Problem] {
   Gateway.query(gateway, Supabase.DISCARD_PENDING_EVENT_MEDIA, &[("p_media_id", Gateway.text(mediaId)), ("p_event_id", Gateway.text(eventId))], Some(token), Gateway.Write)
 }
+
+/// Gives an activity (`event`) or a place (`place`) a background theme, or the category default for
+/// an empty one; an uploaded photograph is kept.
+export fn setCoverTheme(gateway: &Gateway.Gateway, kind: Str, id: Str, theme: Str, token: Str) -> Result[(), Problem.Problem] {
+  let _answer = Gateway.call(gateway, Supabase.SET_COVER_THEME, &[("p_kind", Gateway.text(kind)), ("p_id", Gateway.text(id)), ("p_theme", Gateway.text(theme))], Some(token), Gateway.Write) ?
+  Ok(())
+}

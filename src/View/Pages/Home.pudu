@@ -74,27 +74,46 @@ fn planTile(frame: &Frame.Frame) -> H.Node {
     ])
 }
 
-/// The blue promotional tile inviting the visitor to see what is near: by device location, or by
-/// choosing a town and a radius, which needs no location permission at all.
+/// How many featured towns the near-you card offers as one-tap choices.
+const NEAR_QUICK_TOWNS: Int = 6
+
+/// The card inviting the visitor to see what is near: by device location, or by choosing a town and
+/// a radius, which needs no location permission at all. Featured destinations become one-tap towns.
 fn nearTile(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> H.Node {
   var towns = H.select().name("cerca").id("near-town").required()
   towns = towns.holding([H.option().value("").says(Frame.t(frame, "home.near_pick_town"))])
   for town in catalog.municipalities { towns = towns.holding([H.option().value(town.slug).says(town.name)]) }
-  H.section().class("promo").holding([
-      H.div().class("promo-copy").holding([
-          H.h2().says(Frame.t(frame, "home.near_title")),
-          H.p().says(Frame.t(frame, "home.near_body"))
+  var quick: Array[Catalog.Municipality] = []
+  for scene in catalog.scenes {
+    match Catalog.municipality(catalog, scene.town) {
+      case Some(found) => if quick.length() < NEAR_QUICK_TOWNS && quick.filter(|kept: Catalog.Municipality| kept.slug == found.slug).isEmpty() { quick = quick.push(found) }
+      case None => ()
+    }
+  }
+  H.section().class("near-card").at("aria-labelledby", "near-title").holding([
+      H.div().class("near-copy").holding([
+          H.h2().class("section-title").id("near-title").says(Frame.t(frame, "home.near_title")),
+          H.p().class("muted").says(Frame.t(frame, "home.near_body"))
         ]),
-      H.div().class("promo-actions").holding([
-          H.a().class("button button-light").href(Routes.MAP + "?near=1").holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "home.near_action"))]),
-          H.form().class("near-form").data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).action(Routes.SEARCH).method("get").holding([
-              H.labelFor().class("sr-only").at("for", "near-town").says(Frame.t(frame, "search.near")),
-              towns,
-              H.labelFor().class("sr-only").at("for", "near-radius").says(Frame.t(frame, "search.radius")),
-              SearchControls.radiusSelect(frame, Search.DEFAULT_RADIUS_KM, "near-radius"),
-              H.button().submit().class("button button-light button-small").says(Frame.t(frame, "home.near_go"))
-            ])
-        ])
+      H.a().class("button button-ghost near-locate").href(Routes.MAP + "?near=1").holding([Icons.sized("crosshair", 18), H.span().says(Frame.t(frame, "home.near_action"))]),
+      H.p().class("near-divider").says(Frame.t(frame, "home.near_or")),
+      H.form().class("near-form").data("feature", "search-pickers").data("open-invalid", "1").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).action(Routes.SEARCH).method("get").holding([
+          H.div().class("near-field near-field-town").holding([
+              H.labelFor().class("near-label").at("for", "near-town").says(Frame.t(frame, "search.near")),
+              towns
+            ]),
+          H.div().class("near-field").holding([
+              H.labelFor().class("near-label").at("for", "near-radius").says(Frame.t(frame, "search.radius")),
+              SearchControls.radiusSelect(frame, Search.DEFAULT_RADIUS_KM, "near-radius")
+            ]),
+          H.button().submit().class("near-go").label(Frame.t(frame, "home.near_go")).holding([Icons.sized("search", 20)])
+        ]),
+      if quick.isEmpty() { H.nothing() } else {
+        H.nav().class("near-quick").label(Frame.t(frame, "home.near_popular")).holding([
+            H.p().class("near-label").says(Frame.t(frame, "home.near_popular")),
+            H.div().class("chips").holding(quick.map(|town: Catalog.Municipality| H.a().class("chip").href(Routes.SEARCH + Query.render(&[("cerca", town.slug), ("radio", show(Search.DEFAULT_RADIUS_KM))])).holding([Icons.sized("pin", 16), H.span().says(town.name)])))
+          ])
+      }
     ])
 }
 

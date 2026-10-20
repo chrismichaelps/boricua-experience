@@ -18,13 +18,13 @@ fn main() -> Int {
   let topics: Result[Forum.Topics, Json.DecodeError] = Wire.decode(&topicsPage)
   let checks = Test.suite("DecodeCollision", &[
       Test.that("the achievements board decodes beside the forum board", match achievements {
-        case Ok(board) => board.total == 81 && board.items.length() == 5 && board.items[0].slug != ""
-        case Err(_) => false
-      }),
+          case Ok(board) => board.total == 81 && board.items.length() == 5 && board.items[0].slug != ""
+          case Err(_) => false
+        }),
       Test.that("the forum board decodes beside the achievements board", match topics {
-        case Ok(board) => board.items.length() == 1 && board.items[0].id == "t-1"
-        case Err(_) => false
-      })
+          case Ok(board) => board.items.length() == 1 && board.items[0].id == "t-1"
+          case Err(_) => false
+        })
     ])
   let ran = Test.run(&checks)
   Test.report(&ran)

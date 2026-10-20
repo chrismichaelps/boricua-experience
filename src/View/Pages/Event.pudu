@@ -10,6 +10,7 @@ import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Participation as Participation
 import Domain.Problem as Problem
+import Domain.Resume as Resume
 import I18n.Dates as Dates
 import I18n.Format as Format
 import I18n.Translate as Translate
@@ -47,6 +48,7 @@ export fn renderFrom(frame: &Frame.Frame, detail: &Event.Detail, problem: &Optio
         H.div().class("event-layout").holding([
             H.div().class("event-main").holding([
                 heading(frame, detail),
+                resumeBanner(frame, detail),
                 interest(frame, detail),
                 reactions(frame, detail),
                 about(frame, detail),
@@ -152,6 +154,41 @@ fn shareMenu(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
     ])
 }
 
+/// After signing in from an action on this page, offers to finish it in one tap; nothing when it is
+/// already done or no longer possible.
+fn resumeBanner(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
+  let card = detail.card
+  let kind = match Resume.fromQuery(frame.query) {
+    case Some(found) => found
+    case None => { return H.nothing() }
+  }
+  let open = card.status == "published" && !Event.hasEnded(&card, frame.nowMillis)
+  if !detail.viewer.signedIn || detail.viewer.isOrganizer || !open { return H.nothing() }
+  let base = Routes.EVENT_PREFIX + card.slug
+  let action = if kind == "interested" || kind == "going" {
+    if card.visibility != "public" || Option.unwrapOr(detail.viewer.interest, "") == kind { return H.nothing() }
+    H.form().action(base + "/interest").method("post").holding([
+        Form.token(frame),
+        H.input().kind("hidden").name("kind").value(kind),
+        H.button().submit().class("button").data("resume-action", kind).holding([Icons.sized(if kind == "going" { "check" } else { "star" }, 18), H.span().says(Frame.t(frame, if kind == "going" { "event.resume_going" } else { "event.resume_interested" }))])
+      ])
+  } else if kind == "like" {
+    if detail.viewer.reaction == 1 { return H.nothing() }
+    H.form().action(base + "/react").method("post").holding([
+        Form.token(frame),
+        H.input().kind("hidden").name("value").value("1"),
+        H.button().submit().class("button").data("resume-action", kind).holding([Icons.sized("heart", 18), H.span().says(Frame.t(frame, "event.resume_like"))])
+      ])
+  } else if kind == "join" {
+    if detail.source == "curated" || detail.viewer.requestStatus != None { return H.nothing() }
+    H.a().class("button").href("#join").data("resume-action", kind).says(Frame.t(frame, "event.resume_join"))
+  } else { return H.nothing() }
+  H.section().class("resume-banner").role("status").data("feature", "resume").holding([
+      H.p().class("resume-title").holding([Icons.sized("sparkle", 18), H.strong().says(Frame.t(frame, "event.resume_title"))]),
+      H.div().class("resume-actions").holding([action, H.a().class("text-link").href(base).says(Frame.t(frame, "event.resume_dismiss"))])
+    ])
+}
+
 /// Like, not interested, add to calendar.
 fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let card = detail.card
@@ -161,7 +198,7 @@ fn reactions(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   // Guests are invited to sign in to like; organizers see the count but cannot like their own activity.
   if !detail.viewer.signedIn {
     return H.div().class("reactions").holding([
-        H.a().class("reaction").href(Routes.SIGN_IN + "?return=" + base).holding([Icons.sized("heart", 18), H.span().says(Frame.t(frame, "event.like")), H.span().class("count").says(show(card.likeCount))]),
+        H.a().class("reaction").href(Resume.signIn(Routes.SIGN_IN, base, "like")).holding([Icons.sized("heart", 18), H.span().says(Frame.t(frame, "event.like")), H.span().class("count").says(show(card.likeCount))]),
         calendar
       ])
   }
@@ -199,7 +236,7 @@ fn interest(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let mark = |kind: Str, icon: Str, label: Str| {
     let on = mine == kind
     if !detail.viewer.signedIn {
-      H.a().class("interest-button").href(Routes.SIGN_IN + "?return=" + base).holding([Icons.sized(icon, 18), H.span().says(label)])
+      H.a().class("interest-button").href(Resume.signIn(Routes.SIGN_IN, base, kind)).holding([Icons.sized(icon, 18), H.span().says(label)])
     } else {
       H.form().action(base + "/interest").method("post").data("feature", "interest").holding([
           Form.token(frame),
@@ -358,7 +395,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
     H.p().class("muted").says(Frame.t(frame, if card.endsAt == None { "event.archived" } else { "event.ended" }))
   } else if !detail.viewer.signedIn {
     H.div().class("join-actions").holding([
-        H.a().class("button button-block").href(Routes.SIGN_IN + "?return=" + base).says(Frame.t(frame, "event.sign_in_to_join")),
+        H.a().class("button button-block").href(Resume.signIn(Routes.SIGN_IN, base, "join")).says(Frame.t(frame, "event.sign_in_to_join")),
         H.p().class("muted small").says(Frame.t(frame, "event.sign_in_why"))
       ])
   } else {
@@ -406,7 +443,7 @@ fn joinPanel(frame: &Frame.Frame, detail: &Event.Detail, problem: &Option[Proble
       }
     }
   }
-  H.div().class("join-panel").data("feature", "join-panel").holding([price, held, refusal, body])
+  H.div().class("join-panel").id("join").data("feature", "join-panel").holding([price, held, refusal, body])
 }
 
 /// A collapsed form withdrawing the viewer's request.

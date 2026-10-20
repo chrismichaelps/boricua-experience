@@ -24,6 +24,7 @@ import Domain.Problem as Problem
 import Domain.Profile as Profile
 import Domain.Review as Review
 import Domain.Search as Search
+import Domain.TownGuide as TownGuide
 import I18n.Dates as Dates
 import I18n.Format as Format
 import Services.Discovery as Discovery
@@ -39,6 +40,7 @@ import View.Components.Notice as Notice
 import View.Components.PhotoHeader as PhotoHeader
 import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as Controls
+import View.Components.TownGuide as TownGuidePanel
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Pages.Activity as ActivityPage
@@ -68,11 +70,11 @@ fn visitor(locale: Locale.Locale, path: Str) -> Frame.Frame {
 fn main() -> Int {
   let en = visitor(Locale.En, "/")
   let es = visitor(Locale.Es, "/")
-  let emptyCatalog = Catalog.Catalog{categories: [], municipalities: [], scenes: []}
+  let emptyCatalog = Catalog.Catalog{categories: [], municipalities: [], scenes: [], planStyles: []}
   let catalog = Catalog.Catalog{categories: [], municipalities: [], scenes: [
       Catalog.Scene{image: "/assets/img/luquillo-photo.webp", captionEs: "Luquillo, Puerto Rico", captionEn: "Luquillo, Puerto Rico", town: "luquillo"},
       Catalog.Scene{image: "/assets/img/san-juan-photo.webp", captionEs: "Viejo San Juan", captionEn: "Old San Juan", town: "san-juan"}
-    ] }
+    ], planStyles: [] }
   let tokenFrame = Frame.Frame{..es, formToken: "session-token"}
   let consentForm = Html.render(&Notice.cookieBanner(&tokenFrame).html())
   let cookiePage = Html.render(&Legal.render(&tokenFrame, &Legal.Cookies))
@@ -163,12 +165,25 @@ fn main() -> Int {
   let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
   let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.blank(), &None))
   let highlightsPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &Review.ReviewBoard{..board, highlights: board.items}, &None, &pictured, &Review.blank(), &None))
-  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
+  let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: "", companions: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
   let placePinJson = Json.encode(&MapPage.combinedPins(&en, &[], &[Place.Listing{..fonda.card, mapIconUrl: Some("/assets/listings/example.png")}]))
   let placeMap = Html.render(&MapPage.renderPlaces(&en, &[], &[fonda.card], false, false, &profiled, &Search.everything(), "/search"))
   let placeCard = Html.render(&PlaceCard.card(&mondayNoon, &profiled, &fonda.card).html())
   let placeSearchFilters = Search.Filters{..Search.everything(), query: "Macdonald", category: "comida", municipality: "ponce"}
   let placeSearch = Html.render(&SearchPage.renderResults(&en, &profiled, &placeSearchFilters, &SearchPage.Open, &Event.Page{items: [], next: Some("event-cursor")}, &Place.Results{items: [fonda.card], next: Some("place&cursor")}))
+  let secondPlace = Place.Listing{..fonda.card, id: "otra-fonda-id", slug: "otra-fonda", name: "Otra Fonda"}
+  let rankedSearch = Html.render(&SearchPage.renderResults(&en, &profiled, &Search.everything(), &SearchPage.Open, &Event.Page{items: [detail.card], next: None}, &Place.Results{items: [fonda.card, secondPlace], next: None}))
+  let laterPlaces = Html.render(&SearchPage.renderResults(&en, &profiled, &Search.everything(), &SearchPage.Open, &Event.Page{items: [], next: None}, &Place.Results{items: [fonda.card, secondPlace], next: None}, true))
+  let areaPage = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None, &PlacePage.Area{townRank: 2, places: [fonda.card, secondPlace], activities: [detail.card]}, &Review.ALL_REVIEWS))
+  let lowRank = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None, &PlacePage.Area{townRank: 40, places: [fonda.card], activities: []}, &Review.ALL_REVIEWS))
+  let busyBoard = Review.ReviewBoard{..board, count: 5, companions: Json.object(&[("family", Json.Number(2)), ("solo", Json.Number(0))]), items: board.items.map(|r: Review.Review| Review.Review{..r, companions: Some("family")})}
+  let filteredPage = Html.render(&PlacePage.renderWith(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &busyBoard, &None, &noMedia, &Review.blank(), &None, &PlacePage.NO_AREA, &Review.filterOf("4", "family")))
+  let emptyFiltered = Html.render(&PlacePage.renderWith(&en, &profiled, &fonda, &Review.ReviewBoard{..busyBoard, items: []}, &None, &noMedia, &Review.blank(), &None, &PlacePage.NO_AREA, &Review.filterOf("1", "")))
+  let quietBoard = Html.render(&PlacePage.render(&en, &profiled, &fonda, &board, &None, &noMedia, &Review.blank(), &None))
+  let rinconGuide: TownGuide.TownGuide = match Wire.decode(&Fixtures.json("town-guide.json")) { case Ok(found) => found case Err(_) => panic("town guide fixture") }
+  let rinconTown = Catalog.Municipality{slug: "rincon", name: "Rincón", region: "oeste", lat: 18.34, lng: -67.25}
+  let guidePanel = Html.render(&TownGuidePanel.panel(&en, &profiled, &rinconTown, &rinconGuide).html())
+  let islandPanel = Html.render(&TownGuidePanel.panel(&es, &profiled, &rinconTown, &TownGuide.TownGuide{..rinconGuide, island: true, airport: None}).html())
   let signedOutReply = Respond.problemJson(&Problem.SignedOut, true)
   let unavailableReply = Respond.problemJson(&Problem.Unavailable("network"), true)
   let expiredCookies = Http.headerValues(&signedOutReply.headers, "set-cookie")
@@ -196,7 +211,36 @@ fn main() -> Int {
   let noBadges = Achievement.Showcase{total: 0, items: []}
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
+  let resumeFrame = Frame.Frame{..en, query: "from=share&resume=going"}
+  let guestPage = Html.render(&EventPage.render(&en, &detail, &None))
+  let resumedGoing = Html.render(&EventPage.render(&resumeFrame, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
+  let alreadyGoing = Html.render(&EventPage.render(&resumeFrame, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true, interest: Some("going")}}, &None))
+  let guestResume = Html.render(&EventPage.render(&resumeFrame, &detail, &None))
+  let resumedLike = Html.render(&EventPage.render(&Frame.Frame{..en, query: "resume=like"}, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
+  let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
+  let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("a town guide gives the drive, the driest months and the year by month", guidePanel.contains("About 2 h 7 min by car from the main airport") && guidePanel.contains("Driest months: January, February, March") && guidePanel.contains("class=\"climate-strip\"") && guidePanel.contains("climate-month is-best")),
+      Test.that("a town guide cites its climate source and links categories to the town listing", guidePanel.contains("NOAA") && guidePanel.contains("/pueblo/rincon?category=")),
+      Test.that("an island's guide says how to get there instead of a drive", islandPanel.contains("lancha desde Ceiba") && !islandPanel.contains("en carro")),
+      Test.that("busy reviews offer star and companion filters that find something", filteredPage.contains("class=\"review-filters chips\"") && filteredPage.contains("estrellas=4&amp;con=family#reviews") && filteredPage.contains(">Family<") && !filteredPage.contains("con=solo")),
+      Test.that("the active filters are marked", filteredPage.contains("class=\"chip chip-active\" href=\"/lugar/") && filteredPage.contains("aria-current=\"true\"")),
+      Test.that("a review says who the visit was with, and the form asks", filteredPage.contains("Went with family") && filteredPage.contains("name=\"companions\"") && filteredPage.contains("Who did you go with?")),
+      Test.that("a filter that finds nothing offers every review again", emptyFiltered.contains("No reviews match this filter.")),
+      Test.that("a place with few reviews shows no filters", !quietBoard.contains("review-filters")),
+      Test.that("a place page shows the area with nearby places and activities, without itself", areaPage.contains("id=\"place-area\"") && areaPage.contains("Otra Fonda") && areaPage.contains("href=\"#place-area\"") && areaPage.contains(detail.card.title)),
+      Test.that("a place in its town's top ten says so", areaPage.contains("#2 of places in")),
+      Test.that("a lower rank and an area of only itself stay quiet", !lowRank.contains("of places in") && !lowRank.contains("id=\"place-area\"")),
+      Test.that("the first page of a ranked place listing numbers its places", rankedSearch.contains("class=\"card-rank\"") && rankedSearch.contains(">#1<") && rankedSearch.contains(">#2<")),
+      Test.that("activities come before the places on a search page", rankedSearch.indexOf("data-feature=\"results\"") < rankedSearch.indexOf("place-results-title")),
+      Test.that("a continued place page and a single place carry no rank", !laterPlaces.contains("card-rank") && !placeSearch.contains("card-rank")),
+      Test.that("a guest's marks and join link carry the action through sign-in", guestPage.contains("%3Fresume%3Dgoing") && guestPage.contains("%3Fresume%3Dinterested") && guestPage.contains("%3Fresume%3Dlike") && guestPage.contains("%3Fresume%3Djoin")),
+      Test.that("a member back from sign-in is offered to finish the action in one tap", resumedGoing.contains("resume-banner") && resumedGoing.contains("data-resume-action=\"going\"") && resumedGoing.contains("Mark as going")),
+      Test.that("an action already done, or a guest, gets no resume offer", !alreadyGoing.contains("resume-banner") && !guestResume.contains("resume-banner")),
+      Test.that("a resumed like posts a like", resumedLike.contains("data-resume-action=\"like\"") && resumedLike.contains("/react")),
+      Test.that("the sign-in page says what the guest was doing and keeps it in the Google link", signInResume.contains("say you&#39;re going") || signInResume.contains("say you're going")),
+      Test.that("the Google and sign-up links encode the return path", signInResume.contains("/auth/google?return=%2Fe%2Fplaza%3Fresume%3Dgoing") && signInResume.contains("/signup?return=%2Fe%2Fplaza%3Fresume%3Dgoing")),
+      Test.that("a plain sign-in keeps its usual welcome", signInPlain.contains("Good to see you again.")),
       Test.equals("map keeps the accessibility launcher in reach", &map.contains("a11y-launch"), &true),
       Test.that("every page names its build and links to the live version", results.contains("<meta name=\"build\" content=\"development\"") && results.contains("href=\"/version\"") && results.contains("data-refresh=")),
       Test.that("phone map offers a Map pill that lowers the list", map.contains("class=\"sheet-map-pill\"") && map.contains("data-sheet-collapse=\"1\"")),

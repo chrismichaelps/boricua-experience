@@ -80,7 +80,7 @@
 .search-hero-place { position: absolute; bottom: 24px; right: 28px; color: #fff; font-size: 14px; font-weight: 700; text-shadow: 0 1px 4px #16394b; min-height: 44px; display: flex; align-items: center; }
 .search-hero-place:hover { text-decoration: underline; }
 @media (max-width: 699px) {
-  .search-hero { margin-top: 0; height: calc(100svh - 80px); padding: 80px 16px 68px; border-radius: 24px; }
+  .search-hero { margin-top: 0; height: auto; min-height: 0; padding: 40px 16px 56px; border-radius: 24px; }
   .search-hero-content > p { margin-bottom: 48px; font-size: 14px; }
   .search-hero-place { right: 20px; bottom: 14px; }
 }
@@ -129,8 +129,6 @@
 .picker-option:hover { background: #f4f4f4; }
 .picker-option[aria-pressed="true"] { background: #f7f7f7; color: #182c36; border-color: #53666d; }
 .picker-check { color: #25343b; }
-.near-form .picker-trigger { width: auto; min-height: 44px; padding: 10px 16px; border: 1px solid #c6cdd1; border-radius: 14px; background: white; color: #182c36; font-size: 14px; }
-.near-form .picker-trigger .picker-value { max-width: 160px; }
 
 .field { position: relative; }
 .field > .picker-trigger { width: 100%; min-height: 52px; padding: 14px 16px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font-size: 16px; }
@@ -176,3 +174,18 @@
 .home-quick { padding-inline: 16px; margin-top: 4px; } @media (min-width: 960px) { .home-quick { max-width: 1120px; margin-inline: auto; width: calc(100% - 40px); padding-inline: 0; } }
 
 #search-results { scroll-margin-top: calc(var(--appbar-height, 76px) + 20px); }
+
+.town-guide { display: grid; gap: 16px; margin: 8px 0 16px; }
+.town-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 24px; }
+.town-facts li { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.town-subtitle { font-size: 1rem; margin: 0 0 8px; }
+.town-essentials .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.town-essentials .chip small { margin-left: 4px; opacity: .7; font-weight: 700; }
+.climate-strip { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; align-items: end; }
+.climate-month { display: grid; justify-items: center; gap: 4px; font-size: .78rem; }
+.climate-high { font-weight: 700; }
+.climate-bar { width: 100%; max-width: 28px; height: 64px; display: flex; align-items: flex-end; background: var(--color-cloud); border-radius: 6px; overflow: hidden; }
+.climate-rain { width: 100%; background: var(--color-ocean); border-radius: 6px 6px 0 0; min-height: 4px; }
+.climate-month.is-best .climate-name { font-weight: 800; color: var(--color-ink); }
+.climate-month.is-best .climate-bar { box-shadow: inset 0 0 0 2px var(--color-amber); }
+.climate-name { color: var(--color-graphite); text-transform: capitalize; }

@@ -13,6 +13,7 @@ import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Place as Place
 import Domain.Search as Search
+import Domain.TownGuide as TownGuide
 import I18n.Format as Format
 import Utils.Geo as Geo
 import Utils.Query as Query
@@ -23,6 +24,7 @@ import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as SearchControls
+import View.Components.TownGuide as TownGuidePanel
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -149,7 +151,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
 }
 
 /// Independent activity and place pages share the same canonical filters.
-export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Place.Results, continuingPlaces: Bool = false) -> Html.Html {
+export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Place.Results, continuingPlaces: Bool = false, guide: Option[TownGuide.TownGuide] = None) -> Html.Html {
   let (title, description, path) = identity(frame, landing, filters)
   let indexable = !continuingPlaces && match landing {
     case Open => !Search.isNarrowed(filters)
@@ -168,6 +170,8 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
     case Some(cursor) => H.a().class("button button-ghost load-more").href(path + queryOf(filters, landing, cursor)).data("feature", "load-more").says(Frame.t(frame, "search.load_more"))
     case None => H.nothing()
   }
+  // The first page of the default listing is the quality ranking, so its places carry their position.
+  let ranked = !continuingPlaces && filters.sort == Search.Soon && places.items.length() > 1
   let photographic = *landing == Open && !catalog.scenes.isEmpty()
   let scene = if photographic { catalog.scenes[0] } else { Catalog.Scene{image: "", captionEs: "", captionEn: "", town: ""} }
   Layout.page(frame, &meta, Layout.Explore, H.div().class("search-page").holding([
@@ -192,6 +196,15 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
           case ForTown(town) => neighbors(frame, catalog, &town)
           case _ => H.nothing()
         },
+        match (*landing, guide) {
+          case (ForTown(town), Some(found)) => if continuingPlaces || !filters.after.isEmpty() { H.nothing() } else { TownGuidePanel.panel(frame, catalog, &town, &found) }
+          case _ => H.nothing()
+        },
+        if page.items.isEmpty() && places.items.isEmpty() {
+          Notice.empty("search", Frame.t(frame, "search.empty_title"), Frame.t(frame, "search.empty_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action")))
+        } else {
+          H.div().class("results").data("feature", "results").holding([EventCard.grid(frame, &page.items), more])
+        },
         if places.items.isEmpty() { H.nothing() } else {
           H.section().class("results place-results").at("aria-labelledby", "place-results-title").holding([
               H.h2().id("place-results-title").class("section-title").says(match landing {
@@ -199,17 +212,12 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
                   case ForTown(town) => Frame.tf(frame, "place.rail_town", &[("town", town.name)])
                   case Open => Frame.t(frame, "place.rail")
                 }),
-              H.div().class("card-grid").holding(places.items.map(|place: Place.Listing| PlaceCard.card(frame, catalog, &place))),
+              H.div().class("card-grid").holding(if ranked { PlaceCard.ranked(frame, catalog, &places.items) } else { places.items.map(|place: Place.Listing| PlaceCard.card(frame, catalog, &place)) }),
               match places.next {
                 case Some(cursor) => H.a().class("button button-ghost load-more").href(path + placeQueryOf(filters, landing, cursor)).data("feature", "load-more").says(Frame.t(frame, "search.load_more"))
                 case None => H.nothing()
               }
             ])
-        },
-        if page.items.isEmpty() && places.items.isEmpty() {
-          Notice.empty("search", Frame.t(frame, "search.empty_title"), Frame.t(frame, "search.empty_body"), H.a().class("button").href(Routes.CREATE).says(Frame.t(frame, "home.create_action")))
-        } else {
-          H.div().class("results").data("feature", "results").holding([EventCard.grid(frame, &page.items), more])
         }
       ]))
 }

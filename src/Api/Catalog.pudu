@@ -5,6 +5,7 @@ import Api.Supabase.Gateway as Gateway
 import Constants.Supabase as Supabase
 import Domain.Catalog as Catalog
 import Domain.Problem as Problem
+import Domain.TownGuide as TownGuide
 
 /// Every category with its count of upcoming events.
 export fn categories(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Category], Problem.Problem] {
@@ -14,6 +15,16 @@ export fn categories(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Category
 /// Every municipality with its centroid.
 export fn municipalities(gateway: &Gateway.Gateway) -> Result[Array[Catalog.Municipality], Problem.Problem] {
   Gateway.query(gateway, Supabase.LIST_MUNICIPALITIES, &[], None, Gateway.Read)
+}
+
+/// A town's guide.
+export fn townGuide(gateway: &Gateway.Gateway, slug: Str) -> Result[TownGuide.TownGuide, Problem.Problem] {
+  Gateway.query(gateway, Supabase.TOWN_GUIDE, &[("p_slug", Gateway.text(slug))], None, Gateway.Read)
+}
+
+/// The active plan styles in form order.
+export fn planStyles(gateway: &Gateway.Gateway) -> Result[Array[Catalog.PlanStyle], Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLAN_STYLES, &[], None, Gateway.Read)
 }
 
 /// The active homepage destinations in their database display order.

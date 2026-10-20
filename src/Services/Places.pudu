@@ -2,6 +2,7 @@
 module Services.Places
 
 import Std.Option as Option
+import Api.Media as MediaApi
 import Api.Places as PlacesApi
 import Constants.App as App
 import Constants.Limits as Limits
@@ -23,10 +24,10 @@ export fn detail(runtime: &Runtime.Runtime, slug: Str, session: Option[Session.S
 export fn listed(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[Place.Results, Problem.Problem] {
   if !eligible(filters) { return Ok(Place.Results{items: [], next: None}) }
   let sort = match filters.sort {
-    case Search.Near => if filters.lat != None { "near" } else { "name" }
+    case Search.Near => if filters.lat != None { "near" } else { "best" }
     case Search.Top => "rating"
     case Search.Relevant => "relevant"
-    case Search.Soon => "name"
+    case Search.Soon => "best"
   }
   PlacesApi.search(&runtime.gateway, &PlacesApi.SearchArgs{query: filters.query, category: filters.category, municipality: filters.municipality, lat: filters.lat, lng: filters.lng, radiusM: filters.radiusM, sort: sort, limit: Limits.PAGE_SIZE, after: filters.after})
 }
@@ -35,7 +36,12 @@ export fn listed(runtime: &Runtime.Runtime, filters: &Search.Filters) -> Result[
 export fn publish(runtime: &Runtime.Runtime, draft: &Place.Draft, session: &Session.Session) -> Result[Place.Published, Problem.Problem] {
   let catalog = CatalogService.current(runtime) ?
   let ready = PlaceForm.check(draft, &catalog) ?
-  PlacesApi.create(&runtime.gateway, &ready, session.accessToken)
+  let published = PlacesApi.create(&runtime.gateway, &ready, session.accessToken) ?
+  let coverSaved = if draft.coverTheme.isEmpty() { true } else {
+    match MediaApi.setCoverTheme(&runtime.gateway, "place", published.id, draft.coverTheme, session.accessToken) { case Ok(_) => true
+      case Err(_) => false }
+  }
+  Ok(Place.Published{..published, coverSaved: coverSaved})
 }
 
 /// The edit form of a place the member owns, with the place it edits.
@@ -49,7 +55,10 @@ export fn editable(runtime: &Runtime.Runtime, slug: Str, session: &Session.Sessi
 export fn update(runtime: &Runtime.Runtime, placeId: Str, draft: &Place.Draft, session: &Session.Session) -> Result[Place.Published, Problem.Problem] {
   let catalog = CatalogService.current(runtime) ?
   let ready = PlaceForm.check(draft, &catalog) ?
-  PlacesApi.update(&runtime.gateway, placeId, &ready, session.accessToken)
+  let saved = PlacesApi.update(&runtime.gateway, placeId, &ready, session.accessToken) ?
+  let coverSaved = match MediaApi.setCoverTheme(&runtime.gateway, "place", placeId, draft.coverTheme, session.accessToken) { case Ok(_) => true
+    case Err(_) => false }
+  Ok(Place.Published{..saved, coverSaved: coverSaved})
 }
 
 /// Publishes or hides a place the member owns.

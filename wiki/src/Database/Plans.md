@@ -73,3 +73,9 @@ public transport is offered: there is no timetable data to plan it honestly.
 choices from the junction nearest a rounded position to an activity: routed once per junction pair on the
 part of the network around it (about 0.4–2.6 s, then about 80 ms), kept two days, at most 10 new routings
 a minute across the site ("busy" beyond), never across water and never beyond 60 km.
+
+## Plan styles as data Grill Log · #153
+Resolved: styles are rows in `app.plan_styles` (categories, free_only, family, outdoor, names, icon, sort_order, active) instead of a CASE in `private.fits_style` and a fixed list in `plan_outings`. An activity fits when every set flag holds and, if the style names categories or outdoor, it is in one of them or outdoors; an unknown slug keeps everything, while `plan_outings` refuses any slug that is not an active row. The migration rewrites only the style check of the live `plan_outings` definition (`pg_get_functiondef` + replace, asserted) so the rest of its body cannot drift. `public.plan_styles()` is readable by anon; the catalog cache loads it, and the app falls back to the original five when it cannot. The planner remains rule-based: no model chooses stops.
+
+## Nullable style eligibility Grill Log · #148 — resolved
+Known styles evaluate nullable predicates as false: an unknown price cannot satisfy free-only, while explicit zero can. Only the absence of a style row retains the private helper's permissive fallback; the public planner still validates an active style before selection. The follow-up replaces only `private.fits_style`, preserves its private ACL, and leaves routing, scheduling, quotas and data untouched. A private rollback matrix checks unknown/free/paid prices and known/unknown style behavior before either environment is changed.

@@ -31,6 +31,8 @@ export fn draftOf, routes, chooser
 
 ## Algorithm
 
+The place page also reads its town's best-ordered places (to find its rank, announced only among at least five) and the best places and next activities within 8 km. Each read is optional and falls back to empty (#150).
+
 `draftOf` keeps `d.` and `h.` fields only. A category switch carries shared fields in the query. A category that takes no places sends the visitor back to the chooser.
 
 ## Negative Logic (Prohibited Paths)
@@ -46,3 +48,6 @@ Resolved: Load the optional database menu board for the parent page. On dependen
 
 ## Place discovery Grill Log · #132
 Resolved: Empty degraded review boards default highlights to empty; public details remain readable when optional review/media requests fail.
+
+## Cover completion Grill Log · #155 — resolved
+Reject unknown theme values before publishing. Successful listing saves carry an explicit coverSaved outcome; a subsequent theme failure keeps the saved listing and redirects once with a bilingual warning to retry through editing, never a duplicate publish. Theme updates lock the owned parent before reading its cover so a concurrent confirmed photograph cannot be overwritten. Theme/default artwork is illustration, never a gallery photograph. The fieldset retains keyboard radio semantics, selected state, linked validation errors and all category-switch draft state. Local artwork is asset-versioned; uploaded photographs remain authoritative.

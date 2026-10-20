@@ -91,3 +91,5 @@ one shared edge, 14–16 px apart, chip rows scrolling edge to edge on phones. S
 apart on desktop and 40 px on phones. A row of activities needs two to show (a single card read as an
 empty band); the "near you" row keeps a single nearby activity.
 
+## Nearby card Grill Log · #148 — resolved
+Replace the photographic promo with a neutral nearby card: explicit private device-location link, required town/radius GET form using the existing progressive picker, and at most six distinct catalog scene towns as one-tap nearby searches. No location permission is required for town selection; canonical cerca/radio parameters and native fallback remain intact.

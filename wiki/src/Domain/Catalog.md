@@ -25,7 +25,10 @@ export type Category = { slug, nameEs, nameEn, icon, upcoming }
 export type Municipality = { slug, name, region, lat, lng }
 export type Scene = { image, captionEs, captionEn, town }
 export fn regions(catalog) -> Array[Str]
-export type Catalog = { categories: Array[Category], municipalities: Array[Municipality], scenes: Array[Scene] }
+export type PlanStyle = { slug, nameEs, nameEn, icon }
+export type Catalog = { categories: Array[Category], municipalities: Array[Municipality], scenes: Array[Scene], planStyles: Array[PlanStyle] }
+export fn styleSlugs(catalog) -> Array[Str]
+export fn planStyle(catalog, slug) -> Option[PlanStyle]
 export fn category(catalog: &Catalog, slug: Str) -> Option[Category]
 export fn municipality(catalog: &Catalog, slug: Str) -> Option[Municipality]
 ```
@@ -66,3 +69,6 @@ SHALLOW: typed values with their decoding, so no caller reads raw JSON.
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Catalog adds typed database scenes; regions are deduplicated from municipality records rather than a hardcoded ordering. Resolved.
+
+## Planner catalog Grill Log · #148 — resolved
+Active style rows retain database form order and bilingual names. Only an empty style list falls back to mixed/free/family/adventure/culture; a nonempty catalog is authoritative. `planStyle` returns no row for an unknown slug. The reference catalog's style list defaults empty for compatible construction.

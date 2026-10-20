@@ -40,6 +40,7 @@ vm.runInNewContext(source('searchPickers')+'\nthis.start=searchPickers;',scope);
 assert(select.classList.contains('picker-native'));assert.equal(select.trigger.attrs['aria-required'],'true');
 owner.querySelector=()=>({});active=null;select.handlers.invalid({preventDefault(){}});assert.equal(active,null,'a later invalid control leaves focus on the first one');delete owner.querySelector;
 let prevented=false;select.handlers.invalid({preventDefault(){prevented=true;}});assert(prevented);assert.equal(active,select.trigger);assert.equal(select.trigger.attrs['aria-invalid'],'true');
+let pickerOpens=0;const realClick=select.trigger.click;select.trigger.click=()=>{pickerOpens++;};select.handlers.invalid({preventDefault(){}});assert.equal(pickerOpens,0,'a picker stays closed on invalid unless its form opts in');owner.dataset={openInvalid:'1'};select.handlers.invalid({preventDefault(){}});assert.equal(pickerOpens,1,'an opted-in form opens the picker of its first invalid control');delete owner.dataset;select.trigger.click=realClick;
 const all=node=>[node,...node.children.flatMap(all)];const rows=all(form).filter(node=>node.className==='picker-option');assert.equal(rows[2].disabled,true);
 rows[1].handlers.click();assert.equal(select.value,'music');assert.equal(select.trigger.attrs['aria-invalid'],undefined);
 select.value='';owner.handlers.reset();assert.equal(select.trigger.children[0].textContent,'Choose');

@@ -44,7 +44,8 @@ export fn draftOf(fields: &Map[Str, Str]) -> Draft.Draft {
     minAge: Form.text(fields, "minAge"),
     accessible: Form.text(fields, "accessible") == "on",
     parking: Form.text(fields, "parking"),
-    cashOnly: Form.text(fields, "cashOnly")
+    cashOnly: Form.text(fields, "cashOnly"),
+    coverTheme: Form.text(fields, "coverTheme")
   }
 }
 
@@ -133,7 +134,7 @@ fn refused(app: &Assembly.App, visitor: &Context.Visitor, mode: &EventForm.Mode,
 fn publish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let draft = draftOf(&Serve.fields(visitor))
   match Serve.ask(app, &app.kinds.publish, Serve.signed(session, draft)) {
-    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + published.slug), "flash.published")
+    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + published.slug), if published.coverSaved { "flash.published" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &EventForm.Creating, &draft, &problem)
   }
 }
@@ -156,7 +157,7 @@ fn update(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
   match Serve.ask(app, &app.kinds.update, Serve.signed(session, Messages.Edit{eventId: event.card.id, draft: draft})) {
-    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + saved.slug), "flash.updated")
+    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + saved.slug), if saved.coverSaved { "flash.updated" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &EventForm.Editing(slug), &draft, &problem)
   }
 }

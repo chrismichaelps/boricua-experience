@@ -47,3 +47,6 @@ Resolved: place_reviews adds highlights: latest six published reviews by created
 
 ## Hidden orphan guard · #132
 Resolved: rollback testing exposed a pre-existing NULL-owner comparison: guests could read reviews of an unowned hidden place. Require a non-null viewer for hidden access, matching place_detail. Owned hidden places remain owner-only; removed/missing places still refuse. Follow-up migration preserves the additive projection and ACLs.
+
+## Companions and filters Grill Log · #151
+Resolved: `app.reviews.companions` is an optional closed set (solo, couple, family, friends, business), checked in the table and in `save_review` (new optional `p_companions`; the four-argument signature is dropped and grants re-applied). `place_reviews` gains optional `p_rating` and `p_companions` that narrow only the listed page; summary, breakdown and highlights stay whole, and a `companions` object counts published reviews per type so the page offers only filters that find something. A partial `(place_id, rating, created_at desc, id)` index serves star filters. Unknown values fail as `invalid_rating` / `invalid_companions`.

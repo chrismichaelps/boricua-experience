@@ -25,6 +25,7 @@ export fn registrations(kinds: &Messages.Kinds, runtime: &Runtime.Runtime) -> Ar
     Registration.handler(&kinds.suggest, |asked: Str, _context: Context.Context| Messaging.lift(Discovery.suggest(&held, asked))),
     Registration.handler(&kinds.pins, |asked: Search.Filters, _context: Context.Context| Messaging.lift(Discovery.pins(&held, &asked))),
     Registration.handler(&kinds.catalog, |_asked: (), _context: Context.Context| Messaging.lift(Catalog.current(&held))),
+    Registration.handler(&kinds.townGuide, |asked: Str, _context: Context.Context| Messaging.lift(Catalog.townGuide(&held, asked))),
     Registration.handler(&kinds.sitemap, |_asked: (), _context: Context.Context| Messaging.lift(Seo.entries(&held)))
   ]
 }

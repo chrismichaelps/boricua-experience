@@ -57,11 +57,11 @@ export fn execute(runtime: &Runtime.Runtime, name: Str, args: &Json.Json, known:
   let when = text(args, "when")
   let style = text(args, "style")
   let mode = text(args, "mode")
-  if !(when.isEmpty() || ["today", "tomorrow", "weekend"].contains(when)) || !(style.isEmpty() || ["mixed", "free", "family", "adventure", "culture"].contains(style)) || !(mode.isEmpty() || ["local", "visitor"].contains(mode)) { return Err(Problem.Refused("assistant_invalid")) }
+  if !(when.isEmpty() || ["today", "tomorrow", "weekend"].contains(when)) || !(style.isEmpty() || Catalog.styleSlugs(&catalog).contains(style)) || !(mode.isEmpty() || ["local", "visitor"].contains(mode)) { return Err(Problem.Refused("assistant_invalid")) }
   if Json.field(args, "stops") != None && Option.andThen(Json.field(args, "stops"), |v: Json.Json| Json.asInt(&v)) == None { return Err(Problem.Refused("assistant_invalid")) }
   let wanted = Option.unwrapOr(Option.andThen(Json.field(args, "stops"), |v: Json.Json| Json.asInt(&v)), 3)
   if wanted < 2 || wanted > 4 { return Err(Problem.Refused("assistant_invalid")) }
-  let outings = Plans.outings(runtime, &Plan.Request{lat: town.lat, lng: town.lng, window: Plan.windowFrom(when), style: Plan.styleFrom(style), stops: wanted, mode: Plan.modeFrom(mode), radiusM: Plan.RADIUS_M, seed: 0}) ?
+  let outings = Plans.outings(runtime, &Plan.Request{lat: town.lat, lng: town.lng, window: Plan.windowFrom(when), style: Plan.styleFrom(style, &Catalog.styleSlugs(&catalog)), stops: wanted, mode: Plan.modeFrom(mode), radiusM: Plan.RADIUS_M, seed: 0}) ?
   var visuals: Array[Json.Json] = []
   var cards: Array[Event.Card] = []
   for plan in List.take(&outings.plans, 2) {

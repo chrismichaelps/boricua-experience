@@ -24,6 +24,7 @@ import Domain.Profile as Profile
 import Domain.Review as Review
 import Domain.Search as Search
 import Domain.Session as Session
+import Domain.TownGuide as TownGuide
 import PuduLangMediator.Request as Request
 import Services.Admin as AdminService
 import Services.Auth.Accounts as Accounts
@@ -54,7 +55,7 @@ export type PlaceEdit = { placeId: Str, draft: Listing.Draft }
 export type PlaceStatus = { placeId: Str, visible: Bool }
 
 /** @App.Messages.ReviewRead — a page of a place's reviews */
-export type ReviewRead = { placeId: Str, after: Str }
+export type ReviewRead = { placeId: Str, after: Str, filter: Review.ReviewFilter }
 
 /** @App.Messages.MediaStart — an owner's declared upload for one place */
 export type MediaStart = { placeId: Str, request: Media.UploadRequest }
@@ -126,6 +127,7 @@ export type Kinds = {
   suggest: Request.Kind[Str, Array[Event.Card], Problem.Problem],
   pins: Request.Kind[Search.Filters, Search.Pins, Problem.Problem],
   catalog: Request.Kind[(), Catalog.Catalog, Problem.Problem],
+  townGuide: Request.Kind[Str, TownGuide.TownGuide, Problem.Problem],
   event: Request.Kind[Visit[Str], Event.Detail, Problem.Problem],
   eventPage: Request.Kind[Visit[(Str, Str)], Event.Detail, Problem.Problem],
   attendees: Request.Kind[Visit[Str], Event.Attendees, Problem.Problem],
@@ -235,6 +237,7 @@ export fn kinds() -> Kinds {
     suggest: kind("discover.suggest", READ),
     pins: kind("discover.pins", READ),
     catalog: kind("discover.catalog", READ),
+    townGuide: kind("discover.town_guide", READ),
     event: kind("events.detail", READ),
     eventPage: kind("events.page", READ),
     attendees: kind("events.attendees", READ),

@@ -13,7 +13,7 @@ export fn photosOf(gallery: &Media.Gallery, cover: &Option[Str]) -> Array[Str] {
   let uploaded = Media.ofKind(gallery, Media.COVER).map(|file: Media.MediaFile| file.url)
   let first = if !uploaded.isEmpty() { uploaded } else {
     match cover {
-      case Some(address) => [address]
+      case Some(address) => if address.startsWith("/assets/covers/") { [] } else { [address] }
       case None => []
     }
   }

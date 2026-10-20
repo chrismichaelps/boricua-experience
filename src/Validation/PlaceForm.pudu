@@ -5,6 +5,7 @@ import Std.Json as Json
 import Std.Option as Option
 import Constants.Limits as Limits
 import Domain.Catalog as Catalog
+import Domain.Cover as Cover
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Utils.Geo as Geo
@@ -21,6 +22,7 @@ const URL_MAX: Int = 500
 export fn check(draft: &Place.Draft, catalog: &Catalog.Catalog) -> Result[Place.Ready, Problem.Problem] {
   var errors: Array[Problem.FieldError] = []
   let refuse = |field: Str, key: Str| Problem.FieldError{field: field, key: key}
+  if !Cover.valid(draft.coverTheme) { errors = errors.push(refuse("coverTheme", "form.cover_invalid")) }
   let category = Catalog.category(catalog, draft.category)
   let takesPlaces = match category {
     case Some(found) => Catalog.takes(&found, Catalog.PLACE)

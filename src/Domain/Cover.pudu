@@ -1,0 +1,32 @@
+/** @Domain.Cover.Theme — the background a card shows when no photograph was uploaded */
+module Domain.Cover
+
+/// The themes a creator may choose, in the order the form offers them.
+export const THEMES: Array[Str] = ["mar", "atardecer", "bosque", "montana", "ciudad", "noche", "fiesta"]
+
+/// Where theme artwork lives.
+const THEME_PREFIX: Str = "/assets/covers/themes/"
+
+/// Whether a value names a theme; empty means the category's default.
+export fn valid(theme: Str) -> Bool { theme.isEmpty() || THEMES.contains(theme) }
+
+/// The artwork of a theme.
+export fn path(theme: Str) -> Str { THEME_PREFIX + theme + ".svg" }
+
+/// The theme a stored cover shows, or empty for a photograph or the category default.
+export fn themeOf(coverUrl: Option[Str]) -> Str {
+  match coverUrl {
+    case Some(url) => {
+      if !url.startsWith(THEME_PREFIX) || !url.endsWith(".svg") { return "" }
+      let theme = url.drop(THEME_PREFIX.length()).take(url.length() - THEME_PREFIX.length() - 4)
+      if THEMES.contains(theme) { theme } else { "" }
+    }
+    case None => ""
+  }
+}
+
+/// A cover address as served: local artwork carries the asset version, since the CDN keeps /assets
+/// forever; uploaded photographs are left as they are.
+export fn served(url: Str, version: Str) -> Str {
+  if url.startsWith("/assets/") && !url.contains("?") { url + "?v=" + version } else { url }
+}

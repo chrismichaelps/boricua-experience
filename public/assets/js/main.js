@@ -1,11 +1,11 @@
-import { formDates } from './features/formDates.js?v=80';
+import { formDates } from './features/formDates.js?v=90';
 import { buildCheck } from './features/buildCheck.js?v=80';
 import { passwordControls } from './features/passwords.js?v=80';
 import { submitFeedback } from './features/submitFeedback.js?v=84';
 import { privacyControls } from './features/privacyControls.js?v=80';
 import { interactionFeedback } from './features/haptics.js?v=80';
 import { sheetGestures } from './features/sheetGestures.js?v=80';
-import { searchPickers } from './features/searchPickers.js?v=80';
+import { searchPickers } from './features/searchPickers.js?v=90';
 import { heroCarousel } from './features/carousel.js?v=80';
 import { accountMenu } from './features/accountMenu.js?v=80';
 import { bell } from './features/bell.js?v=80';
@@ -47,7 +47,7 @@ const FEATURES = {
   back,
   'join-panel': joinPanel,
   retry,
-  explorer: (node) => import('./features/explorer.js?v=83').then((module) => module.explorer(node)),
+  explorer: (node) => import('./features/explorer.js?v=90').then((module) => module.explorer(node)),
   achievements: (node) => import('./features/achievements.js?v=80').then((module) => module.achievements(node)).catch(() => {}),
   'achievement-board': (node) => import('./features/achievements.js?v=80').then((module) => module.achievementBoard(node)).catch(() => {}),
   a11y: (node) => import('./features/a11y.js?v=80').then((module) => module.a11y(node)).catch(() => {}),

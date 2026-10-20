@@ -21,7 +21,7 @@ A place card: cover, open-now, verified, rating, town, and the category's highli
 ### Signatures
 
 ```pudu
-export fn coverOf, openNow, card, rail
+export fn coverOf, openNow, card (with an optional rank), ranked, rail
 ```
 
 ### Linkage
@@ -30,6 +30,8 @@ export fn coverOf, openNow, card, rail
 - **Consumed by:** [[src/View/Pages/Search]], [[src/View/Pages/Place]].
 
 ## Algorithm
+
+On the first page of a ranked listing, `ranked` numbers the cards from one in the order the database gave them.
 
 A restaurant card reads cuisine and price range; a beach card water conditions and facilities: whatever the profile highlights.
 

@@ -4,9 +4,11 @@ module View.Pages.Auth
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Html as Html
+import Std.Url as Url
 import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Problem as Problem
+import Domain.Resume as Resume
 import View.Components.Form as Form
 import View.Components.Hero as Hero
 import View.Components.Icons as Icons
@@ -41,7 +43,7 @@ fn card(frame: &Frame.Frame, meta: &Seo.Meta, title: Str, lead: Str, body: Array
 
 /// The Google button, carrying where to return.
 fn google(frame: &Frame.Frame, returnTo: Str) -> H.Node {
-  H.a().class("button button-ghost button-block google").href(Routes.AUTH_GOOGLE + "?return=" + returnTo).holding([
+  H.a().class("button button-ghost button-block google").href(Routes.AUTH_GOOGLE + "?return=" + Url.encodeComponent(returnTo)).holding([
       H.img().src("/assets/brand/google-mark.svg").alt("").at("width", "18").at("height", "18"),
       H.span().says(Frame.t(frame, "auth.continue_google"))
     ])
@@ -50,11 +52,23 @@ fn google(frame: &Frame.Frame, returnTo: Str) -> H.Node {
 /// The "or" divider between the provider and the form.
 fn divider(frame: &Frame.Frame) -> H.Node { H.p().class("divider").says(Frame.t(frame, "auth.or")) }
 
+/// The lead of a sign-in or sign-up page: what the guest was doing when asked to sign in, or the default.
+fn leadFor(frame: &Frame.Frame, returnTo: Str, fallback: Str) -> Str {
+  match Resume.ofPath(returnTo) {
+    case Some("interested") => Frame.t(frame, "auth.resume_interested")
+    case Some("going") => Frame.t(frame, "auth.resume_going")
+    case Some("like") => Frame.t(frame, "auth.resume_like")
+    case Some("join") => Frame.t(frame, "auth.resume_join")
+    case Some("review") => Frame.t(frame, "auth.resume_review")
+    case _ => Frame.t(frame, fallback)
+  }
+}
+
 /// The sign-in page.
 export fn signIn(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Problem]) -> Html.Html {
   let errors = errorsOf(problem)
   let meta = Seo.meta(Frame.t(frame, "auth.sign_in_title"), Frame.t(frame, "auth.sign_in_lead"), Routes.SIGN_IN, false)
-  card(frame, &meta, Frame.t(frame, "auth.sign_in_title"), Frame.t(frame, "auth.sign_in_lead"), [
+  card(frame, &meta, Frame.t(frame, "auth.sign_in_title"), leadFor(frame, typed.returnTo, "auth.sign_in_lead"), [
       Form.problemBanner(frame, problem),
       H.form().class("stack-form").action(Routes.SIGN_IN).method("post").holding([
           H.input().kind("hidden").name("return").value(typed.returnTo),
@@ -66,7 +80,7 @@ export fn signIn(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Pr
       google(frame, typed.returnTo),
       H.p().class("auth-links").holding([
           H.a().class("text-link").href(Routes.RECOVER).says(Frame.t(frame, "auth.forgot")),
-          H.a().class("text-link").href(Routes.SIGN_UP + "?return=" + typed.returnTo).says(Frame.t(frame, "auth.no_account"))
+          H.a().class("text-link").href(Routes.SIGN_UP + "?return=" + Url.encodeComponent(typed.returnTo)).says(Frame.t(frame, "auth.no_account"))
         ])
     ])
 }
@@ -75,7 +89,7 @@ export fn signIn(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Pr
 export fn signUp(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Problem]) -> Html.Html {
   let errors = errorsOf(problem)
   let meta = Seo.meta(Frame.t(frame, "auth.sign_up_title"), Frame.t(frame, "auth.sign_up_lead"), Routes.SIGN_UP, false)
-  card(frame, &meta, Frame.t(frame, "auth.sign_up_title"), Frame.t(frame, "auth.sign_up_lead"), [
+  card(frame, &meta, Frame.t(frame, "auth.sign_up_title"), leadFor(frame, typed.returnTo, "auth.sign_up_lead"), [
       Form.problemBanner(frame, problem),
       H.form().class("stack-form").action(Routes.SIGN_UP).method("post").holding([
           H.input().kind("hidden").name("return").value(typed.returnTo),
@@ -93,7 +107,7 @@ export fn signUp(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Pr
       divider(frame),
       google(frame, typed.returnTo),
       H.p().class("muted small center").says(Frame.t(frame, "auth.google_consent_note")),
-      H.p().class("auth-links").holding([H.a().class("text-link").href(Routes.SIGN_IN + "?return=" + typed.returnTo).says(Frame.t(frame, "auth.have_account"))])
+      H.p().class("auth-links").holding([H.a().class("text-link").href(Routes.SIGN_IN + "?return=" + Url.encodeComponent(typed.returnTo)).says(Frame.t(frame, "auth.have_account"))])
     ])
 }
 

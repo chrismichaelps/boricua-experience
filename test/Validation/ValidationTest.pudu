@@ -30,7 +30,7 @@ import Validation.ReviewForm as ReviewForm
 /// The catalogue of the recorded category profiles and two towns.
 fn profiles() -> Catalog.Catalog {
   let categories: Array[Catalog.Category] = Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), [])
-  Catalog.Catalog{categories: categories, municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}, Catalog.Municipality{slug: "luquillo", name: "Luquillo", region: "este", lat: 18.37, lng: -65.72}], scenes: []}
+  Catalog.Catalog{categories: categories, municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}, Catalog.Municipality{slug: "luquillo", name: "Luquillo", region: "este", lat: 18.37, lng: -65.72}], scenes: [], planStyles: []}
 }
 
 /// The recorded member profile, read before profiles carried their accepted versions.
@@ -93,9 +93,9 @@ fn main() -> Int {
   let ready = EventForm.check(&goodDraft())
   let signUp = Credentials.SignUp{displayName: "Ana", email: "ana@example.com", password: "boricua2026", confirmation: "boricua2026", birthDate: "1990-05-17", terms: true, privacy: true}
   let checks = Test.suite("Validation", &[
-      Test.equals("a review is converted with its visit month", &Result.map(ReviewForm.check(&Review.ReviewDraft{rating: "4", body: "  Muy buen mofongo, aunque hubo espera.  ", visited: "2026-09"}, &Time.Local{year: 2026, month: 10, day: 12, weekday: 1, hour: 12, minute: 0}), |r: Review.ReviewReady| (r.rating, r.body, r.visitedOn)), &Ok((4, "Muy buen mofongo, aunque hubo espera.", Some("2026-09-01")))),
-      Test.equals("a review needs stars, enough text and a past month", &Result.isErr(&ReviewForm.check(&Review.ReviewDraft{rating: "6", body: "corto", visited: "2026-11"}, &Time.Local{year: 2026, month: 10, day: 12, weekday: 1, hour: 12, minute: 0})), &true),
-      Test.equals("every refused review field is named", &match ReviewForm.check(&Review.ReviewDraft{rating: "0", body: "corto", visited: "2026-13"}, &Time.Local{year: 2026, month: 10, day: 12, weekday: 1, hour: 12, minute: 0}) { case Err(problem) => Problem.fieldErrors(&problem).map(|e: Problem.FieldError| e.field) case Ok(_) => [] }, &["rating", "body", "visited"]),
+      Test.equals("a review is converted with its visit month", &Result.map(ReviewForm.check(&Review.ReviewDraft{rating: "4", body: "  Muy buen mofongo, aunque hubo espera.  ", visited: "2026-09", companions: "family"}, &Time.Local{year: 2026, month: 10, day: 12, weekday: 1, hour: 12, minute: 0}), |r: Review.ReviewReady| (r.rating, r.body, r.visitedOn, r.companions)), &Ok((4, "Muy buen mofongo, aunque hubo espera.", Some("2026-09-01"), Some("family")))),
+      Test.equals("a review needs stars, enough text and a past month", &Result.isErr(&ReviewForm.check(&Review.ReviewDraft{rating: "6", body: "corto", visited: "2026-11", companions: ""}, &Time.Local{year: 2026, month: 10, day: 12, weekday: 1, hour: 12, minute: 0})), &true),
+      Test.equals("every refused review field is named", &match ReviewForm.check(&Review.ReviewDraft{rating: "0", body: "corto", visited: "2026-13", companions: "aliens"}, &Time.Local{year: 2026, month: 10, day: 12, weekday: 1, hour: 12, minute: 0}) { case Err(problem) => Problem.fieldErrors(&problem).map(|e: Problem.FieldError| e.field) case Ok(_) => [] }, &["rating", "body", "visited", "companions"]),
       Test.that("an owner answer may be cleared but not be one letter", ReviewForm.responseOk("") && ReviewForm.responseOk("Gracias") && !ReviewForm.responseOk("x")),
       Test.equals("a complete restaurant passes", &placeRefusals(&goodPlace()), &[]),
       Test.equals("facts are converted by type and unknown names are ignored", &Json.encode(&(match PlaceForm.check(&goodPlace(), &profiles()) { case Ok(found) => found case Err(_) => panic("good place refused") }).details), &"\{\"cuisine\":\"criolla\",\"price_level\":\"2\",\"service\":[\"dine_in\",\"takeout\"],\"accessible\":true\}"),

@@ -1,0 +1,93 @@
+/** @View.Components.TownGuide.Panel — a town's guide: how to get there, when to go, and what it offers */
+module View.Components.TownGuide
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.Routes as Routes
+import Domain.Catalog as Catalog
+import Domain.TownGuide as TownGuide
+import I18n.Dates as Dates
+import Utils.Geo as Geo
+import View.Components.Icons as Icons
+import View.Components.Search as SearchControls
+import View.Frame as Frame
+
+/// A Celsius normal in whole Fahrenheit degrees, as the island's forecasts read.
+fn fahrenheit(celsius: Float64) -> Int { Geo.wholeOf(celsius * 9.0 / 5.0 + 32.0) }
+
+/// The guide for a town; nothing when the database had nothing to say.
+export fn panel(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: &Catalog.Municipality, guide: &TownGuide.TownGuide) -> H.Node {
+  if guide.climate.isEmpty() && guide.categories.isEmpty() && guide.airport == None { return H.nothing() }
+  H.section().class("town-guide panel").at("aria-labelledby", "town-guide-title").holding([
+      H.h2().class("section-title").id("town-guide-title").says(Frame.tf(frame, "town.guide_title", &[("town", town.name)])),
+      H.ul().class("town-facts").holding([access(frame, guide), bestTime(frame, guide)]),
+      essentials(frame, catalog, town, guide),
+      climate(frame, guide)
+    ])
+}
+
+/// How a visitor gets there from the main airport.
+fn access(frame: &Frame.Frame, guide: &TownGuide.TownGuide) -> H.Node {
+  if guide.island {
+    return H.li().holding([Icons.sized("ship", 20), H.span().says(Frame.t(frame, "town.island_access"))])
+  }
+  match TownGuide.airportMinutes(guide) {
+    case Some(0) => H.li().holding([Icons.sized("plane", 20), H.span().says(Frame.t(frame, "town.airport_here"))])
+    case Some(minutes) => H.li().holding([Icons.sized("car", 20), H.span().says(Frame.tf(frame, "town.airport_drive", &[("time", duration(frame, minutes))]))])
+    case None => H.nothing()
+  }
+}
+
+/// `1 h 55 min` or `40 min`.
+fn duration(frame: &Frame.Frame, minutes: Int) -> Str {
+  if minutes < 60 { return Frame.tf(frame, "town.minutes", &[("minutes", show(minutes))]) }
+  Frame.tf(frame, "town.hours_minutes", &[("hours", show(minutes / 60)), ("minutes", show(minutes % 60))])
+}
+
+/// The driest months of the year there.
+fn bestTime(frame: &Frame.Frame, guide: &TownGuide.TownGuide) -> H.Node {
+  let months = TownGuide.driestMonths(guide)
+  if months.isEmpty() { return H.nothing() }
+  H.li().holding([Icons.sized("sun", 20), H.span().says(Frame.tf(frame, "town.best_months", &[("months", months.map(|month: Int| Dates.monthLong(&frame.locale, month)).join(", "))]))])
+}
+
+/// Each category the town has something in, with how much, linking to the town's listing of it.
+fn essentials(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: &Catalog.Municipality, guide: &TownGuide.TownGuide) -> H.Node {
+  if guide.categories.isEmpty() { return H.nothing() }
+  H.nav().class("town-essentials").label(Frame.tf(frame, "town.essentials", &[("town", town.name)])).holding([
+      H.h3().class("town-subtitle").says(Frame.tf(frame, "town.essentials", &[("town", town.name)])),
+      H.div().class("chips").holding(guide.categories.map(|counted: TownGuide.TownCategory| match Catalog.category(catalog, counted.slug) {
+            case Some(category) => H.a().class("chip").href(Routes.TOWN_PREFIX + town.slug + "?category=" + category.slug + "#search-results").holding([
+                Icons.sized(category.icon, 16),
+                H.span().says(SearchControls.categoryName(frame, &category)),
+                H.small().says(show(counted.places + counted.activities))
+              ])
+            case None => H.nothing()
+          }))
+    ])
+}
+
+/// The year month by month: highs and lows, and rainy days as bars, with where the numbers come from.
+fn climate(frame: &Frame.Frame, guide: &TownGuide.TownGuide) -> H.Node {
+  if guide.climate.length() != 12 { return H.nothing() }
+  var wettest = 1.0
+  for month in guide.climate {
+    if month.rainDays > wettest { wettest = month.rainDays }
+  }
+  let best = TownGuide.driestMonths(guide)
+  H.div().class("town-climate").holding([
+      H.h3().class("town-subtitle").says(Frame.t(frame, "town.climate_title")),
+      H.ol().class("climate-strip").label(Frame.t(frame, "town.climate_title")).holding(guide.climate.map(|month: TownGuide.ClimateMonth| {
+            let share = Geo.wholeOf(month.rainDays / wettest * 100.0)
+            H.li().class(if best.contains(month.month) { "climate-month is-best" } else { "climate-month" }).label(Frame.tf(frame, "town.climate_month", &[("month", Dates.monthLong(&frame.locale, month.month)), ("high", show(fahrenheit(month.highC))), ("low", show(fahrenheit(month.lowC))), ("days", show(Geo.wholeOf(month.rainDays)))])).holding([
+                H.span().class("climate-high").at("aria-hidden", "true").says(show(fahrenheit(month.highC)) + "°"),
+                H.span().class("climate-bar").at("aria-hidden", "true").holding([H.span().class("climate-rain").at("style", "height:" + show(share) + "%")]),
+                H.span().class("climate-name").at("aria-hidden", "true").says(Dates.monthShort(&frame.locale, month.month))
+              ])
+          })),
+      H.p().class("muted small").says(match guide.climateSource {
+          case Some(source) => Frame.tf(frame, "town.climate_source", &[("km", show(Geo.wholeOf(source.tempKm)))])
+          case None => Frame.t(frame, "town.climate_source_plain")
+        })
+    ])
+}

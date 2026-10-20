@@ -5,6 +5,7 @@ import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Json as Json
 import Std.Option as Option
+import Std.Url as Url
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Cookies as Cookies
@@ -195,7 +196,7 @@ fn onboard(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sess
 fn renewal(app: &Assembly.App, visitor: &Context.Visitor, problem: Option[Problem.Problem]) -> Http.Response {
   let returnTo = Respond.returnPath(Option.orElse(Route.queryParam(&visitor.request, "return"), Route.fieldsOf(&visitor.request).get("return")))
   match visitor.member {
-    case Some(member) => if !member.onboarded { return Respond.redirect(Routes.ONBOARDING + "?return=" + returnTo) } else if !AccountRules.owesRenewal(&member) && problem == None { return Respond.redirect(returnTo) }
+    case Some(member) => if !member.onboarded { return Respond.redirect(Routes.ONBOARDING + "?return=" + Url.encodeComponent(returnTo)) } else if !AccountRules.owesRenewal(&member) && problem == None { return Respond.redirect(returnTo) }
     case None => {}
   }
   Respond.page(if problem == None { 200 } else { 422 }, &AuthPage.renewal(&Context.frame(app, visitor), returnTo, &problem))

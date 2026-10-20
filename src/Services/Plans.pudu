@@ -1,8 +1,8 @@
 /** @Services.Plans.Outings — plans near a visitor, a shared plan, and its road route */
 module Services.Plans
 
-import Std.Math.Float as Float
 import Std.Json as Json
+import Std.Math.Float as Float
 import Api.Plans as PlansApi
 import Domain.Plan as Plan
 import Domain.Problem as Problem

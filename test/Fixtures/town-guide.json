@@ -1,0 +1,107 @@
+{
+ "town": "rincon",
+ "island": false,
+ "airport": {
+  "seconds": 7594,
+  "meters": 159352
+ },
+ "climate": [
+  {
+   "month": 1,
+   "high_c": 29.1,
+   "low_c": 19.0,
+   "rain_mm": 65,
+   "rain_days": 5.0
+  },
+  {
+   "month": 2,
+   "high_c": 29.2,
+   "low_c": 19.0,
+   "rain_mm": 70,
+   "rain_days": 5.0
+  },
+  {
+   "month": 3,
+   "high_c": 29.3,
+   "low_c": 19.0,
+   "rain_mm": 75,
+   "rain_days": 6.0
+  },
+  {
+   "month": 4,
+   "high_c": 29.4,
+   "low_c": 19.0,
+   "rain_mm": 80,
+   "rain_days": 9.0
+  },
+  {
+   "month": 5,
+   "high_c": 29.5,
+   "low_c": 19.0,
+   "rain_mm": 85,
+   "rain_days": 12.0
+  },
+  {
+   "month": 6,
+   "high_c": 29.6,
+   "low_c": 19.0,
+   "rain_mm": 90,
+   "rain_days": 8.0
+  },
+  {
+   "month": 7,
+   "high_c": 29.7,
+   "low_c": 19.0,
+   "rain_mm": 95,
+   "rain_days": 10.0
+  },
+  {
+   "month": 8,
+   "high_c": 29.8,
+   "low_c": 19.0,
+   "rain_mm": 100,
+   "rain_days": 12.0
+  },
+  {
+   "month": 9,
+   "high_c": 29.9,
+   "low_c": 19.0,
+   "rain_mm": 105,
+   "rain_days": 14.0
+  },
+  {
+   "month": 10,
+   "high_c": 30.0,
+   "low_c": 19.0,
+   "rain_mm": 110,
+   "rain_days": 13.0
+  },
+  {
+   "month": 11,
+   "high_c": 30.1,
+   "low_c": 19.0,
+   "rain_mm": 115,
+   "rain_days": 11.0
+  },
+  {
+   "month": 12,
+   "high_c": 30.2,
+   "low_c": 19.0,
+   "rain_mm": 120,
+   "rain_days": 7.0
+  }
+ ],
+ "climate_source": {
+  "temp_station": "RQC00660061",
+  "temp_km": 8.1,
+  "rain_station": "RQC00660061",
+  "rain_km": 8.1
+ },
+ "categories": [
+  {
+   "slug": "playa",
+   "places": 3,
+   "activities": 1
+  }
+ ]
+}

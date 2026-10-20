@@ -8,15 +8,19 @@ import Domain.Problem as Problem
 import Domain.Review as Review
 
 /// A place's reviews, newest first, from a cursor.
-export fn board(gateway: &Gateway.Gateway, placeId: Str, after: Str, token: Option[Str]) -> Result[Review.ReviewBoard, Problem.Problem] {
-  Gateway.query(gateway, Supabase.PLACE_REVIEWS, &[("p_place_id", Gateway.text(placeId)), ("p_limit", Json.Number(10)), ("p_after", Gateway.textOrNull(after))], token, Gateway.Read)
+export fn board(gateway: &Gateway.Gateway, placeId: Str, after: Str, filter: &Review.ReviewFilter, token: Option[Str]) -> Result[Review.ReviewBoard, Problem.Problem] {
+  Gateway.query(gateway, Supabase.PLACE_REVIEWS, &[
+      ("p_place_id", Gateway.text(placeId)), ("p_limit", Json.Number(10)), ("p_after", Gateway.textOrNull(after)),
+      ("p_rating", if filter.rating > 0 { Json.Number(filter.rating) } else { Json.Null }), ("p_companions", Gateway.textOrNull(filter.companions))
+    ], token, Gateway.Read)
 }
 
 /// Writes or rewrites the member's review of a place.
 export fn save(gateway: &Gateway.Gateway, placeId: Str, ready: &Review.ReviewReady, token: Str) -> Result[(), Problem.Problem] {
   let _answer = Gateway.call(gateway, Supabase.SAVE_REVIEW, &[
       ("p_place_id", Gateway.text(placeId)), ("p_rating", Json.Number(ready.rating)), ("p_body", Gateway.text(ready.body)),
-      ("p_visited_on", match ready.visitedOn { case Some(day) => Gateway.text(day) case None => Json.Null })
+      ("p_visited_on", match ready.visitedOn { case Some(day) => Gateway.text(day) case None => Json.Null }),
+      ("p_companions", match ready.companions { case Some(kind) => Gateway.text(kind) case None => Json.Null })
     ], Some(token), Gateway.Write) ?
   Ok(())
 }

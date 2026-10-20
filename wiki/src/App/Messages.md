@@ -100,3 +100,6 @@ Resolved: place listings return a bounded24-item Results page and retain its nex
 
 ## Forum integration Grill Log · #137
 Resolved: register four typed forum messages and dedicated handlers/catalogues without changing existing contracts; preserve all session/CSRF wrappers and Spanish fallback. No HTTP below Web, no services in View.
+
+## Formatter parity — resolved Grill Log
+Pinned compiler normalizes import order only; no behavior changes. Full formatting and test gates verify parity.

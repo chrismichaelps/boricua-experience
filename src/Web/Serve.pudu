@@ -4,6 +4,7 @@ module Web.Serve
 import Std.Http as Http
 import Std.Http.Server.Route as Route
 import Std.Option as Option
+import Std.Url as Url
 import App.Assembly as Assembly
 import App.Messages as Messages
 import Constants.Routes as Routes
@@ -79,7 +80,7 @@ export fn api(app: &Assembly.App, handle: fn(Context.Visitor) -> Http.Response) 
 fn gate(app: &Assembly.App, visitor: &Context.Visitor, handle: fn(Context.Visitor) -> Http.Response) -> Http.Response {
   match visitor.member {
     case Some(member) => if !member.onboarded && !OPEN_PATHS.contains(visitor.request.path) {
-      Respond.redirect(Routes.ONBOARDING + "?return=" + visitor.request.path)
+      Respond.redirect(Routes.ONBOARDING + "?return=" + Url.encodeComponent(Frame.here(&Context.frame(app, visitor))))
     } else if AccountRules.owesRenewal(&member) && !OPEN_PATHS.contains(visitor.request.path) {
       Respond.redirect(Routes.TERMS_ACCEPT + "?return=" + Frame.here(&Context.frame(app, visitor)).replace("&", "%26"))
     } else { handle(*visitor) }

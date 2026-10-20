@@ -25,7 +25,7 @@ import View.Layout as Layout
 import View.Seo as Seo
 
 /** @View.Pages.Plan.Choices — what the visitor chose on the page */
-export type Choices = { lat: Option[Float64], lng: Option[Float64], town: Str, window: Plan.Window, style: Plan.Style, stops: Int, mode: Plan.Mode }
+export type Choices = { lat: Option[Float64], lng: Option[Float64], town: Str, window: Plan.Window, style: Str, stops: Int, mode: Plan.Mode }
 
 /** @View.Pages.Plan.Shown — what the page shows below the choices */
 export type Shown = Nothing | Found(Plan.Outings) | Shared(Plan.Outings)
@@ -149,6 +149,17 @@ fn chips(frame: &Frame.Frame, name: Str, label: Str, options: &Array[(Str, Str)]
     ])
 }
 
+/// A style's name in the visitor's language: the database's, else the built-in one.
+fn styleLabel(frame: &Frame.Frame, catalog: &Catalog.Catalog, slug: Str) -> Str {
+  match Catalog.planStyle(catalog, slug) {
+    case Some(style) => match frame.locale {
+      case Locale.Es => style.nameEs
+      case Locale.En => style.nameEn
+    }
+    case None => Frame.t(frame, "plan.style." + slug)
+  }
+}
+
 /// The choices, folded under a one-line summary once plans are shown so the plans come first on phones.
 fn choicesPanel(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choices, folded: Bool) -> H.Node {
   if !folded { return form(frame, catalog, choices) }
@@ -156,7 +167,7 @@ fn choicesPanel(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choice
     case Some(town) => town.name
     case None => Frame.t(frame, "plan.near_you")
   }
-  let line = [start, Frame.t(frame, "plan.when." + Plan.windowName(&choices.window)), Frame.t(frame, "plan.style." + Plan.styleName(&choices.style)), Frame.t(frame, "plan.mode." + Plan.modeName(&choices.mode))].join(" · ")
+  let line = [start, Frame.t(frame, "plan.when." + Plan.windowName(&choices.window)), styleLabel(frame, catalog, choices.style), Frame.t(frame, "plan.mode." + Plan.modeName(&choices.mode))].join(" · ")
   H.details().class("plan-choices").holding([
       H.summary().class("plan-choices-summary").holding([Icons.sized("sliders", 18), H.span().says(line), H.span().class("plan-choices-edit").says(Frame.t(frame, "plan.change"))]),
       form(frame, catalog, choices)
@@ -177,7 +188,7 @@ fn form(frame: &Frame.Frame, catalog: &Catalog.Catalog, choices: &Choices) -> H.
         ]),
       H.p().class("plan-privacy muted").says(Frame.t(frame, "plan.location_private")),
       chips(frame, "when", Frame.t(frame, "plan.when"), &Plan.WINDOWS.map(|window: Plan.Window| (Plan.windowName(&window), Frame.t(frame, "plan.when." + Plan.windowName(&window)))), Plan.windowName(&choices.window)),
-      chips(frame, "style", Frame.t(frame, "plan.style"), &Plan.STYLES.map(|style: Plan.Style| (Plan.styleName(&style), Frame.t(frame, "plan.style." + Plan.styleName(&style)))), Plan.styleName(&choices.style)),
+      chips(frame, "style", Frame.t(frame, "plan.style"), &Catalog.styleSlugs(catalog).map(|slug: Str| (slug, styleLabel(frame, catalog, slug))), choices.style),
       chips(frame, "stops", Frame.t(frame, "plan.stops"), &Plan.STOP_CHOICES.map(|count: Int| (show(count), Frame.tf(frame, "plan.stops_count", &[("count", show(count))]))), show(choices.stops)),
       chips(frame, "mode", Frame.t(frame, "plan.mode"), &[("local", Frame.t(frame, "plan.mode.local")), ("visitor", Frame.t(frame, "plan.mode.visitor"))], Plan.modeName(&choices.mode)),
       H.div().class("plan-submit").holding([

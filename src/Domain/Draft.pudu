@@ -3,6 +3,7 @@ module Domain.Draft
 
 import Std.Option as Option
 
+import Domain.Cover as Cover
 import Domain.Event as Event
 import Utils.Time as Time
 
@@ -28,7 +29,9 @@ export type Draft = {
   accessible: Bool,
   /// "yes", "no", or empty when not said.
   parking: Str,
-  cashOnly: Str
+  cashOnly: Str,
+  /// The card's background theme when no photograph is uploaded; empty for the category default.
+  coverTheme: Str
 }
 
 /** @Domain.Draft.Ready — a draft validated and converted for the database */
@@ -56,7 +59,7 @@ export type Ready = {
 }
 
 /** @Domain.Draft.Published — the event a publish or edit produced */
-export type Published = { id: Str, slug: Str }
+export type Published = { id: Str, slug: Str, coverSaved: Bool }
 
 /// An empty draft: public, approval required, price unknown.
 export fn blank() -> Draft {
@@ -80,7 +83,8 @@ export fn blank() -> Draft {
     minAge: "",
     accessible: false,
     parking: "",
-    cashOnly: ""
+    cashOnly: "",
+    coverTheme: ""
   }
 }
 
@@ -122,6 +126,7 @@ export fn fromDetail(detail: &Event.Detail) -> Draft {
     accessible: detail.accessible,
     parking: answerOf(card.parking),
     cashOnly: answerOf(card.cashOnly),
+    coverTheme: Cover.themeOf(card.coverUrl),
     price: match card.priceCents {
       case Some(cents) => show(cents / 100) + "." + (if cents % 100 < 10 { "0" } else { "" }) + show(cents % 100)
       case None => ""

@@ -5,8 +5,10 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Option as Option
 import Std.Time as StdTime
+import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Cover as Cover
 import Domain.Place as Place
 import I18n.Format as Format
 import I18n.Translate as Translate
@@ -16,15 +18,16 @@ import View.Components.Icons as Icons
 import View.Frame as Frame
 
 /// The cover a place shows, its own or its category's illustration.
-export fn coverOf(place: &Place.Listing) -> Str { Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg") }
+export fn coverOf(place: &Place.Listing) -> Str { Cover.served(Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg"), App.ASSET_VERSION) }
 
 /// Whether the place is open now in Puerto Rico, or none when its hours are unknown.
 export fn openNow(frame: &Frame.Frame, place: &Place.Listing) -> Option[Bool] {
   Place.openAt(&place.hours, &Time.local(&StdTime.instantOf(frame.nowMillis)))
 }
 
-/// One place as a card: cover, open-now, rating, name, town, and the category's highlighted facts.
-export fn card(frame: &Frame.Frame, catalog: &Catalog.Catalog, place: &Place.Listing) -> H.Node {
+/// One place as a card: cover, open-now, rating, name, town, and the category's highlighted facts; a
+/// `rank` above zero shows its position in a ranked listing.
+export fn card(frame: &Frame.Frame, catalog: &Catalog.Catalog, place: &Place.Listing, rank: Int = 0) -> H.Node {
   let category = Catalog.category(catalog, place.category.slug)
   let facts = Facts.highlightTexts(frame, &category, Catalog.PLACE, &place.highlights)
   let distance = Format.distance(&frame.locale, place.distanceM)
@@ -32,6 +35,7 @@ export fn card(frame: &Frame.Frame, catalog: &Catalog.Catalog, place: &Place.Lis
       H.a().class("card-link").href(Routes.PLACE_PREFIX + place.slug).holding([
           H.div().class("card-media").holding([
               H.img().src(coverOf(place)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),
+              if rank > 0 { H.span().class("card-rank").label(Frame.tf(frame, "place.rank_label", &[("rank", show(rank))])).says("#" + show(rank)) } else { H.nothing() },
               match openNow(frame, place) {
                 case Some(true) => H.span().class("pill pill-open card-price").says(Frame.t(frame, "place.open_now"))
                 case Some(false) => H.span().class("pill pill-light card-price").says(Frame.t(frame, "place.closed_now"))
@@ -54,6 +58,13 @@ export fn card(frame: &Frame.Frame, catalog: &Catalog.Catalog, place: &Place.Lis
             ])
         ])
     ])
+}
+
+/// Place cards numbered from one, in the order a ranked listing gave them.
+export fn ranked(frame: &Frame.Frame, catalog: &Catalog.Catalog, places: &Array[Place.Listing]) -> Array[H.Node] {
+  var cards: Array[H.Node] = []
+  for place in *places { cards = cards.push(card(frame, catalog, &place, cards.length() + 1)) }
+  cards
 }
 
 /// A titled row of place cards that scrolls sideways on phones, with a link to see more.
