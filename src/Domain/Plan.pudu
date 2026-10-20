@@ -37,9 +37,6 @@ export fn validArrival(arrival: &Arrival) -> Bool {
     && arrival.plan.length() <= SHARED_MAX && arrival.plan.filter(|slug: Str| !wellShaped(slug)).length() == 0
 }
 
-/** @Domain.Plan.Style — the kind of outing a visitor asked for */
-export type Style = Mixed | Free | Family | Adventure | Culture
-
 /** @Domain.Plan.Window — when the plan happens */
 export type Window = Today | Tomorrow | Weekend
 
@@ -47,10 +44,10 @@ export type Window = Today | Tomorrow | Weekend
 export type Mode = Local | Visitor
 
 /** @Domain.Plan.Request — everything a plan search reads */
-export type Request = { lat: Float64, lng: Float64, window: Window, style: Style, stops: Int, mode: Mode, radiusM: Int, seed: Int }
+export type Request = { lat: Float64, lng: Float64, window: Window, style: Str, stops: Int, mode: Mode, radiusM: Int, seed: Int }
 
-/// Every style, in the order the page offers them.
-export const STYLES: Array[Style] = [Mixed, Free, Family, Adventure, Culture]
+/// The style every plan falls back to.
+export const MIXED: Str = "mixed"
 
 /// Every window, in the order the page offers them.
 export const WINDOWS: Array[Window] = [Today, Tomorrow, Weekend]
@@ -64,27 +61,8 @@ export const RADIUS_M: Int = 30000
 /// The most stops a shared plan may carry.
 export const SHARED_MAX: Int = 6
 
-/// The style's wire name.
-export fn styleName(style: &Style) -> Str {
-  match style {
-    case Mixed => "mixed"
-    case Free => "free"
-    case Family => "family"
-    case Adventure => "adventure"
-    case Culture => "culture"
-  }
-}
-
-/// The style a wire name selects; mixed for anything else.
-export fn styleFrom(name: Str) -> Style {
-  match name {
-    case "free" => Free
-    case "family" => Family
-    case "adventure" => Adventure
-    case "culture" => Culture
-    case _ => Mixed
-  }
-}
+/// The style a wire name selects among the known styles; mixed for anything else.
+export fn styleFrom(name: Str, known: &Array[Str]) -> Str { if known.contains(name) { name } else { MIXED } }
 
 /// The window's wire name.
 export fn windowName(window: &Window) -> Str {

@@ -32,8 +32,8 @@ fn main() -> Int {
     case Ok(found) => found
     case Err(_) => Plan.Outings{plans: []}
   }
-  let catalog = Catalog.Catalog{categories: [], municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.4655, lng: -66.1057}], scenes: []}
-  let choices = PlanPage.Choices{lat: None, lng: None, town: "san-juan", window: Plan.Weekend, style: Plan.Mixed, stops: 3, mode: Plan.Local}
+  let catalog = Catalog.Catalog{categories: [], municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.4655, lng: -66.1057}], scenes: [], planStyles: []}
+  let choices = PlanPage.Choices{lat: None, lng: None, town: "san-juan", window: Plan.Weekend, style: Plan.MIXED, stops: 3, mode: Plan.Local}
   let es = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Found(outings)))
   let en = Html.render(&PlanPage.render(&visitor(Locale.En), &catalog, &choices, &PlanPage.Found(outings)))
   let start = Html.render(&PlanPage.render(&visitor(Locale.Es), &catalog, &choices, &PlanPage.Nothing))
@@ -50,14 +50,18 @@ fn main() -> Int {
   let englishPlan = Html.render(&PlanPage.render(&visitor(Locale.En), &catalog, &choices, &PlanPage.Found(Plan.Outings{plans: [localizedPlan]})))
   let arrival = Plan.Arrival{slug: "a-one", lat: 18.4, lng: -66.1, plan: ["a-one", "b-two"]}
   let ics = Calendar.plan("https://boricuaexperience.com", "Plan", &first.stops.map(|stop: Plan.Stop| (stop.card, stop.arrive, stop.leave)))
+  let styled = Catalog.Catalog{..catalog, planStyles: [Catalog.PlanStyle{slug: "mixed", nameEs: "Mixto", nameEn: "Mixed", icon: "sparkle"}, Catalog.PlanStyle{slug: "nightlife", nameEs: "De noche", nameEn: "Night out", icon: "moon"}]}
+  let styledForm = Html.render(&PlanPage.render(&visitor(Locale.En), &styled, &PlanPage.Choices{..choices, style: "nightlife"}, &PlanPage.Nothing))
   let checks = Test.suite("Plan", &[
       Test.equals("trip uses database English title", &englishTrip.contains("Coffee route"), &true),
       Test.equals("plan uses database English title", &englishPlan.contains("Coffee route"), &true),
       Test.equals("refreshed map pins retain database English title", &Json.encode(&MapPage.pinsValue(&visitor(Locale.En), &[factsCard])).contains("Coffee route"), &true),
       Test.equals("assistant source retains database English title", &Json.encode(&Assistant.sourceLocalized(&factsCard, "en")).contains("Coffee route"), &true),
 
-      Test.equals("styles read their wire names", &Plan.styleName(&Plan.styleFrom("adventure")), &"adventure"),
-      Test.equals("an unknown style is mixed", &Plan.styleName(&Plan.styleFrom("<script>")), &"mixed"),
+      Test.equals("a known style is kept", &Plan.styleFrom("nightlife", &["mixed", "nightlife"]), &"nightlife"),
+      Test.equals("an unknown style is mixed", &Plan.styleFrom("<script>", &Catalog.styleSlugs(&catalog)), &"mixed"),
+      Test.equals("without database styles the original five are offered", &Catalog.styleSlugs(&catalog), &["mixed", "free", "family", "adventure", "culture"]),
+      Test.that("database styles drive the plan form, named in the visitor's language", styledForm.contains("value=\"nightlife\"") && styledForm.contains("Night out") && !styledForm.contains("value=\"culture\"")),
       Test.equals("an unknown window is today", &Plan.windowName(&Plan.windowFrom("someday")), &"today"),
       Test.equals("the visitor mode is remembered by name", &Plan.modeName(&Plan.modeFrom("visitor")), &"visitor"),
       Test.equals("stop counts stay within the offered choices", &[Plan.stopsFrom("1"), Plan.stopsFrom("3"), Plan.stopsFrom("9"), Plan.stopsFrom("x")], &[2, 3, 4, 3]),

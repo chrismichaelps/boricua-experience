@@ -70,11 +70,11 @@ fn visitor(locale: Locale.Locale, path: Str) -> Frame.Frame {
 fn main() -> Int {
   let en = visitor(Locale.En, "/")
   let es = visitor(Locale.Es, "/")
-  let emptyCatalog = Catalog.Catalog{categories: [], municipalities: [], scenes: []}
+  let emptyCatalog = Catalog.Catalog{categories: [], municipalities: [], scenes: [], planStyles: []}
   let catalog = Catalog.Catalog{categories: [], municipalities: [], scenes: [
       Catalog.Scene{image: "/assets/img/luquillo-photo.webp", captionEs: "Luquillo, Puerto Rico", captionEn: "Luquillo, Puerto Rico", town: "luquillo"},
       Catalog.Scene{image: "/assets/img/san-juan-photo.webp", captionEs: "Viejo San Juan", captionEn: "Old San Juan", town: "san-juan"}
-    ] }
+    ], planStyles: [] }
   let tokenFrame = Frame.Frame{..es, formToken: "session-token"}
   let consentForm = Html.render(&Notice.cookieBanner(&tokenFrame).html())
   let cookiePage = Html.render(&Legal.render(&tokenFrame, &Legal.Cookies))

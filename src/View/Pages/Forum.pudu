@@ -131,5 +131,5 @@ export fn moderation(frame: &Frame.Frame, reports: &Array[Forum.Report]) -> Html
 
 /// Preserve a refused reply without disclosing a parent that is no longer readable.
 export fn replyFallback(frame: &Frame.Frame, topic: Str, draft: Str, problem: Problem.Problem) -> Html.Html {
-  editor(frame, &Catalog.Catalog{categories: [], municipalities: [], scenes: []}, &Forum.Command{..Forum.draft("reply", topic), body: draft}, Some(problem))
+  editor(frame, &Catalog.Catalog{categories: [], municipalities: [], scenes: [], planStyles: []}, &Forum.Command{..Forum.draft("reply", topic), body: draft}, Some(problem))
 }

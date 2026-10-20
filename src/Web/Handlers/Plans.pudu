@@ -75,7 +75,7 @@ fn page(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
   }
   let mode = modeOf(visitor)
   let (lat, lng, town) = originOf(visitor, &catalog)
-  let choices = PlanPage.Choices{lat: lat, lng: lng, town: town, window: Plan.windowFrom(Serve.query(visitor, "when")), style: Plan.styleFrom(Serve.query(visitor, "style")), stops: Plan.stopsFrom(Serve.query(visitor, "stops")), mode: mode}
+  let choices = PlanPage.Choices{lat: lat, lng: lng, town: town, window: Plan.windowFrom(Serve.query(visitor, "when")), style: Plan.styleFrom(Serve.query(visitor, "style"), &Catalog.styleSlugs(&catalog)), stops: Plan.stopsFrom(Serve.query(visitor, "stops")), mode: mode}
   let shared = Plan.sharedSlugs(Serve.query(visitor, "e"))
   let shown = if !shared.isEmpty() {
     match Serve.ask(app, &app.kinds.planShared, shared) {
