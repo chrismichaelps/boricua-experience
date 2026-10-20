@@ -71,3 +71,7 @@ Resolved: standard rail/search cards keep a shared13rem copy track, matching cov
 
 ## Compact discovery supersession · #136
 Resolved: discovery grids and rails now use smaller photos and natural-height fully visible copy, superseding #124’s13rem internally scrolling track. Delegated keyboard overflow support remains available for specialized organizer contexts; map cards keep their existing composition. See [[handoffs/community-forum]].
+
+
+## Unknown admission placement · #171 — resolved Grill Log
+Unknown admission remains explicit bilingual text but belongs in ordinary card metadata, not an image overlay that wraps over narrow map thumbnails. Only actual known amounts, including explicit zero/free, use the compact photo badge. Preserve category/photo images, source attribution, dates, navigation and accessibility text. Shared server-rendered markup covers initial and refreshed map cards as well as rails/grids/organizer lists; no CSS or database contract changes. Rendered regressions distinguish None from Some(0) and positive amounts.

@@ -138,3 +138,7 @@ Current presentation assertions cover mainland/island guides, climate provenance
 
 ## Search favicon Grill Log · #167 — resolved
 Google Search receives stable supported raster favicon URLs, independent of application asset revisions. The ICO directory contains16,32,48,96,192 and256px square PNG entries and its declared sizes match those bytes; the existing192px PNG is the primary large raster. Prefer raster candidates in rel=icon discovery, retaining the official vector and all install assets unchanged. Root ICO remains revalidated after24h. Crawler requests must return images and remain allowed by robots. Google indexing timing and display are external, never an immediate acceptance claim. Rendered shell and binary regressions check both halves of the contract.
+
+
+## Unknown admission placement · #171 — resolved Grill Log
+Unknown admission remains explicit bilingual text but belongs in ordinary card metadata, not an image overlay that wraps over narrow map thumbnails. Only actual known amounts, including explicit zero/free, use the compact photo badge. Preserve category/photo images, source attribution, dates, navigation and accessibility text. Shared server-rendered markup covers initial and refreshed map cards as well as rails/grids/organizer lists; no CSS or database contract changes. Rendered regressions distinguish None from Some(0) and positive amounts.
