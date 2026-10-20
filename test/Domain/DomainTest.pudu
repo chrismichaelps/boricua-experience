@@ -19,6 +19,7 @@ import Domain.Participation as Participation
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Profile as Profile
+import Domain.Resume as Resume
 import Domain.Search as Search
 import Services.Discovery as Discovery
 import Support.Fixtures as Fixtures
@@ -60,6 +61,11 @@ fn main() -> Int {
   let dateNow = Option.unwrapOr(Time.parseTimestamp("2026-10-18T20:00:00Z"), Time.now())
   let release = Build.of(" 0.6.1 ", "0123456789abcdef0123456789abcdef01234567", "sha256:" + "0123456789abcdef".repeat(4), "2026-10-14T05:00:00Z")
   let checks = Test.suite("Domain", &[
+      Test.equals("a guest's action rides inside the return path, before its fragment", &Resume.returning("/lugar/fonda#reviews", "review"), &"/lugar/fonda?resume=review#reviews"),
+      Test.equals("an existing query gains the action as another pair", &Resume.returning("/e/plaza?from=share", "going"), &"/e/plaza?from=share&resume=going"),
+      Test.equals("the sign-in address encodes the whole return path", &Resume.signIn("/signin", "/e/plaza", "like"), &"/signin?return=%2Fe%2Fplaza%3Fresume%3Dlike"),
+      Test.equals("a return path names the action it resumes", &(Resume.ofPath("/e/plaza?from=share&resume=going"), Resume.ofPath("/lugar/fonda?resume=review#reviews")), &(Some("going"), Some("review"))),
+      Test.equals("unknown actions and paths without one resume nothing", &(Resume.ofPath("/e/plaza?resume=delete"), Resume.ofPath("/e/plaza"), Resume.fromQuery("resume=")), &(None, None, None)),
       Test.that("a release fingerprint is sha256 and 64 lowercase hex characters", Build.wellFormed("sha256:" + "a".repeat(64))),
       Test.that("an uppercase or short fingerprint is not a release", !Build.wellFormed("sha256:" + "A".repeat(64)) && !Build.wellFormed("sha256:abc") && !Build.wellFormed("a".repeat(71))),
       Test.equals("a malformed release identity falls back to development", &Build.of("0.6.1", "abc", "sha256:nothex", "now"), &Build.development()),

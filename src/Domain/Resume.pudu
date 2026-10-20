@@ -1,0 +1,44 @@
+/** @Domain.Resume.Intent — an action a guest started before signing in, finished after */
+module Domain.Resume
+
+import Std.Url as Url
+
+/// The query parameter that carries the action through the sign-in and back.
+export const PARAM: Str = "resume"
+
+/// The actions a guest can start: marks and the like on an activity, a join request, a review.
+export const KINDS: Array[Str] = ["interested", "going", "like", "join", "review"]
+
+/// Whether a value names an action a guest can start.
+export fn valid(kind: Str) -> Bool { KINDS.contains(kind) }
+
+/// The action a query text (without its `?`) asks to resume, when it names a known one.
+export fn fromQuery(query: Str) -> Option[Str] {
+  for pair in query.split("&") {
+    let equals = pair.indexOf("=")
+    if equals > 0 && pair.take(equals) == PARAM {
+      let kind = Url.decodeComponent(pair.drop(equals + 1))
+      return if valid(kind) { Some(kind) } else { None }
+    }
+  }
+  None
+}
+
+/// The action a return path asks to resume.
+export fn ofPath(path: Str) -> Option[Str] {
+  let mark = path.indexOf("?")
+  if mark < 0 { None } else { fromQuery(path.drop(mark + 1).split("#")[0]) }
+}
+
+/// A path that resumes an action, keeping any fragment after the query.
+export fn returning(path: Str, kind: Str) -> Str {
+  let hash = path.indexOf("#")
+  let bare = if hash < 0 { path } else { path.take(hash) }
+  let fragment = if hash < 0 { "" } else { path.drop(hash) }
+  bare + (if bare.contains("?") { "&" } else { "?" }) + PARAM + "=" + kind + fragment
+}
+
+/// The sign-in address for a guest who tried an action on a page.
+export fn signIn(signInPath: Str, path: Str, kind: Str) -> Str {
+  signInPath + "?return=" + Url.encodeComponent(returning(path, kind))
+}

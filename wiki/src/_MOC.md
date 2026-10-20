@@ -47,6 +47,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Domain/Participation]] — A member's own requests, an organizer's queue, and the small states actions answer.
 - [[src/Domain/Problem]] — The single failure type of every service, with its HTTP status, stable code, and message key; field errors for forms.
 - [[src/Domain/Profile]] — The signed-in account with preferences and counts, the public organizer profile, and the edit records.
+- [[src/Domain/Resume]] — Keeps a guest's tap alive through sign-in so the page can offer to finish it.
 - [[src/Domain/Search]] — Search filters, sort, and date windows with their wire names.
 - [[src/Domain/Session]] — The sealed session, the sign-in flow, and the identity provider's tokens.
 

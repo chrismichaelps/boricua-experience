@@ -196,7 +196,22 @@ fn main() -> Int {
   let noBadges = Achievement.Showcase{total: 0, items: []}
   let adminEn = Html.render(&ProfilePage.render(&en, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
   let adminEs = Html.render(&ProfilePage.render(&es, &Profile.PublicProfile{..profile, isAdmin: true}, &noBadges))
+  let resumeFrame = Frame.Frame{..en, query: "from=share&resume=going"}
+  let guestPage = Html.render(&EventPage.render(&en, &detail, &None))
+  let resumedGoing = Html.render(&EventPage.render(&resumeFrame, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
+  let alreadyGoing = Html.render(&EventPage.render(&resumeFrame, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true, interest: Some("going")}}, &None))
+  let guestResume = Html.render(&EventPage.render(&resumeFrame, &detail, &None))
+  let resumedLike = Html.render(&EventPage.render(&Frame.Frame{..en, query: "resume=like"}, &Event.Detail{..detail, viewer: Event.Viewer{..detail.viewer, signedIn: true}}, &None))
+  let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
+  let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("a guest's marks and join link carry the action through sign-in", guestPage.contains("%3Fresume%3Dgoing") && guestPage.contains("%3Fresume%3Dinterested") && guestPage.contains("%3Fresume%3Dlike") && guestPage.contains("%3Fresume%3Djoin")),
+      Test.that("a member back from sign-in is offered to finish the action in one tap", resumedGoing.contains("resume-banner") && resumedGoing.contains("data-resume-action=\"going\"") && resumedGoing.contains("Mark as going")),
+      Test.that("an action already done, or a guest, gets no resume offer", !alreadyGoing.contains("resume-banner") && !guestResume.contains("resume-banner")),
+      Test.that("a resumed like posts a like", resumedLike.contains("data-resume-action=\"like\"") && resumedLike.contains("/react")),
+      Test.that("the sign-in page says what the guest was doing and keeps it in the Google link", signInResume.contains("say you&#39;re going") || signInResume.contains("say you're going")),
+      Test.that("the Google and sign-up links encode the return path", signInResume.contains("/auth/google?return=%2Fe%2Fplaza%3Fresume%3Dgoing") && signInResume.contains("/signup?return=%2Fe%2Fplaza%3Fresume%3Dgoing")),
+      Test.that("a plain sign-in keeps its usual welcome", signInPlain.contains("Good to see you again.")),
       Test.equals("map keeps the accessibility launcher in reach", &map.contains("a11y-launch"), &true),
       Test.that("every page names its build and links to the live version", results.contains("<meta name=\"build\" content=\"development\"") && results.contains("href=\"/version\"") && results.contains("data-refresh=")),
       Test.that("phone map offers a Map pill that lowers the list", map.contains("class=\"sheet-map-pill\"") && map.contains("data-sheet-collapse=\"1\"")),
