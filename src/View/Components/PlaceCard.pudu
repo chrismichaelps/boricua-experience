@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Option as Option
 import Std.Time as StdTime
+import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
 import Domain.Place as Place
@@ -16,7 +17,7 @@ import View.Components.Icons as Icons
 import View.Frame as Frame
 
 /// The cover a place shows, its own or its category's illustration.
-export fn coverOf(place: &Place.Listing) -> Str { Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg") }
+export fn coverOf(place: &Place.Listing) -> Str { Option.unwrapOr(place.coverUrl, "/assets/covers/" + place.category.slug + ".svg?v=" + App.ASSET_VERSION) }
 
 /// Whether the place is open now in Puerto Rico, or none when its hours are unknown.
 export fn openNow(frame: &Frame.Frame, place: &Place.Listing) -> Option[Bool] {

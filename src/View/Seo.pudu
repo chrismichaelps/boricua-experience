@@ -117,7 +117,7 @@ export fn event(siteUrl: Str, detail: &Event.Detail) -> Json.Json {
     ("eventStatus", Json.Text(status)),
     ("eventAttendanceMode", Json.Text("https://schema.org/OfflineEventAttendanceMode")),
     ("location", place),
-    ("image", Json.list(&[Json.Text(imageUrl(siteUrl, Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg")))])),
+    ("image", Json.list(&[Json.Text(imageUrl(siteUrl, Option.unwrapOr(card.coverUrl, "/assets/covers/" + card.category.slug + ".svg?v=" + App.ASSET_VERSION)))])),
     ("url", Json.Text(siteUrl + Routes.EVENT_PREFIX + card.slug))
   ]
   if let Some(end) = card.endsAt { fields = fields.push(("endDate", Json.Text(end))) }

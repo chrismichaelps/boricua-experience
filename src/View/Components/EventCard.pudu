@@ -5,6 +5,7 @@ import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Option as Option
 import Std.Time as StdTime
+import Constants.App as App
 import Constants.Routes as Routes
 import Domain.Event as Event
 import Domain.Locale as Locale
@@ -17,7 +18,7 @@ import View.Frame as Frame
 
 /// The cover an event shows, its own or its category's illustration.
 export fn coverOf(event: &Event.Card) -> Str {
-  Option.unwrapOr(event.coverUrl, "/assets/covers/" + event.category.slug + ".svg")
+  Option.unwrapOr(event.coverUrl, "/assets/covers/" + event.category.slug + ".svg?v=" + App.ASSET_VERSION)
 }
 
 /// One event as a card: cover, price, save, time, title, place, and social proof.
