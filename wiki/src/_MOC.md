@@ -398,3 +398,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Services/Plans]] — itinerary and road-route service.
 
 - [[src/Test/ProfileSwitch]] — cover draft across category navigation.
+
+- [[src/Test/Favicon]] — stable search favicon binary dimensions and container validation.
