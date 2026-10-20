@@ -1,11 +1,11 @@
-import { formDates } from './features/formDates.js?v=92';
+import { formDates } from './features/formDates.js?v=93';
 import { buildCheck } from './features/buildCheck.js?v=80';
 import { passwordControls } from './features/passwords.js?v=80';
 import { submitFeedback } from './features/submitFeedback.js?v=84';
 import { privacyControls } from './features/privacyControls.js?v=80';
 import { interactionFeedback } from './features/haptics.js?v=80';
 import { sheetGestures } from './features/sheetGestures.js?v=80';
-import { searchPickers } from './features/searchPickers.js?v=92';
+import { searchPickers } from './features/searchPickers.js?v=93';
 import { heroCarousel } from './features/carousel.js?v=80';
 import { accountMenu } from './features/accountMenu.js?v=80';
 import { bell } from './features/bell.js?v=80';
@@ -47,18 +47,19 @@ const FEATURES = {
   back,
   'join-panel': joinPanel,
   retry,
-  explorer: (node) => import('./features/explorer.js?v=92').then((module) => module.explorer(node)),
+  explorer: (node) => import('./features/explorer.js?v=93').then((module) => module.explorer(node)),
   achievements: (node) => import('./features/achievements.js?v=80').then((module) => module.achievements(node)).catch(() => {}),
   'achievement-board': (node) => import('./features/achievements.js?v=80').then((module) => module.achievementBoard(node)).catch(() => {}),
   a11y: (node) => import('./features/a11y.js?v=80').then((module) => module.a11y(node)).catch(() => {}),
   'mini-map': (node) => import('./features/eventMaps.js?v=80').then((module) => module.miniMap(node)),
   participants: (node) => import('./features/eventMaps.js?v=80').then((module) => module.participants(node)),
   'avatar-upload': (node) => import('./features/avatarUpload.js?v=80').then((module) => module.avatarUpload(node)),
-  'media-upload': (node) => import('./features/mediaUpload.js?v=80').then((module) => module.mediaUpload(node)),
+  'media-upload': (node) => import('./features/mediaUpload.js?v=93').then((module) => module.mediaUpload(node)),
+  'cover-photo': (node) => import('./features/coverPhoto.js?v=93').then((module) => module.coverPhoto(node)).catch(() => {}),
   interest: (node) => import('./features/interest.js?v=80').then((module) => module.interest(node)).catch(() => {}),
-  plan: (node) => import('./features/plan.js?v=92').then((module) => module.plan(node)).catch(() => {}),
+  plan: (node) => import('./features/plan.js?v=93').then((module) => module.plan(node)).catch(() => {}),
   weather: (node) => import('./features/weather.js?v=80').then((module) => module.weather(node)).catch(() => {}),
-  trip: (node) => import('./features/trip.js?v=92').then((module) => module.trip(node)).catch(() => {}),
+  trip: (node) => import('./features/trip.js?v=93').then((module) => module.trip(node)).catch(() => {}),
   'pin-picker': (node) => import('./features/eventMaps.js?v=80').then((module) => module.pinPicker(node)),
 };
 

@@ -255,11 +255,18 @@ fn refused(app: &Assembly.App, visitor: &Context.Visitor, mode: &PlaceForm.Mode,
   }
 }
 
+/// Where a saved place opens: its media page, which sends the cover photograph the form staged in the
+/// browser, or the place itself.
+fn landing(fields: &Map[Str, Str], listing: Str) -> Str {
+  if Form.flag(fields, "coverUpload") { listing + "/media?pending=1" } else { listing }
+}
+
 /// Publishes the posted place and opens its page.
 fn publish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
-  let draft = draftOf(&Serve.fields(visitor))
+  let fields = Serve.fields(visitor)
+  let draft = draftOf(&fields)
   match Serve.ask(app, &app.kinds.publishPlace, Serve.signed(session, draft)) {
-    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + published.slug), if published.coverSaved { "flash.place_published" } else { "flash.cover_not_saved" })
+    case Ok(published) => Respond.withFlash(app, Respond.redirect(landing(&fields, Routes.PLACE_PREFIX + published.slug)), if published.coverSaved { "flash.place_published" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &PlaceForm.Creating, &draft, &problem)
   }
 }
@@ -276,13 +283,14 @@ fn editForm(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Ses
 /// Saves the posted changes to a place the member owns.
 fn update(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let slug = Serve.param(visitor, "slug")
-  let draft = draftOf(&Serve.fields(visitor))
+  let fields = Serve.fields(visitor)
+  let draft = draftOf(&fields)
   let place = match Serve.ask(app, &app.kinds.editablePlace, Serve.signed(session, slug)) {
     case Ok((found, _)) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
   match Serve.ask(app, &app.kinds.updatePlace, Serve.signed(session, Messages.PlaceEdit{placeId: place.card.id, draft: draft})) {
-    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + saved.slug), if saved.coverSaved { "flash.updated" } else { "flash.cover_not_saved" })
+    case Ok(saved) => Respond.withFlash(app, Respond.redirect(landing(&fields, Routes.PLACE_PREFIX + saved.slug)), if saved.coverSaved { "flash.updated" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &PlaceForm.Editing(slug), &draft, &problem)
   }
 }

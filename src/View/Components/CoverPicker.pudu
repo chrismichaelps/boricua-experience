@@ -1,4 +1,4 @@
-/** @View.Components.CoverPicker.Themes — the background a card shows until a photograph is uploaded */
+/** @View.Components.CoverPicker.Themes — the creator's own cover photograph, or the background a card shows without one */
 module View.Components.CoverPicker
 
 import Std.Html.Build {Building}
@@ -6,9 +6,32 @@ import Std.Html.Build as H
 import Constants.App as App
 import Domain.Cover as Cover
 import Domain.Problem as Problem
+import View.Components.Icons as Icons
+import View.Components.Uploader as Uploader
 import View.Frame as Frame
 
-/// Radio tiles for the category default and each theme, previewing its artwork.
+/// The creator's own photograph: chosen and prepared in the browser before the form is sent, then
+/// uploaded from the listing's cover page once the listing exists. It needs scripts, so it stays
+/// hidden without them and the themes remain the only choice.
+fn photoTile(frame: &Frame.Frame) -> H.Node {
+  H.div().class("cover-tile cover-upload").at("hidden", "hidden").data("feature", "cover-photo")
+    .data("working", Frame.t(frame, "publish.cover_upload_working")).data("ready", Frame.t(frame, "publish.cover_upload_ready"))
+    .data("change", Frame.t(frame, "publish.cover_upload_change")).data("too-large", Frame.t(frame, "media.too_large")).data("invalid", Frame.t(frame, "media.invalid")).holding([
+      H.input().kind("file").class("sr-only").id("cover-photo").at("accept", Uploader.PHOTO_TYPES),
+      H.labelFor().class("cover-upload-pick").at("for", "cover-photo").holding([
+          H.span().class("cover-upload-frame").holding([
+              H.span().class("cover-upload-empty").at("aria-hidden", "true").holding([Icons.sized("camera", 22)]),
+              H.img().class("cover-upload-preview").alt("").at("hidden", "hidden")
+            ]),
+          H.span().class("cover-upload-label").says(Frame.t(frame, "publish.cover_upload"))
+        ]),
+      H.input().kind("hidden").name("coverUpload").value(""),
+      H.p().class("cover-upload-status").role("status").at("aria-live", "polite")
+    ])
+}
+
+/// Radio tiles for the creator's own photograph, the category default and each theme, previewing
+/// its artwork.
 export fn picker(frame: &Frame.Frame, chosen: Str, fallback: Str, errors: &Array[Problem.FieldError]) -> H.Node {
   let tile = |value: Str, image: Str, label: Str| {
     var radio = H.input().kind("radio").class("sr-only").name("coverTheme").id("cover-" + (if value.isEmpty() { "default" } else { value })).value(value)
@@ -25,6 +48,6 @@ export fn picker(frame: &Frame.Frame, chosen: Str, fallback: Str, errors: &Array
       match Problem.errorFor(errors, "coverTheme") { case Some(key) => H.p().class("field-error").id("coverTheme-error").role("alert").says(Frame.t(frame, key))
         case None => H.nothing() },
       H.p().class("field-hint").says(Frame.t(frame, "publish.cover_hint")),
-      H.div().class("cover-tiles").holding([tile("", fallback, Frame.t(frame, "publish.cover_default"))].concat(Cover.THEMES.map(|theme: Str| tile(theme, Cover.path(theme), Frame.t(frame, "publish.cover_" + theme)))))
+      H.div().class("cover-tiles").holding([photoTile(frame), tile("", fallback, Frame.t(frame, "publish.cover_default"))].concat(Cover.THEMES.map(|theme: Str| tile(theme, Cover.path(theme), Frame.t(frame, "publish.cover_" + theme)))))
     ])
 }

@@ -4,10 +4,10 @@
 // sent, once, so the server can confirm the arrival; the server compares it and keeps nothing.
 import { create } from '../utils/dom.js?v=80';
 import { createMap } from './mapLoader.js?v=80';
-import { buildings3d } from './map3d.js?v=92';
-import { expandable } from './mapExpand.js?v=92';
+import { buildings3d } from './map3d.js?v=93';
+import { expandable } from './mapExpand.js?v=93';
 import { getJson, postJson } from '../net/http.js?v=80';
-import { legLines, pinsOf } from './plan.js?v=92';
+import { legLines, pinsOf } from './plan.js?v=93';
 import { haptic } from './haptics.js?v=80';
 import { toast } from './toast.js?v=80';
 import { refreshSlot } from './weather.js?v=80';

@@ -755,6 +755,7 @@ media.menu_pdf
 media.menu_photo
 media.needs_script
 media.none
+media.pending_working
 media.photo
 media.photos_of
 media.remove
@@ -1155,6 +1156,10 @@ publish.cover_mar
 publish.cover_montana
 publish.cover_noche
 publish.cover_title
+publish.cover_upload
+publish.cover_upload_change
+publish.cover_upload_ready
+publish.cover_upload_working
 publish.description
 publish.edit_title
 publish.fact_unsaid

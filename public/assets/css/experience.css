@@ -721,3 +721,17 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .cover-tile img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 12px; border: 2px solid transparent; }
 .cover-tile input:checked + img { border-color: var(--color-ink); }
 .cover-tile input:focus-visible + img { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+.cover-upload[hidden] { display: none; }
+.cover-upload { grid-column: span 2; }
+.cover-upload-pick { display: grid; gap: 6px; cursor: pointer; }
+.cover-upload-frame { position: relative; display: grid; place-items: center; aspect-ratio: 16 / 5; border: 2px dashed var(--color-divider); border-radius: 12px; background: var(--color-cloud); color: var(--color-ocean-deep); overflow: hidden; transition: border-color .15s ease, background .15s ease; }
+.cover-upload-pick:hover .cover-upload-frame { border-color: var(--color-ocean); background: #f0f6ff; }
+.cover-upload input:focus-visible + .cover-upload-pick .cover-upload-frame { outline: 2px solid var(--color-ink); outline-offset: 2px; }
+.cover-upload-preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cover-upload-preview[hidden] { display: none; }
+.cover-upload.is-chosen .cover-upload-frame { border: 2px solid var(--color-ink); }
+.cover-upload.is-chosen .cover-upload-empty { visibility: hidden; }
+.cover-upload[aria-busy="true"] .cover-upload-frame { opacity: .6; cursor: progress; }
+.cover-upload-status { margin: 0; min-height: 1.3em; font-size: 12px; font-weight: 600; color: var(--color-graphite); }
+/* With a photograph chosen, no background tile reads as selected. */
+.cover-picker.has-photo .cover-tile input:checked + img { border-color: transparent; }
