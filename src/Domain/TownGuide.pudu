@@ -1,0 +1,62 @@
+/** @Domain.TownGuide.Guide — what a visitor checks before going to a town: weather by month, the drive, what is there */
+module Domain.TownGuide
+
+import Std.Json as Json
+
+/** @Domain.TownGuide.ClimateMonth — one month's climate normals in a town */
+export type ClimateMonth = {
+  month: Int,
+  @json("high_c") highC: Float64,
+  @json("low_c") lowC: Float64,
+  @json("rain_mm") rainMm: Int,
+  @json("rain_days") rainDays: Float64
+} derives Json.Decode
+
+/** @Domain.TownGuide.AirportAccess — the drive from the main airport, when there is a road */
+export type AirportAccess = { seconds: Option[Int], meters: Option[Int] } derives Json.Decode
+
+/** @Domain.TownGuide.ClimateSource — the stations a town's normals come from and how far they are */
+export type ClimateSource = {
+  @json("temp_station") tempStation: Str,
+  @json("temp_km") tempKm: Float64,
+  @json("rain_station") rainStation: Str,
+  @json("rain_km") rainKm: Float64
+} derives Json.Decode
+
+/** @Domain.TownGuide.TownCategory — how many places and upcoming activities a category has in town */
+export type TownCategory = { slug: Str, places: Int, activities: Int } derives Json.Decode
+
+/** @Domain.TownGuide.TownGuide — a town's guide as the database answers it */
+export type TownGuide = {
+  town: Str,
+  island: Bool,
+  airport: Option[AirportAccess],
+  climate: Array[ClimateMonth],
+  @json("climate_source") climateSource: Option[ClimateSource],
+  categories: Array[TownCategory]
+} derives Json.Decode
+
+/// How many months the guide recommends.
+const BEST_MONTHS: Int = 3
+
+/// The driest months, fewest rainy days first and the cooler month on a tie, then in calendar order.
+export fn driestMonths(guide: &TownGuide) -> Array[Int] {
+  var left = guide.climate
+  var chosen: Array[Int] = []
+  while chosen.length() < BEST_MONTHS && !left.isEmpty() {
+    var best = left[0]
+    for month in left {
+      if month.rainDays < best.rainDays || (month.rainDays == best.rainDays && month.highC < best.highC) { best = month }
+    }
+    chosen = chosen.push(best.month)
+    left = left.filter(|month: ClimateMonth| month.month != best.month)
+  }
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].filter(|month: Int| chosen.contains(month))
+}
+
+/// The drive from the airport in whole minutes, rounded up, when there is one.
+export fn airportMinutes(guide: &TownGuide) -> Option[Int] {
+  let access = guide.airport ?
+  let seconds = access.seconds ?
+  Some((seconds + 59) / 60)
+}

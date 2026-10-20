@@ -8,6 +8,7 @@ Boricua Experience includes the following work by others, each under its own lic
 | Marked18.1.0 | `public/assets/js/vendor/` | MIT, `marked-LICENSE.md` |
 | Motion 14.1.0 | `public/assets/js/vendor/` | MIT, `MOTION-LICENSE.md` |
 | Lucide icons | `src/View/Components/Icons.pudu` | ISC, `public/assets/brand/LUCIDE-LICENSE.txt` |
+| NOAA U.S. Climate Normals 1991–2020 (monthly) | `app.town_climate` (private migration), town guides | Public domain (U.S. Government work), NOAA National Centers for Environmental Information |
 | Nunito Sans | `public/assets/fonts/` | SIL Open Font License 1.1, `NOTICE.txt` |
 | Pacifico | `public/assets/fonts/` | SIL Open Font License 1.1, `PACIFICO-LICENSE.txt` |
 | Photographs | `public/assets/img/` | CC BY 2.0, CC BY 4.0, CC BY-SA 4.0, and public domain, each credited in `PHOTO-CREDITS.md` |

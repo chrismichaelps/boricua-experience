@@ -50,6 +50,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Domain/Resume]] — Keeps a guest's tap alive through sign-in so the page can offer to finish it.
 - [[src/Domain/Search]] — Search filters, sort, and date windows with their wire names.
 - [[src/Domain/Session]] — The sealed session, the sign-in flow, and the identity provider's tokens.
+- [[src/Domain/TownGuide]] — A town's guide as the database answers it: climate by month, the airport drive, category counts.
 
 ## I18n
 
@@ -291,6 +292,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/Media]] — Declared-upload boundaries and stored-signature checks, including disguised markup.
 
 - [[src/Database/EventCovers]] — Activity cover integration.
+- [[src/View/Components/TownGuide]] — The "Plan your visit" panel on a town page.
 - [[src/View/Components/Uploader]] — Activity cover integration.
 - [[src/View/Pages/EventCover]] — Activity cover integration.
 - [[src/Web/Handlers/EventCover]] — Activity cover integration.

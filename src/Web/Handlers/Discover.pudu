@@ -125,7 +125,12 @@ fn listingWith(app: &Assembly.App, visitor: &Context.Visitor, landing: SearchPag
         case Ok(found) => found
         case Err(problem) => { return Respond.problem(app, visitor, &problem) }
       }
-      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.renderResults(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places, !placeFilters.after.isEmpty())))
+      // A town's guide is a courtesy: the listing answers without it.
+      let guide = match landing {
+        case SearchPage.ForTown(town) => Result.toOption(Serve.ask(app, &app.kinds.townGuide, town.slug))
+        case _ => None
+      }
+      remembered(app, visitor, &anchored, Respond.page(200, &SearchPage.renderResults(&Context.frame(app, visitor), &catalog, &anchored, &landing, &page, &places, !placeFilters.after.isEmpty(), guide)))
     }
     case Err(problem) => Respond.problem(app, visitor, &problem)
   }

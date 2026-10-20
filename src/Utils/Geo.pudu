@@ -33,7 +33,7 @@ export fn metersBetween(fromLat: Float64, fromLng: Float64, toLat: Float64, toLn
 }
 
 /// The nearest whole number to a nonnegative amount below ten million; zero for anything else.
-fn wholeOf(amount: Float64) -> Int {
+export fn wholeOf(amount: Float64) -> Int {
   if !(amount >= 0.0 && amount < 10000000.0) { return 0 }
   let written = show(Float.round(amount))
   let point = written.indexOf(".")

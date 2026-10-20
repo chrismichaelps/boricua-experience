@@ -28,7 +28,7 @@ export fn weekday(locale: &Locale.Locale, day: Int) -> Str {
 fn weekdayShort(locale: &Locale.Locale, day: Int) -> Str { capitalized(weekday(locale, day).take(3)) }
 
 /// The month's short name, from 1 for January.
-fn monthShort(locale: &Locale.Locale, month: Int) -> Str {
+export fn monthShort(locale: &Locale.Locale, month: Int) -> Str {
   match locale {
     case Locale.Es => MONTHS_ES[(month - 1) % 12]
     case Locale.En => MONTHS_EN[(month - 1) % 12]
@@ -36,7 +36,7 @@ fn monthShort(locale: &Locale.Locale, month: Int) -> Str {
 }
 
 /// The month's full name, from 1 for January.
-fn monthLong(locale: &Locale.Locale, month: Int) -> Str {
+export fn monthLong(locale: &Locale.Locale, month: Int) -> Str {
   match locale {
     case Locale.Es => MONTHS_LONG_ES[(month - 1) % 12]
     case Locale.En => MONTHS_LONG_EN[(month - 1) % 12]

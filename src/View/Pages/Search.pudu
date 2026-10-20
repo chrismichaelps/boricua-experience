@@ -13,6 +13,7 @@ import Domain.Event as Event
 import Domain.Locale as Locale
 import Domain.Place as Place
 import Domain.Search as Search
+import Domain.TownGuide as TownGuide
 import I18n.Format as Format
 import Utils.Geo as Geo
 import Utils.Query as Query
@@ -23,6 +24,7 @@ import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Components.PlaceCard as PlaceCard
 import View.Components.Search as SearchControls
+import View.Components.TownGuide as TownGuidePanel
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Seo as Seo
@@ -149,7 +151,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Searc
 }
 
 /// Independent activity and place pages share the same canonical filters.
-export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Place.Results, continuingPlaces: Bool = false) -> Html.Html {
+export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters, landing: &Landing, page: &Event.Page, places: &Place.Results, continuingPlaces: Bool = false, guide: Option[TownGuide.TownGuide] = None) -> Html.Html {
   let (title, description, path) = identity(frame, landing, filters)
   let indexable = !continuingPlaces && match landing {
     case Open => !Search.isNarrowed(filters)
@@ -192,6 +194,10 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
         SearchControls.filterBar(frame, catalog, filters),
         match landing {
           case ForTown(town) => neighbors(frame, catalog, &town)
+          case _ => H.nothing()
+        },
+        match (*landing, guide) {
+          case (ForTown(town), Some(found)) => if continuingPlaces || !filters.after.isEmpty() { H.nothing() } else { TownGuidePanel.panel(frame, catalog, &town, &found) }
           case _ => H.nothing()
         },
         if page.items.isEmpty() && places.items.isEmpty() {

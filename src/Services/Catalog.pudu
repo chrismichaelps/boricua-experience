@@ -8,6 +8,7 @@ import Api.Catalog as CatalogApi
 import Constants.Limits as Limits
 import Domain.Catalog as Catalog
 import Domain.Problem as Problem
+import Domain.TownGuide as TownGuide
 import Services.Runtime as Runtime
 import Utils.Time as Time
 
@@ -24,4 +25,9 @@ export fn current(runtime: &Runtime.Runtime) -> Result[Catalog.Catalog, Problem.
   let loaded = Catalog.Catalog{categories: categories, municipalities: municipalities, scenes: scenes}
   let _stored = Sync.set(&runtime.catalog, Some((now, loaded)))
   Ok(loaded)
+}
+
+/// A town's guide, read fresh: its counts follow what is published.
+export fn townGuide(runtime: &Runtime.Runtime, slug: Str) -> Result[TownGuide.TownGuide, Problem.Problem] {
+  CatalogApi.townGuide(&runtime.gateway, slug)
 }
