@@ -220,6 +220,10 @@ fn main() -> Int {
   let signInResume = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza?resume=going"}, &None))
   let signInPlain = Html.render(&Auth.signIn(&en, &Auth.Typed{displayName: "", email: "", returnTo: "/e/plaza"}, &None))
   let checks = Test.suite("Presentation", &[
+      Test.that("unknown admission belongs in metadata without an image badge", Html.render(&EventCard.card(&en, &unknownCard).html()).contains("class=\"meta card-admission\">Check admission") && !Html.render(&EventCard.card(&en, &unknownCard).html()).contains("class=\"pill pill-light card-price\"")),
+      Test.that("Spanish admission copy remains visible in metadata", Html.render(&EventCard.card(&es, &unknownCard).html()).contains("class=\"meta card-admission\">Consulta la entrada")),
+      Test.that("explicit free admission retains the image badge", Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, priceCents: Some(0)}).html()).contains("class=\"pill pill-light card-price\">Free") && !Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, priceCents: Some(0)}).html()).contains("card-admission")),
+      Test.that("known paid admission retains the image badge", Html.render(&EventCard.card(&en, &Event.Card{..unknownCard, priceCents: Some(2500)}).html()).contains("class=\"pill pill-light card-price\">$25")),
       Test.that("search icons keep stable raster URLs across application revisions", home.contains("href=\"/favicon.ico\"") && home.contains("href=\"/assets/brand/icon-192.png\"") && !home.contains("/favicon.ico?v=") && !home.contains("/assets/brand/icon-192.png?v=")),
       Test.that("favicon metadata declares the actual raster sizes", home.contains("sizes=\"16x16 32x32 48x48 96x96 192x192 256x256\"") && home.contains("type=\"image/png\" sizes=\"192x192\"")),
       Test.that("search favicon candidates prefer raster formats while retaining touch icon", !home.contains("/assets/brand/icon.svg") && home.contains("rel=\"apple-touch-icon\"")),
