@@ -34,3 +34,6 @@ Climate is NOAA's 1991–2020 monthly Climate Normals (public domain): each town
 ## Referenced by
 
 [[src/_MOC]]
+
+## Discovery eligibility Grill Log · #148 — resolved
+Category activity counts use published, public, non-held rows with `discovery_until > now()`, matching discovery's optional-end cutoff. A missing end retains the generated 24-hour discovery window; it does not claim an actual end or current opening hours. Exact cutoff is excluded. The follow-up replaces only the guide function body, retaining climate/airport projections, place counts, bounded catalog output, empty search path and anon/authenticated execute permissions. Rollback verification compares guide counts against canonical eligibility, including a started unknown-end fixture and held/expired fixtures. No real publication is modified.

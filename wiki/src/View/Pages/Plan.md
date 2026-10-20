@@ -26,3 +26,6 @@ Resolved: translated titles from the database are retained in map refreshes, pla
 
 ## Regression evidence · #107
 `test/View/PlanTest.pudu` now has40 assertions, including English titles in map, plan, trip and assistant projections. Original titles remain the fallback when translation is absent. Resolved Grill Log: no model-generated coordinates or daily hours are introduced by presentation.
+
+## Catalog styles Grill Log · #148 — resolved
+Choices.style is a slug string. Form chips and the folded summary use the active catalog's bilingual names, or the original translated names when the catalog styles are empty. The bounded request and shared-plan contracts stay intact. `test/View/PlanTest.pudu` now has 42 assertions, including dynamic labels and unknown-style fallback.

@@ -78,3 +78,6 @@ Resolved: pinned0.1.3 formatting only; preserve imports, literals, control flow,
 
 ## Declared activity facts Grill Log · #101
 Resolved: detail displays a stated minimum age and confirmed step-free access from the guarded database response; unknown/unchecked facts render no positive claim. Labels attribute these statements to the organizer rather than implying certification. Existing participation eligibility is unchanged.
+
+## Guest resume Grill Log · #148 — resolved
+Guest Interested/Going/Like/Join links carry validated intent through authentication. A signed-in non-organizer returning to an open activity receives an explicit token-bearing action, or a link to the native join panel; already-completed intent and impossible final-state actions are omitted. Curated publications never resume a local join. Dismiss removes the resume query. Actions remain deliberate and server-authorized.

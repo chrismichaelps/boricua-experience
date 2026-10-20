@@ -7,7 +7,6 @@ import Api.Places as PlacesApi
 import Constants.App as App
 import Constants.Limits as Limits
 import Domain.Catalog as Catalog
-import Domain.Cover as Cover
 import Domain.Place as Place
 import Domain.Problem as Problem
 import Domain.Search as Search
@@ -38,9 +37,11 @@ export fn publish(runtime: &Runtime.Runtime, draft: &Place.Draft, session: &Sess
   let catalog = CatalogService.current(runtime) ?
   let ready = PlaceForm.check(draft, &catalog) ?
   let published = PlacesApi.create(&runtime.gateway, &ready, session.accessToken) ?
-  // The background is a finishing touch: the place is published even when it cannot be set.
-  if Cover.valid(draft.coverTheme) && !draft.coverTheme.isEmpty() { let _themed = MediaApi.setCoverTheme(&runtime.gateway, "place", published.id, draft.coverTheme, session.accessToken) }
-  Ok(published)
+  let coverSaved = if draft.coverTheme.isEmpty() { true } else {
+    match MediaApi.setCoverTheme(&runtime.gateway, "place", published.id, draft.coverTheme, session.accessToken) { case Ok(_) => true
+      case Err(_) => false }
+  }
+  Ok(Place.Published{..published, coverSaved: coverSaved})
 }
 
 /// The edit form of a place the member owns, with the place it edits.
@@ -55,8 +56,9 @@ export fn update(runtime: &Runtime.Runtime, placeId: Str, draft: &Place.Draft, s
   let catalog = CatalogService.current(runtime) ?
   let ready = PlaceForm.check(draft, &catalog) ?
   let saved = PlacesApi.update(&runtime.gateway, placeId, &ready, session.accessToken) ?
-  if Cover.valid(draft.coverTheme) { let _themed = MediaApi.setCoverTheme(&runtime.gateway, "place", placeId, draft.coverTheme, session.accessToken) }
-  Ok(saved)
+  let coverSaved = match MediaApi.setCoverTheme(&runtime.gateway, "place", placeId, draft.coverTheme, session.accessToken) { case Ok(_) => true
+    case Err(_) => false }
+  Ok(Place.Published{..saved, coverSaved: coverSaved})
 }
 
 /// Publishes or hides a place the member owns.

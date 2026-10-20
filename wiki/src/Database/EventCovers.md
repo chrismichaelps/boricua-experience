@@ -16,3 +16,6 @@ No client confirmation authority, invented records, direct table grants, paid re
 Resolved: Organizer covers across all activity categories. Typed images only, bounded pending reservations, shared actor daily quota, organizer parent lock followed by media row recheck. Signed upload/read-back before trusted server confirmation. Removal binds event and media identity; category fallback restored only for the removed active cover. Sweep preserves referenced place and event files.
 ## Referenced by
 [[src/_MOC]] · [[decisions/ADR-0012-place-media]]
+
+## Card-theme concurrency — resolved Grill Log
+`set_cover_theme(kind,id,theme)` is a signed-in owner-only RPC with a seven-theme allowlist and empty category reset. It locks the owned parent before reading cover_url, serializing against confirmed-photo updates. A committed HTTPS photograph always wins; no guest or unrelated member may alter it. Preserve restricted grants and empty search_path. Both environments receive the same migration.

@@ -40,3 +40,6 @@ The drive from the main airport (or the ferry note for islands), the driest mont
 ## Referenced by
 
 [[src/_MOC]]
+
+## Grill Log · #148 — resolved
+Only supplied typed database facts render. Empty guides and continuation pages omit the panel. NOAA normals are historical climate, not forecast; rainy-day bars and bilingual spoken month labels retain units and source attribution. Island access remains ferry/flight rather than an invented road. Activity category counts follow the reviewed non-held discovery cutoff contract; missing end does not mean finished at start.

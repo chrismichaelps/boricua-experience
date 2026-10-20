@@ -33,3 +33,6 @@ Covers well-formed fingerprints, development fallback, trimming, short forms, th
 
 ## Quick-filter continuation Grill Log
 Resolved: preserve canonical known traits through chips, forms, map/list, pagination and saved search. Combine traits by AND; Near me retains other filters. Family requires a stated minimum age at most12; unknown age is not a suitability claim. Step-free access is organizer-confirmed, not audited certification. Optional facts survive validation/editing and atomic database writes; legacy callers preserve existing facts. No app deployment.
+
+## Visitor facts Grill Log · #148 — resolved
+DomainTest includes typed town-guide decoding, driest-month tie/calendar ordering, airport-minute rounding, guest resume query/fragment/whole-return encoding and unknown-action refusal, plus review-filter normalization and companion counts. Private SQL regressions separately exercise database eligibility; pure assertions do not prove applied schema parity.

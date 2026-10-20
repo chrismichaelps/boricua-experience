@@ -68,14 +68,19 @@ fn readyArguments(ready: &Place.Ready) -> Array[(Str, Json.Json)] {
   ]
 }
 
+/** @Api.Places.PublishedWire — identity returned by the database, without service outcomes */
+type PublishedWire = { id: Str, slug: Str } derives Json.Decode
+
 /// Publishes a place owned by the member.
 export fn create(gateway: &Gateway.Gateway, ready: &Place.Ready, token: Str) -> Result[Place.Published, Problem.Problem] {
-  Gateway.query(gateway, Supabase.CREATE_PLACE, &readyArguments(ready), Some(token), Gateway.Write)
+  let wire: PublishedWire = Gateway.query(gateway, Supabase.CREATE_PLACE, &readyArguments(ready), Some(token), Gateway.Write) ?
+  Ok(Place.Published{id: wire.id, slug: wire.slug, coverSaved: true})
 }
 
 /// Changes a place the member owns.
 export fn update(gateway: &Gateway.Gateway, placeId: Str, ready: &Place.Ready, token: Str) -> Result[Place.Published, Problem.Problem] {
-  Gateway.query(gateway, Supabase.UPDATE_PLACE, &[("p_place_id", Gateway.text(placeId))].concat(readyArguments(ready)), Some(token), Gateway.Write)
+  let wire: PublishedWire = Gateway.query(gateway, Supabase.UPDATE_PLACE, &[("p_place_id", Gateway.text(placeId))].concat(readyArguments(ready)), Some(token), Gateway.Write) ?
+  Ok(Place.Published{id: wire.id, slug: wire.slug, coverSaved: true})
 }
 
 /// Publishes or hides a place the member owns.

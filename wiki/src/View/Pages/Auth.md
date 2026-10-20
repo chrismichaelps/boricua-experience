@@ -78,3 +78,6 @@ Signup renders required confirmation and is noindex; reset retains confirmation.
 
 ## Renewal page
 `renewal(frame, returnTo, problem)` — the Terms summary, the two acceptance checkboxes linking both documents, "Accept and continue", and a sign-out link. The birth date fields declare `data-date-age` with `App.MINIMUM_AGE` so the calendar never offers an under-age date.
+
+## Guest intent Grill Log · #148 — resolved
+Sign-in/sign-up leads name a validated Resume intent (interested/going/like/join/review) found inside the return path. Hidden return fields retain the path verbatim; Google and cross-auth links URL-encode the whole path, preserving its query and fragment. Existing validation, consent and provider authentication remain authoritative. No action executes automatically after authentication.

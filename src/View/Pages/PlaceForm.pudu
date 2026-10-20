@@ -12,8 +12,8 @@ import Domain.Place as Place
 import Domain.Problem as Problem
 import I18n.Dates as Dates
 import Utils.Query as Query
-import View.Components.Facts as Facts
 import View.Components.CoverPicker as CoverPicker
+import View.Components.Facts as Facts
 import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.Search as SearchControls
@@ -85,7 +85,7 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, mode: &Mode, dr
                 Form.input(frame, &field("name", "place.field_name", draft.name), &errors, |c: H.Node| c.at("maxlength", "120")),
                 Form.input(frame, &Form.Field{..field("summary", "publish.field_summary", draft.summary), hint: Frame.t(frame, "place.hint_summary")}, &errors, |c: H.Node| c.at("maxlength", "200")),
                 Form.area(frame, &Form.Field{..Form.field("description", Frame.t(frame, "publish.field_description"), draft.description), hint: Frame.t(frame, "place.hint_description")}, 6, &errors),
-                CoverPicker.picker(frame, draft.coverTheme, "/assets/covers/" + (if draft.category.isEmpty() { "comida" } else { draft.category }) + ".svg")
+                CoverPicker.picker(frame, draft.coverTheme, "/assets/covers/" + (if draft.category.isEmpty() { "comida" } else { draft.category }) + ".svg", &errors)
               ]),
             if fields.isEmpty() { H.nothing() } else {
               H.section().class("form-section").data("profile", draft.category).holding([

@@ -391,3 +391,10 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Web/Handlers/Forum]] · [[src/Test/Forum]]
 
 - [[src/Manifest]] — package and release version.
+
+- [[src/Test/Covers]] · [[src/Public/ProfileSwitch]] — cover outcomes and form draft continuity.
+
+- [[src/Test/DecodeCollision]] — achievements/forum decoder separation.
+- [[src/Services/Plans]] — itinerary and road-route service.
+
+- [[src/Test/ProfileSwitch]] — cover draft across category navigation.

@@ -121,7 +121,7 @@ export type Ready = {
 }
 
 /** @Domain.Place.Published — the place a publish or edit produced */
-export type Published = { id: Str, slug: Str } derives Json.Decode
+export type Published = { id: Str, slug: Str, coverSaved: Bool }
 
 /// The form name of a fact, and of one option of a flags fact.
 export fn factName(key: Str) -> Str { "d." + key }

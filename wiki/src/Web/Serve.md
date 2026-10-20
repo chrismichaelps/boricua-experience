@@ -59,3 +59,6 @@ DEEP.
 After the onboarding check, a page request from a member who `owesRenewal` is redirected to `/terms/accept?return=<path>`. The renewal page itself and the legal, about, contact and offline pages stay open. Actions (posts) are not gated, so signing out always works.
 
 The renewal redirect keeps the full path and query (`Frame.here`, with `&` escaped) as its return.
+
+## Guest resume Grill Log · #148 — resolved
+The onboarding redirect URL-encodes all of Frame.here, retaining its query rather than only the path. This preserves a guest's validated resume intent through first-time onboarding; ordinary request guards and member authorization are unchanged.

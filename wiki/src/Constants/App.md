@@ -164,3 +164,6 @@ Resolved: asset87 refreshes the changed card stylesheet; policy versions remain 
 
 ## Forum navigation Grill Log · #137
 Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.
+
+## Cover completion asset revision — resolved Grill Log
+Revision91 refreshes category-switch draft preservation; no policy version changes.

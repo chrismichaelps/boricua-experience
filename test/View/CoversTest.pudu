@@ -1,0 +1,120 @@
+/** @Test.View.Covers — cover choices survive forms and partial publishing failures */
+module View.CoversTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Html.Build {Building}
+import Std.Html as Html
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Test as Test
+import Api.Supabase.Gateway as Gateway
+import Constants.App as App
+import Domain.Build as Build
+import Domain.Catalog as Catalog
+import Domain.Draft as Draft
+import Domain.Locale as Locale
+import Domain.Media as Media
+import Domain.Place as Place
+import Domain.Problem as Problem
+import Domain.Session as Session
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
+import PuduLangHttpClient.Response as Response
+import Services.Events as Events
+import Services.Places as Places
+import Services.Runtime as Runtime
+import Support.Fixtures as Fixtures
+import Utils.Time as Time
+import Utils.Wire as Wire
+import View.Components.Notice as Notice
+import View.Components.PhotoHeader as PhotoHeader
+import View.Frame as Frame
+import View.Pages.EventForm as EventForm
+import View.Pages.PlaceForm as PlaceForm
+
+fn catalog() -> Catalog.Catalog {
+  Catalog.Catalog{categories: Result.unwrapOr(Wire.decode(&Fixtures.json("category-profiles.json")), []), municipalities: [Catalog.Municipality{slug: "san-juan", name: "San Juan", region: "metro", lat: 18.46, lng: -66.1}], scenes: [], planStyles: []}
+}
+
+fn eventDraft() -> Draft.Draft {
+  Draft.Draft{..Draft.blank(), title: "Bomba en la calle", summary: "Toques de bomba en vivo y taller corto.", category: "cultura", municipality: "san-juan", venueName: "La Placita", lat: "18.4498", lng: "-66.0703", startsAt: "2026-12-05T19:00", endsAt: "2026-12-05T23:00", coverTheme: "mar"}
+}
+
+fn placeDraft() -> Place.Draft {
+  Place.Draft{..Place.blank("comida"), municipality: "san-juan", name: "La Fonda", summary: "Mofongo, pescado frito y café de la montaña.", lat: "18.4655", lng: "-66.1057", facts: mapOf([("d.cuisine", "criolla")]), coverTheme: "bosque"}
+}
+
+fn frame(locale: Locale.Locale) -> Frame.Frame {
+  Frame.Frame{locale: locale, siteUrl: "http://localhost:8080", path: "/create", query: "", member: None, formToken: "csrf-fixture", consent: None, flash: "", nowMillis: 0, build: Build.development()}
+}
+
+fn session() -> Session.Session {
+  Session.Session{accessToken: "fixture", refreshToken: "fixture", userId: "actor", email: "fixture@example.test", provider: "email", expiresAt: 1, issuedAt: 1, signedInAt: 1, formKey: "fixture"}
+}
+
+/// Record actual gateway calls; only the secondary theme write may fail.
+fn runtime(calls: &Sync.Cell[Array[Str]], failTheme: Bool) -> Runtime.Runtime {
+  let gateway = Gateway.over(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      let _record = Sync.set(calls, Result.unwrapOr(Sync.get(calls), []).push(request.uri))
+      if failTheme && request.uri.contains("set_cover_theme") { return Err(HttpClient.Rejected("theme unavailable")) }
+      Ok(Response.answer(&request, 200).withJson(&Json.object(&[("id", Json.Text("parent")), ("slug", Json.Text("saved"))])))
+    }, "https://example.test", "fixture")
+  let ready = Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://example.test")
+  let _cached = Sync.set(&ready.catalog, Some((Time.now().millis, catalog())))
+  ready
+}
+
+fn main() -> Int {
+  let en = frame(Locale.En)
+  let es = frame(Locale.Es)
+  let problem = Some(Problem.Invalid([Problem.FieldError{field: "coverTheme", key: "form.cover_invalid"}]))
+  let eventCreate = Html.render(&EventForm.render(&en, &catalog(), &EventForm.Creating, &eventDraft(), &None))
+  let eventEdit = Html.render(&EventForm.render(&es, &catalog(), &EventForm.Editing("saved"), &eventDraft(), &None))
+  let placeCreate = Html.render(&PlaceForm.render(&es, &catalog(), &PlaceForm.Creating, &placeDraft(), &None))
+  let placeEdit = Html.render(&PlaceForm.render(&en, &catalog(), &PlaceForm.Editing("saved"), &placeDraft(), &None))
+  let invalid = Html.render(&EventForm.render(&en, &catalog(), &EventForm.Creating, &Draft.Draft{..eventDraft(), coverTheme: "unknown"}, &problem))
+  let warningEn = Html.render(&Notice.flash(&Frame.Frame{..en, flash: "flash.cover_not_saved"}).html())
+  let warningEs = Html.render(&Notice.flash(&Frame.Frame{..es, flash: "flash.cover_not_saved"}).html())
+  let invalidEs = Html.render(&PlaceForm.render(&es, &catalog(), &PlaceForm.Creating, &Place.Draft{..placeDraft(), coverTheme: "unknown"}, &problem))
+  let calls = Sync.cell([])
+  let failing = runtime(&calls, true)
+  let created = Events.publish(&failing, &eventDraft(), &session())
+  let updated = Events.update(&failing, "parent", &eventDraft(), &session())
+  let placeCreated = Places.publish(&failing, &placeDraft(), &session())
+  let placeUpdated = Places.update(&failing, "parent", &placeDraft(), &session())
+  let beforeInvalid = Result.unwrapOr(Sync.get(&calls), []).length()
+  let badEvent = Events.publish(&failing, &Draft.Draft{..eventDraft(), coverTheme: "unknown"}, &session())
+  let badPlace = Places.publish(&failing, &Place.Draft{..placeDraft(), coverTheme: "unknown"}, &session())
+  let afterInvalid = Result.unwrapOr(Sync.get(&calls), []).length()
+  let successfulCalls = Sync.cell([])
+  let successful = runtime(&successfulCalls, false)
+  let saved = Events.publish(&successful, &eventDraft(), &session())
+  let defaultCalls = Sync.cell([])
+  let defaults = runtime(&defaultCalls, true)
+  let defaultSaved = Events.publish(&defaults, &Draft.Draft{..eventDraft(), coverTheme: ""}, &session())
+  let checks = Test.suite("Cover completion", &[
+      Test.that("all four forms offer eight native radio choices", [eventCreate, eventEdit, placeCreate, placeEdit].filter(|html: Str| html.split("name=\"coverTheme\"").length() == 9).length() == 4),
+      Test.that("selected themes survive create and edit", eventCreate.contains("value=\"mar\" checked") && eventEdit.contains("value=\"mar\" checked") && placeCreate.contains("value=\"bosque\" checked") && placeEdit.contains("value=\"bosque\" checked")),
+      Test.that("themes are versioned and forms retain CSRF", eventCreate.contains("/assets/covers/themes/mar.svg?v=" + App.ASSET_VERSION) && eventCreate.contains("csrf-fixture") && placeCreate.contains("csrf-fixture")),
+      Test.that("bilingual labels and edit actions render", placeCreate.contains("Fondo de la tarjeta") && placeEdit.contains("Card background") && eventEdit.contains("/e/saved/edit") && placeEdit.contains("/lugar/saved/edit")),
+      Test.that("invalid theme is linked to an accessible inline error", invalid.contains("aria-invalid=\"true\"") && invalid.contains("aria-describedby=\"coverTheme-error\"") && invalid.contains("Choose one of the available card backgrounds.") && invalid.contains("Bomba en la calle")),
+      Test.that("partial save warns in both languages without discarding the listing", warningEn.contains("Your listing was saved, but its card background could not be updated.") && warningEs.contains("Tu publicación se guardó, pero no pudimos actualizar su fondo.") && warningEn.contains("role=\"status\"")),
+      Test.that("Spanish place validation retains fields and links the error", invalidEs.contains("Elige uno de los fondos disponibles.") && invalidEs.contains("aria-describedby=\"coverTheme-error\"") && invalidEs.contains("La Fonda")),
+      Test.equals("failed secondary writes preserve all saved identities", &(Result.map(created, |p| (p.slug, p.coverSaved)), Result.map(updated, |p| (p.slug, p.coverSaved)), Result.map(placeCreated, |p| (p.slug, p.coverSaved)), Result.map(placeUpdated, |p| (p.slug, p.coverSaved))), &(Ok(("saved", false)), Ok(("saved", false)), Ok(("saved", false)), Ok(("saved", false)))),
+      Test.equals("one parent write and one theme attempt per save", &beforeInvalid, &8),
+      Test.that("invalid theme is rejected before any write", Result.isErr(&badEvent) && Result.isErr(&badPlace) && beforeInvalid == afterInvalid),
+      Test.equals("a successful theme reports complete save", &Result.map(saved, |p| p.coverSaved), &Ok(true)),
+      Test.equals("default creation needs no secondary write", &(Result.map(defaultSaved, |p| p.coverSaved), Result.unwrapOr(Sync.get(&defaultCalls), []).length()), &(Ok(true), 1)),
+      Test.equals("illustrated themes are not photographs", &PhotoHeader.photosOf(&Media.empty(), &Some("/assets/covers/themes/mar.svg")), &[]),
+      Test.equals("category defaults are not photographs", &PhotoHeader.photosOf(&Media.empty(), &Some("/assets/covers/comida.svg")), &[]),
+      Test.equals("real curated photos remain photos", &PhotoHeader.photosOf(&Media.empty(), &Some("/assets/img/san-juan-photo.webp")), &["/assets/img/san-juan-photo.webp"]),
+      Test.equals("uploaded photos remain photos", &PhotoHeader.photosOf(&Media.empty(), &Some("https://example.test/photo.webp")), &["https://example.test/photo.webp"])
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _written = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

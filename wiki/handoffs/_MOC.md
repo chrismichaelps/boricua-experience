@@ -28,3 +28,5 @@ tags: [moc, handoff]
 - [[handoffs/place-discovery]] — photo mosaic and genuine visitor reviews.
 
 - [[handoffs/community-forum]] — compact discovery cards and a moderated public forum.
+
+- [[handoffs/visitor-guide-completion]] — PR154 release completion.
