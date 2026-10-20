@@ -7,6 +7,7 @@ import Std.Html as Html
 import Std.Option as Option
 import Constants.Routes as Routes
 import Domain.Catalog as Catalog
+import Domain.Event as Event
 import Domain.Media as Media
 import Domain.Menu as Menu
 import Domain.Place as Place
@@ -16,6 +17,7 @@ import I18n.Dates as Dates
 import I18n.Format as Format
 import I18n.Translate as Translate
 import Utils.Text as Text
+import View.Components.EventCard as EventCard
 import View.Components.Facts as Facts
 import View.Components.Form as Form
 import View.Components.Icons as Icons
@@ -31,8 +33,24 @@ import View.Seo as Seo
 /// Weekdays in the order a week is read in Puerto Rico, Monday first; Sunday is 0.
 const WEEK: Array[Int] = [1, 2, 3, 4, 5, 6, 0]
 
+/** @View.Pages.Place.Area — what surrounds a place: its standing in town, places and activities nearby */
+export type Area = { townRank: Int, places: Array[Place.Listing], activities: Array[Event.Card] }
+
+/// Nothing known about the surroundings.
+export const NO_AREA: Area = Area{townRank: 0, places: [], activities: []}
+
+/// How many neighbours "The area" shows of each kind, and the ranks worth announcing.
+const AREA_PLACES: Int = 6
+const AREA_ACTIVITIES: Int = 4
+const TOP_RANK: Int = 10
+
 /// The place page.
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], gallery: &Media.Gallery, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
+  renderWith(frame, catalog, detail, board, menus, gallery, draft, problem, &NO_AREA)
+}
+
+/// The place page with its surroundings.
+export fn renderWith(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], gallery: &Media.Gallery, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem], area: &Area) -> Html.Html {
   let card = detail.card
   let path = Routes.PLACE_PREFIX + card.slug
   let category = Catalog.category(catalog, card.category.slug)
@@ -47,11 +65,12 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
     structured: if indexable { [Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (Format.categoryName(&frame.locale, &card.category), Routes.CATEGORY_PREFIX + card.category.slug), (card.name, path)])] } else { [] }
   }
   Layout.page(frame, &meta, Layout.Explore, H.article().class("event place").holding([
-        heading(frame, detail),
+        heading(frame, detail, area.townRank),
         PlaceGallery.render(frame, &PhotoHeader.photosOf(gallery, &card.coverUrl), PlaceCard.coverOf(&card), card.name),
         H.nav().class("place-sections").label(Frame.t(frame, "place.sections")).holding([
             H.a().href("#place-about").says(Frame.t(frame, "place.about")),
             H.a().href("#place-location").says(Frame.t(frame, "event.where")),
+            if area.places.isEmpty() && area.activities.isEmpty() { H.nothing() } else { H.a().href("#place-area").says(Frame.t(frame, "place.area")) },
             H.a().href("#reviews").says(Frame.t(frame, "review.title"))
           ]),
         Reviews.highlights(frame, card.slug, board),
@@ -70,18 +89,39 @@ export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.
               ]),
             H.aside().class("event-side").holding([contact(frame, detail), owner(frame, detail)])
           ]),
-        Reviews.section(frame, card.slug, board, draft, problem)
+        Reviews.section(frame, card.slug, board, draft, problem),
+        surroundings(frame, catalog, detail, area)
       ]))
 }
 
+/// "The area": the best places and the next activities around this place, without the place itself.
+fn surroundings(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, area: &Area) -> H.Node {
+  let card = detail.card
+  let others = area.places.filter(|other: Place.Listing| other.id != card.id)
+  let places = others.slice(0, if others.length() < AREA_PLACES { others.length() } else { AREA_PLACES })
+  let activities = area.activities.slice(0, if area.activities.length() < AREA_ACTIVITIES { area.activities.length() } else { AREA_ACTIVITIES })
+  if places.isEmpty() && activities.isEmpty() { return H.nothing() }
+  H.section().class("place-area").id("place-area").at("aria-labelledby", "place-area-title").holding([
+      H.div().class("rail-head").holding([
+          H.div().holding([H.h2().class("section-title").id("place-area-title").says(Frame.t(frame, "place.area")), H.p().class("muted small").says(Frame.tf(frame, "place.area_lead", &[("place", card.name)]))]),
+          H.a().class("text-link").href(Routes.MAP + "?lat=" + show(card.lat) + "&lng=" + show(card.lng)).holding([Icons.sized("map", 16), H.span().says(Frame.t(frame, "search.show_map"))])
+        ]),
+      if activities.isEmpty() { H.nothing() } else {
+        H.div().class("place-area-block").holding([H.h3().class("place-area-title").says(Frame.t(frame, "place.area_activities")), EventCard.grid(frame, &activities)])
+      },
+      PlaceCard.rail(frame, catalog, "place-area-places", Frame.t(frame, "place.area_places"), &places, Routes.TOWN_PREFIX + card.municipality.slug)
+    ])
+}
+
 /// Name, category, town, verification, rating, and whether it is open now.
-fn heading(frame: &Frame.Frame, detail: &Place.Detail) -> H.Node {
+fn heading(frame: &Frame.Frame, detail: &Place.Detail, townRank: Int) -> H.Node {
   let card = detail.card
   H.header().class("event-head").holding([
       H.a().class("chip chip-small").href(Routes.CATEGORY_PREFIX + card.category.slug).holding([Icons.sized(card.category.icon, 16), H.span().says(Format.categoryName(&frame.locale, &card.category))]),
       H.h1().class("event-title").says(card.name),
       H.ul().class("event-lines").holding([
           H.li().holding([Icons.sized("pin", 18), H.span().holding([H.a().class("text-link").href(Routes.TOWN_PREFIX + card.municipality.slug).says(card.municipality.name)])]),
+          if townRank > 0 && townRank <= TOP_RANK { H.li().class("place-rank").holding([Icons.sized("trophy", 18), H.a().class("text-link").href(Routes.TOWN_PREFIX + card.municipality.slug + "#place-results-title").says(Frame.tf(frame, "place.town_rank", &[("rank", show(townRank)), ("town", card.municipality.name)]))]) } else { H.nothing() },
           if card.verified { H.li().holding([Icons.sized("check", 18), H.span().says(Frame.t(frame, "place.verified"))]) } else { H.nothing() },
           H.li().holding([Icons.sized("star", 18), H.a().class("text-link").href("#reviews").says(match Place.ratingText(&card) {
                   case Some(average) => average + " · " + Translate.count(&frame.locale, "place.reviews", card.ratingCount)

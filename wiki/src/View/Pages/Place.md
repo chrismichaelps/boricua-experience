@@ -21,7 +21,8 @@ The place page.
 ### Signatures
 
 ```pudu
-export fn render, ownerName
+export type Area; export const NO_AREA
+export fn render, renderWith, ownerName
 ```
 
 ### Linkage
@@ -30,6 +31,8 @@ export fn render, ownerName
 - **Consumed by:** [[src/Web/Handlers/Places]].
 
 ## Algorithm
+
+`renderWith` adds the surroundings: a top-ten town rank in the heading ("#N of places in <town>") and "The area", up to four upcoming activities and six of the best places nearby, never the place itself, with its own section tab.
 
 Hidden places carry an owner notice and are not indexed. Hours list Monday first with closed days. Contact and management sit beside the content.
 
