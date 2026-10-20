@@ -11,6 +11,7 @@ import Domain.Admin as Admin
 import Domain.Build as Build
 import Domain.Catalog as Catalog
 import Domain.Consent as Consent
+import Domain.Cover as Cover
 import Domain.Draft as Draft
 import Domain.Event as Event
 import Domain.Locale as Locale
@@ -63,6 +64,10 @@ fn main() -> Int {
   let release = Build.of(" 0.6.1 ", "0123456789abcdef0123456789abcdef01234567", "sha256:" + "0123456789abcdef".repeat(4), "2026-10-14T05:00:00Z")
   let rincon: TownGuide.TownGuide = match Wire.decode(&Fixtures.json("town-guide.json")) { case Ok(found) => found case Err(why) => panic("town guide fixture: " + Json.explainDecode(&why)) }
   let checks = Test.suite("Domain", &[
+      Test.equals("a stored theme cover reads back as its theme", &Cover.themeOf(Some(Cover.path("noche"))), &"noche"),
+      Test.equals("photos, category defaults and unknown artwork read as no theme", &(Cover.themeOf(Some("https://x.supabase.co/a.webp")), Cover.themeOf(Some("/assets/covers/playa.svg")), Cover.themeOf(Some("/assets/covers/themes/evil.svg")), Cover.themeOf(None)), &("", "", "", "")),
+      Test.that("only listed themes or the default are valid", Cover.valid("") && Cover.valid("mar") && !Cover.valid("../x")),
+      Test.equals("local covers carry the asset version and photos stay as they are", &(Cover.served("/assets/covers/playa.svg", "90"), Cover.served("https://x/a.webp", "90")), &("/assets/covers/playa.svg?v=90", "https://x/a.webp")),
       Test.equals("a town guide names its three driest months in calendar order, the cooler first on a tie", &TownGuide.driestMonths(&rincon), &[1, 2, 3]),
       Test.equals("the drive from the airport rounds up to whole minutes", &TownGuide.airportMinutes(&rincon), &Some(127)),
       Test.equals("an island has no drive", &TownGuide.airportMinutes(&TownGuide.TownGuide{..rincon, island: true, airport: Some(TownGuide.AirportAccess{seconds: None, meters: None})}), &None),

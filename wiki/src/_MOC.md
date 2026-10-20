@@ -37,6 +37,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Domain/Admin]] — The administrator's overview counts and open reports.
 - [[src/Domain/Catalog]] — Category and municipality reference values and lookups by slug.
 - [[src/Domain/Consent]] — Which optional cookie uses a visitor allowed, and the versioned cookie value that remembers it.
+- [[src/Domain/Cover]] — The background a card shows when no photograph was uploaded.
 - [[src/Domain/Credentials]] — Sign-up, sign-in, new password, and onboarding form records.
 - [[src/Domain/Draft]] — The publishing form's raw values, the validated values sent to the database, and the published result.
 - [[src/Domain/Event]] — The card (listing projection), the page of cards, and the full detail with organizer, attendees, revealed location, and the viewer's relation.
@@ -128,6 +129,7 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 
 - [[src/View/Calendar]] — An iCalendar file for one event, with its page address.
 - [[src/View/Components/Avatar]] — Initials avatars with a stable colour per name, and overlapping stacks with a count.
+- [[src/View/Components/CoverPicker]] — Card background tiles on the activity and place forms.
 - [[src/View/Components/EventCard]] — The event card (cover, price, policy flag, time line, title, place, going, likes, seats, distance), sideways rails, and grids.
 - [[src/View/Components/Moment]] — dates and times as `<time>` elements the browser rewrites in the reader's zone.
 - [[src/View/Components/Form]] — Labelled inputs, text areas, selects, checkboxes, switches, the hidden form token, and the problem banner, wired with `aria-invalid` and `aria-describedby`.
