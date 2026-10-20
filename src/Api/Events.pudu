@@ -143,14 +143,14 @@ fn fact(answer: Option[Bool]) -> Json.Json {
 /// Publishes an event organized by the member.
 export fn create(gateway: &Gateway.Gateway, ready: &Draft.Ready, token: Str) -> Result[Draft.Published, Problem.Problem] {
   let wire: PublishedWire = Gateway.query(gateway, Supabase.CREATE_EVENT, &draftArguments(ready), Some(token), Gateway.Write) ?
-  Ok(Draft.Published{id: wire.id, slug: wire.slug})
+  Ok(Draft.Published{id: wire.id, slug: wire.slug, coverSaved: true})
 }
 
 /// Changes an event the member organizes.
 export fn update(gateway: &Gateway.Gateway, eventId: Str, ready: &Draft.Ready, token: Str) -> Result[Draft.Published, Problem.Problem] {
   let arguments = [("p_event_id", Gateway.text(eventId))].concat(draftArguments(ready))
   let wire: PublishedWire = Gateway.query(gateway, Supabase.UPDATE_EVENT, &arguments, Some(token), Gateway.Write) ?
-  Ok(Draft.Published{id: wire.id, slug: wire.slug})
+  Ok(Draft.Published{id: wire.id, slug: wire.slug, coverSaved: true})
 }
 
 /// Cancels an event the member organizes.

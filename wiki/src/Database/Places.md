@@ -61,3 +61,6 @@ Performance refinement #124: force custom query plans for the whitelisted sort b
 
 ## Quality ranking Grill Log · #149
 Resolved: listings default to a `best` order instead of the alphabet. `private.place_quality` is a damped rating (prior 3.8 over three reviews) plus small completeness signals (cover, verified, saves on a log scale, a real description, hours, website), minus 0.9 for a chain branch (business artwork and a "Brand · Branch" name). Ownership is not a signal: imported branches belong to the admin account. Scores are rounded to six decimals so the JSON page cursor reproduces them exactly; the rating order gets the same rounding, which fixes places being skipped between pages when averages are repeating decimals. Name, rating, near and relevant orders keep their behaviour. No new grant; the helper is private.
+
+## Card-theme concurrency — resolved Grill Log
+`set_cover_theme(kind,id,theme)` is a signed-in owner-only RPC with a seven-theme allowlist and empty category reset. It locks the owned parent before reading cover_url, serializing against confirmed-photo updates. A committed HTTPS photograph always wins; no guest or unrelated member may alter it. Preserve restricted grants and empty search_path. Both environments receive the same migration.

@@ -14,7 +14,7 @@ tags: [module, services, medium]
 
 ## Purpose
 
-Categories, municipalities and featured scenes, read at most once per ten minutes per instance.
+Categories, municipalities, featured scenes and optional active plan styles, read at most once per ten minutes per instance. Town guides are separate fresh reads.
 
 ## Interface
 
@@ -22,6 +22,7 @@ Categories, municipalities and featured scenes, read at most once per ten minute
 
 ```pudu
 export fn current(runtime) -> Result[Catalog.Catalog, Problem.Problem]
+export fn townGuide(runtime, slug) -> Result[TownGuide.TownGuide, Problem.Problem]
 ```
 
 ### Linkage
@@ -31,7 +32,7 @@ export fn current(runtime) -> Result[Catalog.Catalog, Problem.Problem]
 
 ## Algorithm
 
-A cell holds (loaded at, catalogue); stale or empty reloads all three lists.
+A cell holds (loaded at, catalogue); stale or empty reloads the four lists. A failed style read alone falls back to an empty style list; the other three reads remain required. Town guides bypass this cache.
 
 ## Negative Logic (Prohibited Paths)
 
@@ -57,3 +58,6 @@ MEDIUM: callers name a use case; validation, calls, and composition stay inside.
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** Cache categories, municipalities and featured scenes together. No embedded business-data fallback on a failed database read. Resolved.
+
+## Visitor guide Grill Log · #148 — resolved
+Optional style failures retain the original five planner choices through Domain.Catalog; they never fabricate town facts. A failed fresh town-guide read is omitted by the listing handler without hiding valid discovery results.

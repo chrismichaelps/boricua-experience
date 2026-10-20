@@ -3,6 +3,7 @@ module Validation.EventForm
 
 import Std.Option as Option
 import Constants.Limits as Limits
+import Domain.Cover as Cover
 import Domain.Draft as Draft
 import Domain.Problem as Problem
 import PuduLangValidator.Validator as Validator
@@ -37,6 +38,7 @@ const HOUR_MILLIS: Int = 3600000
 /// Every rule of the publishing form.
 fn validator() -> Validator.Validator[Draft.Draft] {
   Check.all(&[
+      Check.rule("coverTheme", |d: Draft.Draft| d.coverTheme, |v: Str| Cover.valid(v), "form.cover_invalid"),
       Check.rule("title", |d: Draft.Draft| d.title, |v: Str| Check.lengthWithin(v, Limits.TITLE_MIN, Limits.TITLE_MAX), TITLE),
       Check.rule("summary", |d: Draft.Draft| d.summary, |v: Str| Check.lengthWithin(v, Limits.SUMMARY_MIN, Limits.SUMMARY_MAX), SUMMARY),
       Check.rule("description", |d: Draft.Draft| d.description, |v: Str| v.length() <= Limits.DESCRIPTION_MAX, DESCRIPTION),

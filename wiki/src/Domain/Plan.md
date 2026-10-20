@@ -9,7 +9,7 @@ tags: [module, domain, plans]
 ## Purpose
 
 Ready-made outings near a visitor: two or three plans of nearby activities chained by real road time,
-in a style (mixed, free, family, adventure, culture), for today, tomorrow or the weekend, ranked for a
+in a catalog-defined style, for today, tomorrow or the weekend, ranked for a
 local or a visitor.
 
 ## Interface
@@ -35,3 +35,6 @@ Malformed slugs are dropped; at most six stops.
 ## Referenced by
 
 [[src/_MOC]] · [[src/Database/Plans]]
+
+## Dynamic styles Grill Log · #148 — resolved
+Request.style is a string validated by `styleFrom(name, known)` against the current catalog slugs; unknown names fall back to `MIXED = "mixed"`. The old Style enum/STYLES/styleName interface is removed. Wire style values pass unchanged through Api.Plans. Catalog fallback is separate from the database's active-style validation.

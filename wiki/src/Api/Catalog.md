@@ -24,6 +24,8 @@ Reference lists.
 export fn categories(gateway) -> Result[Array[Catalog.Category], Problem.Problem]
 export fn municipalities(gateway) -> Result[Array[Catalog.Municipality], Problem.Problem]
 export fn scenes(gateway) -> Result[Array[Catalog.Scene], Problem.Problem]
+export fn planStyles(gateway) -> Result[Array[Catalog.PlanStyle], Problem.Problem]
+export fn townGuide(gateway, slug) -> Result[TownGuide.TownGuide, Problem.Problem]
 ```
 
 ### Linkage
@@ -60,3 +62,6 @@ SHALLOW: one typed function per database function; the argument names and decodi
 ## Mobile/content correction Grill Log
 
 - **Q:** What is the resolved contract? **A:** featured_destinations() returns at most eight active scenes in database order through the existing typed read gateway. Resolved.
+
+## Visitor catalog Grill Log · #148 — resolved
+`plan_styles()` and `town_guide(p_slug)` are anonymous typed read calls through the existing gateway. No write, identity token or fallback facts are introduced; caching and optional-read handling belong to Services.Catalog and the handler.

@@ -441,6 +441,7 @@ flash.answer_saved
 flash.approved
 flash.approved_all
 flash.cancelled
+flash.cover_not_saved
 flash.deleted
 flash.email_confirmed
 flash.history_deleted
@@ -504,6 +505,7 @@ form.contact_body
 form.contact_links
 form.contact_name
 form.contact_topic
+form.cover_invalid
 form.description_length
 form.detail_length
 form.duration_too_long

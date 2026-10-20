@@ -39,8 +39,8 @@ import View.Components.Hero as Hero
 import View.Components.Notice as Notice
 import View.Components.PhotoHeader as PhotoHeader
 import View.Components.PlaceCard as PlaceCard
-import View.Components.TownGuide as TownGuidePanel
 import View.Components.Search as Controls
+import View.Components.TownGuide as TownGuidePanel
 import View.Frame as Frame
 import View.Layout as Layout
 import View.Pages.Activity as ActivityPage

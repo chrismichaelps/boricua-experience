@@ -226,7 +226,8 @@ fn carried(visitor: &Context.Visitor, category: Str) -> Place.Draft {
     lat: read("lat"),
     lng: read("lng"),
     phone: read("phone"),
-    website: read("website")
+    website: read("website"),
+    coverTheme: read("coverTheme")
   }
 }
 
@@ -258,7 +259,7 @@ fn refused(app: &Assembly.App, visitor: &Context.Visitor, mode: &PlaceForm.Mode,
 fn publish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let draft = draftOf(&Serve.fields(visitor))
   match Serve.ask(app, &app.kinds.publishPlace, Serve.signed(session, draft)) {
-    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + published.slug), "flash.place_published")
+    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + published.slug), if published.coverSaved { "flash.place_published" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &PlaceForm.Creating, &draft, &problem)
   }
 }
@@ -281,7 +282,7 @@ fn update(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Sessi
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
   match Serve.ask(app, &app.kinds.updatePlace, Serve.signed(session, Messages.PlaceEdit{placeId: place.card.id, draft: draft})) {
-    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + saved.slug), "flash.updated")
+    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.PLACE_PREFIX + saved.slug), if saved.coverSaved { "flash.updated" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &PlaceForm.Editing(slug), &draft, &problem)
   }
 }

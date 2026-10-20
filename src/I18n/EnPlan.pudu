@@ -35,6 +35,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("place.area_activities", "Happening nearby"),
     ("place.area_places", "Top places nearby"),
     ("place.town_rank", "#:rank of places in :town"),
+    ("flash.cover_not_saved", "Your listing was saved, but its card background could not be updated. Edit the listing to try again."),
+    ("form.cover_invalid", "Choose one of the available card backgrounds."),
     ("publish.cover_title", "Card background"),
     ("publish.cover_hint", "Shown until you upload a photo. You can add a photo after publishing."),
     ("publish.cover_default", "Category default"),

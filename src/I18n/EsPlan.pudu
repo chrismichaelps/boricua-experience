@@ -35,6 +35,8 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("place.area_activities", "Pasando cerca"),
     ("place.area_places", "Los mejores lugares cerca"),
     ("place.town_rank", "#:rank de los lugares en :town"),
+    ("flash.cover_not_saved", "Tu publicación se guardó, pero no pudimos actualizar su fondo. Edita la publicación para volver a intentarlo."),
+    ("form.cover_invalid", "Elige uno de los fondos disponibles."),
     ("publish.cover_title", "Fondo de la tarjeta"),
     ("publish.cover_hint", "Se muestra hasta que subas una foto. Puedes añadir una foto después de publicar."),
     ("publish.cover_default", "El de la categoría"),
