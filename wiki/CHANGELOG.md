@@ -1,6 +1,10 @@
 # Changelog
 
-- 2026-10-19 · release0.14.0 · visitor guides, database plan styles, review companion filters, place quality/area ranking, resumed guest actions, shared UI polish and reviewed card themes; PRs154,156–163. Seven schema migrations are recorded in both environments. Release validation and deployment receipt: [[handoffs/visitor-guide-completion]].
+- 2026-10-19 · release0.14.1 · stable official cotorra raster favicon discovery and accurate multi-size ICO metadata. No schema changes.21 suites/752 assertions, binary format checks and browser icon decoding pass. [[handoffs/search-favicon]] · issue #167.
+
+- 2026-10-19 · stable search favicon · official cotorra ICO now contains six accurately declared raster sizes; homepage icon URLs stay stable across asset releases, with a192px PNG candidate. Crawler access verified; Google recrawl/display remains external. [[handoffs/search-favicon]] · issue #167.
+
+- 2026-10-19 · release0.14.0 · visitor guides, database plan styles, review companion filters, place quality/area ranking, resumed guest actions, shared UI polish and reviewed card themes; PRs154,156–163. Seven schema migrations are recorded in both environments. Live on production at main8284038; function/static/artifact fingerprints match. Release metadata synchronized to dev through PR165. Release validation and deployment receipt: [[handoffs/visitor-guide-completion]].
 
 - 2026-10-19 · visitor guide completion · guest actions resume after authentication; quality-ranked permanent places and town standing; visit-companion review filters; database-backed plan styles and town access/climate/category guides; redesigned nearby home card and optional card backgrounds. Cover validation precedes publishing, partial saves produce bilingual warnings, category switches retain choices and artwork never counts as a photograph. Owned parent locks preserve concurrent uploads. Free plans require a known zero price; guide counts use canonical discovery windows and held exclusions. Seven reviewed private migrations are recorded in both environments. Independent review,21 suites/749 assertions, browser desktop/390px checks and real dev concurrency/permission regressions pass; asset91. [[handoffs/visitor-guide-completion]] · PR154.
 

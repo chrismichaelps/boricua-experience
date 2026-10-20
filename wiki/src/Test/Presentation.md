@@ -134,3 +134,7 @@ Browser lifecycle harness: scripts/place-gallery-test.mjs executes the actual mo
 
 ## Visitor guide and guest intent Grill Log · #148 — resolved
 Current presentation assertions cover mainland/island guides, climate provenance/category links, independent review star/companion filter links and filtered-empty reset, surrounding place/activity cards and self-exclusion, visible town ranks, ranked first-page versus continuation/single-card omission, activity-before-place order, and guest resume links/banner suppression/like actions/auth encoding. Existing checks preserve shared nearby picker markup. These are pure rendered-output tests, not a claim of end-to-end OAuth or database verification.
+
+
+## Search favicon Grill Log · #167 — resolved
+Google Search receives stable supported raster favicon URLs, independent of application asset revisions. The ICO directory contains16,32,48,96,192 and256px square PNG entries and its declared sizes match those bytes; the existing192px PNG is the primary large raster. Prefer raster candidates in rel=icon discovery, retaining the official vector and all install assets unchanged. Root ICO remains revalidated after24h. Crawler requests must return images and remain allowed by robots. Google indexing timing and display are external, never an immediate acceptance claim. Rendered shell and binary regressions check both halves of the contract.

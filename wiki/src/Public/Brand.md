@@ -50,3 +50,7 @@ Resolved: social.png is a1200×630 deterministic browser raster of the actual co
 
 ## Social transport format correction · #124
 Resolved: browser screenshot bytes must be converted to true PNG before storing social.png; the browser capture API can return JPEG despite a chosen filename. Preserve the visual raster; verify PNG signature, IHDR1200×630 and bounded bytes rather than relying on filename or a format-agnostic image viewer. Revision85 refreshes sharing URLs and the shell.
+
+
+## Search favicon Grill Log · #167 — resolved
+Google Search receives stable supported raster favicon URLs, independent of application asset revisions. The ICO directory contains16,32,48,96,192 and256px square PNG entries and its declared sizes match those bytes; the existing192px PNG is the primary large raster. Prefer raster candidates in rel=icon discovery, retaining the official vector and all install assets unchanged. Root ICO remains revalidated after24h. Crawler requests must return images and remain allowed by robots. Google indexing timing and display are external, never an immediate acceptance claim. Rendered shell and binary regressions check both halves of the contract.

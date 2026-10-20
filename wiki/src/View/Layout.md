@@ -124,3 +124,7 @@ Resolved: Load a versioned place stylesheet; no change to page caching or authen
 
 ## Forum navigation Grill Log · #137
 Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.
+
+
+## Search favicon Grill Log · #167 — resolved
+Google Search receives stable supported raster favicon URLs, independent of application asset revisions. The ICO directory contains16,32,48,96,192 and256px square PNG entries and its declared sizes match those bytes; the existing192px PNG is the primary large raster. Prefer raster candidates in rel=icon discovery, retaining the official vector and all install assets unchanged. Root ICO remains revalidated after24h. Crawler requests must return images and remain allowed by robots. Google indexing timing and display are external, never an immediate acceptance claim. Rendered shell and binary regressions check both halves of the contract.
