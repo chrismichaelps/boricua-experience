@@ -10,6 +10,7 @@ import Domain.Resume as Resume
 import Domain.Review as Review
 import I18n.Dates as Dates
 import I18n.Translate as Translate
+import Utils.Query as Query
 import Utils.Text as Text
 import Utils.Time as Time
 import View.Components.Avatar as Avatar
@@ -19,19 +20,42 @@ import View.Frame as Frame
 
 /// The reviews section of a place page.
 export fn section(frame: &Frame.Frame, slug: Str, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> H.Node {
+  sectionFiltered(frame, slug, board, draft, problem, &Review.ALL_REVIEWS)
+}
+
+/// The reviews section showing only the reviews a reader filtered for.
+export fn sectionFiltered(frame: &Frame.Frame, slug: Str, board: &Review.ReviewBoard, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem], filter: &Review.ReviewFilter) -> H.Node {
   let base = Routes.PLACE_PREFIX + slug
   H.section().class("panel reviews").id("reviews").at("aria-labelledby", "reviews-title").holding([
       H.h2().class("section-title").id("reviews-title").says(Frame.t(frame, "review.title")),
       summary(frame, board),
+      filters(frame, base, board, filter),
       composer(frame, base, board, draft, problem),
-      if board.items.isEmpty() { H.p().class("muted").says(Frame.t(frame, "review.none")) } else {
+      if board.items.isEmpty() && Review.filtered(filter) {
+        H.p().class("muted").holding([H.span().says(Frame.t(frame, "review.filter_none") + " "), H.a().class("text-link").href(base + "#reviews").says(Frame.t(frame, "review.filter_all"))])
+      } else if board.items.isEmpty() { H.p().class("muted").says(Frame.t(frame, "review.none")) } else {
         H.ol().class("review-list").holding(board.items.map(|review: Review.Review| item(frame, base, board, &review)))
       },
       match board.next {
-        case Some(cursor) => H.a().class("button button-ghost load-more").href(base + "?resenas=" + cursor + "#reviews").says(Frame.t(frame, "review.more"))
+        case Some(cursor) => H.a().class("button button-ghost load-more").href(base + filterQuery(filter, cursor) + "#reviews").says(Frame.t(frame, "review.more"))
         case None => H.nothing()
       }
     ])
+}
+
+/// The query of a filtered page of reviews, with its cursor when there is one.
+fn filterQuery(filter: &Review.ReviewFilter, cursor: Str) -> Str {
+  Query.render(&[("estrellas", if filter.rating > 0 { show(filter.rating) } else { "" }), ("con", filter.companions), ("resenas", cursor)])
+}
+
+/// Chips narrowing the reviews to a star count or to who the visit was with; only filters that
+/// find something are offered, and none at all for fewer than three reviews.
+fn filters(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, filter: &Review.ReviewFilter) -> H.Node {
+  if board.count < 3 && !Review.filtered(filter) { return H.nothing() }
+  let chip = |href: Str, label: Str, on: Bool| H.a().class(if on { "chip chip-active" } else { "chip" }).href(href).at("aria-current", if on { "true" } else { "false" }).says(label)
+  let starChips = [5, 4, 3, 2, 1].filter(|n: Int| Review.countOf(board, n) > 0 || filter.rating == n).map(|n: Int| chip(base + filterQuery(&Review.ReviewFilter{rating: n, companions: filter.companions}, "") + "#reviews", Frame.tf(frame, "review.filter_stars", &[("count", show(n))]), filter.rating == n))
+  let company = Review.COMPANIONS.filter(|kind: Str| Review.companionCount(board, kind) > 0 || filter.companions == kind).map(|kind: Str| chip(base + filterQuery(&Review.ReviewFilter{rating: filter.rating, companions: kind}, "") + "#reviews", Frame.t(frame, "review.with_" + kind), filter.companions == kind))
+  H.nav().class("review-filters chips").label(Frame.t(frame, "review.filter_label")).holding([chip(base + "#reviews", Frame.t(frame, "review.filter_all"), !Review.filtered(filter))].concat(starChips).concat(company))
 }
 
 /// Recent published opinions across all ratings, independent of the full-list cursor.
@@ -130,6 +154,14 @@ fn composer(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, draft: &
             ]),
           Form.area(frame, &Form.Field{..Form.field("body", Frame.t(frame, "review.body"), current.body), hint: Frame.t(frame, "review.body_hint"), required: true}, 4, &errors),
           Form.input(frame, &Form.Field{..Form.field("visited", Frame.t(frame, "review.visited"), current.visited), kind: "month"}, &errors, |c: H.Node| c.at("min", "2000-01")),
+          H.fieldset().class("field companion-input").holding([
+              H.legend().class("label").says(Frame.t(frame, "review.companions_label")),
+              H.div().class("chips").holding(Review.COMPANIONS.map(|kind: Str| {
+                    var radio = H.input().kind("radio").class("sr-only").name("companions").id("companions-" + kind).value(kind)
+                    if current.companions == kind { radio = radio.checked() }
+                    H.span().class("chip-choice").holding([radio, H.labelFor().class("chip").at("for", "companions-" + kind).says(Frame.t(frame, "review.with_" + kind))])
+                  }))
+            ]),
           H.button().submit().class("button").says(Frame.t(frame, if board.mine == None { "review.publish" } else { "review.save" }))
         ]),
       match board.mine {
@@ -150,6 +182,10 @@ fn item(frame: &Frame.Frame, base: Str, board: &Review.ReviewBoard, review: &Rev
           author(frame, review),
           stars(frame, review.rating)
         ]),
+      match review.companions {
+        case Some(kind) => if Review.COMPANIONS.contains(kind) { H.p().class("review-companions muted small").holding([Icons.sized("users", 14), H.span().says(Frame.t(frame, "review.went_" + kind))]) } else { H.nothing() }
+        case None => H.nothing()
+      },
       H.p().class("review-body").says(review.body),
       match review.response {
         case Some(answer) => H.div().class("review-response").holding([H.p().class("small").holding([H.strong().says(Frame.t(frame, "review.owner_answer"))]), H.p().says(answer)])

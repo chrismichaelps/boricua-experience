@@ -13,6 +13,7 @@ export type Review = {
   rating: Int,
   body: Str,
   @json("visited_on") visitedOn: Option[Str],
+  @default("null") companions: Option[Str],
   status: Str,
   @json("created_at") createdAt: Str,
   @json("updated_at") updatedAt: Str,
@@ -33,14 +34,38 @@ export type ReviewBoard = {
   next: Option[Str],
   mine: Option[Review],
   @json("can_review") canReview: Bool,
-  @json("is_owner") isOwner: Bool
+  @json("is_owner") isOwner: Bool,
+  @default("\{\}") companions: Json.Json
 } derives Json.Decode
 
 /** @Domain.Review.ReviewDraft — the review form's values, as entered */
-export type ReviewDraft = { rating: Str, body: Str, visited: Str }
+export type ReviewDraft = { rating: Str, body: Str, visited: Str, companions: Str }
 
 /** @Domain.Review.ReviewReady — a review validated for the database; the visit is `YYYY-MM-01` */
-export type ReviewReady = { rating: Int, body: Str, visitedOn: Option[Str] }
+export type ReviewReady = { rating: Int, body: Str, visitedOn: Option[Str], companions: Option[Str] }
+
+/** @Domain.Review.ReviewFilter — which reviews a reader asked for: a star count (0 for all) and companions */
+export type ReviewFilter = { rating: Int, companions: Str }
+
+/// Who a visit was with, in the order the form and the filters list them.
+export const COMPANIONS: Array[Str] = ["solo", "couple", "family", "friends", "business"]
+
+/// Every review.
+export const ALL_REVIEWS: ReviewFilter = ReviewFilter{rating: 0, companions: ""}
+
+/// The filter a page's query asks for, dropping anything it does not know.
+export fn filterOf(rating: Str, companions: Str) -> ReviewFilter {
+  let stars = Option.unwrapOr(rating.trim().toInt(), 0)
+  ReviewFilter{rating: if stars >= 1 && stars <= 5 { stars } else { 0 }, companions: if COMPANIONS.contains(companions) { companions } else { "" }}
+}
+
+/// Whether a filter narrows the reviews.
+export fn filtered(filter: &ReviewFilter) -> Bool { filter.rating > 0 || !filter.companions.isEmpty() }
+
+/// How many published reviews were written by visitors with these companions.
+export fn companionCount(board: &ReviewBoard, kind: Str) -> Int {
+  Option.unwrapOr(Option.andThen(Json.field(&board.companions, kind), |value: Json.Json| Json.asInt(&value)), 0)
+}
 
 /** @Domain.Review.ReportedReview — a review waiting for moderation */
 export type ReportedReview = {
@@ -69,8 +94,8 @@ export fn countOf(board: &ReviewBoard, stars: Int) -> Int {
 
 /// The draft an existing review fills the form with.
 export fn draftOf(review: &Review) -> ReviewDraft {
-  ReviewDraft{rating: show(review.rating), body: review.body, visited: Option.unwrapOr(Option.map(review.visitedOn, |day: Str| day.take(7)), "")}
+  ReviewDraft{rating: show(review.rating), body: review.body, visited: Option.unwrapOr(Option.map(review.visitedOn, |day: Str| day.take(7)), ""), companions: Option.unwrapOr(review.companions, "")}
 }
 
 /// An empty review form.
-export fn blank() -> ReviewDraft { ReviewDraft{rating: "", body: "", visited: ""} }
+export fn blank() -> ReviewDraft { ReviewDraft{rating: "", body: "", visited: "", companions: ""} }

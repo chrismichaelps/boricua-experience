@@ -46,11 +46,11 @@ const TOP_RANK: Int = 10
 
 /// The place page.
 export fn render(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], gallery: &Media.Gallery, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem]) -> Html.Html {
-  renderWith(frame, catalog, detail, board, menus, gallery, draft, problem, &NO_AREA)
+  renderWith(frame, catalog, detail, board, menus, gallery, draft, problem, &NO_AREA, &Review.ALL_REVIEWS)
 }
 
-/// The place page with its surroundings.
-export fn renderWith(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], gallery: &Media.Gallery, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem], area: &Area) -> Html.Html {
+/// The place page with its surroundings, its reviews narrowed as the reader filtered them.
+export fn renderWith(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Place.Detail, board: &Review.ReviewBoard, menus: &Option[Menu.MenuBoard], gallery: &Media.Gallery, draft: &Review.ReviewDraft, problem: &Option[Problem.Problem], area: &Area, filter: &Review.ReviewFilter) -> Html.Html {
   let card = detail.card
   let path = Routes.PLACE_PREFIX + card.slug
   let category = Catalog.category(catalog, card.category.slug)
@@ -89,7 +89,7 @@ export fn renderWith(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Pl
               ]),
             H.aside().class("event-side").holding([contact(frame, detail), owner(frame, detail)])
           ]),
-        Reviews.section(frame, card.slug, board, draft, problem),
+        Reviews.sectionFiltered(frame, card.slug, board, draft, problem, filter),
         surroundings(frame, catalog, detail, area)
       ]))
 }

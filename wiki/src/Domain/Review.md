@@ -32,6 +32,9 @@ export const REASONS
 
 ## Algorithm
 
+Reviews carry optional `companions`; `ReviewFilter`, `filterOf`, `filtered`, `companionCount` and `COMPANIONS` describe the reader's narrowing (#151).
+
+
 Type names are unique across domain modules so derived decoders do not collide.
 
 ## Negative Logic (Prohibited Paths)

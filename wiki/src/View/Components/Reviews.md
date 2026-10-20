@@ -31,6 +31,9 @@ export fn section
 
 ## Algorithm
 
+`sectionFiltered` adds filter chips (stars, companions) for places with three or more reviews, keeps the filter in the next-page link, and the form asks who the visit was with (#151).
+
+
 Average with a bar per star count; the composer for members who may review (pre-filled with their own review, with delete), a note for owners, a sign-in link for guests; each review with the owner's answer, the owner's answer form, and a report form for other members. Stars are radio buttons styled in reverse order so the hovered and chosen stars light up without a script.
 
 ## Negative Logic (Prohibited Paths)

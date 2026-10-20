@@ -23,8 +23,10 @@ export fn check(draft: &Review.ReviewDraft, today: &Time.Local) -> Result[Review
   if !Check.lengthWithin(draft.body, BODY_MIN, BODY_MAX) { errors = errors.push(Problem.FieldError{field: "body", key: "review.body_length"}) }
   let visited = visitOf(draft.visited.trim(), today)
   if !draft.visited.trim().isEmpty() && visited == None { errors = errors.push(Problem.FieldError{field: "visited", key: "review.visit_invalid"}) }
+  let companions = draft.companions.trim()
+  if !companions.isEmpty() && !Review.COMPANIONS.contains(companions) { errors = errors.push(Problem.FieldError{field: "companions", key: "review.companions_invalid"}) }
   if !errors.isEmpty() { return Err(Problem.Invalid(errors)) }
-  Ok(Review.ReviewReady{rating: rating, body: draft.body.trim(), visitedOn: visited})
+  Ok(Review.ReviewReady{rating: rating, body: draft.body.trim(), visitedOn: visited, companions: if companions.isEmpty() { None } else { Some(companions) }})
 }
 
 /// The first day of a written `YYYY-MM` month from 2000 to the current month, or none.

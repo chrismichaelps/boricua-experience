@@ -72,7 +72,8 @@ fn page(app: &Assembly.App, visitor: &Context.Visitor, draft: &Review.ReviewDraf
   match Serve.ask(app, &app.kinds.place, Serve.visit(visitor, Serve.param(visitor, "slug"))) {
     case Ok(detail) => {
       // Reviews are part of the page, but a place stays readable if they cannot be read.
-      let board = Result.unwrapOr(Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: detail.card.id, after: Serve.query(visitor, "resenas")})), EMPTY_BOARD)
+      let filter = Review.filterOf(Serve.query(visitor, "estrellas"), Serve.query(visitor, "con"))
+      let board = Result.unwrapOr(Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: detail.card.id, after: Serve.query(visitor, "resenas"), filter: filter})), EMPTY_BOARD)
       let menus = Result.toOption(Serve.ask(app, &app.kinds.menuBoard, Serve.visit(visitor, detail.card.id)))
       // Photographs are optional: without them the page shows the category's default image.
       let gallery = Result.unwrapOr(Serve.ask(app, &app.kinds.placeMedia, Serve.visit(visitor, detail.card.id)), Media.empty())
@@ -80,7 +81,7 @@ fn page(app: &Assembly.App, visitor: &Context.Visitor, draft: &Review.ReviewDraf
         case Some(found) => Problem.status(&found)
         case None => 200
       }
-      Respond.page(status, &PlacePage.renderWith(&Context.frame(app, visitor), &catalog, &detail, &board, &menus, &gallery, draft, &problem, &area(app, visitor, &detail)))
+      Respond.page(status, &PlacePage.renderWith(&Context.frame(app, visitor), &catalog, &detail, &board, &menus, &gallery, draft, &problem, &area(app, visitor, &detail), &filter))
     }
     case Err(found) => Respond.problem(app, visitor, &found)
   }
@@ -97,7 +98,12 @@ const RANKED_TOWN_MIN: Int = 5
 fn area(app: &Assembly.App, visitor: &Context.Visitor, detail: &Place.Detail) -> PlacePage.Area {
   let card = detail.card
   let around = Search.Filters{..Search.everything(), lat: Some(card.lat), lng: Some(card.lng), radiusM: Some(AREA_RADIUS_M)}
-  let town = Result.unwrapOr(Serve.ask(app, &app.kinds.placesListed, Search.Filters{..Search.everything(), municipality: card.municipality.slug}), Place.Results{items: [], next: None})
+  // The first read stands for the others: when it fails the database is struggling, and the page
+  // answers without its surroundings rather than wait on two more.
+  let town = match Serve.ask(app, &app.kinds.placesListed, Search.Filters{..Search.everything(), municipality: card.municipality.slug}) {
+    case Ok(found) => found
+    case Err(_) => { return PlacePage.NO_AREA }
+  }
   var rank = 0
   var seen = 0
   for listed in town.items {
@@ -115,7 +121,7 @@ fn area(app: &Assembly.App, visitor: &Context.Visitor, detail: &Place.Detail) ->
 }
 
 /// The reviews of a place that could not be read.
-const EMPTY_BOARD: Review.ReviewBoard = Review.ReviewBoard{count: 0, average: None, breakdown: Json.Null, items: [], highlights: [], next: None, mine: None, canReview: false, isOwner: false}
+const EMPTY_BOARD: Review.ReviewBoard = Review.ReviewBoard{count: 0, average: None, breakdown: Json.Null, items: [], highlights: [], next: None, mine: None, canReview: false, isOwner: false, companions: Json.Null}
 
 /// The place a review action names, as the member may see it.
 fn placeOf(app: &Assembly.App, visitor: &Context.Visitor) -> Result[Place.Detail, Problem.Problem] {
@@ -128,7 +134,7 @@ fn reviewsOf(slug: Str) -> Str { Routes.PLACE_PREFIX + slug + "#reviews" }
 /// Writes the member's review, or shows the form again with what was refused.
 fn saveReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let fields = Serve.fields(visitor)
-  let draft = Review.ReviewDraft{rating: Form.text(&fields, "rating"), body: Form.paragraph(&fields, "body"), visited: Form.text(&fields, "visited")}
+  let draft = Review.ReviewDraft{rating: Form.text(&fields, "rating"), body: Form.paragraph(&fields, "body"), visited: Form.text(&fields, "visited"), companions: Form.text(&fields, "companions")}
   let place = match placeOf(app, visitor) {
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
@@ -151,7 +157,7 @@ fn deleteReview(app: &Assembly.App, visitor: &Context.Visitor, session: &Session
     case Ok(found) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
-  let mine = match Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: place.card.id, after: ""})) {
+  let mine = match Serve.ask(app, &app.kinds.reviews, Serve.visit(visitor, Messages.ReviewRead{placeId: place.card.id, after: "", filter: Review.ALL_REVIEWS})) {
     case Ok(board) => board.mine
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
