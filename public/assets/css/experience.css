@@ -702,3 +702,10 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .activity .card-meta { margin-top: auto; }
 .activity .card, .activity .card-link { height: 100%; }
 @media (min-width: 700px) { .activity .card-body { height: 128px; } }
+
+.cover-picker { border: 0; padding: 0; margin: 0; min-width: 0; }
+.cover-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
+.cover-tile { display: grid; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.cover-tile img { width: 100%; aspect-ratio: 8 / 5; object-fit: cover; border-radius: 12px; border: 2px solid transparent; }
+.cover-tile input:checked + img { border-color: var(--color-ink); }
+.cover-tile input:focus-visible + img { outline: 2px solid var(--color-ink); outline-offset: 2px; }

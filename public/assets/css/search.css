@@ -129,8 +129,6 @@
 .picker-option:hover { background: #f4f4f4; }
 .picker-option[aria-pressed="true"] { background: #f7f7f7; color: #182c36; border-color: #53666d; }
 .picker-check { color: #25343b; }
-.near-form .picker-trigger { width: auto; min-height: 44px; padding: 10px 16px; border: 1px solid #c6cdd1; border-radius: 14px; background: white; color: #182c36; font-size: 14px; }
-.near-form .picker-trigger .picker-value { max-width: 160px; }
 
 .field { position: relative; }
 .field > .picker-trigger { width: 100%; min-height: 52px; padding: 14px 16px; border: 1px solid #b6c2c8; border-radius: 14px; background: white; color: #182c36; font-size: 16px; }

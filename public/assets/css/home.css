@@ -109,9 +109,7 @@
 .app-home .card-title { font-size: 18px; }
 .app-home .card-meta { padding-top: 4px; gap: 8px; }
 .app-home .card-when { font-size: 11px; letter-spacing: .6px; }
-.app-home .promo { min-height: 280px; padding: 48px; background: linear-gradient(90deg,rgba(8,43,54,.9),rgba(8,43,54,.45)),url('/assets/img/san-juan-photo-1300.webp') center 60% / cover; border-radius: 28px; }
-.app-home .promo-copy { max-width: 560px; display: grid; gap: 12px; }
-.app-home .promo h2, .app-home .create-tile h2 { font-size: clamp(26px,3vw,38px); line-height: 1.2; letter-spacing: -.6px; }
+.app-home .create-tile h2 { font-size: clamp(26px,3vw,38px); line-height: 1.2; letter-spacing: -.6px; }
 .app-home .create-tile { min-height: 240px; border-radius: 28px; background: #eff7f3; padding: 48px; gap: 24px; }
 .app-home .create-tile p { max-width: 600px; margin-top: 12px; color: #53665e; }
 .app-home .directory { margin: 0 auto; padding: 0; background: white; gap: 24px; }
@@ -170,7 +168,7 @@
 @media (max-width: 959px) {
   .app-home .home { gap: 40px; }
   .app-home .home > :not(.hero) { width: calc(100% - 32px); }
-  .app-home .promo, .app-home .create-tile { padding: 28px; }
+  .app-home .create-tile { padding: 28px; }
   .destination-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
   .destination-copy { left: 14px; right: 14px; bottom: 18px; }
   .destination-copy strong { font-size: 19px; }
@@ -188,7 +186,6 @@
 .footer-credits { color: #687176; font-size: 13px; width: fit-content; text-decoration: underline; }
 @media (max-width: 699px) { .footer-column a { min-height: 44px; } }
 
-@media (min-width: 960px) { .app-home .promo { background-image: linear-gradient(90deg,rgba(8,43,54,.9),rgba(8,43,54,.45)), url('/assets/img/san-juan-photo.webp'); } }
 
 .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; padding-top: 20px; }
 .footer-note { margin: 0; font-size: 13px; color: var(--color-graphite); }
@@ -226,3 +223,38 @@
   .home-discover > .chips, .home-discover > .home-quick { margin: 0; padding: 2px 0 4px; }
 }
 
+
+/* "What's on near you": a quiet card, like the other tools on the page: one way by location, one by
+   town (a single search pill), and the featured towns one tap away. */
+.near-card { display: grid; gap: 16px; padding: 24px 20px; border: 1px solid var(--color-divider); border-radius: 24px; background: var(--color-white); }
+.near-copy { display: grid; gap: 6px; }
+.near-copy p { max-width: 52ch; }
+.near-locate { justify-self: start; }
+.near-divider { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 13px; font-weight: 700; color: var(--color-graphite); }
+.near-divider::before, .near-divider::after { content: ""; flex: 1; height: 1px; background: var(--color-mist); }
+.near-form { position: relative; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto; align-items: center; border: 1px solid var(--color-divider); border-radius: 20px; background: var(--color-white); box-shadow: 0 2px 10px rgb(17 17 17 / 6%); }
+.near-field { display: grid; gap: 0; min-width: 0; padding: 8px 14px; }
+.near-field-town { border-right: 1px solid var(--color-mist); }
+.near-label { font-size: 12px; font-weight: 800; color: var(--color-ink); }
+.near-form .picker-trigger, .near-form select { width: 100%; min-height: 28px; padding: 0; border: 0; border-radius: 0; background: transparent; font-weight: 600; color: var(--color-graphite); text-align: left; justify-content: space-between; box-shadow: none; }
+.near-form .picker-trigger .picker-value { max-width: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.near-form .picker-trigger[aria-invalid="true"] { color: #c5221f; }
+.near-field-town:has(.picker-trigger[aria-invalid="true"]) .near-label { color: #c5221f; }
+.near-go { display: inline-grid; place-items: center; width: 48px; height: 48px; margin: 6px; border: 0; border-radius: 50%; background: var(--color-ocean); color: var(--color-white); cursor: pointer; }
+.near-go:hover { background: var(--color-ocean-deep); }
+.near-quick { display: grid; gap: 8px; min-width: 0; }
+.near-card { overflow: hidden; }
+.near-quick .chips { margin: 0 -20px; padding: 2px 20px; scroll-padding-inline: 20px; }
+@media (min-width: 960px) { .near-quick .chips { margin: 0; padding: 2px 0; flex-wrap: wrap; } }
+@media (max-width: 559px) {
+  .near-form { grid-template-columns: minmax(0, 1fr) auto; }
+  .near-field-town { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--color-mist); }
+  .near-go { grid-column: 2; grid-row: 2; }
+  .near-locate { justify-self: stretch; }
+}
+@media (min-width: 960px) {
+  .near-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 48px; padding: 36px 40px; }
+  .near-copy { grid-row: 1 / span 2; align-self: center; }
+  .near-copy .section-title { font-size: 30px; }
+  .near-locate, .near-divider, .near-form, .near-quick { grid-column: 2; }
+}

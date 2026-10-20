@@ -176,7 +176,7 @@ export function searchPickers(form) {
       }
     });
     select.addEventListener('change', () => { trigger.removeAttribute('aria-invalid'); sync(); });
-    select.addEventListener('invalid', event => { event.preventDefault(); trigger.setAttribute('aria-invalid', 'true'); const first = select.form?.querySelector?.(':invalid'); if (!first || first === select) trigger.focus(); });
+    select.addEventListener('invalid', event => { event.preventDefault(); trigger.setAttribute('aria-invalid', 'true'); const first = select.form?.querySelector?.(':invalid'); if (!first || first === select) { trigger.focus(); if (select.form?.dataset?.openInvalid === '1') trigger.click(); } });
     if (select.required) trigger.setAttribute('aria-required', 'true');
     if (select.getAttribute('aria-invalid')) trigger.setAttribute('aria-invalid', select.getAttribute('aria-invalid'));
     if (select.getAttribute('aria-describedby')) trigger.setAttribute('aria-describedby', select.getAttribute('aria-describedby'));

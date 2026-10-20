@@ -4,6 +4,7 @@ module Domain.Place
 import Std.Json as Json
 import Std.Math.Float as Float
 import Std.Option as Option
+import Domain.Cover as Cover
 import Domain.Event as Event
 import Utils.Time as Time
 
@@ -98,7 +99,9 @@ export type Draft = {
   phone: Str,
   website: Str,
   facts: Map[Str, Str],
-  hours: Map[Str, Str]
+  hours: Map[Str, Str],
+  /// The card's background theme when no photograph is uploaded; empty for the category default.
+  coverTheme: Str
 }
 
 /** @Domain.Place.Ready — a draft validated and converted for the database */
@@ -144,7 +147,8 @@ export fn blank(category: Str) -> Draft {
     phone: "",
     website: "",
     facts: mapOf([]),
-    hours: mapOf([])
+    hours: mapOf([]),
+    coverTheme: ""
   }
 }
 
@@ -186,7 +190,8 @@ export fn fromDetail(detail: &Detail) -> Draft {
     phone: Option.unwrapOr(detail.phone, ""),
     website: Option.unwrapOr(detail.website, ""),
     facts: facts,
-    hours: hours
+    hours: hours,
+    coverTheme: Cover.themeOf(detail.card.coverUrl)
   }
 }
 

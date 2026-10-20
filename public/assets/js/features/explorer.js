@@ -428,6 +428,8 @@ export async function explorer(page) {
     if (feedback) feedback.textContent = message(state === 'waiting' ? 'locationLocating' : state === 'ready' ? (live.isSharing() ? 'locationSharing' : 'locationPrivate') : state === 'error' ? 'locationUnavailable' : 'locationStopped');
     locate?.setAttribute('aria-busy', String(following && state === 'waiting'));
     share?.setAttribute('aria-busy', String(live.isSharing() && state === 'waiting'));
+    // Sighted visitors need the failure too: the status line is for screen readers.
+    if (state === 'error' && following) toast(message('locationUnavailable'));
     if (state === 'error' || state === 'stopped') {
       following = false;
       follow = false;

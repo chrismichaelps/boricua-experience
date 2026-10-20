@@ -1,0 +1,26 @@
+/** @View.Components.CoverPicker.Themes — the background a card shows until a photograph is uploaded */
+module View.Components.CoverPicker
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.App as App
+import Domain.Cover as Cover
+import View.Frame as Frame
+
+/// Radio tiles for the category default and each theme, previewing its artwork.
+export fn picker(frame: &Frame.Frame, chosen: Str, fallback: Str) -> H.Node {
+  let tile = |value: Str, image: Str, label: Str| {
+    var radio = H.input().kind("radio").class("sr-only").name("coverTheme").id("cover-" + (if value.isEmpty() { "default" } else { value })).value(value)
+    if value == chosen { radio = radio.checked() }
+    H.labelFor().class("cover-tile").at("for", "cover-" + (if value.isEmpty() { "default" } else { value })).holding([
+        radio,
+        H.img().src(Cover.served(image, App.ASSET_VERSION)).alt("").at("width", "160").at("height", "100").at("loading", "lazy"),
+        H.span().says(label)
+      ])
+  }
+  H.fieldset().class("field cover-picker").holding([
+      H.legend().class("label").says(Frame.t(frame, "publish.cover_title")),
+      H.p().class("field-hint").says(Frame.t(frame, "publish.cover_hint")),
+      H.div().class("cover-tiles").holding([tile("", fallback, Frame.t(frame, "publish.cover_default"))].concat(Cover.THEMES.map(|theme: Str| tile(theme, Cover.path(theme), Frame.t(frame, "publish.cover_" + theme)))))
+    ])
+}
