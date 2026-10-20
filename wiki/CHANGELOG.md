@@ -1,5 +1,9 @@
 # Changelog
 
+- 2026-10-19 · release0.14.2 · unknown admission moves from narrow photo badges to card metadata; known/free badges are unchanged.21 suites/756 assertions and all browser harnesses pass. [[handoffs/admission-label]] · issue #171.
+
+- 2026-10-19 · card admission label · unknown prices render as quiet metadata instead of wrapping across map thumbnails; explicit free/paid image badges retain their existing appearance. [[handoffs/admission-label]] · issue #171.
+
 - 2026-10-19 · release0.14.1 · stable official cotorra raster favicon discovery and accurate multi-size ICO metadata. No schema changes.21 suites/752 assertions, binary format checks and browser icon decoding pass. [[handoffs/search-favicon]] · issue #167.
 
 - 2026-10-19 · stable search favicon · official cotorra ICO now contains six accurately declared raster sizes; homepage icon URLs stay stable across asset releases, with a192px PNG candidate. Crawler access verified; Google recrawl/display remains external. [[handoffs/search-favicon]] · issue #167.

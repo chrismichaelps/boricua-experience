@@ -32,3 +32,5 @@ tags: [moc, handoff]
 - [[handoffs/visitor-guide-completion]] — completed PR154, production0.14.0 and verified deployment receipt.
 
 - [[handoffs/search-favicon]] — stable cotorra search-icon discovery and release verification.
+
+- [[handoffs/admission-label]] — compact unknown-price card metadata and release verification.

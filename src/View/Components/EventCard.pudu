@@ -35,7 +35,7 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
       H.a().class("card-link").href(href).holding([
           H.div().class("card-media").holding([
               H.img().src(coverOf(event)).alt("").at("loading", "lazy").at("decoding", "async").at("width", "640").at("height", "400"),
-              H.span().class("pill pill-light card-price").says(Format.price(&locale, event.priceCents)),
+              if event.priceCents == None { H.nothing() } else { H.span().class("pill pill-light card-price").says(Format.price(&locale, event.priceCents)) },
               if Event.isCancelled(event) { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, "event.cancelled")) } else if ended { H.span().class("pill pill-dark card-flag").says(Frame.t(frame, if event.endsAt == None { "event.archived" } else { "event.ended" })) } else if event.source != "curated" && Event.needsApproval(event) { H.span().class("pill pill-dark card-flag").holding([Icons.sized("lock", 14), H.span().says(Frame.t(frame, "event.approval_short"))]) } else { H.nothing() }
             ]),
           H.div().class("card-body").holding([
@@ -44,6 +44,7 @@ export fn card(frame: &Frame.Frame, event: &Event.Card) -> H.Node {
               H.h3().class("card-title").says(Event.titleFor(event, locale == Locale.En)),
               H.p().class("card-place").holding([Icons.sized("pin", 14), H.span().says(event.venueName + " · " + event.municipality.name)]),
               H.div().class("card-meta").holding([
+                  if event.priceCents == None { H.span().class("meta card-admission").says(Format.price(&locale, None)) } else { H.nothing() },
                   H.span().class("meta").holding([Icons.sized(if event.source == "curated" { "ticket" } else { "users" }, 14), H.span().says(if event.source == "curated" { Frame.t(frame, "event.official_source") } else { social })]),
                   if event.likeCount > 0 { H.span().class("meta").holding([Icons.sized("heart", 14), H.span().says(show(event.likeCount))]) } else { H.nothing() },
                   if seats.isEmpty() { H.nothing() } else { H.span().class("meta meta-accent").says(seats) },
