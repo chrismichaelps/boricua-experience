@@ -50,6 +50,8 @@ export const CATEGORY: Str = "/c/:slug"
 /// Prefix of a municipality page; the slug follows.
 export const TOWN_PREFIX: Str = "/pueblo/"
 export const TOWN: Str = "/pueblo/:slug"
+/// The guide of the town nearest the visitor's position (lat and lng in the query).
+export const NEAR_ME: Str = "/cerca"
 /// Prefix of a public profile; the account id follows.
 export const PROFILE_PREFIX: Str = "/u/"
 export const PROFILE: Str = "/u/:id"
@@ -104,6 +106,7 @@ export const RECOVER: Str = "/recover"
 export const RESET_PASSWORD: Str = "/reset-password"
 export const AUTH_GOOGLE: Str = "/auth/google"
 export const AUTH_CALLBACK: Str = "/auth/callback"
+export const AUTH_GOOGLE_CALLBACK: Str = "/auth/google/callback"
 /// Age, terms, and privacy confirmation for accounts that have not given them.
 export const ONBOARDING: Str = "/welcome"
 export const ADMIN: Str = "/admin"

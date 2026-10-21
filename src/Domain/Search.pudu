@@ -139,8 +139,9 @@ export fn isNarrowed(filters: &Filters) -> Bool {
     || !filters.near.isEmpty() || filters.window != Anytime || filters.freeOnly || filters.lat != None || !filters.traits.isEmpty()
 }
 
-/// Quick traits a listing may ask for: suits families, starts at night, outdoors, step-free access.
-export const TRAITS: Array[Str] = ["family", "night", "outdoor", "accessible"]
+/// Quick traits a listing may ask for: suits families, starts at night, outdoors, under a roof (for a
+/// rainy day), step-free access.
+export const TRAITS: Array[Str] = ["family", "night", "outdoor", "indoor", "accessible"]
 
 /// The known traits a written list names, once each, in the order they are offered.
 export fn traitsFrom(written: Str) -> Array[Str] {

@@ -4,9 +4,10 @@
 // sent, once, so the server can confirm the arrival; the server compares it and keeps nothing.
 import { create } from '../utils/dom.js?v=80';
 import { createMap } from './mapLoader.js?v=80';
-import { buildings3d } from './map3d.js?v=80';
+import { buildings3d } from './map3d.js?v=96';
+import { expandable } from './mapExpand.js?v=96';
 import { getJson, postJson } from '../net/http.js?v=80';
-import { legLines, pinsOf } from './plan.js?v=80';
+import { legLines, pinsOf } from './plan.js?v=96';
 import { haptic } from './haptics.js?v=80';
 import { toast } from './toast.js?v=80';
 import { refreshSlot } from './weather.js?v=80';
@@ -476,6 +477,12 @@ export function trip(page) {
     paint();
     const tools = page.querySelector('.trip-map-tools');
     buildings3d(map, tools.querySelector('[data-map-3d]'), tools.querySelector('.map-turn'), { zoomIn: false });
+    // The full-screen map keeps following the visitor; otherwise it frames every stop again.
+    expandable(map, tools.querySelector('[data-map-expand]'), () => {
+      if (watch !== null && following) return;
+      const routed = routeLines.flat();
+      map.fitBounds(routed.reduce((box, point) => box.extend(point), bounds), { padding: FRAME, maxZoom: 14, duration: 0 });
+    });
     // Moving the map by hand stops following until the visitor asks again.
     map.on('dragstart', (event) => { if (event.originalEvent && watch !== null) setFollowing(false); });
     map.on('load', async () => {

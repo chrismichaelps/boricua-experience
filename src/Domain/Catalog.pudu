@@ -114,6 +114,25 @@ export fn municipality(catalog: &Catalog, slug: Str) -> Option[Municipality] {
 /** @Domain.Catalog.Neighbor — a municipality and its distance from another */
 export type Neighbor = { town: Municipality, meters: Int }
 
+/// Metres from a town centre beyond which a position is not taken to be in that town's area; the
+/// farthest point of the main island from its nearest town centre is well inside it.
+export const NEAREST_TOWN_MAX_M: Int = 25000
+
+/// The municipality whose centre is nearest a position, or nothing off the islands.
+export fn nearestTown(catalog: &Catalog, lat: Float64, lng: Float64) -> Option[Municipality] {
+  var best: Option[Neighbor] = None
+  for town in catalog.municipalities {
+    let meters = Geo.metersBetween(lat, lng, town.lat, town.lng)
+    let closer = match best {
+      case Some(found) => meters < found.meters
+      case None => true
+    }
+    if closer { best = Some(Neighbor{town: town, meters: meters}) }
+  }
+  let found = best ?
+  if found.meters <= NEAREST_TOWN_MAX_M { Some(found.town) } else { None }
+}
+
 /// The municipalities nearest to a town by centroid, nearest first, without the town itself.
 export fn neighbors(catalog: &Catalog, town: &Municipality, count: Int) -> Array[Neighbor] {
   var found: Array[Neighbor] = []

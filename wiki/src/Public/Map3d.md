@@ -37,3 +37,6 @@ In 3D the camera turns freely: right-drag or ctrl-drag turns and tilts, a two-fi
 
 ## Compact joystick refinement · #124
 Resolved user sizing: discovery rotation is one44px circular compass, equal to the map buttons. Hide the former side buttons only on discovery; pointer drag rotates continuously, tap resets north, Left/Right keys step rotation and Home resets. Capture one primary pointer, ignore secondary pointers, cancel safely, suppress a drag's synthetic reset click and detach location-follow on explicit rotation. Existing trip controls remain unchanged. Localized label explains drag and north action. This supersedes the96px pad.
+
+## Round route compass · #175
+Route maps (plan cards and the live trip) use the same compact joystick as discovery: one round compass, no side arrows. `public/assets/js/features/mapExpand.js` (`expandable(map, button, frame)`) opens a route map over the whole screen, locks page scroll, resizes the map and calls `frame` so the route is fitted again; Escape or the same button closes it.

@@ -86,3 +86,8 @@
 .chip-choice input:focus-visible + .chip { outline: 2px solid var(--color-ink); outline-offset: 2px; }
 .chip-choice .chip { cursor: pointer; }
 .review-companions { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; }
+/* A town guide's strip of the newest reviews of its places. */
+.town-voices { margin-top: 8px; }
+.town-voices-average { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; }
+.town-voices-average strong { font-size: 20px; }
+.town-voices-place { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }

@@ -16,7 +16,7 @@ export fn render(frame: &Frame.Frame, action: Str, kind: Str, accept: Str, label
   let id = "media-" + kind
   H.form().class("media-upload").action(action).method("post").data("feature", "media-upload").data("kind", kind)
     .data("choose", Frame.t(frame, "media.choose")).data("working", Frame.t(frame, "media.working")).data("failed", Frame.t(frame, "media.failed"))
-    .data("too-large", Frame.t(frame, "media.too_large")).data("invalid", Frame.t(frame, "media.invalid")).data("limit", Frame.t(frame, "media.limit")).holding([
+    .data("too-large", Frame.t(frame, "media.too_large")).data("invalid", Frame.t(frame, "media.invalid")).data("limit", Frame.t(frame, "media.limit")).data("pending", Frame.t(frame, "media.pending_working")).holding([
       Form.token(frame),
       H.div().class("field").holding([
           H.labelFor().at("for", id).says(label),

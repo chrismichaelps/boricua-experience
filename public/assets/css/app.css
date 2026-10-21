@@ -710,9 +710,19 @@ ul { padding: 0; list-style: none; }
 @media (min-width: 1600px) { :root { --shell: 1360px; } }
 /* Side-by-side screens (dual-screen phones, unfolded books): keep each column on its own screen. */
 @media (horizontal-viewport-segments: 2) {
-  .event-layout { display: grid; grid-template-columns: env(viewport-segment-width 0 0, 1fr) env(viewport-segment-width 1 0, 1fr); column-gap: calc(env(viewport-segment-left 1 0, 0px) - env(viewport-segment-right 0 0, 0px)); }
+  :root { --fold: calc(env(viewport-segment-left 1 0, 0px) - env(viewport-segment-right 0 0, 0px)); }
+  .event-layout { display: grid; grid-template-columns: env(viewport-segment-width 0 0, 1fr) env(viewport-segment-width 1 0, 1fr); column-gap: var(--fold); }
+  /* Card grids take an even number of columns so the fold falls between cards, never across one. */
+  .card-grid:not(.activity .card-grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: max(20px, var(--fold)); }
+  /* A live trip keeps the map on one screen and the stops on the other. */
+  .trip-page { grid-template-columns: env(viewport-segment-width 0 0, 1fr) env(viewport-segment-width 1 0, 1fr); column-gap: var(--fold); grid-template-rows: auto minmax(0, 1fr); grid-template-areas: "head head" "stage panel"; }
+  .trip-head { grid-area: head; } .trip-stage { grid-area: stage; }
+  .trip-panel { grid-area: panel; max-height: none; border-radius: 0; box-shadow: none; }
 }
 /* Half-folded (top screen, bottom screen): the content stays above the fold line. */
 @media (vertical-viewport-segments: 2) {
   .search-hero { max-height: env(viewport-segment-height 0 0, 60vh); }
+  /* Half-folded like a laptop: the trip map on the top screen, the stops on the bottom one. */
+  .trip-page { grid-template-rows: auto env(viewport-segment-height 0 0, 1fr) minmax(0, 1fr); row-gap: calc(env(viewport-segment-top 0 1, 0px) - env(viewport-segment-bottom 0 0, 0px)); }
+  .trip-panel { max-height: none; }
 }

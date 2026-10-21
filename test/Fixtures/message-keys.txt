@@ -755,6 +755,7 @@ media.menu_pdf
 media.menu_photo
 media.needs_script
 media.none
+media.pending_working
 media.photo
 media.photos_of
 media.remove
@@ -1155,6 +1156,10 @@ publish.cover_mar
 publish.cover_montana
 publish.cover_noche
 publish.cover_title
+publish.cover_upload
+publish.cover_upload_change
+publish.cover_upload_ready
+publish.cover_upload_working
 publish.description
 publish.edit_title
 publish.fact_unsaid
@@ -1205,6 +1210,7 @@ publish.who
 quick.accessible
 quick.family
 quick.free
+quick.indoor
 quick.label
 quick.near
 quick.night
@@ -1264,6 +1270,7 @@ review.send_report
 review.sign_in
 review.stars_label
 review.title
+review.town_title
 review.visit_invalid
 review.visited
 review.visited_on
@@ -1297,10 +1304,16 @@ search.label
 search.load_more
 search.near
 search.near_anywhere
+search.nearby
+search.nearby_busy
+search.nearby_failed
+search.nearby_hint
 search.nearby_towns
 search.no_towns
+search.popular_towns
 search.radius
 search.radius_km
+search.recent_towns
 search.results_for
 search.save
 search.saved_all
@@ -1309,6 +1322,7 @@ search.sort
 search.submit
 search.title
 search.town_description
+search.town_head_title
 search.town_title
 search.what
 search.what_placeholder
@@ -1331,6 +1345,13 @@ town.climate_source
 town.climate_source_plain
 town.climate_title
 town.essentials
+town.faq_get_q
+town.faq_offer_a
+town.faq_offer_item
+town.faq_offer_q
+town.faq_title
+town.faq_when_a
+town.faq_when_q
 town.guide_title
 town.hours_minutes
 town.island_access

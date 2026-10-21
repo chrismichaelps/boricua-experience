@@ -1,7 +1,9 @@
 /** @Services.Auth.Accounts.Identity — signing up, in, and out, and proving it is you */
 module Services.Auth.Accounts
 
+import Std.Crypto as Crypto
 import Api.Account as Account
+import Api.Google as Google
 import Api.Supabase.Identity as Identity
 import Constants.Limits as Limits
 import Constants.Routes as Routes
@@ -55,14 +57,36 @@ export fn signUp(runtime: &Runtime.Runtime, form: &Credentials.SignUp, locale: S
 
 /// The provider's sign-in address and the flow to keep until it returns.
 export fn startProvider(runtime: &Runtime.Runtime, provider: Str, returnTo: Str) -> Result[(Str, Session.Flow), Problem.Problem] {
+  // With the site's own Google client, Google returns here, so its consent screen names this site.
+  match runtime.google {
+    case Some(google) => if provider == Session.GOOGLE {
+      let flow = newFlow(returnTo, Session.GOOGLE) ?
+      return Ok((Google.authorizeUrl(&google, googleCallback(runtime), Pkce.challenge(flow.verifier), Crypto.sha256Hex(nonceOf(&flow))), flow))
+    }
+    case None => {}
+  }
   let flow = newFlow(returnTo, Session.SIGN_IN) ?
   Ok((Identity.authorizeUrl(&runtime.gateway, provider, callback(runtime), Pkce.challenge(flow.verifier)), flow))
 }
 
+/// Where Google returns a sign-in the site started itself.
+fn googleCallback(runtime: &Runtime.Runtime) -> Str { runtime.siteUrl + Routes.AUTH_GOOGLE_CALLBACK }
+
+/// The raw nonce of a Google flow, derived from its secret verifier: Google signs its SHA-256 into
+/// the ID token and the identity provider checks the token against this raw value.
+fn nonceOf(flow: &Session.Flow) -> Str { Pkce.challenge("nonce:" + flow.verifier) }
+
 /// The session a returning redirect's code opens, proven with the flow's verifier.
 export fn finish(runtime: &Runtime.Runtime, code: Str, flow: &Session.Flow) -> Result[Session.Session, Problem.Problem] {
   if code.isEmpty() { return Err(Problem.Refused("flow_expired")) }
-  let tokens = Identity.exchangeCode(&runtime.gateway, code, flow.verifier) ?
+  let tokens = if flow.purpose == Session.GOOGLE {
+    let google = match runtime.google {
+      case Some(found) => found
+      case None => { return Err(Problem.Refused("flow_expired")) }
+    }
+    let idToken = Google.exchange(&google, code, flow.verifier, googleCallback(runtime)) ?
+    Identity.idTokenGrant(&runtime.gateway, Session.GOOGLE, idToken, nonceOf(flow)) ?
+  } else { Identity.exchangeCode(&runtime.gateway, code, flow.verifier) ? }
   let session = Sessions.start(&tokens) ?
   let _reactivated = Account.reactivate(&runtime.gateway, session.accessToken)
   Ok(session)
