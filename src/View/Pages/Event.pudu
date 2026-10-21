@@ -93,7 +93,7 @@ fn cover(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
               H.h3().says(Frame.t(frame, "event.about")),
               H.p().class("gallery-activity-summary").says(card.summary),
               H.p().class("muted small").says(Format.categoryName(&frame.locale, &card.category) + " · " + card.municipality.name),
-              Moment.schedule(frame, card.startsAt, card.endsAt),
+              H.p().class("gallery-activity-schedule").holding([Moment.schedule(frame, card.startsAt, card.endsAt)]),
               H.a().class("text-link gallery-read-all").data("photo", "context-link").href(Routes.EVENT_PREFIX + card.slug + "#activity-detail").says(Frame.t(frame, "gallery.view_activity"))
             ]))
       } else { H.nothing() }
