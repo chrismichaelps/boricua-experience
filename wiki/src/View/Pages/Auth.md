@@ -81,3 +81,6 @@ Signup renders required confirmation and is noindex; reset retains confirmation.
 
 ## Guest intent Grill Log · #148 — resolved
 Sign-in/sign-up leads name a validated Resume intent (interested/going/like/join/review) found inside the return path. Hidden return fields retain the path verbatim; Google and cross-auth links URL-encode the whole path, preserving its query and fragment. Existing validation, consent and provider authentication remain authoritative. No action executes automatically after authentication.
+
+## Split-screen identity pages · #177
+Every identity page is a photograph of the island beside the form (`split`): on screens 960px and wider the photo fills the left half edge to edge and stays in place while the form scrolls; phones show a photo band above the form. Sign-in shows Playa Flamenco from above (Culebra), sign-up Faro Los Morrillos (Cabo Rojo), the rest a Rincón sunset. All three are real camera photographs from Wikimedia Commons under CC BY / CC BY-SA, verified by Commons SHA-1 and camera EXIF, listed in `public/assets/img/PHOTO-CREDITS.md` and the credits page; each photo carries its place, author and licence on the page. The story panel adds the brand mark, tagline and three member benefits (`auth.perk_*`).

@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · split-screen sign-in and sign-up · half-screen real photographs (Playa Flamenco, Faro Los Morrillos, Rincón; CC BY/BY-SA, credited on the page) beside the form, a photo band on phones, member benefits and a lined divider · issue #177.
+
 - 2026-10-20 · own cover photographs · the activity and place forms offer a "Your photo" tile: the photo is resized and stripped of metadata in the browser, previewed, and uploaded from the cover page right after publishing; asset93 · issue #176.
 
 - 2026-10-20 · round route compass and full-screen route maps · plan and trip maps show one round drag compass instead of a tall arrow pill, and an expand button opens the route over the whole screen (Escape closes); asset92 · issue #175.
