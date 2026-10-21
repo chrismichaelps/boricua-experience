@@ -19,13 +19,20 @@ function sheetItem(pin) {
   const item = create('div', { class: 'sheet-item', 'data-slug': pinKey(pin) });
   const link = create('a', { class: 'card-link', href: `${pin.kind === 'place' ? '/lugar/' : '/e/'}${encodeURIComponent(pin.slug)}` });
   const media = create('div', { class: 'card-media' });
-  media.append(create('img', { src: pin.cover, alt: '', loading: 'lazy' }), create('span', { class: 'pill pill-light card-price' }, pin.price));
+  media.append(create('img', { src: pin.cover, alt: '', loading: 'lazy' }));
+  const unknownAdmission = pin.kind !== 'place' && pin.price_cents == null;
+  if (!unknownAdmission) media.append(create('span', { class: 'pill pill-light card-price' }, pin.price));
   const body = create('div', { class: 'card-body' });
   const when = pin.kind === 'place' ? create('span', {}, pin.when) : create('time', { datetime: pin.starts, 'data-moment': 'when', 'data-ends': pin.ends ?? '' }, pin.when);
   if (pin.kind !== 'place') localizeMoment(when);
   const date = create('p', { class: 'card-when' });
   date.append(when);
   body.append(date, create('h3', { class: 'card-title' }, pin.title), create('p', { class: 'card-place' }, pin.place));
+  if (unknownAdmission) {
+    const meta = create('div', { class: 'card-meta' });
+    meta.append(create('span', { class: 'meta card-admission' }, pin.price));
+    body.append(meta);
+  }
   link.append(media, body);
   const card = create('article', { class: 'card' });
   card.append(link);

@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · map admission correction · dynamic viewport cards retain unknown admission beside the image, matching initial HTML; zero/paid values remain thumbnail badges. Nullable numeric pin metadata and redraw regressions; asset97 · issue #183.
+
 - 2026-10-20 · production configuration verification · own-domain Google sign-in enabled and verified with the existing0.15.0 artifact; in-app notification trigger, reminder, inbox, preference and read-boundary checks passed in a rolled-back production audit. No application/schema change or fake notices. [[handoffs/production-auth-notifications]] · issue #181.
 
 - 2026-10-20 · release0.15.0 · round route compass and full-screen route maps, own cover photos, split-screen sign-in/sign-up with credited Commons photographs, Google sign-in on the site's address (active once the client secret is set), Nearby search, town photo heroes, town-aware chips, Indoors filter, town review strip and questions, ItemList/TouristDestination/FAQPage data, landscape and dual-screen layouts; PR179. Private migrations 20261020050000_indoor_trait and 20261020051000_town_reviews recorded in both environments. 22 suites/773 assertions and all browser harnesses pass; asset96 · issues #175–#178.

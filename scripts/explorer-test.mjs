@@ -12,7 +12,7 @@ class Node {
  focus(){}
  getBoundingClientRect(){return {width:800,height:600,bottom:600,top:500};}
 }
-const pins=[{slug:'a',title:'A',lng:10,lat:20},{slug:'b',title:'B',lng:500,lat:20}];
+const pins=[{slug:'a',title:'A',lng:10,lat:20},{slug:'b',title:'B',lng:500,lat:20,price_cents:null,price:'Consulta la entrada'}];
 const canvas=new Node(),list=new Node(),count=new Node({},'2 activities'),locate=new Node(),sheet=new Node(),handle=new Node(),share=new Node();
 const nodes={'#map':canvas,'#map-list':list,'#map-count':count,'#map-pins':{textContent:JSON.stringify(pins)},'[data-feature="locate"]':locate,'[data-feature="live"]':share,'.map-sheet':sheet,'.sheet-handle':handle};
 const page={classList:new Node().classList,dataset:{clusterLabel:'See :count activities',near:'0'},querySelector:s=>nodes[s]};
@@ -69,6 +69,9 @@ requests[1].resolve({items:[{...pins[1],title:'Latest'}],limited:true});await Pr
 requests[0].resolve({items:[{...pins[0],title:'Stale'}],limited:false});await Promise.resolve();await Promise.resolve();
 assert.equal(count.textContent,'1 activities','late responses cannot overwrite current viewport');
 assert.equal(list.children[0].dataset.slug,'b');
+const refreshedLink=list.children[0].children[0].children[0];
+assert.equal(refreshedLink.children[0].children.length,1,'viewport refresh keeps unknown admission off the thumbnail');
+assert.equal(refreshedLink.children[1].children.at(-1).children[0].textContent,'Consulta la entrada','viewport refresh retains the admission note beside the image');
 events.moveend();for(const fn of timers.values())fn();timers.clear();
 assert.equal(requests.length,2,'same viewport uses bounded recent cache');
 scope.document.hidden=true;offset=900;events.moveend();for(const fn of timers.values())fn();timers.clear();
@@ -230,3 +233,19 @@ assert.equal(permanentSheet.dataset.slug,'place:a-shop');
 const sameSlugPlace=scope.renderItem({...pins[0],kind:'place'});
 const sameSlugEvent=scope.renderItem({...pins[0]});
 assert.notEqual(sameSlugPlace.dataset.slug,sameSlugEvent.dataset.slug,'place/event identity cannot collide');
+
+for (const label of ['Consulta la entrada', 'Check admission']) {
+ const row=temporalScope.renderSheet({slug:'unknown',starts:'2026-10-22T00:00:00Z',ends:null,price_cents:null,price:label});
+ const link=row.children[0].children[0];
+ assert.equal(link.children[0].children.length,1,'unknown admission has no image pill');
+ assert.equal(link.children[1].children.at(-1).children[0].textContent,label,'localized admission belongs in details');
+}
+for (const cents of [0,2500]) {
+ const row=temporalScope.renderSheet({slug:'known',starts:'2026-10-22T00:00:00Z',ends:null,price_cents:cents,price:cents?'$25':'Gratis'});
+ const link=row.children[0].children[0];
+ assert.equal(link.children[0].children[1].attrs.class,'pill pill-light card-price');
+ assert.equal(link.children[1].children.length,3,'known prices need no duplicate admission note');
+}
+assert.equal(permanentLink.children[0].children[1].textContent,'Shopping','permanent category label is unchanged');
+assert.equal(unknownSheet.children[0].children[0].children[0].children.length,1,'legacy missing price metadata is safely unknown');
+console.log('PASS: unknown admission stays in details after refresh; known prices and places preserve their badges');
