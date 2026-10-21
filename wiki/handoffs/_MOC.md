@@ -40,3 +40,5 @@ tags: [moc, handoff]
 - [[handoffs/source-listing-artwork]] — original-source listing media and verified BSNF refresh.
 
 - [[handoffs/review-gallery]] — photo viewer with real place-review context.
+
+- [[handoffs/detail-galleries]] — consistent viewer on activity, place and menu detail routes.

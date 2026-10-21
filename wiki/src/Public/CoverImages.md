@@ -20,3 +20,6 @@ Resolved: source thumbnails were enlarged/cropped by object-fit cover, not faded
 
 ## Referenced by
 [[src/Public/BrowserMain]] · [[src/_MOC]]
+
+## All listing details · #195 — resolved Grill Log
+Reuse the same native viewer on place details, real activity-cover images and menu-header images across every category. Place reviews remain published, bounded and place-level. Other routes pass truthful existing context without inventing reviews or querying private facts. Preserve activity back/share/save controls, cover framing, modifier/no-script image links and default category artwork; illustrations never become gallery photos. Keep dialogs outside clipped event-cover styling. Shared canonical image links initialize both single event images and full albums; context links close before navigation. No schema or data mutation.

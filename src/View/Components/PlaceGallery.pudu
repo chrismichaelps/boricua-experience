@@ -10,6 +10,11 @@ import View.Frame as Frame
 
 /// A cover-first mosaic, a complete no-script album, and a progressively enhanced viewer.
 export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: Str, slug: Str, board: &Review.ReviewBoard) -> H.Node {
+  renderWithContext(frame, photos, fallback, name, GalleryReviews.render(frame, slug, board))
+}
+
+/// Shared gallery composition accepts context without assuming that a listing supports reviews.
+export fn renderWithContext(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: Str, context: H.Node) -> H.Node {
   var unique: Array[Str] = []
   for photo in *photos {
     if !unique.contains(photo) { unique = unique.push(photo) }
@@ -33,25 +38,7 @@ export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: 
           H.summary().class("button button-ghost").holding([Icons.sized("camera", 18), H.span().says(Frame.tf(frame, "place.all_photos", &[("count", show(unique.length()))]))]),
           H.div().class("place-album-grid").holding(album)
         ]),
-      H.dialog().class("photo-viewer").label(label).holding([
-          H.div().class("photo-viewer-bar").holding([
-              H.div().holding([H.h2().class("photo-viewer-title").says(name), H.p().class("muted small").data("photo", "position").role("status").at("aria-live", "polite")]),
-              H.button().kind("button").class("icon-button").data("photo", "close").label(Frame.t(frame, "gallery.close")).holding([Icons.sized("x", 24)])
-            ]),
-          H.div().class("photo-viewer-layout").holding([
-              GalleryReviews.render(frame, slug, board),
-              H.div().class("photo-viewer-media").holding([
-                  H.div().class("photo-viewer-stage").data("photo", "stage").holding([
-                      H.img().data("photo", "image").alt(label).at("draggable", "false"),
-                      H.div().class("photo-viewer-controls").holding([
-                          H.button().kind("button").class("icon-button").data("photo", "previous").label(Frame.t(frame, "place.photo_previous")).holding([Icons.sized("chevron-left", 24)]),
-                          H.button().kind("button").class("icon-button").data("photo", "next").label(Frame.t(frame, "place.photo_next")).holding([Icons.sized("chevron-right", 24)])
-                        ])
-                    ]),
-                  H.nav().class("photo-thumbnails").label(Frame.t(frame, "gallery.choose_image")).holding((0..unique.length()).map(|index: Int| H.button().kind("button").data("photo-select", show(index)).label(Frame.tf(frame, "media.slide", &[("number", show(index + 1)), ("total", show(unique.length()))])).holding([H.img().src(unique[index]).alt("").at("width", "80").at("height", "60").at("loading", "lazy")])))
-                ])
-            ])
-        ])
+      viewer(frame, &unique, name, context)
     ])
 }
 
@@ -60,5 +47,30 @@ fn tile(frame: &Frame.Frame, photo: Str, index: Int, total: Int, primary: Bool) 
   let label = Frame.tf(frame, "media.slide", &[("number", show(index + 1)), ("total", show(total))])
   H.a().class("place-photo").href(photo).data("photo-index", show(index)).label(label).holding([
       H.img().src(photo).alt(label).at("width", "960").at("height", "720").at("loading", if primary && index == 0 { "eager" } else { "lazy" }).at("decoding", "async")
+    ])
+}
+
+/// One viewer serves any authorized listing image collection with caller-owned factual context.
+export fn viewer(frame: &Frame.Frame, photos: &Array[Str], name: Str, context: H.Node) -> H.Node {
+  let unique = *photos
+  let label = Frame.tf(frame, "media.photos_of", &[("name", name)])
+  H.dialog().class("photo-viewer").label(label).holding([
+      H.div().class("photo-viewer-bar").holding([
+          H.div().holding([H.h2().class("photo-viewer-title").says(name), H.p().class("muted small").data("photo", "position").role("status").at("aria-live", "polite")]),
+          H.button().kind("button").class("icon-button").data("photo", "close").label(Frame.t(frame, "gallery.close")).holding([Icons.sized("x", 24)])
+        ]),
+      H.div().class("photo-viewer-layout").holding([
+          context,
+          H.div().class("photo-viewer-media").holding([
+              H.div().class("photo-viewer-stage").data("photo", "stage").holding([
+                  H.img().data("photo", "image").alt(label).at("draggable", "false"),
+                  H.div().class("photo-viewer-controls").holding([
+                      H.button().kind("button").class("icon-button").data("photo", "previous").label(Frame.t(frame, "place.photo_previous")).holding([Icons.sized("chevron-left", 24)]),
+                      H.button().kind("button").class("icon-button").data("photo", "next").label(Frame.t(frame, "place.photo_next")).holding([Icons.sized("chevron-right", 24)])
+                    ])
+                ]),
+              H.nav().class("photo-thumbnails").label(Frame.t(frame, "gallery.choose_image")).holding((0..unique.length()).map(|index: Int| H.button().kind("button").data("photo-select", show(index)).label(Frame.tf(frame, "media.slide", &[("number", show(index + 1)), ("total", show(unique.length()))])).holding([H.img().src(unique[index]).alt("").at("width", "80").at("height", "60").at("loading", "lazy")])))
+            ])
+        ])
     ])
 }

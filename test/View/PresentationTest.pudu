@@ -150,6 +150,18 @@ fn main() -> Int {
   let ownerMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true}, &noMedia))
   let picturedMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &pictured))
   let picturedPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &ownerBoard, &None, &pictured, &Review.blank(), &None))
+  let photoActivityDetail = Event.Detail{..detail, card: Event.Card{..detail.card, coverUrl: Some("https://test.supabase.co/storage/v1/object/public/place-media/events/cover.webp")}, viewer: Event.Viewer{..detail.viewer, signedIn: true}, addressLine: Some("PRIVATE-GALLERY-ADDRESS"), instructions: Some("PRIVATE-GALLERY-INSTRUCTIONS"), locationRevealed: false}
+  let photoActivity = Html.render(&EventPage.render(&en, &photoActivityDetail, &None))
+  let activityContext = photoActivity.split("class=\"gallery-context\"")[1].split("</aside>")[0]
+  let themedActivity = Html.render(&EventPage.render(&en, &Event.Detail{..detail, card: Event.Card{..detail.card, coverUrl: Some("/assets/covers/themes/mar.svg")}}, &None))
+  var categoryGalleries = 0
+  for category in profiled.categories {
+    let reference = Event.CategoryRef{slug: category.slug, nameEs: category.nameEs, nameEn: category.nameEn, icon: category.icon}
+    let activityMarkup = Html.render(&EventPage.render(&en, &Event.Detail{..photoActivityDetail, card: Event.Card{..photoActivityDetail.card, category: reference}}, &None))
+    let placeMarkup = Html.render(&PlacePage.render(&en, &profiled, &Place.Detail{..fonda, card: Place.Listing{..fonda.card, category: reference}}, &ownerBoard, &None, &pictured, &Review.blank(), &None))
+    if activityMarkup.contains("event-cover-photo") && activityMarkup.contains("photo-viewer-layout") && placeMarkup.contains("photo-viewer-layout") { categoryGalleries = categoryGalleries + 1 }
+  }
+
   let spanishGallery = Html.render(&PlacePage.render(&es, &profiled, &fonda, &ownerBoard, &None, &pictured, &Review.blank(), &None))
   let bareMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &noMedia))
   let mediaManager = Html.render(&MediaPage.render(&en, &fonda, &pictured, true))
@@ -280,6 +292,11 @@ fn main() -> Int {
       Test.that("place discovery renders a real grid and detail link", placeSearch.contains("results place-results") && placeSearch.contains("class=\"card-grid\"") && placeSearch.contains("/lugar/" + fonda.card.slug)),
       Test.that("populated places do not claim an empty activity search", !placeSearch.contains(Frame.t(&en, "search.empty_title"))),
       Test.that("an existing cover stays first when only further photos are uploaded", PhotoHeader.photosOf(&Media.Gallery{isOwner: false, files: [photo("g1", "gallery", "image/webp", "")]}, &Some("/assets/img/curated.webp")) == ["/assets/img/curated.webp", "https://test.supabase.co/storage/v1/object/public/place-media/p/g1"] && PhotoHeader.photosOf(&noMedia, &None).isEmpty()),
+      Test.that("all catalog categories share activity and place galleries", categoryGalleries == profiled.categories.length() && categoryGalleries > 0),
+      Test.that("activity photo viewer preserves cover controls and factual context", photoActivity.contains("data-feature=\"photo-gallery\"") && photoActivity.contains("photo-viewer-layout") && photoActivity.contains("data-feature=\"share\"") && photoActivity.contains("/save\"") && activityContext.contains("View activity details") && !activityContext.contains("Reviews of this place")),
+      Test.that("activity gallery never copies private location or attendee instructions", !activityContext.contains("PRIVATE-GALLERY-ADDRESS") && !activityContext.contains("PRIVATE-GALLERY-INSTRUCTIONS")),
+      Test.that("category themes never masquerade as gallery photos", !themedActivity.contains("photo-viewer-layout") && !themedActivity.contains("event-cover-photo")),
+      Test.that("menu headers use the shared viewer with a parent-place return", picturedMenu.contains("photo-viewer-layout") && picturedMenu.contains("View place details") && !picturedMenu.contains("data-feature=\"hero-carousel\"")),
       Test.that("place photos form an accessible mosaic, cover first", picturedPlace.contains("data-feature=\"photo-gallery\"") && picturedPlace.indexOf("place-media/p/c1") < picturedPlace.indexOf("place-media/p/g1") && picturedPlace.contains("Image 2 of 2")),
       Test.that("without uploads the header shows the default image alone, without controls", bareMenu.contains("photo-header") && !bareMenu.contains("hero-dot")),
       Test.that("menu documents open from storage, escaped, with a PDF marker", picturedMenu.contains("place-media/p/m1") && picturedMenu.contains("noopener noreferrer") && picturedMenu.contains("&lt;b&gt;Lunch&lt;/b&gt;") && picturedMenu.contains(">PDF<") && picturedMenu.contains("Menu photo")),

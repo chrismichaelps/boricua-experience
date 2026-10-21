@@ -1,7 +1,7 @@
 export function placeGallery(root) {
   const dialog = root.querySelector('dialog');
   if (!dialog?.showModal) return;
-  const links = [...root.querySelectorAll('.place-album-grid [data-photo-index]')];
+  const links = [...root.querySelectorAll('.place-album-grid [data-photo-index], .event-cover-photo[data-photo-index]')];
   const image = dialog.querySelector('[data-photo="image"]');
   const position = dialog.querySelector('[data-photo="position"]');
   const previous = dialog.querySelector('[data-photo="previous"]');
@@ -41,7 +41,7 @@ export function placeGallery(root) {
     close.focus();
   });
   thumbnails.forEach(thumb => thumb.addEventListener('click', () => show(Number(thumb.dataset.photoSelect))));
-  dialog.querySelectorAll('[data-photo="review-link"]').forEach(link => link.addEventListener('click', event => {
+  dialog.querySelectorAll('[data-photo="review-link"], [data-photo="context-link"]').forEach(link => link.addEventListener('click', event => {
     if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) dialog.close();
   }));
   stage?.addEventListener('pointerdown', event => {

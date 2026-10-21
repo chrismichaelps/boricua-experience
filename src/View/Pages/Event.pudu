@@ -23,6 +23,7 @@ import View.Components.Form as Form
 import View.Components.Icons as Icons
 import View.Components.Moment as Moment
 import View.Components.People as People
+import View.Components.PlaceGallery as PlaceGallery
 import View.Components.Weather as Weather
 import View.Frame as Frame
 import View.Layout as Layout
@@ -43,7 +44,7 @@ export fn renderFrom(frame: &Frame.Frame, detail: &Event.Detail, problem: &Optio
     image: EventCard.coverOf(&card),
     structured: if indexable { [Seo.event(frame.siteUrl, detail), Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (Format.categoryName(&frame.locale, &card.category), Routes.CATEGORY_PREFIX + card.category.slug), (card.title, path)])] } else { [] }
   }
-  Layout.page(frame, &meta, Layout.Explore, H.article().class("event").data("feature", "event").data("slug", card.slug).holding([
+  Layout.page(frame, &meta, Layout.Explore, H.article().class("event").id("activity-detail").data("feature", "event").data("slug", card.slug).holding([
         cover(frame, detail),
         H.div().class("event-layout").holding([
             H.div().class("event-main").holding([
@@ -68,15 +69,34 @@ export fn renderFrom(frame: &Frame.Frame, detail: &Event.Detail, problem: &Optio
 /// The cover with its overlaid back, share, and save controls.
 fn cover(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   let card = detail.card
-  H.div().class("event-cover").holding([
-      H.img().src(EventCard.coverOf(&card)).alt("").at("width", "1280").at("height", "640").at("fetchpriority", "high"),
-      H.div().class("cover-actions").holding([
-          H.a().class("round-button").href(Routes.HOME).data("feature", "back").label(Frame.t(frame, "nav.back")).holding([Icons.icon("chevron-left")]),
-          H.div().class("cover-actions-end").holding([
-              H.button().kind("button").class("round-button").data("feature", "share").data("title", card.title).label(Frame.t(frame, "event.share")).holding([Icons.icon("share")]),
-              if detail.viewer.signedIn { saveForm(frame, detail) } else { H.nothing() }
+  let image = EventCard.coverOf(&card)
+  let actual = !image.startsWith("/assets/covers/") && !image.isEmpty()
+  let imageLabel = Frame.tf(frame, "media.slide", &[("number", "1"), ("total", "1")])
+  H.section().class("event-cover-gallery").data("feature", if actual { "photo-gallery" } else { "" }).holding([
+      H.div().class("event-cover").holding([
+          if actual {
+            H.a().class("event-cover-photo").href(image).data("photo-index", "0").label(imageLabel).holding([
+                H.img().src(image).alt(imageLabel).at("width", "1280").at("height", "640").at("fetchpriority", "high")
+              ])
+          } else { H.img().src(image).alt("").at("width", "1280").at("height", "640").at("fetchpriority", "high") },
+          H.div().class("cover-actions").holding([
+              H.a().class("round-button").href(Routes.HOME).data("feature", "back").label(Frame.t(frame, "nav.back")).holding([Icons.icon("chevron-left")]),
+              H.div().class("cover-actions-end").holding([
+                  H.button().kind("button").class("round-button").data("feature", "share").data("title", card.title).label(Frame.t(frame, "event.share")).holding([Icons.icon("share")]),
+                  if detail.viewer.signedIn { saveForm(frame, detail) } else { H.nothing() }
+                ])
             ])
-        ])
+        ]),
+      if actual {
+        PlaceGallery.viewer(frame, &[image], card.title,
+          H.aside().class("gallery-context").label(Frame.t(frame, "event.about")).holding([
+              H.h3().says(Frame.t(frame, "event.about")),
+              H.p().class("gallery-activity-summary").says(card.summary),
+              H.p().class("muted small").says(Format.categoryName(&frame.locale, &card.category) + " · " + card.municipality.name),
+              Moment.schedule(frame, card.startsAt, card.endsAt),
+              H.a().class("text-link gallery-read-all").data("photo", "context-link").href(Routes.EVENT_PREFIX + card.slug + "#activity-detail").says(Frame.t(frame, "gallery.view_activity"))
+            ]))
+      } else { H.nothing() }
     ])
 }
 
@@ -254,7 +274,7 @@ fn interest(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
 /// The description, paragraph by paragraph.
 fn about(frame: &Frame.Frame, detail: &Event.Detail) -> H.Node {
   if detail.description.trim().isEmpty() { return H.nothing() }
-  H.section().class("panel prose").holding([
+  H.section().class("panel prose").id("activity-about").holding([
       H.h2().class("section-title").says(Frame.t(frame, "event.about")),
       H.div().holding(detail.description.split("\n\n").filter(|part: Str| !part.trim().isEmpty()).map(|part: Str| H.p().says(part.trim())))
     ])

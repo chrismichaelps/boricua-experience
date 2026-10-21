@@ -1,4 +1,4 @@
-import { coverImages } from './features/coverImages.js?v=98';
+import { coverImages } from './features/coverImages.js?v=101';
 import { formDates } from './features/formDates.js?v=96';
 import { buildCheck } from './features/buildCheck.js?v=80';
 import { passwordControls } from './features/passwords.js?v=80';
@@ -36,7 +36,7 @@ const FEATURES = {
   assistant: (node) => import('./features/assistant.js?v=80').then(module => module.assistant(node)).catch(() => {}),
   'privacy-controls': privacyControls,
   'hero-carousel': heroCarousel,
-  'photo-gallery': (node) => import('./features/placeGallery.js?v=100').then(module => module.placeGallery(node)).catch(() => {}),
+  'photo-gallery': (node) => import('./features/placeGallery.js?v=101').then(module => module.placeGallery(node)).catch(() => {}),
   suggest,
   'search-pickers': searchPickers,
   filters: (form) => { searchPickers(form); filters(form); },
