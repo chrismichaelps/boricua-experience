@@ -163,3 +163,7 @@ Resolved: discovery grids and rails now use smaller photos and natural-height fu
 
 ## Map admission cache · #183 — resolved Grill Log
 Entry loads Explorer97 so viewport rebuilds use explicit nullable price metadata. Unchanged feature imports retain their existing identities.
+
+
+## Intrinsic image sizing · #185 — resolved Grill Log
+Uploaded source artwork must not be stretched or cropped as a panorama. A small progressive enhancement classifies geometry only: images narrower than640px or with intrinsic aspect below1.2 use scale-down/contain, while larger landscape photos retain cover cropping. Category artwork remains unchanged. Capture image load events for lazy and dynamically inserted map/list cards; no source/brand guessing, artificial saturation, or opacity removal. Broken/not-yet-loaded images wait for a valid intrinsic size. Detail headers and galleries retain accessible controls.

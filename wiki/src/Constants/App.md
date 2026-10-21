@@ -171,3 +171,7 @@ Revision91 refreshes category-switch draft preservation; no policy version chang
 
 ## Admission cache correction · #183 — resolved Grill Log
 Asset/worker revision97 loads Explorer97. Unchanged imports retain their existing identities; private HTML and records remain network-only.
+
+
+## Intrinsic image sizing · #185 — resolved Grill Log
+Uploaded source artwork must not be stretched or cropped as a panorama. A small progressive enhancement classifies geometry only: images narrower than640px or with intrinsic aspect below1.2 use scale-down/contain, while larger landscape photos retain cover cropping. Category artwork remains unchanged. Capture image load events for lazy and dynamically inserted map/list cards; no source/brand guessing, artificial saturation, or opacity removal. Broken/not-yet-loaded images wait for a valid intrinsic size. Detail headers and galleries retain accessible controls.

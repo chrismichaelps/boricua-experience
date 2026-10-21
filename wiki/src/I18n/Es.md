@@ -123,3 +123,7 @@ Resolved user sizing: discovery rotation is one44px circular compass, equal to t
 
 ## Place discovery Grill Log · #132
 Resolved: Add original place navigation, gallery, category-illustration and recent-review labels. No translated user review content or made-up sentiment.
+
+
+## Source image semantics · #185 — resolved Grill Log
+Listing galleries may contain source photographs, event artwork or official identifiers. Use neutral bilingual image labels, without presenting brand artwork as a photograph of a branch. Preserve upload controls and category-illustration fallbacks.

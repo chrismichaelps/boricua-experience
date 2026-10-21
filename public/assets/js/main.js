@@ -1,3 +1,4 @@
+import { coverImages } from './features/coverImages.js?v=98';
 import { formDates } from './features/formDates.js?v=96';
 import { buildCheck } from './features/buildCheck.js?v=80';
 import { passwordControls } from './features/passwords.js?v=80';
@@ -17,6 +18,7 @@ import { disclosures, share } from './features/share.js?v=80';
 import { suggest } from './features/suggest.js?v=96';
 import { reactToggle, saveToggle } from './features/toggle.js?v=80';
 
+coverImages();
 formDates();
 buildCheck();
 passwordControls();

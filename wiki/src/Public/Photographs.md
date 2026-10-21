@@ -63,3 +63,7 @@ Resolved: no brand artwork/photos are copied. One building coordinate derives fr
 
 ## Place gallery photograph · #132
 Resolved: add the real street facade photograph of Castillo Serrallés by Mtmelendez, sourced from Wikimedia Commons and reused under CC BY-SA3.0. Resize to1600px and WebP only; preserve source/author/license in public credits and notices. Set the matching production place cover from the database after the asset is deployed; never substitute this photograph for another venue or overwrite an owner-uploaded cover.
+
+
+## Original-source imagery · #185 — resolved Grill Log
+Use the same official source page as each curated record. Do not substitute Commons or unrelated venue imagery for this batch. Official BSNF home-team images identify the fixture; they are artwork, not photographs of the game. Preserve attribution and trademark rights without asserting an unstated free license. Original files and operational manifests remain ignored. Existing uploaded covers win; trusted confirmation locks/rechecks each parent in the same transaction before replacing a default. Public credits are served with revalidation.
