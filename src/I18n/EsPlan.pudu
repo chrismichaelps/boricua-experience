@@ -93,6 +93,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("quick.free", "Gratis"),
     ("quick.family", "Familiar"),
     ("quick.night", "Nocturno"),
+    ("quick.indoor", "Bajo techo"),
     ("quick.outdoor", "Al aire libre"),
     ("quick.accessible", "Accesible"),
     ("quick.near", "Cerca de mí"),

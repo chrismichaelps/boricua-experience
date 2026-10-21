@@ -1210,6 +1210,7 @@ publish.who
 quick.accessible
 quick.family
 quick.free
+quick.indoor
 quick.label
 quick.near
 quick.night

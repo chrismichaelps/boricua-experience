@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · rainy-day filter · new "Bajo techo / Indoors" quick trait: organizer-stated not outdoors, or workshops, technology and shopping by default; search, map and series honour it (private migration 20261020050000_indoor_trait, applied to development; production before the release) · issue #178.
+
 - 2026-10-20 · richer town guides · featured towns open with their photograph, category chips keep the town, head titles name Puerto Rico, and pages carry ItemList and TouristDestination structured data · issue #178.
 
 - 2026-10-20 · Nearby in search · the empty search box offers "Cerca de mí" (opens the nearest town guide from a position rounded to ~1 km) and recently viewed or featured towns; `/cerca` redirect; asset94 · issue #178.

@@ -111,6 +111,7 @@ fn quickFilters(frame: &Frame.Frame, filters: &Search.Filters, landing: &Landing
       chip("family", "users", filters.traits.contains("family"), marked("family")),
       chip("night", "moon", filters.traits.contains("night"), marked("night")),
       chip("outdoor", "mountain", filters.traits.contains("outdoor"), marked("outdoor")),
+      chip("indoor", "rain", filters.traits.contains("indoor"), marked("indoor")),
       chip("accessible", "accessible", filters.traits.contains("accessible"), marked("accessible")),
       H.a().class("chip quick-chip").href(Routes.MAP + nearby + (if nearby.isEmpty() { "?" } else { "&" }) + "near=1").holding([Icons.sized("crosshair", 16), H.span().says(Frame.t(frame, "quick.near"))])
     ])
