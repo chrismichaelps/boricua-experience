@@ -400,3 +400,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/ProfileSwitch]] — cover draft across category navigation.
 
 - [[src/Test/Favicon]] — stable search favicon binary dimensions and container validation.
+
+- [[src/Public/CoverImages]] · [[src/Test/CoverImages]] — intrinsic source-image framing.

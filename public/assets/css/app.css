@@ -726,3 +726,6 @@ ul { padding: 0; list-style: none; }
   .trip-page { grid-template-rows: auto env(viewport-segment-height 0 0, 1fr) minmax(0, 1fr); row-gap: calc(env(viewport-segment-top 0 1, 0px) - env(viewport-segment-bottom 0 0, 0px)); }
   .trip-panel { max-height: none; }
 }
+
+.card-media img.image-contain { object-fit: scale-down; padding: 10px; background: #fff; }
+.event-cover > img.image-contain { object-fit: scale-down; padding: clamp(24px, 5vw, 48px); background: #fff; }

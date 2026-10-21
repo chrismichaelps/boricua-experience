@@ -157,3 +157,11 @@ Resolved: anonymous shell version87 invalidates discovery styles; no authenticat
 
 ## Forum navigation Grill Log · #137
 Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.
+
+
+## Admission cache correction · #183 — resolved Grill Log
+Asset/worker revision97 loads Explorer97. Unchanged imports retain their existing identities; private HTML and records remain network-only.
+
+
+## Intrinsic image sizing · #185 — resolved Grill Log
+Uploaded source artwork must not be stretched or cropped as a panorama. A small progressive enhancement classifies geometry only: images narrower than640px or with intrinsic aspect below1.2 use scale-down/contain, while larger landscape photos retain cover cropping. Category artwork remains unchanged. Capture image load events for lazy and dynamically inserted map/list cards; no source/brand guessing, artificial saturation, or opacity removal. Broken/not-yet-loaded images wait for a valid intrinsic size. Detail headers and galleries retain accessible controls.

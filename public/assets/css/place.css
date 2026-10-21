@@ -91,3 +91,5 @@
 .town-voices-average { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; }
 .town-voices-average strong { font-size: 20px; }
 .town-voices-place { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; }
+
+.place-photo img.image-contain { object-fit: scale-down; padding: clamp(16px, 3vw, 32px); background: #fff; }

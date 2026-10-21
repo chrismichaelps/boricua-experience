@@ -136,3 +136,7 @@ Resolved: expanded pin activation keeps the map expanded and reveals only the se
 
 ## Compact joystick refinement · #124
 Resolved user sizing: discovery rotation is one44px circular compass, equal to the map buttons. Hide the former side buttons only on discovery; pointer drag rotates continuously, tap resets north, Left/Right keys step rotation and Home resets. Capture one primary pointer, ignore secondary pointers, cancel safely, suppress a drag's synthetic reset click and detach location-follow on explicit rotation. Existing trip controls remain unchanged. Localized label explains drag and north action. This supersedes the96px pad.
+
+
+## Refreshed admission placement · #183 — resolved Grill Log
+The browser rebuilds map cards after viewport changes independently of the server card component. Event pin JSON now includes nullable `price_cents`: null/absent means unknown, explicit zero means free. Only known event amounts and existing place category labels retain thumbnail pills; unknown event admission remains visible as ordinary `card-meta`/`card-admission` text beside the image. Do not infer price knowledge from translated text. Test actual redraws, both languages, zero and positive values, missing metadata, and permanent places.

@@ -34,6 +34,7 @@ export fn pinsValue(frame: &Frame.Frame, cards: &Array[Event.Card]) -> Json.Json
           ("starts", Json.Text(card.startsAt)),
           ("ends", match card.endsAt { case Some(at) => Json.Text(at) case None => Json.Null }),
           ("price", Json.Text(Format.price(&frame.locale, card.priceCents))),
+          ("price_cents", match card.priceCents { case Some(cents) => Json.Number(cents) case None => Json.Null }),
           ("place", Json.Text(card.venueName + " · " + card.municipality.name)),
           ("icon", Json.Text(card.category.icon)),
           ("cover", Json.Text(EventCard.coverOf(&card))),

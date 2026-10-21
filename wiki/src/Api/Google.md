@@ -37,3 +37,7 @@ export fn exchange(google: &Google, code: Str, verifier: Str, redirectUri: Str) 
 
 ## Referenced by
 [[src/Services/Runtime]] · [[src/View/Pages/Auth]] · test `test/Services/GoogleSignInTest.pudu`
+
+
+## Production verification · #181
+Runtime setup is complete in production with a separately approved additional credential on the existing client; the original provider secret remains enabled. Direct authorization, own-domain callback, PKCE, unchanged nonce validation and a real owner sign-in passed. See [[handoffs/production-auth-notifications]]. Credential values remain private.

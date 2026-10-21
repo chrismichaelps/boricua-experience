@@ -34,3 +34,7 @@ tags: [moc, handoff]
 - [[handoffs/search-favicon]] — stable cotorra search-icon discovery and release verification.
 
 - [[handoffs/admission-label]] — compact unknown-price card metadata and release verification.
+
+- [[handoffs/production-auth-notifications]] — verified0.15.0 Google runtime setup and production inbox behavior.
+
+- [[handoffs/source-listing-artwork]] — original-source listing media and verified BSNF refresh.

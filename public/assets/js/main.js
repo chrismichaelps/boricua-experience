@@ -1,3 +1,4 @@
+import { coverImages } from './features/coverImages.js?v=98';
 import { formDates } from './features/formDates.js?v=96';
 import { buildCheck } from './features/buildCheck.js?v=80';
 import { passwordControls } from './features/passwords.js?v=80';
@@ -17,6 +18,7 @@ import { disclosures, share } from './features/share.js?v=80';
 import { suggest } from './features/suggest.js?v=96';
 import { reactToggle, saveToggle } from './features/toggle.js?v=80';
 
+coverImages();
 formDates();
 buildCheck();
 passwordControls();
@@ -47,7 +49,7 @@ const FEATURES = {
   back,
   'join-panel': joinPanel,
   retry,
-  explorer: (node) => import('./features/explorer.js?v=96').then((module) => module.explorer(node)),
+  explorer: (node) => import('./features/explorer.js?v=97').then((module) => module.explorer(node)),
   achievements: (node) => import('./features/achievements.js?v=80').then((module) => module.achievements(node)).catch(() => {}),
   'achievement-board': (node) => import('./features/achievements.js?v=80').then((module) => module.achievementBoard(node)).catch(() => {}),
   a11y: (node) => import('./features/a11y.js?v=80').then((module) => module.a11y(node)).catch(() => {}),
