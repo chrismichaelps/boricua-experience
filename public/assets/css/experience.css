@@ -724,7 +724,7 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
 .auth-photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 60%; }
 .auth-story::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgb(4 24 33 / 0%) 0%, rgb(4 24 33 / 18%) 40%, rgb(4 24 33 / 78%) 100%); }
 .auth-story-copy { display: grid; gap: 8px; max-width: 560px; }
-.auth-story-mark { display: none; }
+.auth-story-brand { display: none; }
 .auth-story h2 { margin: 0; font-size: 24px; line-height: 1.15; font-weight: 800; letter-spacing: -.5px; text-wrap: balance; text-shadow: 0 1px 12px rgb(0 0 0 / 25%); }
 .auth-story-lead { display: none; }
 .auth-credit { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 11px; line-height: 1.3; color: rgb(255 255 255 / 82%); }
@@ -743,7 +743,11 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
   .auth-story { position: sticky; top: calc(var(--appbar) + var(--safe-top)); align-self: start; height: calc(100dvh - var(--appbar) - var(--safe-top)); min-height: 560px; padding: 48px clamp(32px, 5vw, 72px) 28px; border-radius: 0 32px 32px 0; }
   .auth-photo { object-position: center; }
   .auth-story-copy { gap: 18px; }
-  .auth-story-mark { display: block; width: 44px; height: 44px; padding: 8px; border-radius: 14px; background: rgb(255 255 255 / 92%); box-shadow: 0 6px 20px rgb(0 0 0 / 18%); }
+  .auth-story-brand { display: flex; align-items: center; gap: 12px; color: white; text-shadow: 0 1px 10px rgb(0 0 0 / 30%); }
+  .auth-story-brand img { width: 56px; height: 56px; filter: drop-shadow(0 4px 12px rgb(0 0 0 / 30%)); }
+  .auth-story-brand .brand-name { display: grid; line-height: 1.15; }
+  .auth-story-brand .brand-name strong { font: 400 34px/1.2 "Pacifico", cursive; letter-spacing: -.5px; color: white; }
+  .auth-story-brand .brand-name span { font: 700 12px/1.5 var(--font); letter-spacing: 2.4px; text-transform: uppercase; padding-left: 4px; color: rgb(255 255 255 / 90%); }
   .auth-story h2 { font-size: clamp(36px, 3.4vw, 52px); line-height: 1.05; letter-spacing: -1.2px; }
   .auth-story-lead { display: block; margin: 0; font-size: 17px; line-height: 1.6; opacity: .9; }
   .auth-credit { position: absolute; top: 20px; right: 24px; left: auto; max-width: calc(100% - 48px); margin: 0; padding: 6px 10px; border-radius: 999px; background: rgb(4 24 33 / 45%); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); font-size: 12px; }
