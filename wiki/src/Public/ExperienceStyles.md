@@ -131,3 +131,6 @@ Resolved: standard rail/search cards keep a shared13rem copy track, matching cov
 
 ## Compact discovery cards · #136
 Resolved: replace the fixed13rem internally scrolling copy area in discovery rails/grids with natural-height text. Use smaller photo/copy proportions,16px titles and compact gaps; preserve full titles, metadata, no-review/unknown-price truth and stretched rows. Desktop fits four cards at wide widths, tablets three/two and phones two grid columns with single-row horizontal rails. Map and organizer activity layouts retain their specialized geometry. No nested card scrolling or hidden title text.
+
+## Compact phone map rows · #188 — resolved Grill Log
+Live390px verification found the phone override converted map results into350px-wide image tiles. Keep a96px thumbnail beside flexible copy on phones, align content at the top and bound thumbnail height to108px; larger photos stay reserved for detail pages. Reduce row gaps and use an inset selection ring so rounded image clipping does not crop the ring. Preserve sheet gestures, known-price badges, unknown admission beside the image and full titles. No query or interaction changes.

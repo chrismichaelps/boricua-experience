@@ -1,6 +1,6 @@
 [package]
 name = "@chrismichaelps/boricua-experience"
-version = "0.15.1"
+version = "0.15.2"
 description = "Boricua Experience: discover, join, and create activities and events across Puerto Rico"
 license = "LicenseRef-Proprietary"
 keywords = ["events", "puerto-rico", "pwa", "pudu"]
