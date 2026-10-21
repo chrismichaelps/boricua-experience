@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · device pass · checked 344–860 px phones, Fold cover/open, dual-screen inner/outer and phone landscape: no page overflow. Live trips on short landscape screens put the map beside the stops (the map was 109 px tall); on two-segment screens card grids take an even column count with the fold as the gap and the trip map and stops sit on separate screens; asset96.
+
 - 2026-10-20 · town voices and questions · town guides show the newest reviews of their places with the town's average, and up to three questions answered from their own data with FAQPage markup (private migration 20261020051000_town_reviews, development applied); asset95 · issue #178.
 
 - 2026-10-20 · rainy-day filter · new "Bajo techo / Indoors" quick trait: organizer-stated not outdoors, or workshops, technology and shopping by default; search, map and series honour it (private migration 20261020050000_indoor_trait, applied to development; production before the release) · issue #178.
