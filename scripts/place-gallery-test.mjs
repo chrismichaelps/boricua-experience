@@ -7,15 +7,16 @@ function setup(count = 7, supported = true) {
   const previous = element(), next = element(), close = element(), stage = element(), reviewLink = element();
   const thumbnails = Array.from({ length: count }, (_, index) => ({ ...element(), dataset: { photoSelect: String(index) } }));
   const dialog = { ...element(), querySelectorAll(selector) { return selector==='[data-photo-select]'?thumbnails:[reviewLink]; }, open: false, showModal: supported ? function () { this.open = true; } : null, close() { this.open = false; this.handlers.close(); }, querySelector(selector) { return { '[data-photo="image"]': image, '[data-photo="position"]': position, '[data-photo="previous"]': previous, '[data-photo="next"]': next, '[data-photo="close"]': close, '[data-photo="stage"]': stage }[selector]; } };
+  const summary = { ...element(), dataset: {} };
   const links = Array.from({ length: count }, (_, index) => ({ ...element(), dataset: { photoIndex: String(index) }, href: `https://example.test/${index}.jpg`, getAttribute() { return `Photo ${index + 1} of ${count}`; } }));
-  const root = { ...element(), querySelector() { return dialog; }, querySelectorAll() { return links; }, contains(link) { return links.includes(link); } };
+  const root = { ...element(), querySelector() { return dialog; }, querySelectorAll() { return links; }, contains(link) { return link===summary || links.includes(link); } };
   const document = { documentElement: { style: { overflow: 'clip' } } }, lifecycle = {};
   const scope = { document, window: { addEventListener(name, fn) { lifecycle[name] = fn; } } };
   vm.runInNewContext(readFileSync('public/assets/js/features/placeGallery.js', 'utf8').replace('export function', 'function') + '\nthis.start = placeGallery;', scope);
   scope.start(root);
   function click(index, flags = {}) { const event = { button: 0, target: { closest() { return links[index]; } }, preventDefault() { this.prevented = true; }, ...flags }; root.handlers.click?.(event); return event; }
   function key(key, flags = {}) { const event = { key, preventDefault() { this.prevented = true; }, ...flags }; dialog.handlers.keydown(event); return event; }
-  return { stage, reviewLink, thumbnails, dialog, links, image, position, previous, next, close, document, lifecycle, click, key, root };
+  return { summary, stage, reviewLink, thumbnails, dialog, links, image, position, previous, next, close, document, lifecycle, click, key, root };
 }
 const state = setup();
 for (const modifier of ['metaKey', 'ctrlKey', 'altKey', 'shiftKey']) {
@@ -57,3 +58,9 @@ thumbState.reviewLink.handlers.click({ctrlKey:true});assert(thumbState.dialog.op
 thumbState.reviewLink.handlers.click({});assert(!thumbState.dialog.open);
 assert.equal(thumbState.document.documentElement.style.overflow,'clip');
 console.log('PASS: current thumbnail, direct selection, horizontal swipe, cancelled/vertical gestures and review-link dismissal');
+
+const albumEntry=setup();
+albumEntry.root.handlers.click({button:0,target:{closest:selector=>selector==='.place-album > summary'?albumEntry.summary:null},preventDefault(){this.prevented=true;}});
+assert(albumEntry.dialog.open);assert.equal(albumEntry.image.src,'https://example.test/0.jpg');
+albumEntry.dialog.close();assert(albumEntry.summary.focused);
+console.log('PASS: all-images entry opens the viewer and restores summary focus');
