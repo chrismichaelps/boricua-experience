@@ -1,5 +1,5 @@
-import { preparePhoto, MAX_BYTES } from './mediaUpload.js?v=93';
-import { stage, staged, clear } from './coverStage.js?v=93';
+import { preparePhoto, MAX_BYTES } from './mediaUpload.js?v=94';
+import { stage, staged, clear } from './coverStage.js?v=94';
 
 // The "your photo" tile of the cover picker. The photograph is resized and re-encoded here (which
 // drops camera and location metadata), previewed, and kept in this browser; the form only says a

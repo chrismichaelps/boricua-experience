@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · Nearby in search · the empty search box offers "Cerca de mí" (opens the nearest town guide from a position rounded to ~1 km) and recently viewed or featured towns; `/cerca` redirect; asset94 · issue #178.
+
 - 2026-10-20 · Google sign-in on the site's address · with `BORICUA_GOOGLE_CLIENT_ID/SECRET` set, Google returns to /auth/google/callback and its ID token is exchanged with the identity provider, so the consent screen names boricuaexperience.com instead of the provider; unset keeps the old flow. [[src/Api/Google]] · issue #177.
 
 - 2026-10-20 · split-screen sign-in and sign-up · half-screen real photographs (Playa Flamenco, Faro Los Morrillos, Rincón; CC BY/BY-SA, credited on the page) beside the form, a photo band on phones and a lined divider · issue #177.

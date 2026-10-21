@@ -1302,10 +1302,16 @@ search.label
 search.load_more
 search.near
 search.near_anywhere
+search.nearby
+search.nearby_busy
+search.nearby_failed
+search.nearby_hint
 search.nearby_towns
 search.no_towns
+search.popular_towns
 search.radius
 search.radius_km
+search.recent_towns
 search.results_for
 search.save
 search.saved_all

@@ -87,6 +87,23 @@ fn windowSelect(frame: &Frame.Frame, chosen: &Search.When, id: Str) -> H.Node {
   select
 }
 
+/// The featured destinations' towns, as the suggestions shown before anything is typed.
+fn popularTowns(frame: &Frame.Frame, catalog: &Catalog.Catalog) -> Str {
+  var seen: Array[Str] = []
+  var towns: Array[Json.Json] = []
+  for scene in catalog.scenes {
+    if seen.contains(scene.town) { continue }
+    match Catalog.municipality(catalog, scene.town) {
+      case Some(town) => {
+        seen = seen.push(town.slug)
+        towns = towns.push(Json.object(&[("slug", Json.Text(town.slug)), ("name", Json.Text(town.name)), ("region", Json.Text(Frame.t(frame, "region." + town.region)))]))
+      }
+      case None => {}
+    }
+  }
+  Json.encode(&Json.list(&towns.slice(0, if towns.length() < 5 { towns.length() } else { 5 })))
+}
+
 /// The white search pill: what, where, when, and the round blue submit.
 export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.Filters) -> H.Node {
   H.form().class("search-pill").action(Routes.SEARCH).method("get").role("search").label(Frame.t(frame, "search.label")).data("feature", "search-pickers").data("picker-close", Frame.t(frame, "search.close_picker")).data("picker-search", Frame.t(frame, "search.find_town")).data("picker-empty", Frame.t(frame, "search.no_towns")).data("calendar", calendarLabels(frame)).holding([
@@ -100,6 +117,8 @@ export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.
       H.div().class("pill-field pill-what").holding([
           H.labelFor().at("for", "pill-q").says(Frame.t(frame, "search.what")),
           H.input().kind("search").name("q").id("pill-q").value(filters.query).placeholder(Frame.t(frame, "search.what_placeholder")).at("maxlength", show(Limits.QUERY_MAX)).at("autocomplete", "off").data("feature", "suggest").at("aria-autocomplete", "list").at("aria-controls", "suggestions")
+            .data("near-href", Routes.NEAR_ME).data("near-label", Frame.t(frame, "search.nearby")).data("near-hint", Frame.t(frame, "search.nearby_hint")).data("near-busy", Frame.t(frame, "search.nearby_busy")).data("near-failed", Frame.t(frame, "search.nearby_failed"))
+            .data("recent-label", Frame.t(frame, "search.recent_towns")).data("popular-label", Frame.t(frame, "search.popular_towns")).data("town-prefix", Routes.TOWN_PREFIX).data("popular", popularTowns(frame, catalog))
         ]),
       H.div().class("pill-field pill-where").holding([
           H.labelFor().at("for", "pill-town").says(Frame.t(frame, "search.where")),
