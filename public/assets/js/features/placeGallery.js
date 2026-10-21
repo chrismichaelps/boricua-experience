@@ -28,7 +28,7 @@ export function placeGallery(root) {
   };
   previous.hidden = next.hidden = links.length < 2;
   root.addEventListener('click', (event) => {
-    const link = event.target.closest('[data-photo-index]');
+    const link = event.target.closest('[data-photo-index]') || event.target.closest('.place-album > summary');
     if (!link || !root.contains(link) || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     opener = link;
@@ -37,7 +37,7 @@ export function placeGallery(root) {
       dialog.showModal();
       document.documentElement.style.overflow = 'hidden';
     }
-    show(Number(link.dataset.photoIndex));
+    show(Number(link.dataset.photoIndex ?? 0));
     close.focus();
   });
   thumbnails.forEach(thumb => thumb.addEventListener('click', () => show(Number(thumb.dataset.photoSelect))));
