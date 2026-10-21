@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-21 · release0.16.2 · separate activity gallery schedule and return action after live phone verification; reviewed PR198.22suites/781assertions and browser/timezone harnesses pass; asset101 unchanged; no migration.
+
 - 2026-10-21 · release0.16.1 · shared photo viewer across place, activity and menu detail routes; reviewed PR196.22suites/781assertions and all browser/timezone harnesses pass; asset101; no migration.
 
 - 2026-10-21 · detail-wide gallery · reuse the photo/context viewer for activity covers and menu-header images across catalog categories, preserving place reviews and activity controls. Category art remains fallback; no extra query/schema change; asset101 · issue #195.
