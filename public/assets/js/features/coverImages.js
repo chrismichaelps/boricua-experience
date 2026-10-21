@@ -1,4 +1,4 @@
-const COVERS = '.card-media img, .event-cover > img, .place-photo img';
+const COVERS = '.card-media img, .event-cover > img, .event-cover-photo img, .place-photo img';
 
 export function coverImages(root = document) {
   const fit = (image) => {

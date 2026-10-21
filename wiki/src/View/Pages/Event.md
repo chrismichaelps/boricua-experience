@@ -81,3 +81,6 @@ Resolved: detail displays a stated minimum age and confirmed step-free access fr
 
 ## Guest resume Grill Log · #148 — resolved
 Guest Interested/Going/Like/Join links carry validated intent through authentication. A signed-in non-organizer returning to an open activity receives an explicit token-bearing action, or a link to the native join panel; already-completed intent and impossible final-state actions are omitted. Curated publications never resume a local join. Dismiss removes the resume query. Actions remain deliberate and server-authorized.
+
+## All listing details · #195 — resolved Grill Log
+Reuse the same native viewer on place details, real activity-cover images and menu-header images across every category. Place reviews remain published, bounded and place-level. Other routes pass truthful existing context without inventing reviews or querying private facts. Preserve activity back/share/save controls, cover framing, modifier/no-script image links and default category artwork; illustrations never become gallery photos. Keep dialogs outside clipped event-cover styling. Shared canonical image links initialize both single event images and full albums; context links close before navigation. No schema or data mutation.

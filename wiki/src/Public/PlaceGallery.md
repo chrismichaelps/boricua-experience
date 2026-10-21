@@ -24,3 +24,6 @@ The inspected reference pairs a contained image with an independent context colu
 
 ## Gallery entry · #191 — resolved Grill Log
 The visible View all images summary opens the same viewer at image1 when native dialogs are supported; without scripts it remains the complete native-details album. Closing restores focus to the actual summary opener. Modified clicks retain native behavior.
+
+## All listing details · #195 — resolved Grill Log
+Reuse the same native viewer on place details, real activity-cover images and menu-header images across every category. Place reviews remain published, bounded and place-level. Other routes pass truthful existing context without inventing reviews or querying private facts. Preserve activity back/share/save controls, cover framing, modifier/no-script image links and default category artwork; illustrations never become gallery photos. Keep dialogs outside clipped event-cover styling. Shared canonical image links initialize both single event images and full albums; context links close before navigation. No schema or data mutation.
