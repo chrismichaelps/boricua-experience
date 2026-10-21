@@ -27,17 +27,41 @@ fn errorsOf(problem: &Option[Problem.Problem]) -> Array[Problem.FieldError] {
   }
 }
 
-/// A centred card holding an identity form.
-fn card(frame: &Frame.Frame, meta: &Seo.Meta, title: Str, lead: Str, body: Array[H.Node]) -> Html.Html {
+/** @View.Pages.Auth.Scene — the photograph beside an identity form, with the credit its licence asks for */
+type Scene = { image: Str, place: Str, author: Str, licence: Str, focus: Str }
+
+/// Playa Flamenco from above for signing in, Faro Los Morrillos for signing up, a Rincón sunset for the
+/// rest; all real camera photographs listed in the photography credits.
+const FLAMENCO: Scene = Scene { image: "/assets/img/flamenco-horseshoe-photo.webp", place: "Playa Flamenco, Culebra", author: "Breezy Baldwin", licence: "CC BY 2.0", focus: "40% 80%" }
+const MORRILLOS: Scene = Scene { image: "/assets/img/los-morrillos-photo.webp", place: "Faro Los Morrillos, Cabo Rojo", author: "fortherock", licence: "CC BY-SA 2.0", focus: "68% center" }
+const RINCON: Scene = Scene { image: "/assets/img/rincon-sunset-photo.webp", place: "Rincón", author: "M S", licence: "CC BY-SA 2.0", focus: "center 45%" }
+
+/// A centred card holding an identity form, beside a Rincón sunset.
+fn card(frame: &Frame.Frame, meta: &Seo.Meta, title: Str, lead: Str, body: Array[H.Node]) -> Html.Html { split(frame, meta, &RINCON, title, lead, body) }
+
+/// An identity form beside a photograph of the island: half the screen each on wide screens, a photo
+/// band above the form on phones. The photograph carries its place and credit.
+fn split(frame: &Frame.Frame, meta: &Seo.Meta, scene: &Scene, title: Str, lead: Str, body: Array[H.Node]) -> Html.Html {
   Layout.page(frame, meta, Layout.Me, H.div().class("auth").holding([
         H.aside().class("auth-story").holding([
-            H.img().src("/assets/img/el-morro-flags-photo.webp").at("srcset", Hero.photoSet("/assets/img/el-morro-flags-photo.webp")).at("sizes", "(max-width: 959px) 100vw, 50vw").alt("").at("width", "700").at("height", "467"),
-            H.div().class("auth-story-copy").holding([H.h2().says(Frame.t(frame, "auth.story_title")), H.p().says(Frame.t(frame, "footer.tagline"))])
+            H.img().class("auth-photo").src(scene.image).at("srcset", Hero.photoSet(scene.image)).at("sizes", "(max-width: 959px) 100vw, 50vw").alt("").at("width", "1100").at("height", "800").at("fetchpriority", "high").at("decoding", "async").at("style", "object-position: " + scene.focus),
+            H.div().class("auth-story-copy").holding([
+                H.span().class("brand auth-story-brand").holding([H.img().src("/assets/brand/cotorra-mark.svg?v=" + App.ASSET_VERSION).alt("").at("width", "56").at("height", "56"), H.span().class("brand-name").holding([H.strong().says("boricua"), H.span().says("experience")])]),
+                H.h2().says(Frame.t(frame, "auth.story_title")),
+                H.p().class("auth-story-lead").says(Frame.t(frame, "footer.tagline"))
+              ]),
+            H.p().class("auth-credit").holding([
+                Icons.sized("camera", 14),
+                H.span().says(scene.place + " · " + scene.author + " · " + scene.licence + " · "),
+                H.a().href("/assets/img/credits.html?v=" + App.ASSET_VERSION).says(Frame.t(frame, "footer.photography"))
+              ])
           ]),
-        H.div().class("auth-card").holding([
-            H.h1().class("page-title").says(title),
-            if lead.isEmpty() { H.nothing() } else { H.p().class("lead").says(lead) }
-          ].concat(body))
+        H.div().class("auth-pane").holding([
+            H.div().class("auth-card").holding([
+                H.h1().class("page-title").says(title),
+                if lead.isEmpty() { H.nothing() } else { H.p().class("lead").says(lead) }
+              ].concat(body))
+          ])
       ]))
 }
 
@@ -68,7 +92,7 @@ fn leadFor(frame: &Frame.Frame, returnTo: Str, fallback: Str) -> Str {
 export fn signIn(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Problem]) -> Html.Html {
   let errors = errorsOf(problem)
   let meta = Seo.meta(Frame.t(frame, "auth.sign_in_title"), Frame.t(frame, "auth.sign_in_lead"), Routes.SIGN_IN, false)
-  card(frame, &meta, Frame.t(frame, "auth.sign_in_title"), leadFor(frame, typed.returnTo, "auth.sign_in_lead"), [
+  split(frame, &meta, &FLAMENCO, Frame.t(frame, "auth.sign_in_title"), leadFor(frame, typed.returnTo, "auth.sign_in_lead"), [
       Form.problemBanner(frame, problem),
       H.form().class("stack-form").action(Routes.SIGN_IN).method("post").holding([
           H.input().kind("hidden").name("return").value(typed.returnTo),
@@ -89,7 +113,7 @@ export fn signIn(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Pr
 export fn signUp(frame: &Frame.Frame, typed: &Typed, problem: &Option[Problem.Problem]) -> Html.Html {
   let errors = errorsOf(problem)
   let meta = Seo.meta(Frame.t(frame, "auth.sign_up_title"), Frame.t(frame, "auth.sign_up_lead"), Routes.SIGN_UP, false)
-  card(frame, &meta, Frame.t(frame, "auth.sign_up_title"), leadFor(frame, typed.returnTo, "auth.sign_up_lead"), [
+  split(frame, &meta, &MORRILLOS, Frame.t(frame, "auth.sign_up_title"), leadFor(frame, typed.returnTo, "auth.sign_up_lead"), [
       Form.problemBanner(frame, problem),
       H.form().class("stack-form").action(Routes.SIGN_UP).method("post").holding([
           H.input().kind("hidden").name("return").value(typed.returnTo),

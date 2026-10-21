@@ -1,0 +1,86 @@
+/** @Test.GoogleSignIn.Suite — Google sign-in on the site's own address: consent address, code and ID-token exchange */
+module Services.GoogleSignInTest
+
+import Std.Bytes as Bytes
+import Std.Concurrent.Cancel as Cancel
+import Std.Crypto as Crypto
+import Std.Io as Io
+import Std.Json as Json
+import Std.Result as Result
+import Std.Sync as Sync
+import Std.Test as Test
+import Std.Url as Url
+import Api.Google as Google
+import Api.Supabase.Gateway as Gateway
+import Domain.Session as Session
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Response {Answering}
+import PuduLangHttpClient.Response as Response
+import Services.Auth.Accounts as Accounts
+import Services.Runtime as Runtime
+
+/// An access token whose payload carries a member, with placeholder header and signature.
+fn accessToken() -> Str {
+  "eyJhbGciOiJFUzI1NiJ9." + Bytes.encodeBase64Url(&Bytes.fromText("\{\"sub\":\"member-1\",\"email\":\"ana@example.test\",\"exp\":1900000000,\"iat\":1800000000,\"app_metadata\":\{\"provider\":\"google\"\}\}")) + ".signature"
+}
+
+/// The text a request sent.
+fn bodyOf(request: &Request.Request) -> Str {
+  match request.content {
+    case Some(content) => Result.unwrapOr(Bytes.toText(&content.payload), "")
+    case None => ""
+  }
+}
+
+/// The value of one query parameter of an address.
+fn param(address: Str, name: Str) -> Str {
+  let parts = address.split("&" + name + "=")
+  if parts.length() < 2 { return "" }
+  Url.decodeComponent(parts[1].split("&")[0])
+}
+
+/// Runs the suite.
+fn main() -> Int {
+  let identityCalls: Sync.Cell[Array[Str]] = Sync.cell([])
+  let gateway = Gateway.over(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+      let _kept = Sync.set(&identityCalls, Result.unwrapOr(Sync.get(&identityCalls), []).push(request.uri + " " + bodyOf(&request)))
+      if request.uri.contains("grant_type=id_token") {
+        return Ok(Response.answer(&request, 200).withJson(&Json.object(&[("access_token", Json.Text(accessToken())), ("refresh_token", Json.Text("refresh-1"))])))
+      }
+      Ok(Response.answer(&request, 200).withJson(&Json.Null))
+    }, "https://project.example.test", "fixture")
+  let googleCalls: Sync.Cell[Array[Str]] = Sync.cell([])
+  let google = Google.over(Client.create(fn(request: Request.Request, _cancel: Cancel.Token) -> Result[Response.Response, HttpClient.Failure] {
+        let _kept = Sync.set(&googleCalls, Result.unwrapOr(Sync.get(&googleCalls), []).push(request.uri + " " + bodyOf(&request)))
+        Ok(Response.answer(&request, 200).withJson(&Json.object(&[("id_token", Json.Text("google-id-token")), ("access_token", Json.Text("unused"))])))
+      }))
+  let plain = Runtime.over(gateway, Bytes.fromText("01234567890123456789012345678901"), "https://example.test")
+  let branded = Runtime.Runtime{..plain, google: Some(google)}
+
+  let fallback = Accounts.startProvider(&plain, "google", "/e/fiesta")
+  let started = Accounts.startProvider(&branded, "google", "/e/fiesta")
+  let (address, flow) = Result.unwrapOr(started, ("", Session.Flow{verifier: "", returnTo: "", purpose: ""}))
+  let finished = Accounts.finish(&branded, "code-1", &flow)
+  let sentToGoogle = Result.unwrapOr(Sync.get(&googleCalls), []).join("\n")
+  let sentToIdentity = Result.unwrapOr(Sync.get(&identityCalls), []).join("\n")
+  let grant = Result.unwrapOr(Sync.get(&identityCalls), []).filter(|call: Str| call.contains("grant_type=id_token"))
+  let nonceParts = if grant.isEmpty() { [] } else { grant[0].split("\"nonce\":\"") }
+  let rawNonce = if nonceParts.length() < 2 { "" } else { nonceParts[1].split("\"")[0] }
+
+  let checks = Test.suite("Google sign-in on the site's address", &[
+      Test.that("without site credentials the identity provider's address is used", Result.unwrapOr(Result.map(fallback, |pair: (Str, Session.Flow)| pair[0].startsWith("https://project.example.test/auth/v1/authorize?provider=google") && pair[1].purpose == Session.SIGN_IN), false)),
+      Test.that("with site credentials Google is asked directly and returns to this site", address.startsWith("https://accounts.google.com/o/oauth2/v2/auth?client_id=client-test") && param(address, "redirect_uri") == "https://example.test/auth/google/callback"),
+      Test.that("the consent asks only for the OpenID scopes with PKCE", param(address, "scope") == "openid email profile" && param(address, "code_challenge_method") == "S256" && !param(address, "code_challenge").isEmpty()),
+      Test.equals("the flow is marked as the site's Google flow and keeps the return path", &(flow.purpose, flow.returnTo), &(Session.GOOGLE, "/e/fiesta")),
+      Test.that("the code is exchanged with the verifier, secret and same return address", sentToGoogle.contains("code=code-1") && sentToGoogle.contains("code_verifier=" + Url.encodeComponent(flow.verifier)) && sentToGoogle.contains("client_secret=secret-test") && sentToGoogle.contains("redirect_uri=" + Url.encodeComponent("https://example.test/auth/google/callback"))),
+      Test.that("the identity provider receives Google's ID token, not a code", sentToIdentity.contains("\"id_token\":\"google-id-token\"") && sentToIdentity.contains("\"provider\":\"google\"") && !sentToIdentity.contains("grant_type=pkce")),
+      Test.that("the raw nonce matches the hash Google was asked to sign", !rawNonce.isEmpty() && Crypto.sha256Hex(rawNonce) == param(address, "nonce") && rawNonce != flow.verifier),
+      Test.equals("the session belongs to the Google member", &Result.map(finished, |session: Session.Session| session.userId), &Ok("member-1")),
+      Test.that("an empty code is refused before any exchange", Result.isErr(&Accounts.finish(&branded, "", &flow)))
+    ])
+  let ran = Test.run(&checks)
+  for failure in Test.failuresOf(&ran) { let _reported = Io.writeErrorLine(failure) }
+  Test.report(&ran)
+}

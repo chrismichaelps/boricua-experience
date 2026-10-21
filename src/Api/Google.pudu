@@ -1,0 +1,76 @@
+/** @Api.Google.Client — Google sign-in on this site's own address, so Google's consent screen names the site */
+module Api.Google
+
+import Std.Json as Json
+import Std.Url as Url
+import Domain.Problem as Problem
+import PuduLangHttpClient.Client as Client
+import PuduLangHttpClient.Content as Content
+import PuduLangHttpClient.Factory.Builder as Builder
+import PuduLangHttpClient.Factory.Builder {Configuring}
+import PuduLangHttpClient.Factory as Factory
+import PuduLangHttpClient as HttpClient
+import PuduLangHttpClient.Request as Request
+import PuduLangHttpClient.Request {Shaping}
+import PuduLangHttpClient.Response as Response
+import Utils.Wire as Wire
+
+/** @Api.Google.Google — the token client and this site's OAuth client credentials */
+export type Google = { http: Client.Client, clientId: Str, clientSecret: Str }
+
+/** @Api.Google.GoogleTokenAnswer — the part of Google's token answer the site keeps */
+type GoogleTokenAnswer = { @json("id_token") idToken: Str } derives Json.Decode
+
+/// Where Google asks the visitor to choose an account.
+const AUTHORIZE: Str = "https://accounts.google.com/o/oauth2/v2/auth"
+/// Google's token origin and path.
+const TOKEN_BASE: Str = "https://oauth2.googleapis.com/"
+const TOKEN_PATH: Str = "token"
+/// Milliseconds a token exchange may take.
+const TIMEOUT_MILLIS: Int = 8000
+/// The client name in the factory.
+const CLIENT_NAME: Str = "google"
+
+/// The client for configured credentials, or nothing when the site has none and Google sign-in goes
+/// through the identity provider's own address instead.
+export fn create(clientId: Str, clientSecret: Str) -> Result[Option[Google], Str] {
+  if clientId.trim().isEmpty() || clientSecret.trim().isEmpty() { return Ok(None) }
+  let builder = Builder.named(CLIENT_NAME).withBaseAddress(TOKEN_BASE).withTimeout(TIMEOUT_MILLIS)
+  match Factory.build([builder]) {
+    case Ok(factory) => Ok(Some(Google{http: Factory.createClient(&factory, CLIENT_NAME), clientId: clientId.trim(), clientSecret: clientSecret.trim()}))
+    case Err(invalid) => Err(Factory.explain(&invalid))
+  }
+}
+
+/// A client over a stub transport, for tests.
+export fn over(http: Client.Client) -> Google { Google{http: http.withBaseAddress(TOKEN_BASE), clientId: "client-test", clientSecret: "secret-test"} }
+
+/// The consent address: an authorization code for the OpenID scopes, proven later with the PKCE
+/// verifier, and an ID token that will carry `nonceHash`.
+export fn authorizeUrl(google: &Google, redirectUri: Str, challenge: Str, nonceHash: Str) -> Str {
+  AUTHORIZE + "?client_id=" + Url.encodeComponent(google.clientId)
+    + "&redirect_uri=" + Url.encodeComponent(redirectUri)
+    + "&response_type=code&scope=" + Url.encodeComponent("openid email profile")
+    + "&code_challenge=" + Url.encodeComponent(challenge) + "&code_challenge_method=S256"
+    + "&nonce=" + Url.encodeComponent(nonceHash)
+    + "&prompt=select_account"
+}
+
+/// The ID token for a returned code, proven with the flow's verifier.
+export fn exchange(google: &Google, code: Str, verifier: Str, redirectUri: Str) -> Result[Str, Problem.Problem] {
+  let fields = [("code", code), ("client_id", google.clientId), ("client_secret", google.clientSecret), ("redirect_uri", redirectUri), ("grant_type", "authorization_code"), ("code_verifier", verifier)]
+  let request = Request.post(TOKEN_PATH, Content.form(&fields)).accepting("application/json")
+  let response = match Client.send(&google.http, request) {
+    case Ok(found) => found
+    case Err(failure) => { return Err(Problem.Unavailable("google: " + HttpClient.describe(&failure))) }
+  }
+  if !Response.isSuccess(&response) { return Err(Problem.Refused("flow_expired")) }
+  let answer: GoogleTokenAnswer = match Response.json(&response) {
+    case Ok(document) => match Wire.decode(&document) {
+      case Ok(found) => found
+      case Err(_) => { return Err(Problem.Unavailable("google: unreadable answer")) }
+    }
+    case Err(_) => { return Err(Problem.Unavailable("google: unreadable answer")) }
+  }
+  if answer.idToken.isEmpty() { Err(Problem.Refused("flow_expired")) } else { Ok(answer.idToken) }
+}

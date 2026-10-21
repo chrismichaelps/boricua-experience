@@ -15,7 +15,7 @@ out="$root/test/Fixtures/message-keys.txt"
     report.spam report.scam report.unsafe report.minors report.offensive report.other \
     notification.request_received notification.request_approved notification.request_rejected \
     notification.event_reminder notification.event_changed notification.event_cancelled notification.waitlist_promoted notification.event_held; do echo "$family"; done
-  for family in quick.today quick.weekend quick.free quick.family quick.night quick.outdoor quick.accessible quick.near; do echo "$family"; done
+  for family in quick.today quick.weekend quick.free quick.family quick.night quick.outdoor quick.indoor quick.accessible quick.near; do echo "$family"; done
   for family in plan.when.today plan.when.tomorrow plan.when.weekend plan.style.mixed plan.style.free plan.style.family plan.style.adventure plan.style.culture plan.mode.local plan.mode.visitor; do echo "$family"; done
   for counted in interest.going interest.interested digest.unread achievements.showcase_count admin.open_reports event.waitlist_ahead event.going event.more_dates place.reviews event.spots_left event.going_title event.more_people event.manage_requests \
     profile.events_hosted profile.guests_hosted profile.upcoming profile.likes; do echo "$counted.one"; echo "$counted.other"; done

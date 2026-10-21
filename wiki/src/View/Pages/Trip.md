@@ -38,7 +38,8 @@ drew. The page and its script follow the plan live.
   completed trips feed the trip achievements ([[src/Database/Achievements]]). Unconfirmed arrivals are
   retried every 30 seconds while the visitor stays at the stop.
 - Progress and route choices are kept in the browser for the day, so a reload resumes the trip.
-- Map tools (3D and compass; turn arrows only with a pointer) sit in one narrow column, and the camera
+- Map tools (3D, the round drag compass and the full-screen expand, which keeps following the
+  visitor while a trip is live) sit in one narrow column, and the camera
   keeps that edge clear so the route is never drawn under them. On phones the tab bar steps aside.
 
 ## Referenced by

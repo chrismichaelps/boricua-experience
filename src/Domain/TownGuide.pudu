@@ -26,6 +26,18 @@ export type ClimateSource = {
 /** @Domain.TownGuide.TownCategory — how many places and upcoming activities a category has in town */
 export type TownCategory = { slug: Str, places: Int, activities: Int } derives Json.Decode
 
+/** @Domain.TownGuide.TownReview — one recent published review of a place in town */
+export type TownReview = {
+  rating: Int,
+  body: Str,
+  companions: Option[Str],
+  @json("visited_on") visitedOn: Option[Str],
+  @json("created_at") createdAt: Str,
+  author: Str,
+  @json("place_slug") placeSlug: Str,
+  @json("place_name") placeName: Str
+} derives Json.Decode
+
 /** @Domain.TownGuide.TownGuide — a town's guide as the database answers it */
 export type TownGuide = {
   town: Str,
@@ -33,7 +45,10 @@ export type TownGuide = {
   airport: Option[AirportAccess],
   climate: Array[ClimateMonth],
   @json("climate_source") climateSource: Option[ClimateSource],
-  categories: Array[TownCategory]
+  categories: Array[TownCategory],
+  @json("review_count") reviewCount: Option[Int],
+  @json("review_average") reviewAverage: Option[Float64],
+  reviews: Option[Array[TownReview]]
 } derives Json.Decode
 
 /// How many months the guide recommends.

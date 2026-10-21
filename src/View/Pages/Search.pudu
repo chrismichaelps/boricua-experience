@@ -3,6 +3,7 @@ module View.Pages.Search
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
+import Std.Json as Json
 import Std.Html as Html
 import Std.Option as Option
 import Std.Url as Url
@@ -23,6 +24,7 @@ import View.Components.Hero as Hero
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Components.PlaceCard as PlaceCard
+import View.Components.Reviews as Reviews
 import View.Components.Search as SearchControls
 import View.Components.TownGuide as TownGuidePanel
 import View.Frame as Frame
@@ -110,6 +112,7 @@ fn quickFilters(frame: &Frame.Frame, filters: &Search.Filters, landing: &Landing
       chip("family", "users", filters.traits.contains("family"), marked("family")),
       chip("night", "moon", filters.traits.contains("night"), marked("night")),
       chip("outdoor", "mountain", filters.traits.contains("outdoor"), marked("outdoor")),
+      chip("indoor", "rain", filters.traits.contains("indoor"), marked("indoor")),
       chip("accessible", "accessible", filters.traits.contains("accessible"), marked("accessible")),
       H.a().class("chip quick-chip").href(Routes.MAP + nearby + (if nearby.isEmpty() { "?" } else { "&" }) + "near=1").holding([Icons.sized("crosshair", 16), H.span().says(Frame.t(frame, "quick.near"))])
     ])
@@ -157,11 +160,36 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
     case Open => !Search.isNarrowed(filters)
     case _ => filters.after.isEmpty()
   }
-  let crumbs = match landing {
-    case Open => []
-    case _ => [Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (title, path)])]
+  // A town with a featured destination photograph opens with it, like the open search.
+  let townScene = match landing {
+    case ForTown(town) => catalog.scenes.filter(|candidate: Catalog.Scene| candidate.town == town.slug)
+    case _ => []
   }
-  let meta = Seo.Meta{..Seo.meta(title, description, path, indexable), structured: crumbs}
+  let listed = page.items.map(|card: Event.Card| (Event.titleFor(&card, frame.locale == Locale.En), Routes.EVENT_PREFIX + card.slug)).concat(places.items.map(|place: Place.Listing| (place.name, Routes.PLACE_PREFIX + place.slug)))
+  var structured: Array[Json.Json] = []
+  match landing {
+    case Open => {}
+    case _ => {
+      structured = structured.push(Seo.breadcrumbs(frame.siteUrl, &[(Frame.t(frame, "nav.explore"), Routes.HOME), (title, path)]))
+      if indexable && !listed.isEmpty() { structured = structured.push(Seo.itemList(frame.siteUrl, title, &listed)) }
+    }
+  }
+  match (*landing, guide) {
+    case (ForTown(town), Some(found)) => {
+      let asked = TownGuidePanel.questions(frame, catalog, &town, &found)
+      if indexable && !asked.isEmpty() { structured = structured.push(Seo.faq(&asked)) }
+    }
+    case _ => {}
+  }
+  match landing {
+    case ForTown(town) => { structured = structured.push(Seo.destination(frame.siteUrl, town.name, path, town.lat, town.lng, if townScene.isEmpty() { "" } else { townScene[0].image })) }
+    case _ => {}
+  }
+  let headTitle = match landing {
+    case ForTown(town) => Frame.tf(frame, "search.town_head_title", &[("town", town.name)])
+    case _ => title
+  }
+  let meta = Seo.Meta{..Seo.meta(headTitle, description, path, indexable), structured: structured}
   let activeCategory = match landing {
     case ForCategory(category) => category.slug
     case _ => filters.category
@@ -172,8 +200,8 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
   }
   // The first page of the default listing is the quality ranking, so its places carry their position.
   let ranked = !continuingPlaces && filters.sort == Search.Soon && places.items.length() > 1
-  let photographic = *landing == Open && !catalog.scenes.isEmpty()
-  let scene = if photographic { catalog.scenes[0] } else { Catalog.Scene{image: "", captionEs: "", captionEn: "", town: ""} }
+  let photographic = (*landing == Open && !catalog.scenes.isEmpty()) || !townScene.isEmpty()
+  let scene = if !townScene.isEmpty() { townScene[0] } else if photographic { catalog.scenes[0] } else { Catalog.Scene{image: "", captionEs: "", captionEn: "", town: ""} }
   Layout.page(frame, &meta, Layout.Explore, H.div().class("search-page").holding([
         if photographic {
           H.section().class("search-hero").holding([
@@ -182,7 +210,10 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
               H.a().class("search-hero-place").href(Routes.TOWN_PREFIX + scene.town).says(if frame.locale == Locale.Es { scene.captionEs } else { scene.captionEn })
             ])
         } else { H.div().class("search-top").holding([SearchControls.pill(frame, catalog, filters)]) },
-        SearchControls.chips(frame, catalog, activeCategory),
+        SearchControls.chips(frame, catalog, activeCategory, match landing {
+            case ForTown(town) => town.slug
+            case _ => filters.municipality
+          }),
         H.div().id("search-results").class("results-head").holding([
             if photographic { H.h2().class("page-title").says(Frame.t(frame, "search.activities")) } else { H.h1().class("page-title").says(title) },
             H.div().class("results-actions").holding([
@@ -197,7 +228,7 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
           case _ => H.nothing()
         },
         match (*landing, guide) {
-          case (ForTown(town), Some(found)) => if continuingPlaces || !filters.after.isEmpty() { H.nothing() } else { TownGuidePanel.panel(frame, catalog, &town, &found) }
+          case (ForTown(town), Some(found)) => if continuingPlaces || !filters.after.isEmpty() { H.nothing() } else { H.nothing().holding([TownGuidePanel.panel(frame, catalog, &town, &found), Reviews.townVoices(frame, town.name, &found)]) }
           case _ => H.nothing()
         },
         if page.items.isEmpty() && places.items.isEmpty() {

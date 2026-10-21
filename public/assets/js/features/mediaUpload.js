@@ -1,8 +1,9 @@
 import { postJson, RequestFailed } from '../net/http.js?v=80';
+import { staged, clear } from './coverStage.js?v=96';
 
 const SIDE = 1600;
 const QUALITY = 0.85;
-const MAX_BYTES = 3145728;
+export const MAX_BYTES = 3145728;
 const PDF = 'application/pdf';
 
 async function decode(file) {
@@ -27,7 +28,7 @@ export function fitted(width, height, side = SIDE) {
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
 }
 
-async function preparePhoto(file) {
+export async function preparePhoto(file) {
   const source = await decode(file);
   const size = fitted(source.width, source.height);
   const canvas = document.createElement('canvas');
@@ -55,6 +56,15 @@ export function refusal(form, error) {
   return form.dataset.failed;
 }
 
+// Declares the file, sends it straight to storage, then asks the server to verify it.
+async function deliver(form, body, label, send) {
+  if (body.size > MAX_BYTES) throw new Error('media_too_large');
+  const ticket = await postJson(form.action, { kind: form.dataset.kind, mediaType: body.type, bytes: body.size, label });
+  const stored = await send(ticket.uploadUrl, { method: 'PUT', headers: { 'content-type': body.type, 'x-upsert': 'false', apikey: ticket.apiKey }, body });
+  if (!stored.ok) throw new Error('upload');
+  await postJson(ticket.finishUrl, {});
+}
+
 export function mediaUpload(form, send = fetch, reload = () => location.reload()) {
   const input = form.querySelector('input[type="file"]');
   const label = form.querySelector('input[name="label"]');
@@ -71,11 +81,7 @@ export function mediaUpload(form, send = fetch, reload = () => location.reload()
       // Some systems report no type for a PDF; its extension decides, and the server reads the bytes anyway.
       const pdf = file.type === PDF || (!file.type && /\.pdf$/i.test(file.name || ''));
       const body = file.type === PDF ? file : pdf ? new Blob([file], { type: PDF }) : await preparePhoto(file);
-      if (body.size > MAX_BYTES) throw new Error('media_too_large');
-      const ticket = await postJson(form.action, { kind: form.dataset.kind, mediaType: body.type, bytes: body.size, label: label?.value.trim() ?? '' });
-      const stored = await send(ticket.uploadUrl, { method: 'PUT', headers: { 'content-type': body.type, 'x-upsert': 'false', apikey: ticket.apiKey }, body });
-      if (!stored.ok) throw new Error('upload');
-      await postJson(ticket.finishUrl, {});
+      await deliver(form, body, label?.value.trim() ?? '', send);
       reload();
     } catch (error) {
       status.textContent = refusal(form, error);
@@ -83,4 +89,24 @@ export function mediaUpload(form, send = fetch, reload = () => location.reload()
       form.setAttribute('aria-busy', 'false');
     }
   });
+  if (form.dataset.kind === 'cover' && new URLSearchParams(location.search || '').has('pending')) sendStaged(form, status, send);
+}
+
+// A listing just saved with a photograph chosen on its form: the cover page sends that photograph
+// and returns to the listing. Without one (another browser, or it expired) the page simply stays.
+async function sendStaged(form, status, send) {
+  const done = document.querySelector('.menu-back')?.href;
+  history.replaceState(null, '', location.pathname);
+  const body = await staged();
+  if (!body) return;
+  form.setAttribute('aria-busy', 'true');
+  status.textContent = form.dataset.pending || form.dataset.working;
+  try {
+    await deliver(form, body, '', send);
+    await clear();
+    if (done) location.replace(done); else location.reload();
+  } catch (error) {
+    status.textContent = refusal(form, error);
+    form.setAttribute('aria-busy', 'false');
+  }
 }

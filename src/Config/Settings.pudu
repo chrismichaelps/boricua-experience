@@ -25,6 +25,8 @@ export type Settings = {
   @env("BORICUA_OPENROUTER_KEY") @default("") @secret openRouterKey: Secret.Secret,
   @env("CRON_SECRET") @default("") @secret cronSecret: Secret.Secret,
   @env("BORICUA_FAILURE_LOG_URL") @default("") failureLogUrl: Str,
+  @env("BORICUA_GOOGLE_CLIENT_ID") @default("") googleClientId: Str,
+  @env("BORICUA_GOOGLE_CLIENT_SECRET") @default("") @secret googleClientSecret: Secret.Secret,
   @env("BORICUA_RESEND_KEY") @default("") @secret resendKey: Secret.Secret,
   @env("BORICUA_CONTACT_TO") @default("") @secret contactTo: Secret.Secret,
   @env("BORICUA_MAIL_FROM") @default("Boricua Experience <hola@boricuaexperience.com>") mailFrom: Str,

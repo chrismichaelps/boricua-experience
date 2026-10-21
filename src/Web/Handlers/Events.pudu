@@ -130,11 +130,18 @@ fn refused(app: &Assembly.App, visitor: &Context.Visitor, mode: &EventForm.Mode,
   }
 }
 
+/// Where a saved listing opens: its cover page, which sends the photograph the form staged in the
+/// browser, or the listing itself.
+fn landing(fields: &Map[Str, Str], listing: Str, cover: Str) -> Str {
+  if Form.flag(fields, "coverUpload") { cover + "?pending=1" } else { listing }
+}
+
 /// Publishes the posted draft and opens its page.
 fn publish(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
-  let draft = draftOf(&Serve.fields(visitor))
+  let fields = Serve.fields(visitor)
+  let draft = draftOf(&fields)
   match Serve.ask(app, &app.kinds.publish, Serve.signed(session, draft)) {
-    case Ok(published) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + published.slug), if published.coverSaved { "flash.published" } else { "flash.cover_not_saved" })
+    case Ok(published) => Respond.withFlash(app, Respond.redirect(landing(&fields, Routes.EVENT_PREFIX + published.slug, Routes.EVENT_PREFIX + published.slug + "/cover")), if published.coverSaved { "flash.published" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &EventForm.Creating, &draft, &problem)
   }
 }
@@ -151,13 +158,14 @@ fn editForm(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Ses
 /// Saves the posted changes.
 fn update(app: &Assembly.App, visitor: &Context.Visitor, session: &Session.Session) -> Http.Response {
   let slug = Serve.param(visitor, "slug")
-  let draft = draftOf(&Serve.fields(visitor))
+  let fields = Serve.fields(visitor)
+  let draft = draftOf(&fields)
   let event = match Serve.ask(app, &app.kinds.editable, Serve.signed(session, slug)) {
     case Ok((found, _)) => found
     case Err(problem) => { return Respond.problem(app, visitor, &problem) }
   }
   match Serve.ask(app, &app.kinds.update, Serve.signed(session, Messages.Edit{eventId: event.card.id, draft: draft})) {
-    case Ok(saved) => Respond.withFlash(app, Respond.redirect(Routes.EVENT_PREFIX + saved.slug), if saved.coverSaved { "flash.updated" } else { "flash.cover_not_saved" })
+    case Ok(saved) => Respond.withFlash(app, Respond.redirect(landing(&fields, Routes.EVENT_PREFIX + saved.slug, Routes.EVENT_PREFIX + saved.slug + "/cover")), if saved.coverSaved { "flash.updated" } else { "flash.cover_not_saved" })
     case Err(problem) => refused(app, visitor, &EventForm.Editing(slug), &draft, &problem)
   }
 }

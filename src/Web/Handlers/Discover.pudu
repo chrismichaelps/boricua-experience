@@ -76,6 +76,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.get(Routes.SEARCH, Serve.page(app, |visitor: Context.Visitor| listing(&held, &visitor, SearchPage.Open, filtersOf(&visitor)))),
     Route.get(Routes.CATEGORY, Serve.page(app, |visitor: Context.Visitor| landingPage(&held, &visitor, true))),
     Route.get(Routes.TOWN, Serve.page(app, |visitor: Context.Visitor| landingPage(&held, &visitor, false))),
+    Route.get(Routes.NEAR_ME, Serve.page(app, |visitor: Context.Visitor| nearMe(&held, &visitor))),
     Route.get(Routes.MAP, Serve.page(app, |visitor: Context.Visitor| map(&held, &visitor))),
     Route.get(Routes.API_SUGGEST, Serve.api(app, |visitor: Context.Visitor| suggest(&held, &visitor))),
     Route.get(Routes.API_MAP, Serve.api(app, |visitor: Context.Visitor| viewport(&held, &visitor))),
@@ -283,6 +284,25 @@ fn suggest(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
                 ("href", Json.Text(Routes.EVENT_PREFIX + card.slug))
               ])))), headers: [("content-type", "application/json; charset=utf-8"), ("cache-control", "public, max-age=0, s-maxage=60")] }
     case Err(problem) => Respond.problem(app, visitor, &problem)
+  }
+}
+
+/// "Nearby": the guide of the town around the visitor's position. A position off the islands opens
+/// the search, and no position the map.
+fn nearMe(app: &Assembly.App, visitor: &Context.Visitor) -> Http.Response {
+  let lat = Geo.parseDegrees(Serve.query(visitor, "lat"))
+  let lng = Geo.parseDegrees(Serve.query(visitor, "lng"))
+  let (atLat, atLng) = match (lat, lng) {
+    case (Some(a), Some(b)) => (a, b)
+    case _ => { return Respond.redirect(Routes.MAP) }
+  }
+  let catalog = match Serve.ask(app, &app.kinds.catalog, ()) {
+    case Ok(found) => found
+    case Err(problem) => { return Respond.problem(app, visitor, &problem) }
+  }
+  match Catalog.nearestTown(&catalog, atLat, atLng) {
+    case Some(town) => Respond.redirect(Routes.TOWN_PREFIX + town.slug)
+    case None => Respond.redirect(Routes.SEARCH)
   }
 }
 

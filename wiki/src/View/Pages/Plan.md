@@ -12,8 +12,9 @@ plans come first on phones. Each plan shows numbered stops with arrive–leave t
 each, a map with the road route (dashed where only an estimate exists), and WhatsApp, share and calendar
 actions. Any choice rebuilds the plans at once with the old ones dimmed while the next page loads; maps
 draw as they scroll into view. Every plan map has a 3D switch: it tilts the whole route without
-zooming into its middle, and the compass (turn arrows with a pointer) turns the camera; the tools sit in
-a narrow column the route is framed to avoid. "Start trip" opens the plan as a live trip
+zooming into its middle, and one round compass turns the camera (drag to turn, tap for north, arrow
+keys step); an expand button opens the map over the whole screen and frames the route again (the same
+button or Escape closes it). The tools sit in a narrow column the route is framed to avoid. "Start trip" opens the plan as a live trip
 ([[src/View/Pages/Trip]]). The home page invites to plans right under the search chips with a plain card
 like the chips around it.
 

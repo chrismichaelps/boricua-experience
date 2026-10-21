@@ -14,3 +14,6 @@ No file goes to the site function; no upsert.
 See [[decisions/ADR-0012-place-media]].
 ## Referenced by
 [[src/_MOC]]
+
+## Staged cover · #176
+`preparePhoto` and `MAX_BYTES` are exported for the cover picker. The declare → store → verify steps live in `deliver`; on a cover uploader opened with `?pending=1`, `sendStaged` sends the photograph staged by [[src/View/Components/CoverPicker]], clears it and replaces the page with the listing (the `.menu-back` link).

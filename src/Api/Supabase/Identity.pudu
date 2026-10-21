@@ -154,6 +154,13 @@ export fn signOut(gateway: &Gateway.Gateway, token: Str) -> Result[(), Problem.P
   command(gateway, Request.post(Supabase.AUTH_PATH + Supabase.AUTH_LOGOUT + "?scope=local", Content.empty()).withBearer(token))
 }
 
+/// Tokens for a provider's ID token that this site obtained itself, bound to the raw nonce whose
+/// SHA-256 the provider signed into the token.
+export fn idTokenGrant(gateway: &Gateway.Gateway, provider: Str, idToken: Str, nonce: Str) -> Result[Session.Tokens, Problem.Problem] {
+  let body = Json.object(&[("provider", Json.Text(provider)), ("id_token", Json.Text(idToken)), ("nonce", Json.Text(nonce))])
+  exchange(gateway, Request.post(Supabase.AUTH_PATH + Supabase.AUTH_TOKEN + "?grant_type=id_token", Content.json(&body)))
+}
+
 /// The address that starts a sign-in with an external provider and returns to `redirectTo`.
 export fn authorizeUrl(gateway: &Gateway.Gateway, provider: Str, redirectTo: Str, challenge: Str) -> Str {
   gateway.base + "/" + Supabase.AUTH_PATH + Supabase.AUTH_AUTHORIZE + "?provider=" + Url.encodeComponent(provider)

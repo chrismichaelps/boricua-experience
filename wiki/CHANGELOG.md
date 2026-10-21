@@ -1,5 +1,23 @@
 # Changelog
 
+- 2026-10-20 · device pass · checked 344–860 px phones, Fold cover/open, dual-screen inner/outer and phone landscape: no page overflow. Live trips on short landscape screens put the map beside the stops (the map was 109 px tall); on two-segment screens card grids take an even column count with the fold as the gap and the trip map and stops sit on separate screens; asset96.
+
+- 2026-10-20 · town voices and questions · town guides show the newest reviews of their places with the town's average, and up to three questions answered from their own data with FAQPage markup (private migration 20261020051000_town_reviews, development applied); asset95 · issue #178.
+
+- 2026-10-20 · rainy-day filter · new "Bajo techo / Indoors" quick trait: organizer-stated not outdoors, or workshops, technology and shopping by default; search, map and series honour it (private migration 20261020050000_indoor_trait, applied to development; production before the release) · issue #178.
+
+- 2026-10-20 · richer town guides · featured towns open with their photograph, category chips keep the town, head titles name Puerto Rico, and pages carry ItemList and TouristDestination structured data · issue #178.
+
+- 2026-10-20 · Nearby in search · the empty search box offers "Cerca de mí" (opens the nearest town guide from a position rounded to ~1 km) and recently viewed or featured towns; `/cerca` redirect; asset94 · issue #178.
+
+- 2026-10-20 · Google sign-in on the site's address · with `BORICUA_GOOGLE_CLIENT_ID/SECRET` set, Google returns to /auth/google/callback and its ID token is exchanged with the identity provider, so the consent screen names boricuaexperience.com instead of the provider; unset keeps the old flow. [[src/Api/Google]] · issue #177.
+
+- 2026-10-20 · split-screen sign-in and sign-up · half-screen real photographs (Playa Flamenco, Faro Los Morrillos, Rincón; CC BY/BY-SA, credited on the page) beside the form, a photo band on phones and a lined divider · issue #177.
+
+- 2026-10-20 · own cover photographs · the activity and place forms offer a "Your photo" tile: the photo is resized and stripped of metadata in the browser, previewed, and uploaded from the cover page right after publishing; asset93 · issue #176.
+
+- 2026-10-20 · round route compass and full-screen route maps · plan and trip maps show one round drag compass instead of a tall arrow pill, and an expand button opens the route over the whole screen (Escape closes); asset92 · issue #175.
+
 - 2026-10-19 · release0.14.2 · unknown admission moves from narrow photo badges to card metadata; known/free badges are unchanged.21 suites/756 assertions and all browser harnesses pass. [[handoffs/admission-label]] · issue #171.
 
 - 2026-10-19 · card admission label · unknown prices render as quiet metadata instead of wrapping across map thumbnails; explicit free/paid image badges retain their existing appearance. [[handoffs/admission-label]] · issue #171.
