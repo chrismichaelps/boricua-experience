@@ -3,6 +3,11 @@ module I18n.EnMenu
 
 /// English menu messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("gallery.close", "Close gallery"),
+    ("gallery.reviews", "Reviews of this place"),
+    ("gallery.no_reviews", "No visitor reviews yet. Share your visit to help the next person."),
+    ("gallery.choose_image", "Choose an image"),
+
     ("menu.changed", "This menu changed while you were editing. Your draft is preserved; review the current version before saving again."),
     ("menu.invalid", "Check the menu details. One of the values is invalid."),
     ("menu.unsupported", "This category does not support menus. You can archive an existing menu."),

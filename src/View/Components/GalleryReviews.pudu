@@ -1,0 +1,49 @@
+module View.Components.GalleryReviews
+
+import Std.Html.Build {Building}
+import Std.Html.Build as H
+import Constants.Routes as Routes
+import Domain.Review as Review
+import I18n.Dates as Dates
+import I18n.Translate as Translate
+import Utils.Text as Text
+import Utils.Time as Time
+import View.Components.Avatar as Avatar
+import View.Frame as Frame
+
+/// Place opinions are independent of the selected image; only published previews belong here.
+export fn render(frame: &Frame.Frame, slug: Str, board: &Review.ReviewBoard) -> H.Node {
+  let published = board.highlights.filter(|review: Review.Review| review.status == "published")
+  let reviews = published.slice(0, if published.length() < 6 { published.length() } else { 6 })
+  H.aside().class("gallery-context").label(Frame.t(frame, "gallery.reviews")).holding([
+      H.div().class("gallery-context-heading").holding([
+          H.h3().says(Frame.t(frame, "gallery.reviews")),
+          if board.count > 0 {
+            H.p().class("gallery-rating").holding([
+                match board.average { case Some(average) => H.strong().says(show(average) + " / 5") case None => H.nothing() },
+                H.span().class("muted small").says(Translate.count(&frame.locale, "place.reviews", board.count))
+              ])
+          } else { H.nothing() }
+        ]),
+      if reviews.isEmpty() { H.p().class("muted gallery-no-reviews").says(Frame.t(frame, "gallery.no_reviews")) } else {
+        H.div().class("gallery-reviews").holding(reviews.map(|review: Review.Review| H.article().class("gallery-review").holding([
+                H.div().class("review-author").holding([
+                    Avatar.face(review.author.displayName, review.author.avatarUrl, "sm"),
+                    H.div().holding([H.strong().says(review.author.displayName), H.p().class("muted small").says(when(frame, &review))])
+                  ]),
+                H.span().class("stars").role("img").label(Frame.tf(frame, "review.stars_label", &[("count", show(review.rating))])).holding([1, 2, 3, 4, 5].map(|n: Int| H.span().class(if n <= review.rating { "star star-on" } else { "star" }).at("aria-hidden", "true").says("★"))),
+                H.p().says(Text.truncate(review.body, 320)),
+                H.a().class("text-link").data("photo", "review-link").href(Routes.PLACE_PREFIX + slug + "#review-" + review.id).says(Frame.t(frame, "review.read_full"))
+              ])))
+      },
+      H.a().class("text-link gallery-read-all").data("photo", "review-link").href(Routes.PLACE_PREFIX + slug + "#reviews").says(Frame.t(frame, "review.read_all"))
+    ])
+}
+
+fn when(frame: &Frame.Frame, review: &Review.Review) -> Str {
+  let stamp = match review.visitedOn { case Some(day) => day + "T12:00:00Z" case None => review.createdAt }
+  match Time.parseTimestamp(stamp) {
+    case Some(at) => Dates.monthYear(&frame.locale, &Time.local(&at))
+    case None => ""
+  }
+}

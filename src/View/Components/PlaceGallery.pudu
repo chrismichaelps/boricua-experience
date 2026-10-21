@@ -3,11 +3,13 @@ module View.Components.PlaceGallery
 
 import Std.Html.Build {Building}
 import Std.Html.Build as H
+import Domain.Review as Review
+import View.Components.GalleryReviews as GalleryReviews
 import View.Components.Icons as Icons
 import View.Frame as Frame
 
 /// A cover-first mosaic, a complete no-script album, and a progressively enhanced viewer.
-export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: Str) -> H.Node {
+export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: Str, slug: Str, board: &Review.ReviewBoard) -> H.Node {
   var unique: Array[Str] = []
   for photo in *photos {
     if !unique.contains(photo) { unique = unique.push(photo) }
@@ -33,13 +35,21 @@ export fn render(frame: &Frame.Frame, photos: &Array[Str], fallback: Str, name: 
         ]),
       H.dialog().class("photo-viewer").label(label).holding([
           H.div().class("photo-viewer-bar").holding([
-              H.p().data("photo", "position").role("status").at("aria-live", "polite"),
-              H.button().kind("button").class("icon-button").data("photo", "close").label(Frame.t(frame, "search.close_picker")).holding([Icons.sized("x", 24)])
+              H.div().holding([H.h2().class("photo-viewer-title").says(name), H.p().class("muted small").data("photo", "position").role("status").at("aria-live", "polite")]),
+              H.button().kind("button").class("icon-button").data("photo", "close").label(Frame.t(frame, "gallery.close")).holding([Icons.sized("x", 24)])
             ]),
-          H.img().data("photo", "image").alt(label),
-          H.div().class("photo-viewer-controls").holding([
-              H.button().kind("button").class("button button-ghost").data("photo", "previous").says(Frame.t(frame, "place.photo_previous")),
-              H.button().kind("button").class("button button-ghost").data("photo", "next").says(Frame.t(frame, "place.photo_next"))
+          H.div().class("photo-viewer-layout").holding([
+              GalleryReviews.render(frame, slug, board),
+              H.div().class("photo-viewer-media").holding([
+                  H.div().class("photo-viewer-stage").data("photo", "stage").holding([
+                      H.img().data("photo", "image").alt(label).at("draggable", "false"),
+                      H.div().class("photo-viewer-controls").holding([
+                          H.button().kind("button").class("icon-button").data("photo", "previous").label(Frame.t(frame, "place.photo_previous")).holding([Icons.sized("chevron-left", 24)]),
+                          H.button().kind("button").class("icon-button").data("photo", "next").label(Frame.t(frame, "place.photo_next")).holding([Icons.sized("chevron-right", 24)])
+                        ])
+                    ]),
+                  H.nav().class("photo-thumbnails").label(Frame.t(frame, "gallery.choose_image")).holding((0..unique.length()).map(|index: Int| H.button().kind("button").data("photo-select", show(index)).label(Frame.tf(frame, "media.slide", &[("number", show(index + 1)), ("total", show(unique.length()))])).holding([H.img().src(unique[index]).alt("").at("width", "80").at("height", "60").at("loading", "lazy")])))
+                ])
             ])
         ])
     ])

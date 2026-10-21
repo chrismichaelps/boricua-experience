@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-21 · review gallery · contained photo stage with desktop review sidebar, phone photo-first context, current-thumbnail selection and horizontal swipe. Published place reviews only, bounded at six, truthful empty state and preserved modal/fallback behavior; asset100 · issue #191.
+
 - 2026-10-21 · release0.15.2 · compact phone map thumbnails beside details following live0.15.1 verification; reviewed PR189,22suites/773assertions and browser/timezone harnesses pass; asset99.
 
 - 2026-10-21 · compact phone map rows · keep96px source thumbnails beside titles/venue/admission, reduce list gaps and inset selected-image rings; asset99 · issue #188.

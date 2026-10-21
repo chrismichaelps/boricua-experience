@@ -35,6 +35,7 @@ import Utils.Wire as Wire
 import View.Calendar as Calendar
 import View.Components.EventCard as EventCard
 import View.Components.Form as Form
+import View.Components.GalleryReviews as GalleryReviews
 import View.Components.Hero as Hero
 import View.Components.Notice as Notice
 import View.Components.PhotoHeader as PhotoHeader
@@ -149,6 +150,7 @@ fn main() -> Int {
   let ownerMenu = Html.render(&MenuPage.render(&en, &fonda, &Menu.MenuBoard{..menus, isOwner: true}, &noMedia))
   let picturedMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &pictured))
   let picturedPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &ownerBoard, &None, &pictured, &Review.blank(), &None))
+  let spanishGallery = Html.render(&PlacePage.render(&es, &profiled, &fonda, &ownerBoard, &None, &pictured, &Review.blank(), &None))
   let bareMenu = Html.render(&MenuPage.render(&en, &fonda, &menus, &noMedia))
   let mediaManager = Html.render(&MediaPage.render(&en, &fonda, &pictured, true))
   let photoOnlyManager = Html.render(&MediaPage.render(&es, &fonda, &Media.Gallery{isOwner: true, files: []}, false))
@@ -165,6 +167,11 @@ fn main() -> Int {
   let memberFrame = Frame.Frame{..en, member: Some(member), formToken: "t"}
   let memberPlace = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.blank(), &None))
   let highlightsPlace = Html.render(&PlacePage.render(&en, &profiled, &fonda, &Review.ReviewBoard{..board, highlights: board.items}, &None, &pictured, &Review.blank(), &None))
+  var galleryPreviews: Array[Review.Review] = []
+  for index in 0..8 { galleryPreviews = galleryPreviews.push(Review.Review{..board.items[0], id: "gallery-" + show(index), status: "published"}) }
+  galleryPreviews = galleryPreviews.push(Review.Review{..board.items[0], id: "hidden", status: "hidden", body: "PRIVATE-HIDDEN-GALLERY-CONTENT"})
+  let boundedGalleryReviews = Html.render(&GalleryReviews.render(&en, fonda.card.slug, &Review.ReviewBoard{..board, highlights: galleryPreviews}).html())
+  let hiddenGalleryReviews = Html.render(&GalleryReviews.render(&en, fonda.card.slug, &Review.ReviewBoard{..board, highlights: [Review.Review{..board.items[0], status: "hidden", body: "PRIVATE-HIDDEN-GALLERY-CONTENT"}]}).html())
   let refusedReview = Html.render(&PlacePage.render(&memberFrame, &profiled, &Place.Detail{..fonda, viewer: Place.Relation{signedIn: true, isOwner: false}}, &board, &None, &noMedia, &Review.ReviewDraft{rating: "", body: "corto", visited: "", companions: ""}, &Some(Problem.Invalid([Problem.FieldError{field: "rating", key: "review.rating_required"}, Problem.FieldError{field: "body", key: "review.body_length"}]))))
   let placePinJson = Json.encode(&MapPage.combinedPins(&en, &[], &[Place.Listing{..fonda.card, mapIconUrl: Some("/assets/listings/example.png")}]))
   let placeMap = Html.render(&MapPage.renderPlaces(&en, &[], &[fonda.card], false, false, &profiled, &Search.everything(), "/search"))
@@ -295,6 +302,9 @@ fn main() -> Int {
       Test.that("menu section links target stable IDs", menuReader.contains("href=\"#section-section-test\"") && menuReader.contains("id=\"section-section-test\"")),
 
       Test.that("reviews show the average, breakdown and each review", memberPlace.contains("Reviews") && memberPlace.contains("2 reviews") && memberPlace.contains("width:50%") && memberPlace.contains("Muy buen mofongo") && memberPlace.contains("Visited September 2026")),
+      Test.that("gallery pairs real images with independent published place opinions", highlightsPlace.contains("photo-viewer-layout") && highlightsPlace.contains("Reviews of this place") && highlightsPlace.contains("gallery-review") && highlightsPlace.contains("data-photo-select=\"1\"") && highlightsPlace.contains("Choose an image")),
+      Test.that("gallery review context is bounded and excludes hidden opinions", boundedGalleryReviews.split("class=\"gallery-review\"").length() == 7 && !boundedGalleryReviews.contains("PRIVATE-HIDDEN-GALLERY-CONTENT") && !hiddenGalleryReviews.contains("PRIVATE-HIDDEN-GALLERY-CONTENT") && hiddenGalleryReviews.contains("No visitor reviews yet")),
+      Test.that("gallery empty state is honest and localized", picturedPlace.contains("Reviews of this place") && picturedPlace.contains("No visitor reviews yet") && !picturedPlace.contains("class=\"gallery-review\"") && spanishGallery.contains("Opiniones sobre este lugar") && spanishGallery.contains("Cerrar galería")),
       Test.that("recent previews include all ratings and escaped review bodies", highlightsPlace.contains("Recent reviews") && highlightsPlace.contains("2 of 5 stars") && highlightsPlace.contains("&lt;script&gt;x&lt;/script&gt;") && !highlightsPlace.contains("<script>x</script>")),
       Test.that("preview anchors return to the first review page", highlightsPlace.contains("/lugar/la-fonda-4f1c7a#review-22222222-2222-4222-8222-222222222222") && highlightsPlace.contains("across all ratings")),
       Test.that("legacy and empty boards never invent review highlights", !memberPlace.contains("visitor-review-card") && board.highlights.isEmpty()),
