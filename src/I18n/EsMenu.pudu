@@ -3,6 +3,9 @@ module I18n.EsMenu
 
 /// Spanish menu messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("gallery.view_place", "Ver detalles del lugar"),
+    ("gallery.view_activity", "Ver detalles de la actividad"),
+
     ("gallery.close", "Cerrar galería"),
     ("gallery.reviews", "Opiniones sobre este lugar"),
     ("gallery.no_reviews", "Aún no hay opiniones de visitantes. Comparte tu visita para ayudar a quienes vengan después."),

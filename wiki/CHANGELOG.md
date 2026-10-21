@@ -1,5 +1,9 @@
 # Changelog
 
+- 2026-10-21 · release0.16.1 · shared photo viewer across place, activity and menu detail routes; reviewed PR196.22suites/781assertions and all browser/timezone harnesses pass; asset101; no migration.
+
+- 2026-10-21 · detail-wide gallery · reuse the photo/context viewer for activity covers and menu-header images across catalog categories, preserving place reviews and activity controls. Category art remains fallback; no extra query/schema change; asset101 · issue #195.
+
 - 2026-10-21 · release0.16.0 · responsive photo/review viewer, current thumbnails, keyboard and swipe navigation; reviewed PR192. Existing published-review/media projection; no migration.22suites/776assertions and browser/timezone harnesses pass; asset100.
 
 - 2026-10-21 · review gallery · contained photo stage with desktop review sidebar, phone photo-first context, current-thumbnail selection and horizontal swipe. Published place reviews only, bounded at six, truthful empty state and preserved modal/fallback behavior; asset100 · issue #191.

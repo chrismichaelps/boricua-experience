@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-function setup(count = 7, supported = true) {
+function setup(count = 7, supported = true, eventCover = false) {
   const element = () => ({ hidden: false, handlers: {}, addEventListener(name, fn) { this.handlers[name] = fn; }, focus() { this.focused = true; }, attrs: {}, setAttribute(k,v) { this.attrs[k]=v; }, removeAttribute(k) { delete this.attrs[k]; }, scrollIntoView() { this.scrolled=true; } });
   const image = { removeAttribute(name) { delete this[name]; } }, position = {};
   const previous = element(), next = element(), close = element(), stage = element(), reviewLink = element();
@@ -9,7 +9,7 @@ function setup(count = 7, supported = true) {
   const dialog = { ...element(), querySelectorAll(selector) { return selector==='[data-photo-select]'?thumbnails:[reviewLink]; }, open: false, showModal: supported ? function () { this.open = true; } : null, close() { this.open = false; this.handlers.close(); }, querySelector(selector) { return { '[data-photo="image"]': image, '[data-photo="position"]': position, '[data-photo="previous"]': previous, '[data-photo="next"]': next, '[data-photo="close"]': close, '[data-photo="stage"]': stage }[selector]; } };
   const summary = { ...element(), dataset: {} };
   const links = Array.from({ length: count }, (_, index) => ({ ...element(), dataset: { photoIndex: String(index) }, href: `https://example.test/${index}.jpg`, getAttribute() { return `Photo ${index + 1} of ${count}`; } }));
-  const root = { ...element(), querySelector() { return dialog; }, querySelectorAll() { return links; }, contains(link) { return link===summary || links.includes(link); } };
+  const root = { ...element(), querySelector() { return dialog; }, querySelectorAll(selector) { assert(selector.includes(eventCover ? '.event-cover-photo' : '.place-album-grid')); return links; }, contains(link) { return link===summary || links.includes(link); } };
   const document = { documentElement: { style: { overflow: 'clip' } } }, lifecycle = {};
   const scope = { document, window: { addEventListener(name, fn) { lifecycle[name] = fn; } } };
   vm.runInNewContext(readFileSync('public/assets/js/features/placeGallery.js', 'utf8').replace('export function', 'function') + '\nthis.start = placeGallery;', scope);
@@ -64,3 +64,9 @@ albumEntry.root.handlers.click({button:0,target:{closest:selector=>selector==='.
 assert(albumEntry.dialog.open);assert.equal(albumEntry.image.src,'https://example.test/0.jpg');
 albumEntry.dialog.close();assert(albumEntry.summary.focused);
 console.log('PASS: all-images entry opens the viewer and restores summary focus');
+
+const activityCover=setup(1,true,true);
+assert(activityCover.click(0).prevented && activityCover.dialog.open);
+activityCover.reviewLink.handlers.click({});assert(!activityCover.dialog.open);
+assert.equal(activityCover.document.documentElement.style.overflow,'clip');
+console.log('PASS: single activity-cover entry and factual context dismissal use the shared lifecycle');
