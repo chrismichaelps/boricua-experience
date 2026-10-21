@@ -56,3 +56,7 @@ SHALLOW.
 
 ## Activity covers Grill Log · #82
 Resolved: integrate all-category organizer covers with existing upload presentation and guarded mediator routes. Removal binds the route event; confirmation is server-only after reserved-file verification. Preserve existing place/menu behavior and shared limits.
+
+
+## Source image semantics · #185 — resolved Grill Log
+Listing galleries may contain source photographs, event artwork or official identifiers. Use neutral bilingual image labels, without presenting brand artwork as a photograph of a branch. Preserve upload controls and category-illustration fallbacks.

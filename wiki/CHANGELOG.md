@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-21 · source imagery and intrinsic framing · preserve small/square/portrait source artwork without stretching or cropping, retain landscape photo framing, and use neutral bilingual image labels. Official-source production image curation and BSNF schedule refresh retain private provenance/CSV; asset98 · issue #185.
+
 - 2026-10-20 · map admission correction · dynamic viewport cards retain unknown admission beside the image, matching initial HTML; zero/paid values remain thumbnail badges. Nullable numeric pin metadata and redraw regressions; asset97 · issue #183.
 
 - 2026-10-20 · production configuration verification · own-domain Google sign-in enabled and verified with the existing0.15.0 artifact; in-app notification trigger, reminder, inbox, preference and read-boundary checks passed in a rolled-back production audit. No application/schema change or fake notices. [[handoffs/production-auth-notifications]] · issue #181.

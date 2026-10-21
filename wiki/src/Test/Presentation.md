@@ -142,3 +142,7 @@ Google Search receives stable supported raster favicon URLs, independent of appl
 
 ## Unknown admission placement · #171 — resolved Grill Log
 Unknown admission remains explicit bilingual text but belongs in ordinary card metadata, not an image overlay that wraps over narrow map thumbnails. Only actual known amounts, including explicit zero/free, use the compact photo badge. Preserve category/photo images, source attribution, dates, navigation and accessibility text. Shared server-rendered markup covers initial and refreshed map cards as well as rails/grids/organizer lists; no CSS or database contract changes. Rendered regressions distinguish None from Some(0) and positive amounts.
+
+
+## Source image semantics · #185 — resolved Grill Log
+Listing galleries may contain source photographs, event artwork or official identifiers. Use neutral bilingual image labels, without presenting brand artwork as a photograph of a branch. Preserve upload controls and category-illustration fallbacks.

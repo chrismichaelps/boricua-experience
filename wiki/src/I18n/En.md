@@ -123,3 +123,7 @@ Resolved user sizing: discovery rotation is one44px circular compass, equal to t
 
 ## Place discovery Grill Log · #132
 Resolved: Match the Spanish place gallery/navigation/recent-review keys; user reviews remain in their original language.
+
+
+## Source image semantics · #185 — resolved Grill Log
+Listing galleries may contain source photographs, event artwork or official identifiers. Use neutral bilingual image labels, without presenting brand artwork as a photograph of a branch. Preserve upload controls and category-illustration fallbacks.
