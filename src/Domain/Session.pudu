@@ -28,6 +28,8 @@ export type Tokens = {
 /// Purposes of a flow: signing in, or recovering a password.
 export const SIGN_IN: Str = "signin"
 export const RECOVERY: Str = "recovery"
+/// A Google sign-in this site ran itself; its code is exchanged with Google, not the identity provider.
+export const GOOGLE: Str = "google"
 
 /// Whether a session was opened with an email and password.
 export fn usesPassword(session: &Session) -> Bool { session.provider == "email" }

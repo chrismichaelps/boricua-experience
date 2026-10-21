@@ -252,9 +252,6 @@ auth.or
 auth.password
 auth.password_guidance
 auth.password_hint
-auth.perk_plans
-auth.perk_reviews
-auth.perk_share
 auth.recover_google_note
 auth.recover_lead
 auth.recover_title

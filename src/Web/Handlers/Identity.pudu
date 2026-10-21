@@ -35,6 +35,7 @@ export fn routes(app: &Assembly.App) -> Array[Route.Route] {
     Route.post(Routes.SIGN_UP, Serve.action(app, |visitor: Context.Visitor| signUp(&held, &visitor))),
     Route.get(Routes.AUTH_GOOGLE, Serve.api(app, |visitor: Context.Visitor| google(&held, &visitor))),
     Route.get(Routes.AUTH_CALLBACK, Serve.api(app, |visitor: Context.Visitor| callback(&held, &visitor))),
+    Route.get(Routes.AUTH_GOOGLE_CALLBACK, Serve.api(app, |visitor: Context.Visitor| callback(&held, &visitor))),
     Route.get(Routes.RECOVER, Serve.page(app, |visitor: Context.Visitor| Respond.page(200, &AuthPage.recover(&Context.frame(&held, &visitor), &typed(&visitor, "", ""), &None)))),
     Route.post(Routes.RECOVER, Serve.action(app, |visitor: Context.Visitor| recover(&held, &visitor))),
     Route.get(Routes.RESET_PASSWORD, Serve.memberPage(app, |visitor: Context.Visitor, _session: Session.Session| Respond.page(200, &AuthPage.reset(&Context.frame(&held, &visitor), &None)))),

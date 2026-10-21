@@ -4,13 +4,14 @@ module Services.Runtime
 import Std.App.Secret as Secret
 import Std.Bytes as Bytes
 import Std.Sync as Sync
+import Api.Google as Google
 import Api.Mail as Mail
 import Api.Supabase.Gateway as Gateway
 import Config.Settings as Settings
 import Domain.Build as Build
 import Domain.Catalog as Catalog
 
-/** @Services.Runtime.Runtime — the gateway, the mailer, the session key, the site address, caches, and the running build */
+/** @Services.Runtime.Runtime — the gateway, the mailer, the Google client, the session key, the site address, caches, and the running build */
 export type Runtime = {
   gateway: Gateway.Gateway,
   assistantConfigured: Bool,
@@ -19,6 +20,7 @@ export type Runtime = {
   secureCookies: Bool,
   cronSecret: Str,
   mailer: Option[Mail.Mailer],
+  google: Option[Google.Google],
   contactTo: Str,
   catalog: Sync.Cell[Option[(Int, Catalog.Catalog)]],
   build: Build.Build
@@ -29,6 +31,7 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
   let gateway = Gateway.create(settings) ?
   let key = Settings.keyBytes(&settings.sessionKey) ?
   let mailer = Mail.create(Secret.reveal(&settings.resendKey), settings.mailFrom) ?
+  let google = Google.create(settings.googleClientId, Secret.reveal(&settings.googleClientSecret)) ?
   Ok(Runtime {
       gateway: gateway,
       assistantConfigured: !Secret.reveal(&settings.openRouterKey).isEmpty(),
@@ -37,6 +40,7 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
       secureCookies: Settings.isSecure(settings),
       cronSecret: Secret.reveal(&settings.cronSecret),
       mailer: mailer,
+      google: google,
       contactTo: Secret.reveal(&settings.contactTo).trim(),
       catalog: Sync.cell(None),
       build: Build.of(settings.buildVersion, settings.buildCommit, settings.buildHash, settings.buildTime)
@@ -45,5 +49,5 @@ export fn create(settings: &Settings.Settings) -> Result[Runtime, Str] {
 
 /// A runtime over a given gateway, for tests.
 export fn over(gateway: Gateway.Gateway, sessionKey: Bytes, siteUrl: Str) -> Runtime {
-  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", mailer: None, contactTo: "", catalog: Sync.cell(None), build: Build.development()}
+  Runtime{gateway: gateway, assistantConfigured: false, sessionKey: sessionKey, siteUrl: siteUrl, secureCookies: false, cronSecret: "", mailer: None, google: None, contactTo: "", catalog: Sync.cell(None), build: Build.development()}
 }

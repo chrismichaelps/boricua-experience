@@ -104,6 +104,7 @@ export const RECOVER: Str = "/recover"
 export const RESET_PASSWORD: Str = "/reset-password"
 export const AUTH_GOOGLE: Str = "/auth/google"
 export const AUTH_CALLBACK: Str = "/auth/callback"
+export const AUTH_GOOGLE_CALLBACK: Str = "/auth/google/callback"
 /// Age, terms, and privacy confirmation for accounts that have not given them.
 export const ONBOARDING: Str = "/welcome"
 export const ADMIN: Str = "/admin"
