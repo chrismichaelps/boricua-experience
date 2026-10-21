@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-20 · release0.15.0 · round route compass and full-screen route maps, own cover photos, split-screen sign-in/sign-up with credited Commons photographs, Google sign-in on the site's address (active once the client secret is set), Nearby search, town photo heroes, town-aware chips, Indoors filter, town review strip and questions, ItemList/TouristDestination/FAQPage data, landscape and dual-screen layouts; PR179. Private migrations 20261020050000_indoor_trait and 20261020051000_town_reviews recorded in both environments. 22 suites/773 assertions and all browser harnesses pass; asset96 · issues #175–#178.
+
 - 2026-10-20 · device pass · checked 344–860 px phones, Fold cover/open, dual-screen inner/outer and phone landscape: no page overflow. Live trips on short landscape screens put the map beside the stops (the map was 109 px tall); on two-segment screens card grids take an even column count with the fold as the gap and the trip map and stops sit on separate screens; asset96.
 
 - 2026-10-20 · town voices and questions · town guides show the newest reviews of their places with the town's average, and up to three questions answered from their own data with FAQPage markup (private migration 20261020051000_town_reviews, development applied); asset95 · issue #178.
