@@ -157,3 +157,7 @@ Resolved: anonymous shell version87 invalidates discovery styles; no authenticat
 
 ## Forum navigation Grill Log · #137
 Resolved: expose implemented forum in top navigation, both mobile account menus and community footer; load dedicated versioned forum styles. Anonymous shell advances to88 without caching discussion HTML. Existing tab bar and home-only assistant remain unchanged.
+
+
+## Admission cache correction · #183 — resolved Grill Log
+Asset/worker revision97 loads Explorer97. Unchanged imports retain their existing identities; private HTML and records remain network-only.

@@ -167,3 +167,7 @@ Resolved: expose implemented forum in top navigation, both mobile account menus 
 
 ## Cover completion asset revision — resolved Grill Log
 Revision91 refreshes category-switch draft preservation; no policy version changes.
+
+
+## Admission cache correction · #183 — resolved Grill Log
+Asset/worker revision97 loads Explorer97. Unchanged imports retain their existing identities; private HTML and records remain network-only.
