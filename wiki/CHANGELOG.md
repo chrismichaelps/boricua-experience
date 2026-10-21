@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-21 · release0.15.2 · compact phone map thumbnails beside details following live0.15.1 verification; reviewed PR189,22suites/773assertions and browser/timezone harnesses pass; asset99.
+
 - 2026-10-21 · compact phone map rows · keep96px source thumbnails beside titles/venue/admission, reduce list gaps and inset selected-image rings; asset99 · issue #188.
 
 - 2026-10-21 · release0.15.1 · source-image framing, neutral image labels, source credits and dynamic map admission placement; reviewed PR184/186. Production curated media405covers and27refreshed upcoming BSNF fixtures; no schema change; asset98.
