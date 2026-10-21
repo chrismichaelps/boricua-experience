@@ -4,6 +4,7 @@ module View.Components.Search
 import Std.Html.Build {Building}
 import Std.Html.Build as H
 import Std.Json as Json
+import Std.Url as Url
 import Constants.App as App
 import Constants.Limits as Limits
 import Constants.Routes as Routes
@@ -133,10 +134,11 @@ export fn pill(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters: &Search.
     ])
 }
 
-/// Horizontally scrolling category chips; the active one is marked.
-export fn chips(frame: &Frame.Frame, catalog: &Catalog.Catalog, active: Str) -> H.Node {
+/// Horizontally scrolling category chips; the active one is marked. Within a town, each chip opens
+/// the search for that category in the town instead of the island-wide category page.
+export fn chips(frame: &Frame.Frame, catalog: &Catalog.Catalog, active: Str, town: Str = "") -> H.Node {
   H.nav().class("chips").label(Frame.t(frame, "search.categories")).holding(catalog.categories.map(|category: Catalog.Category| {
-        var chip = H.a().class(if category.slug == active { "chip chip-active" } else { "chip" }).href(Routes.CATEGORY_PREFIX + category.slug).holding([Icons.sized(category.icon, 18), H.span().says(categoryName(frame, &category))])
+        var chip = H.a().class(if category.slug == active { "chip chip-active" } else { "chip" }).href(if town.isEmpty() { Routes.CATEGORY_PREFIX + category.slug } else { Routes.SEARCH + "?category=" + Url.encodeComponent(category.slug) + "&pueblo=" + Url.encodeComponent(town) }).holding([Icons.sized(category.icon, 18), H.span().says(categoryName(frame, &category))])
         if category.slug == active { chip = chip.at("aria-current", "page") }
         chip
       }))

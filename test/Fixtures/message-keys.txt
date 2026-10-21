@@ -1320,6 +1320,7 @@ search.sort
 search.submit
 search.title
 search.town_description
+search.town_head_title
 search.town_title
 search.what
 search.what_placeholder

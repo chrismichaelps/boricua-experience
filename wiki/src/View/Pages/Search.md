@@ -80,3 +80,6 @@ Resolved: place listings return a bounded24-item Results page and retain its nex
 
 ## Visitor discovery Grill Log · #148 — resolved
 Activities precede permanent places. The default first place page numbers its quality-ranked cards only when there are at least two; continuations remain unnumbered. Town landings optionally show their fresh guide on the initial activity/place page; read failure omits it, and canonical filters/cursors are preserved. Guide category links target that town's category results.
+
+## Town guides · #178
+A town guide whose town is a featured destination opens with that destination's photograph, like the open search. Its head title is "Qué hacer en <town>, Puerto Rico" (the H1 stays "Qué hacer en <town>"). Structured data: the breadcrumb, an `ItemList` of the listed activities and places in page order (indexable pages only), and a `TouristDestination` at the town's centre inside Puerto Rico. Category chips on a town guide (or a town-filtered search) open `/search?category=…&pueblo=…`, so a category never drops the town.

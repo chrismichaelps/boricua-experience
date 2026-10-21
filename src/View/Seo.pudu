@@ -157,6 +157,31 @@ export fn breadcrumbs(siteUrl: Str, trail: &Array[(Str, Str)]) -> Json.Json {
   Json.object(&[("@context", Json.Text("https://schema.org")), ("@type", Json.Text("BreadcrumbList")), ("itemListElement", Json.list(&items))])
 }
 
+/// The listed activities and places of a landing page, in page order, as an item list.
+export fn itemList(siteUrl: Str, name: Str, entries: &Array[(Str, Str)]) -> Json.Json {
+  var items: Array[Json.Json] = []
+  var position = 1
+  for entry in *entries {
+    items = items.push(Json.object(&[("@type", Json.Text("ListItem")), ("position", Json.Number(position)), ("name", Json.Text(entry[0])), ("url", Json.Text(siteUrl + entry[1]))]))
+    position = position + 1
+  }
+  Json.object(&[("@context", Json.Text("https://schema.org")), ("@type", Json.Text("ItemList")), ("name", Json.Text(name)), ("numberOfItems", Json.Number(items.length())), ("itemListElement", Json.list(&items))])
+}
+
+/// A municipality as a tourist destination in Puerto Rico, at its centre.
+export fn destination(siteUrl: Str, name: Str, path: Str, lat: Float64, lng: Float64, image: Str) -> Json.Json {
+  var fields = [
+    ("@context", Json.Text("https://schema.org")),
+    ("@type", Json.Text("TouristDestination")),
+    ("name", Json.Text(name)),
+    ("url", Json.Text(siteUrl + path)),
+    ("geo", Json.object(&[("@type", Json.Text("GeoCoordinates")), ("latitude", Json.Fractional(show(lat))), ("longitude", Json.Fractional(show(lng)))])),
+    ("containedInPlace", Json.object(&[("@type", Json.Text("AdministrativeArea")), ("name", Json.Text("Puerto Rico"))]))
+  ]
+  if !image.isEmpty() { fields = fields.push(("image", Json.Text(siteUrl + image))) }
+  Json.object(&fields)
+}
+
 /// `robots.txt`: everything public is crawlable; member and action addresses are not.
 export fn robots(siteUrl: Str) -> Str {
   [
