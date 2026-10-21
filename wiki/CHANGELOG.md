@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-10-21 · release0.15.1 · source-image framing, neutral image labels, source credits and dynamic map admission placement; reviewed PR184/186. Production curated media405covers and27refreshed upcoming BSNF fixtures; no schema change; asset98.
+
 - 2026-10-21 · source imagery and intrinsic framing · preserve small/square/portrait source artwork without stretching or cropping, retain landscape photo framing, and use neutral bilingual image labels. Official-source production image curation and BSNF schedule refresh retain private provenance/CSV; asset98 · issue #185.
 
 - 2026-10-20 · map admission correction · dynamic viewport cards retain unknown admission beside the image, matching initial HTML; zero/paid values remain thumbnail badges. Nullable numeric pin metadata and redraw regressions; asset97 · issue #183.
