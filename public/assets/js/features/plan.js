@@ -7,8 +7,8 @@ import { message } from '../constants/messages.js?v=80';
 import { toast } from './toast.js?v=80';
 import { createMap } from './mapLoader.js?v=80';
 import { getJson } from '../net/http.js?v=80';
-import { buildings3d } from './map3d.js?v=94';
-import { expandable } from './mapExpand.js?v=94';
+import { buildings3d } from './map3d.js?v=95';
+import { expandable } from './mapExpand.js?v=95';
 
 const ROUTE_COLOR = '#1878ec';
 // Room kept clear for the map tools on the right, so the route is never drawn under them.

@@ -1270,6 +1270,7 @@ review.send_report
 review.sign_in
 review.stars_label
 review.title
+review.town_title
 review.visit_invalid
 review.visited
 review.visited_on
@@ -1344,6 +1345,13 @@ town.climate_source
 town.climate_source_plain
 town.climate_title
 town.essentials
+town.faq_get_q
+town.faq_offer_a
+town.faq_offer_item
+town.faq_offer_q
+town.faq_title
+town.faq_when_a
+town.faq_when_q
 town.guide_title
 town.hours_minutes
 town.island_access

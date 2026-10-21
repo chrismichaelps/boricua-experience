@@ -22,7 +22,46 @@ export fn panel(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: &Catalog.M
       H.h2().class("section-title").id("town-guide-title").says(Frame.tf(frame, "town.guide_title", &[("town", town.name)])),
       H.ul().class("town-facts").holding([access(frame, guide), bestTime(frame, guide)]),
       essentials(frame, catalog, town, guide),
-      climate(frame, guide)
+      climate(frame, guide),
+      faq(frame, catalog, town, guide)
+    ])
+}
+
+/// Questions a visitor asks about a town, answered only from the guide's own data: when it is driest,
+/// how to get there, and what the site lists there. A question without data is left out.
+export fn questions(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: &Catalog.Municipality, guide: &TownGuide.TownGuide) -> Array[(Str, Str)] {
+  let named = |key: Str| Frame.tf(frame, key, &[("town", town.name)])
+  var asked: Array[(Str, Str)] = []
+  let months = TownGuide.driestMonths(guide)
+  if !months.isEmpty() {
+    asked = asked.push((named("town.faq_when_q"), Frame.tf(frame, "town.faq_when_a", &[("town", town.name), ("months", months.map(|month: Int| Dates.monthLong(&frame.locale, month)).join(", "))])))
+  }
+  let getting = if guide.island { Frame.t(frame, "town.island_access") } else {
+    match TownGuide.airportMinutes(guide) {
+      case Some(0) => Frame.t(frame, "town.airport_here")
+      case Some(minutes) => Frame.tf(frame, "town.airport_drive", &[("time", duration(frame, minutes))])
+      case None => ""
+    }
+  }
+  if !getting.isEmpty() { asked = asked.push((named("town.faq_get_q"), getting + ".")) }
+  var listed: Array[Str] = []
+  for counted in guide.categories.slice(0, if guide.categories.length() < 3 { guide.categories.length() } else { 3 }) {
+    match Catalog.category(catalog, counted.slug) {
+      case Some(category) => { listed = listed.push(Frame.tf(frame, "town.faq_offer_item", &[("count", show(counted.places + counted.activities)), ("category", SearchControls.categoryName(frame, &category))])) }
+      case None => {}
+    }
+  }
+  if !listed.isEmpty() { asked = asked.push((named("town.faq_offer_q"), Frame.tf(frame, "town.faq_offer_a", &[("list", listed.join(", "))]))) }
+  asked
+}
+
+/// The questions as expandable answers on the page.
+fn faq(frame: &Frame.Frame, catalog: &Catalog.Catalog, town: &Catalog.Municipality, guide: &TownGuide.TownGuide) -> H.Node {
+  let asked = questions(frame, catalog, town, guide)
+  if asked.isEmpty() { return H.nothing() }
+  H.div().class("town-faq").holding([
+      H.h3().class("town-subtitle").says(Frame.tf(frame, "town.faq_title", &[("town", town.name)])),
+      H.div().holding(asked.map(|pair: (Str, Str)| H.details().class("town-faq-item").holding([H.summary().says(pair[0]), H.p().says(pair[1])])))
     ])
 }
 

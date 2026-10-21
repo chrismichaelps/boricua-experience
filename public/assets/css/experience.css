@@ -757,3 +757,11 @@ html:has(.map-page), html:has(.map-page) body { overscroll-behavior: none; }
   .auth-card .lead { font-size: 16px; }
   .auth-card .consents { padding: 18px; }
 }
+/* A town guide's questions, answered from its own data. */
+.town-faq { display: grid; gap: 8px; }
+.town-faq-item { border-top: 1px solid var(--color-divider); }
+.town-faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 10px 0; font-weight: 700; cursor: pointer; list-style: none; }
+.town-faq-item summary::-webkit-details-marker { display: none; }
+.town-faq-item summary::after { content: "+"; flex: none; font-size: 20px; font-weight: 400; color: var(--color-graphite); }
+.town-faq-item[open] summary::after { content: "–"; }
+.town-faq-item p { margin: 0 0 14px; color: #3d4b55; line-height: 1.6; }

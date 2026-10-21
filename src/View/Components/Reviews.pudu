@@ -8,6 +8,7 @@ import Constants.Routes as Routes
 import Domain.Problem as Problem
 import Domain.Resume as Resume
 import Domain.Review as Review
+import Domain.TownGuide as TownGuide
 import I18n.Dates as Dates
 import I18n.Translate as Translate
 import Utils.Query as Query
@@ -73,6 +74,44 @@ export fn highlights(frame: &Frame.Frame, slug: Str, board: &Review.ReviewBoard)
               H.a().class("text-link").href(Routes.PLACE_PREFIX + slug + "#review-" + review.id).says(Frame.t(frame, "review.read_full"))
             ])))
     ])
+}
+
+/// What visitors say about a town's places: the town's average and count, then the newest published
+/// reviews, each linking to its place. Nothing when no place in town has a review.
+export fn townVoices(frame: &Frame.Frame, townName: Str, guide: &TownGuide.TownGuide) -> H.Node {
+  let reviews = Option.unwrapOr(guide.reviews, [])
+  let count = Option.unwrapOr(guide.reviewCount, 0)
+  if reviews.isEmpty() || count == 0 { return H.nothing() }
+  let average = Option.unwrapOr(guide.reviewAverage, 0.0)
+  H.section().class("visitor-highlights town-voices").at("aria-labelledby", "town-voices-title").holding([
+      H.div().class("place-section-heading").holding([
+          H.div().holding([
+              H.h2().class("section-title").id("town-voices-title").says(Frame.tf(frame, "review.town_title", &[("town", townName)])),
+              H.p().class("review-average town-voices-average").holding([H.strong().says(show(average)), stars(frame, roundStars(average)), H.span().class("muted").says(Translate.count(&frame.locale, "place.reviews", count))])
+            ])
+        ]),
+      H.ul().class("visitor-review-rail").at("tabindex", "0").label(Frame.tf(frame, "review.town_title", &[("town", townName)])).holding(reviews.map(|review: TownGuide.TownReview| H.li().class("visitor-review-card").holding([
+              H.div().class("review-author").holding([
+                  Avatar.face(review.author, None, "md"),
+                  H.div().holding([H.strong().says(review.author), H.p().class("muted small").says(townWhen(frame, &review))])
+                ]),
+              stars(frame, review.rating),
+              H.p().class("visitor-review-excerpt").says(Text.truncate(review.body, 240)),
+              H.a().class("text-link town-voices-place").href(Routes.PLACE_PREFIX + review.placeSlug + "#reviews").holding([Icons.sized("pin", 14), H.span().says(review.placeName)])
+            ])))
+    ])
+}
+
+/// The visit month of a town review, or the month it was written.
+fn townWhen(frame: &Frame.Frame, review: &TownGuide.TownReview) -> Str {
+  let stamp = match review.visitedOn {
+    case Some(day) => day + "T12:00:00Z"
+    case None => review.createdAt
+  }
+  match Time.parseTimestamp(stamp) {
+    case Some(at) => if review.visitedOn == None { Dates.monthYear(&frame.locale, &Time.local(&at)) } else { Frame.tf(frame, "review.visited_on", &[("month", Dates.monthYear(&frame.locale, &Time.local(&at)))]) }
+    case None => ""
+  }
 }
 
 /// Public reviewer identity with visit or publication month; no verification claim is inferred.

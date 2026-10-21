@@ -1,5 +1,5 @@
 import { postJson, RequestFailed } from '../net/http.js?v=80';
-import { staged, clear } from './coverStage.js?v=94';
+import { staged, clear } from './coverStage.js?v=95';
 
 const SIDE = 1600;
 const QUALITY = 0.85;

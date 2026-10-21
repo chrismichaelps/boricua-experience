@@ -24,6 +24,7 @@ import View.Components.Hero as Hero
 import View.Components.Icons as Icons
 import View.Components.Notice as Notice
 import View.Components.PlaceCard as PlaceCard
+import View.Components.Reviews as Reviews
 import View.Components.Search as SearchControls
 import View.Components.TownGuide as TownGuidePanel
 import View.Frame as Frame
@@ -173,6 +174,13 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
       if indexable && !listed.isEmpty() { structured = structured.push(Seo.itemList(frame.siteUrl, title, &listed)) }
     }
   }
+  match (*landing, guide) {
+    case (ForTown(town), Some(found)) => {
+      let asked = TownGuidePanel.questions(frame, catalog, &town, &found)
+      if indexable && !asked.isEmpty() { structured = structured.push(Seo.faq(&asked)) }
+    }
+    case _ => {}
+  }
   match landing {
     case ForTown(town) => { structured = structured.push(Seo.destination(frame.siteUrl, town.name, path, town.lat, town.lng, if townScene.isEmpty() { "" } else { townScene[0].image })) }
     case _ => {}
@@ -220,7 +228,7 @@ export fn renderResults(frame: &Frame.Frame, catalog: &Catalog.Catalog, filters:
           case _ => H.nothing()
         },
         match (*landing, guide) {
-          case (ForTown(town), Some(found)) => if continuingPlaces || !filters.after.isEmpty() { H.nothing() } else { TownGuidePanel.panel(frame, catalog, &town, &found) }
+          case (ForTown(town), Some(found)) => if continuingPlaces || !filters.after.isEmpty() { H.nothing() } else { H.nothing().holding([TownGuidePanel.panel(frame, catalog, &town, &found), Reviews.townVoices(frame, town.name, &found)]) }
           case _ => H.nothing()
         },
         if page.items.isEmpty() && places.items.isEmpty() {

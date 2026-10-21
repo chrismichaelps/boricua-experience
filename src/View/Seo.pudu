@@ -182,6 +182,15 @@ export fn destination(siteUrl: Str, name: Str, path: Str, lat: Float64, lng: Flo
   Json.object(&fields)
 }
 
+/// Questions and their answers as shown on the page.
+export fn faq(pairs: &Array[(Str, Str)]) -> Json.Json {
+  Json.object(&[
+      ("@context", Json.Text("https://schema.org")),
+      ("@type", Json.Text("FAQPage")),
+      ("mainEntity", Json.list(&pairs.map(|pair: (Str, Str)| Json.object(&[("@type", Json.Text("Question")), ("name", Json.Text(pair[0])), ("acceptedAnswer", Json.object(&[("@type", Json.Text("Answer")), ("text", Json.Text(pair[1]))]))]))))
+    ])
+}
+
 /// `robots.txt`: everything public is crawlable; member and action addresses are not.
 export fn robots(siteUrl: Str) -> Str {
   [

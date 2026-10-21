@@ -292,6 +292,7 @@ export const MESSAGES: Map[Str, Str] = mapOf([
     ("search.category_title", ":category en Puerto Rico"),
     ("search.category_description", "Actividades de :category en Puerto Rico: fechas, lugares y cómo unirte."),
     ("search.town_title", "Qué hacer en :town"),
+    ("review.town_title", "Lo que dice la gente de :town"),
     ("search.town_head_title", "Qué hacer en :town, Puerto Rico"),
     ("search.town_description", "Actividades y eventos en :town, Puerto Rico. Encuentra planes para hoy y el fin de semana."),
     ("search.show_map", "Ver mapa"),
