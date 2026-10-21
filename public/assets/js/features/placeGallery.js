@@ -8,6 +8,9 @@ export function placeGallery(root) {
   const next = dialog.querySelector('[data-photo="next"]');
   const close = dialog.querySelector('[data-photo="close"]');
   if (!links.length || !image || !position || !previous || !next || !close) return;
+  const thumbnails = [...dialog.querySelectorAll('[data-photo-select]')];
+  const stage = dialog.querySelector('[data-photo="stage"]');
+  let gesture;
   let selected = 0;
   let opener;
   let overflow;
@@ -17,19 +20,41 @@ export function placeGallery(root) {
     image.src = link.href;
     image.alt = link.getAttribute('aria-label') || '';
     position.textContent = image.alt;
+    thumbnails.forEach((thumb, index) => {
+      if (index === selected) thumb.setAttribute('aria-current', 'true');
+      else thumb.removeAttribute('aria-current');
+    });
+    thumbnails[selected]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
   previous.hidden = next.hidden = links.length < 2;
   root.addEventListener('click', (event) => {
-    const link = event.target.closest('[data-photo-index]');
+    const link = event.target.closest('[data-photo-index]') || event.target.closest('.place-album > summary');
     if (!link || !root.contains(link) || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
     opener = link;
-    show(Number(link.dataset.photoIndex));
-    overflow = document.documentElement.style.overflow;
-    dialog.showModal();
-    document.documentElement.style.overflow = 'hidden';
+    if (!dialog.open) {
+      overflow = document.documentElement.style.overflow;
+      dialog.showModal();
+      document.documentElement.style.overflow = 'hidden';
+    }
+    show(Number(link.dataset.photoIndex ?? 0));
     close.focus();
   });
+  thumbnails.forEach(thumb => thumb.addEventListener('click', () => show(Number(thumb.dataset.photoSelect))));
+  dialog.querySelectorAll('[data-photo="review-link"]').forEach(link => link.addEventListener('click', event => {
+    if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) dialog.close();
+  }));
+  stage?.addEventListener('pointerdown', event => {
+    gesture = event.isPrimary && event.button === 0 && !event.target.closest('button,a') ? { id: event.pointerId, x: event.clientX, y: event.clientY } : null;
+  });
+  stage?.addEventListener('pointerup', event => {
+    const start = gesture;
+    gesture = null;
+    if (!start || start.id !== event.pointerId || !event.isPrimary) return;
+    const dx = event.clientX - start.x, dy = event.clientY - start.y;
+    if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.5) show(selected + (dx < 0 ? 1 : -1));
+  });
+  stage?.addEventListener('pointercancel', () => { gesture = null; });
   previous.addEventListener('click', () => show(selected - 1));
   next.addEventListener('click', () => show(selected + 1));
   close.addEventListener('click', () => dialog.close());
@@ -45,6 +70,7 @@ export function placeGallery(root) {
     if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
   });
   dialog.addEventListener('close', () => {
+    gesture = null;
     document.documentElement.style.overflow = overflow;
     image.removeAttribute('src');
     opener?.focus({ preventScroll: true });

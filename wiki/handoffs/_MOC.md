@@ -38,3 +38,5 @@ tags: [moc, handoff]
 - [[handoffs/production-auth-notifications]] — verified0.15.0 Google runtime setup and production inbox behavior.
 
 - [[handoffs/source-listing-artwork]] — original-source listing media and verified BSNF refresh.
+
+- [[handoffs/review-gallery]] — photo viewer with real place-review context.

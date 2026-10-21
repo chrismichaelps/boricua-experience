@@ -3,6 +3,11 @@ module I18n.EsMenu
 
 /// Spanish menu messages by key.
 export const MESSAGES: Map[Str, Str] = mapOf([
+    ("gallery.close", "Cerrar galería"),
+    ("gallery.reviews", "Opiniones sobre este lugar"),
+    ("gallery.no_reviews", "Aún no hay opiniones de visitantes. Comparte tu visita para ayudar a quienes vengan después."),
+    ("gallery.choose_image", "Elegir una imagen"),
+
     ("menu.changed", "Este menú cambió mientras lo editabas. Conservamos tu borrador; revisa la versión actual antes de volver a guardar."),
     ("menu.invalid", "Revisa los datos del menú. Uno de los valores no es válido."),
     ("menu.unsupported", "Esta categoría no admite menús. Puedes archivar un menú existente."),
