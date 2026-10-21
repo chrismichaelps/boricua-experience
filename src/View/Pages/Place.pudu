@@ -66,7 +66,7 @@ export fn renderWith(frame: &Frame.Frame, catalog: &Catalog.Catalog, detail: &Pl
   }
   Layout.page(frame, &meta, Layout.Explore, H.article().class("event place").holding([
         heading(frame, detail, area.townRank),
-        PlaceGallery.render(frame, &PhotoHeader.photosOf(gallery, &card.coverUrl), PlaceCard.coverOf(&card), card.name),
+        PlaceGallery.render(frame, &PhotoHeader.photosOf(gallery, &card.coverUrl), PlaceCard.coverOf(&card), card.name, card.slug, board),
         H.nav().class("place-sections").label(Frame.t(frame, "place.sections")).holding([
             H.a().href("#place-about").says(Frame.t(frame, "place.about")),
             H.a().href("#place-location").says(Frame.t(frame, "event.where")),

@@ -402,3 +402,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Test/Favicon]] — stable search favicon binary dimensions and container validation.
 
 - [[src/Public/CoverImages]] · [[src/Test/CoverImages]] — intrinsic source-image framing.
+
+- [[src/View/Components/GalleryReviews]] — published place reviews alongside gallery images.
