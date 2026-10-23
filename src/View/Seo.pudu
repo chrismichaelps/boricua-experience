@@ -191,9 +191,12 @@ export fn faq(pairs: &Array[(Str, Str)]) -> Json.Json {
     ])
 }
 
-/// `robots.txt`: everything public is crawlable; member and action addresses are not.
+/// Public discovery and private-route exclusions, with a dedicated excessive-crawler opt-out.
 export fn robots(siteUrl: Str) -> Str {
   [
+    "User-agent: meta-externalagent",
+    "Disallow: /",
+    "",
     "User-agent: *",
     "Allow: /",
     "Disallow: /account",

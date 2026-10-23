@@ -42,3 +42,5 @@ tags: [moc, handoff]
 - [[handoffs/review-gallery]] — photo viewer with real place-review context.
 
 - [[handoffs/detail-galleries]] — consistent viewer on activity, place and menu detail routes.
+
+- [[handoffs/crawler-origin-transfer]] — excessive Meta crawl investigation and free mitigation.
