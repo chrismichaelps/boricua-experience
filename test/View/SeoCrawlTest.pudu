@@ -1,0 +1,20 @@
+/** @Test.SeoCrawl.Suite — crawler-specific exclusions preserve public discovery */
+module View.SeoCrawlTest
+
+import Std.Test as Test
+import View.Seo as Seo
+
+/// Exercises complete robots groups so the crawler opt-out cannot hide the site from search.
+fn main() -> Int {
+  let policy = Seo.robots("https://boricuaexperience.com")
+  let groups = policy.split("\n\n")
+  let checks = Test.suite("SeoCrawl", &[
+      Test.equals("the excessive crawler has its own complete exclusion", &groups[0], &"User-agent: meta-externalagent\nDisallow: /"),
+      Test.that("the wildcard group starts after the exclusion ends", groups.length() == 2 && groups[1].startsWith("User-agent: *\nAllow: /\n")),
+      Test.that("public discovery is never denied in the wildcard group", !groups[1].split("\n").contains("Disallow: /")),
+      Test.that("private account and action exclusions remain", policy.contains("Disallow: /account\n") && policy.contains("Disallow: /auth/\n") && policy.contains("Disallow: /api/\n")),
+      Test.that("the production sitemap remains canonical", policy.endsWith("Sitemap: https://boricuaexperience.com/sitemap.xml\n")),
+      Test.that("social previews and other search agents have no specific denial", !policy.contains("facebookexternalhit") && !policy.contains("Googlebot") && !policy.contains("Bingbot") && !policy.contains("meta-externalfetcher"))
+    ])
+  Test.report(&Test.run(&checks))
+}

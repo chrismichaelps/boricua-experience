@@ -20,9 +20,7 @@ minute.
 - **Live location** writes one row per account in place (fill factor 70 for in-place updates),
   refuses writes closer than 10 seconds, and samples history into monthly partitions dropped after
   30 days.
-- **HTTP**: anonymous pages carry `s-maxage` with `stale-while-revalidate` so the CDN answers most
-  guest traffic; the function keeps pooled keep-alive connections to the database API between
-  invocations; reference data is cached per instance for 10 minutes.
+- **HTTP**: HTML remains private because language, consent, flash and session state affect its body. Cookie-neutral API/reference responses declare their own bounded public cache policies. The function pools database API connections and caches reference data per instance for10minutes. An explicit Meta ExternalAgent robots exclusion and narrow Free edge deny address excessive crawling without sharing personalized HTML.
 - **Browser**: one stylesheet, deferred module scripts, fonts preloaded, images lazy, the service
   worker serving the shell and assets from cache.
 

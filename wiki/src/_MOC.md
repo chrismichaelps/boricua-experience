@@ -404,3 +404,5 @@ One page per source file under `src/`, grouped by layer in dependency order ([[a
 - [[src/Public/CoverImages]] · [[src/Test/CoverImages]] — intrinsic source-image framing.
 
 - [[src/View/Components/GalleryReviews]] — published place reviews alongside gallery images.
+
+- [[src/Test/SeoCrawl]] — crawler-specific exclusions and wildcard discovery regressions.
