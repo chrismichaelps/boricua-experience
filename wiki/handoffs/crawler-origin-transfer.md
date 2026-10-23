@@ -8,5 +8,9 @@ On 2026-10-23 the Hobby team exceeded10GB origin transfer. Boricua used8.65GB; t
 ## Resolved Grill Log
 Keep the fix specific to Meta ExternalAgent. Do not block Facebook link-preview fetchers, Google/Bing or all AI traffic. Do not cache personalized HTML, remove authentication guards, purge caches or add paid services. Log a narrow edge matcher before enforcing it; robots excludes the same crawler voluntarily. Existing usage cannot be reversed.
 
-## Pending
-The user published the observation rule. Verify its matches, test a preview-scoped deny, then prepare production enforcement for user publication under the Firewall skill. Next action: inspect the logged requests.
+## Applied edge mitigation
+The user published observation, preview-only enforcement and then production enforcement. Rule `rule_observe_meta_external_agent_crawl_traffic_m7xIbS` denies only user agents containing `meta-externalagent/`. Observed matches were all Facebook-network Meta agents. Authenticated preview probes: target403, browser/Google-shaped/social-preview controls200. Production search/map/signin probes: target403,59-byte `x-vercel-mitigated: deny` responses. Normal search and robots200; homepage browser and social-preview retries200 after one transient function invocation failure. First complete post-enforcement minute had4allowed requests versus roughly120/min beforehand;96denied. This is immediate evidence, not a monthly-quota guarantee. One free custom rule; no paid managed rules, rate limit or plan changes.
+
+## Validation and release
+23/23 suites,787assertions and all browser/timezone harnesses pass. Formatting and source checks pass using the pinned0.1.3 compiler. PR201 merged to dev. Role: Implementer → Release engineer. Next action: deploy release0.16.3 and verify live robots plus matching build fingerprints.
+
